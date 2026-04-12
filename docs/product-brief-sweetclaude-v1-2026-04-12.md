@@ -62,6 +62,10 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - Phase re-entry — revisiting earlier phases is normal and expected, not exceptional
 - Scope change tracking — logs when items move between in/out of scope with rationale
 - Mid-stream work-type detection — recognizes when the nature of work shifts and adapts
+- Dual context window management — manages Claude's token limits AND the human's cognitive load simultaneously; machine context via lazy loading, human context via deference levels, re-orientation, and persistent logs
+- Deference levels — user-declared autonomy setting (Collaborative/Guided/Autonomous) governing checkpoint frequency, changeable mid-stream
+- Phase dwelling — system stays present in current phase, never pushes advancement; user decides when to move on
+- Continuous improvement register — per-project log of what's working and what's not in the collaboration itself; read by future sessions
 
 **Value proposition:** Stop assembling a Frankenstein of plugins. Start a project, tell SweetClaude what you're building, and it walks with you through every phase — doing the grind work for you with the right tools, enforced discipline, and full traceability — concept to deployed, tested code. It thinks with you, not for you, but remains creative and will challenge your ideas — in a healthy, productive way.
 

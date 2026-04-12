@@ -101,6 +101,41 @@
 **Effort:** Low
 **Why it matters:** Avoids infrastructure complexity while maintaining the traceability chain from requirement to passing test.
 
+### Insight 12: Dual Context Window Management
+**Description:** SweetClaude manages two context windows simultaneously: Claude's (token limits, lazy loading, phase-scoped skills) and the human's (cognitive load, working memory, ability to hold details). The human context window is managed through deference levels, detour tracking, re-orientation summaries, decision logs, and assumption registers. Both constraints shape every design decision.
+**Source:** Architecture session — observed that the human repeatedly needed re-orientation after detours, while Claude needed aggressive context pruning for different reasons.
+**Impact:** Critical
+**Effort:** Medium
+**Why it matters:** Optimizing only for Claude's context window ignores half the problem. A system that's efficient for the machine but overwhelming for the human fails at partnership.
+
+### Insight 13: Deference Levels — A Dial, Not a Switch
+**Description:** User-declared autonomy setting governing how frequently SweetClaude stops for approval. Level 1 (Collaborative) stops after every sub-step. Level 2 (Guided) stops at phase gates and major decisions. Level 3 (Autonomous) stops only at phase gates. Changeable mid-stream — early phases may need Level 1, later phases Level 3.
+**Source:** Architecture session — Claude kept jumping ahead without approval, user corrected.
+**Impact:** High
+**Effort:** Low
+**Why it matters:** Different work demands different pacing. Forcing one mode creates either approval hell or runaway execution.
+
+### Insight 14: Phase Dwelling Over Phase Rushing
+**Description:** The system should stay present in the current phase and never push advancement. Constant "is this complete?" and "ready to move on?" signals that iteration is delay rather than work. The user decides when a phase is done. The system's default posture is to deepen, not advance.
+**Source:** Architecture session — Claude's constant approval-seeking pressured the user toward premature advancement.
+**Impact:** Critical
+**Effort:** Low
+**Why it matters:** Rushing through phases to check boxes produces shallow work. Dwelling in phases produces insight. The best ideas in this session came from iterating on things Claude initially presented as "done."
+
+### Insight 15: Context Continuity — Detour Management
+**Description:** When conversation detours, the system must track where it branched, follow the detour, and proactively re-orient the user when the detour completes. Handles nested detours. The human brain cannot hold the full conversation tree — the system must.
+**Source:** Architecture session — user had to ask "replay where we are" after multiple detours.
+**Impact:** High
+**Effort:** Medium
+**Why it matters:** Without this, the human carries the cognitive burden of tracking conversation branches. That's the system's job.
+
+### Insight 16: Continuous Improvement Register
+**Description:** Per-project log of what's working and what's not in the collaboration itself. Populated after friction, after smooth stretches, and periodically. Not project decisions — interaction quality. Read by future sessions to improve behavior over time.
+**Source:** Architecture session — discussion about whether positive feedback helps AI assistants.
+**Impact:** High
+**Effort:** Low
+**Why it matters:** Without capturing what works (not just what fails), the system corrects past mistakes but drifts away from validated approaches. Both directions matter.
+
 ---
 
 ## Capability Inventory: What Stays, What Goes, What's New
@@ -215,7 +250,7 @@ Each phase has:
 ## Statistics
 - Total capabilities mapped: 65+
 - Categories: 5 major branches
-- Key insights: 11 (7 from initial brainstorm + 4 from TDD analysis)
+- Key insights: 16 (7 from initial brainstorm + 4 from TDD analysis + 5 from architecture session)
 - Techniques applied: 3 (Mind Mapping, SCAMPER, Reverse Brainstorming) + deep research
 - Sources analyzed: 4 systems (Superpowers, BMAD, Don Cheli, Custom Skills) + web research (MSR '26, Anthropic, Fowler, NIST, DORA, multiple practitioner reports)
 

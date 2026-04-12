@@ -407,6 +407,26 @@ Full pipeline.
 - [ ] Log stored in working repo
 - [ ] Queryable: "what scope changes have we made?"
 
+#### FR-036: Continuous Improvement Register
+**Priority:** Must Have
+**Description:** Per-project register that captures what's working and what's not in the human-AI collaboration itself — not project decisions, but interaction quality. Populated after friction moments ("we just had a misalignment, here's what I'd do differently"), after smooth stretches ("what specifically worked?"), and periodically ("anything bugging you that you haven't mentioned?"). Lives in working repo, read by future sessions.
+**Acceptance Criteria:**
+- [ ] Stored in working repo (per-project, not global)
+- [ ] Captures both corrections AND confirmations (what works, not just what failed)
+- [ ] After friction: SweetClaude proposes what happened and what to change, saves on user confirmation
+- [ ] After smooth stretches: SweetClaude asks what worked, saves the answer
+- [ ] Periodic check-in: "anything about how I'm operating that's bugging you?"
+- [ ] Future sessions read the register and adjust behavior
+
+#### FR-037: Phase Dwelling
+**Priority:** Must Have
+**Description:** SweetClaude stays present in the current phase. It does not push for advancement, ask "ready to move on?", or treat iteration as delay. The user decides when a phase is complete. The system's default posture is to remain in the current phase and deepen the work, not advance to the next step.
+**Acceptance Criteria:**
+- [ ] No unprompted "shall we move on?" or "is this complete?" prompts
+- [ ] After presenting work, SweetClaude remains available for iteration without signaling impatience
+- [ ] Phase advancement happens only when user explicitly signals readiness
+- [ ] Works at all deference levels — even Level 3 (Autonomous) does not auto-advance phases
+
 ---
 
 ### EPIC-008: Global Configuration
@@ -516,14 +536,14 @@ Full pipeline.
 | EPIC-004 | Knowledge Layer | FR-014, FR-015, FR-016 | Must Have | 4-6 |
 | EPIC-005 | Quality & Verification | FR-017, FR-018, FR-019, FR-020 | Must Have | 6-8 |
 | EPIC-006 | Model Routing | FR-021 | Should Have | 2-3 |
-| EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035 | Must Have | 12-16 |
+| EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037 | Must Have | 14-18 |
 | EPIC-008 | Global Configuration | FR-023, FR-024 | Must Have | 3-4 |
 
 **Totals:**
-- Functional Requirements: 35 (24 Must, 9 Should, 2 Could)
+- Functional Requirements: 37 (26 Must, 9 Should, 2 Could)
 - Non-Functional Requirements: 8 (6 Must, 2 Should)
 - Epics: 8
-- Estimated Stories: 49-67
+- Estimated Stories: 53-71
 
 ---
 
@@ -531,7 +551,7 @@ Full pipeline.
 
 | Priority | FRs | NFRs | Total |
 |---|---|---|---|
-| Must Have | 24 | 6 | 30 |
+| Must Have | 26 | 6 | 32 |
 | Should Have | 9 | 2 | 11 |
 | Could Have | 2 | 0 | 2 |
 
