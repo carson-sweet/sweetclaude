@@ -1,0 +1,97 @@
+# SweetClaude Phase-Skill Mapping
+# Defines which skills, agents, and hooks are available per phase.
+# The master skill reads this to surface only relevant capabilities.
+
+always_loaded:
+  skills:
+    - sweetclaude              # Master skill (phase router + interaction model)
+    - sweetclaude:work-router   # Work-type routing
+  rules:
+    - sweetclaude/interaction-model.md
+    - sweetclaude/phase-gates.md
+    - sweetclaude/tdd-levels.md
+
+phases:
+  discover:
+    skills:
+      - bmad:brainstorm
+      - bmad:research
+      - caucus
+      - reasoning-frameworks
+    agents: []
+    hooks: []
+
+  define:
+    skills:
+      - bmad:product-brief
+      - bmad:prd
+      - sweetclaude:ripple
+      - reconciling-documents
+      - backlog-management
+    agents: []
+    hooks: []
+
+  design:
+    skills:
+      - bmad:tech-spec
+      - bmad:architecture
+      - bmad:create-ux-design
+      - bmad:solutioning-gate-check
+      - sweetclaude:ripple
+      - caucus
+      - reasoning-frameworks
+    agents: []
+    hooks: []
+
+  plan:
+    skills:
+      - bmad:create-story
+      - bmad:sprint-planning
+      - sweetclaude:gherkin-bridge
+      - backlog-management
+    agents: []
+    hooks: []
+
+  implement:
+    skills:
+      - sweetclaude:tdd
+      - sweetclaude:fix-issue
+      - sweetclaude:ripple
+      - superpowers:writing-plans
+      - superpowers:executing-plans
+      - superpowers:using-git-worktrees
+      - superpowers:systematic-debugging
+      - superpowers:dispatching-parallel-agents
+      - superpowers:subagent-driven-development
+    agents:
+      - sweetclaude:test-writer
+      - sweetclaude:implementer
+      - sweetclaude:qa-caucus-service
+      - sweetclaude:qa-caucus-component
+      - sweetclaude:qa-caucus-integration
+    hooks:
+      - test-guardian
+      - auto-test-runner
+      - git-checkpoint
+
+  verify:
+    skills:
+      - sweetclaude:pr-ready
+      - sweetclaude:ripple
+      - sweetclaude:auto-docs
+      - superpowers:requesting-code-review
+      - superpowers:receiving-code-review
+      - superpowers:verification-before-completion
+      - superpowers:simplify
+    agents:
+      - sweetclaude:code-reviewer
+      - sweetclaude:security-reviewer
+      - sweetclaude:workflow-guardian
+    hooks: []
+
+  ship:
+    skills:
+      - superpowers:finishing-a-development-branch
+      - sweetclaude:pr-ready
+    agents: []
+    hooks: []
