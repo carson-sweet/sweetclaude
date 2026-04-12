@@ -40,7 +40,10 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 **Proposed solution:** A single installable Claude Code framework with:
 
 **Core features:**
-- Phase-gated pipeline (Discover → Define → Design → Plan → Implement → Verify → Ship → Maintain) with entry/exit criteria and enforcement
+- Phase-gated pipeline (Discover → Define → Design → Plan → Implement → Verify → Ship) with entry/exit criteria and enforcement
+- Work-type routing — SweetClaude identifies the type of work (net-new feature, bug fix, feature enhancement, iteration) and enters the pipeline at the appropriate phase:
+  - Net-new features: full pipeline from Discover
+  - Bug fixes, enhancements, iterations: enter at Define, escalate to Discover if deeper issues surface
 - Gherkin bridge that formally transitions product stories into TDD test specs via isolated subagents
 - Four-level TDD with hook-based enforcement (test file guardian, auto-test runner, git checkpoints)
 - RAG-powered knowledge layer (semantic search + Notion + git history, loaded on demand)
@@ -52,8 +55,15 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - Lightweight traceability (requirements → Gherkin → tests → code) via structured markdown, no infrastructure overhead
 - Mutation testing as verification layer
 - Creative partnership — actively soundboards, challenges, and introduces ideas, not just executes
+- Decision log — captures what was decided and why at each phase transition, not just what was produced
+- Assumption register — SweetClaude explicitly surfaces its assumptions for user challenge
+- "Propose and invite challenge" interaction — SweetClaude proposes, user pushes back, faster than Q&A
+- Adaptive flow — detects when user is driving or redirecting, follows without resistance
+- Phase re-entry — revisiting earlier phases is normal and expected, not exceptional
+- Scope change tracking — logs when items move between in/out of scope with rationale
+- Mid-stream work-type detection — recognizes when the nature of work shifts and adapts
 
-**Value proposition:** Stop assembling a Frankenstein of plugins. Start a project, tell SweetClaude what you're building, and it walks you through every phase with the right tools, enforced discipline, and full traceability — concept to deployed, tested code. And it thinks with you, not just for you.
+**Value proposition:** Stop assembling a Frankenstein of plugins. Start a project, tell SweetClaude what you're building, and it walks with you through every phase — doing the grind work for you with the right tools, enforced discipline, and full traceability — concept to deployed, tested code. It thinks with you, not for you, but remains creative and will challenge your ideas — in a healthy, productive way.
 
 ---
 
@@ -97,6 +107,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - Creative partner behavior embedded across all phases
 
 ### Out of scope (v1.0) — Future
+- **`sweetclaude adopt`** — Drop SweetClaude into an existing (likely vibe-coded) codebase. Unlike `init`, this requires a full assessment/recovery process: (1) ASSESS — full codebase scan for structure, test coverage, dependency map, pattern consistency, dead code, security surface; (2) DIAGNOSE — report on health, debt, danger zones, uncovered code; (3) PLAN — prioritized remediation plan: stabilize first, add tests to lock behavior before changing anything, document before knowledge is lost; (4) SCAFFOLD — set up working repo, CLAUDE.md, RAG index, traceability baseline from what exists; (5) ITERATE — user works through remediation using the iteration lifecycle. Key principle: treat an adopted codebase like an archaeologist treats a dig site, not a demolition crew.
 - Automatic boilerplate implementation (e.g., Google OAuth for web apps, JWT for microservices) — needs a template library mapping project types to expected components, plus skills to implement each
 - Multi-developer / team workflows
 - IDE integrations beyond Claude Code CLI
@@ -118,6 +129,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 ## 8. Constraints and Assumptions
 
 **Constraints:**
+
 - Must work within Claude Code's native extension model (skills, hooks, subagents, MCP) — no custom runtime or binary
 - Must be language/framework agnostic — no hardcoding to a specific stack
 - Non-commercial license — limits certain distribution channels but aligns with community values
@@ -136,6 +148,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 ## 9. Success Criteria
 
 - A developer installs SweetClaude and runs `sweetclaude init` on a new project in under 5 minutes with zero manual configuration
+- The developer is talked through a guided process — concept discovery, refinement, definition, design, planning, implementation, verification, shipping, bug fixes, enhancement, and iteration
 - The TDD enforcement actually prevents AI cheating — tests are never silently modified during implementation
 - The phase pipeline feels natural, not bureaucratic — it guides without slowing you down
 - SweetClaude acts as a creative partner, not a passive executor — it soundboards ideas, challenges assumptions, introduces alternatives, and actively contributes to the thinking, not just the typing
@@ -198,3 +211,4 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 ---
 
 *Generated by BMAD Method v6 — Business Analyst*
+
