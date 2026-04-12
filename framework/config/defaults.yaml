@@ -1,0 +1,46 @@
+# SweetClaude Defaults
+# User-configurable defaults for SweetClaude behavior.
+
+# Deference level at session start (1=collaborative, 2=guided, 3=autonomous)
+# User is asked at session start and can change mid-stream.
+default_deference_level: 1
+
+# Default TDD level for work types
+default_tdd_levels:
+  hotfix: 0
+  simple_crud: 1
+  bug_fix: 2
+  feature: 2
+  feature_with_gherkin: 3
+  refactoring: 1
+
+# GitHub settings for project init
+github:
+  default_visibility: private
+  default_branch: main
+
+# RAG settings
+rag:
+  auto_init: true
+  indexed_extensions:
+    - md
+    - txt
+    - pdf
+    - docx
+    - rst
+    - yaml
+    - yml
+    - json
+
+# Working repo settings
+working_repo:
+  suffix: "-sweetclaude"
+  auto_commit_on_phase_transition: true
+
+# Interaction model
+interaction:
+  phase_dwelling: true           # Never push for phase advancement
+  propose_and_challenge: true    # Default to proposing, not asking
+  detour_tracking: true          # Track conversation branches
+  periodic_reorientation: true   # Periodic "here's where we are" summaries
+  improvement_checkins: true     # Periodic "how am I doing" check-ins

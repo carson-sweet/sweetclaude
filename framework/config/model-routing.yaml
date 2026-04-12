@@ -1,0 +1,41 @@
+# SweetClaude Model Routing Configuration
+#
+# Maps task types to Claude model IDs. 100% user-configurable.
+# SweetClaude reads this file and routes subagent/task model selection accordingly.
+#
+# Available models (as of 2026-04):
+#   claude-opus-4-6      — Most capable, highest cost
+#   claude-sonnet-4-6    — Balanced capability and speed
+#   claude-haiku-4-5     — Fastest, lowest cost
+#
+# Rules are evaluated top-to-bottom. First match wins.
+# "default" is the fallback for anything not explicitly routed.
+
+default: claude-sonnet-4-6
+
+routes:
+  # Discovery & Design — complex reasoning, use best model
+  brainstorming: claude-opus-4-6
+  architecture: claude-opus-4-6
+  prd-review: claude-opus-4-6
+  reasoning-frameworks: claude-opus-4-6
+
+  # Implementation — balanced
+  test-writing: claude-sonnet-4-6
+  implementation: claude-sonnet-4-6
+  fix-issue: claude-sonnet-4-6
+  gherkin-bridge: claude-sonnet-4-6
+
+  # Review — balanced
+  code-review: claude-sonnet-4-6
+  security-review: claude-sonnet-4-6
+  workflow-guardian: claude-sonnet-4-6
+
+  # Fast/cheap tasks — use lightest model
+  test-runner: claude-haiku-4-5
+  auto-test: claude-haiku-4-5
+  ripple-scan: claude-haiku-4-5
+  auto-docs: claude-haiku-4-5
+  qa-caucus-service: claude-sonnet-4-6
+  qa-caucus-component: claude-sonnet-4-6
+  qa-caucus-integration: claude-sonnet-4-6
