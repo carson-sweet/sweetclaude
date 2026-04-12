@@ -1,4 +1,4 @@
-# superclaude
+# sweetclaude
 
 Claude Code environment configuration: playbooks, skills, audit artifacts, and reference docs for a Superpowers + BMAD setup.
 
