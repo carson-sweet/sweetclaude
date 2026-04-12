@@ -341,6 +341,36 @@ Full pipeline.
 - [ ] Previous work state preserved (can resume if user wants)
 - [ ] Never argues against a direction change
 
+#### FR-033: Deference Level Setting
+**Priority:** Must Have
+**Description:** At session start, SweetClaude asks the user how autonomous vs. collaborative it should be. This governs checkpoint frequency across all skills, phases, and sub-steps. User can change the level mid-stream.
+**Acceptance Criteria:**
+- [ ] Three levels: Level 1 (Collaborative — stop after every sub-step), Level 2 (Guided — stop at phase gates and major decisions), Level 3 (Autonomous — stop only at phase gates)
+- [ ] Asked at session start
+- [ ] User can change level mid-stream with immediate effect
+- [ ] Level persisted to working repo for session recovery
+- [ ] All skills and workflows respect the current deference level
+
+#### FR-034: Context Continuity — Detour Management
+**Priority:** Must Have
+**Description:** When conversation detours from the current topic (user raises a side issue, asks a question, changes subject), SweetClaude follows the detour (per FR-028) but tracks where the conversation branched. When the detour is satisfied, SweetClaude proactively suggests circling back and re-orients the user to where they were without being asked.
+**Acceptance Criteria:**
+- [ ] Detects when conversation branches away from current work
+- [ ] Tracks the branch point (what was being discussed, what step, what was pending)
+- [ ] When detour completes, suggests: "We were on [X]. Ready to circle back?"
+- [ ] On circle-back, re-orients the user with a concise summary of where things stand
+- [ ] Handles nested detours (detour within a detour)
+
+#### FR-035: Dual Context Window Management
+**Priority:** Must Have
+**Description:** SweetClaude manages two context windows simultaneously: Claude's (the machine context window with token limits) and the human's (cognitive load, working memory, ability to hold details). Design decisions must account for both constraints. The human context window is managed through deference levels (FR-033), context continuity (FR-034), decision logs (FR-030), assumption registers (FR-031), re-orientation summaries, and proactive state recaps.
+**Acceptance Criteria:**
+- [ ] Machine context managed via: lazy loading, phase-scoped skills, lean CLAUDE.md, on-demand RAG
+- [ ] Human context managed via: deference levels, detour tracking, re-orientation, decision/assumption persistence, sub-step checkpoints
+- [ ] When presenting complex information, SweetClaude structures it for human comprehension (summaries first, details on request)
+- [ ] After any interruption or detour, SweetClaude recaps current state before continuing
+- [ ] Long sessions include periodic "here's where we are" summaries without being asked
+
 #### FR-029: Pre-Checkpoint Decision Summary
 **Priority:** Must Have
 **Description:** Before any phase transition commit, SweetClaude presents a bullet list of decisions made during the phase. User confirms. The confirmed list becomes the decision log entry.
@@ -486,14 +516,14 @@ Full pipeline.
 | EPIC-004 | Knowledge Layer | FR-014, FR-015, FR-016 | Must Have | 4-6 |
 | EPIC-005 | Quality & Verification | FR-017, FR-018, FR-019, FR-020 | Must Have | 6-8 |
 | EPIC-006 | Model Routing | FR-021 | Should Have | 2-3 |
-| EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032 | Must Have | 8-12 |
+| EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035 | Must Have | 12-16 |
 | EPIC-008 | Global Configuration | FR-023, FR-024 | Must Have | 3-4 |
 
 **Totals:**
-- Functional Requirements: 32 (21 Must, 9 Should, 2 Could)
+- Functional Requirements: 35 (24 Must, 9 Should, 2 Could)
 - Non-Functional Requirements: 8 (6 Must, 2 Should)
 - Epics: 8
-- Estimated Stories: 43-61
+- Estimated Stories: 49-67
 
 ---
 
@@ -501,7 +531,7 @@ Full pipeline.
 
 | Priority | FRs | NFRs | Total |
 |---|---|---|---|
-| Must Have | 21 | 6 | 27 |
+| Must Have | 24 | 6 | 30 |
 | Should Have | 9 | 2 | 11 |
 | Could Have | 2 | 0 | 2 |
 
