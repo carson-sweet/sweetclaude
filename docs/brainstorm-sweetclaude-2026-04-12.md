@@ -28,11 +28,11 @@
 **Why it matters:** Without explicit phases, Claude mixes concerns — starts coding during brainstorming, starts architecting during implementation. The pipeline prevents this.
 
 ### Insight 2: Gherkin Is the Bridge Between Worlds
-**Description:** The transition from product definition to development is the hardest handoff. Gherkin acceptance criteria (Given/When/Then) serve as the contract between BMAD's product phase and the TDD implementation phase. BMAD stories → Gherkin AC → `real-tdd` red tests → implementation. This is the core innovation of SweetClaude.
-**Source:** Mind mapping (Branch 2 → Branch 3 gap), SCAMPER (Combine)
+**Description:** The transition from product definition to development is the hardest handoff. Gherkin acceptance criteria (Given/When/Then) serve as the contract between BMAD's product phase and the TDD implementation phase. BMAD stories → Gherkin `.feature` files → isolated test writer agent → QA caucus → user approval → isolated implementer agent → verification. Research confirms this: AutoUAT + TestFlow studies show 95% of Gherkin acceptance tests rated helpful, 92% of generated test scripts rated helpful. Thoughtworks identified spec-driven development with Gherkin as a key 2025-2026 practice. LLMs can now execute Gherkin specs directly without glue code.
+**Source:** Mind mapping (Branch 2 → Branch 3 gap), SCAMPER (Combine), TDD Analysis research (arxiv.org AutoUAT, Thoughtworks)
 **Impact:** High
 **Effort:** Medium
-**Why it matters:** Without this bridge, product specs and code diverge. With it, every behavior is traceable from user need to passing test.
+**Why it matters:** Without this bridge, product specs and code diverge. With it, every behavior is traceable from user need to passing test. Research validates Gherkin as the emerging standard interchange format between product requirements and AI-generated tests.
 
 ### Insight 3: Two Repos, One Command
 **Description:** Every project needs two GitHub repos: the code repo (the product) and the SweetClaude working repo (embeddings, specs, brainstorm outputs, working documents). A single `sweetclaude init <project-name>` command creates both, sets up GitHub remotes, initializes RAG, scaffolds Notion, generates project CLAUDE.md from codebase discovery, and verifies the setup.
@@ -73,6 +73,34 @@
 **Effort:** Low
 **Why it matters:** Solo developer + long-running projects + Claude context limits = sessions will die. Recovery must be automatic, not manual.
 
+### Insight 8: Enforcement Beats Guidance — TDD Must Be Hook-Enforced
+**Description:** Research conclusively shows that advisory TDD instructions (CLAUDE.md, prompt text) are insufficient. Claude "sometimes listens, sometimes does its own thing." Martin Fowler coined "harness engineering" (April 2026) for this: deterministic enforcement via hooks is the proven approach. The MSR '26 study (1.2M commits, 2,168 repos) empirically confirmed that AI coding agents over-mock 95% of the time. NIST documented agents modifying tests, disabling assertions, and exploiting scoring loopholes. The countermeasure is a layered enforcement stack: PreToolUse hooks that physically block test file edits during implementation, git commit checkpoints on failing tests, PostToolUse hooks that auto-run tests after code changes, and optionally mutation testing to verify test quality.
+**Source:** TDD Analysis research (Fowler "harness engineering", MSR '26 over-mocking study, NIST benchmark gaming, TDD Guard, CircleCI test hooks)
+**Impact:** Critical
+**Effort:** Medium
+**Why it matters:** Without deterministic enforcement, TDD discipline degrades. This is the single highest-leverage improvement SweetClaude can make over all three existing approaches.
+
+### Insight 9: Context Isolation Is the AI TDD Breakthrough
+**Description:** Separating test-writing and implementation into different subagent contexts — where the test writer never sees implementation and the implementer never sees the user story — is the most effective AI TDD technique discovered. Research shows multi-agent TDD with separate contexts achieved 96.3% pass@1 on HumanEval (vs 67% single-agent), and test generation accuracy jumped from 61% to 87.8% when tests were written without knowledge of planned implementation. Anthropic itself calls TDD "the single strongest pattern for working with agentic coding tools."
+**Source:** TDD Analysis research (HumanEval multi-agent study, Anthropic blog, alexop.dev analysis)
+**Impact:** Critical
+**Effort:** Medium
+**Why it matters:** Single-context TDD allows the test writer's analysis to bleed into the implementer's thinking, undermining genuine test-first development. Context isolation is what makes AI TDD actually work.
+
+### Insight 10: No Existing TDD Tool Is Sufficient — SweetClaude Needs Its Own
+**Description:** Deep analysis of real-tdd, Superpowers TDD, and Don Cheli's TDD Documentation Suite reveals that none is sufficient alone. real-tdd has the right philosophy (subagent separation, test immutability, QA caucus) but is too rigid and hardcoded to TypeScript. Superpowers has the best language agnosticism but lacks subagent separation. Don Cheli has useful process levels (hotfix/spike/light/full) but zero AI-specific guardrails. SweetClaude TDD must be a new skill combining: real-tdd's philosophy + Superpowers' language agnosticism + Don Cheli's process levels + research-backed enforcement hooks.
+**Source:** TDD Analysis (full comparison document)
+**Impact:** Critical
+**Effort:** High
+**Why it matters:** TDD is the foundation of SweetClaude's development lifecycle. Getting it wrong undermines everything downstream.
+
+### Insight 11: Lightweight Traceability Over Knowledge Graphs
+**Description:** For a solo developer, a full knowledge graph (Neo4j) for artifact traceability is overkill. A structured markdown traceability file in the SweetClaude working repo — mapping requirements → Gherkin stories → tests → implementation — provides 80% of the value with zero infrastructure. The Gherkin bridge (Insight 2) combined with story-organized test files (Insight 10) creates a natural traceability chain without a separate database.
+**Source:** Brainstorm discussion, architecture evaluation
+**Impact:** Medium
+**Effort:** Low
+**Why it matters:** Avoids infrastructure complexity while maintaining the traceability chain from requirement to passing test.
+
 ---
 
 ## Capability Inventory: What Stays, What Goes, What's New
@@ -104,8 +132,8 @@
 - writing-skills
 - brainstorming (for quick technical brainstorming; BMAD for structured product brainstorming)
 
-### KEEP — Custom Skills
-- real-tdd (overrides Superpowers TDD)
+### KEEP (as input/inspiration) — Custom Skills
+- real-tdd — philosophy, subagent separation, QA caucus, test immutability (to be rebuilt as SweetClaude TDD)
 - fix-issue (end-to-end issue implementation)
 - pr-ready (pre-PR quality gate)
 - caucus (multi-expert deliberation)
@@ -126,15 +154,22 @@
 - Templates, scripts, locales
 
 ### NEW — To Build
+- **SweetClaude TDD skill** — New unified TDD skill combining real-tdd philosophy + Superpowers language agnosticism + process levels (hotfix/light/standard/full-from-Gherkin) + hook-based enforcement. See `/Users/carsonsweet/dev/sweetclaude/docs/tdd-analysis-v1-2026-04-12.md` for full architecture.
 - **`sweetclaude-init`** — Single-command project bootstrap (two repos, GitHub, Notion, RAG, CLAUDE.md generation)
 - **Phase-aware skill router** — Tracks current phase, surfaces relevant capabilities
-- **Gherkin bridge** — Formal transition from BMAD stories to real-tdd test cases
+- **Gherkin bridge** — Formal transition from BMAD stories to `.feature` files to isolated test writer agent
+- **Test file guardian hook** — PreToolUse hook that blocks ALL Write/Edit to test files during implementation phase. Highest-value single enforcement mechanism.
+- **Auto-test runner hook** — PostToolUse hook that runs relevant tests after any source file edit. Feeds failures back to agent immediately.
+- **Git checkpoint enforcement** — Auto-commit failing tests before implementation begins. `git diff` on test files during implementation = violation.
+- **TDD process level selector** — Skill that evaluates task complexity and recommends appropriate TDD level (0-3). User confirms.
 - **Security reviewer subagent** — Replaces Don Cheli's security-audit
 - **Workflow guardian subagent** — GitHub Actions security review
 - **Test runner subagent** — Isolated test execution with minimal output
+- **QA caucus subagent trio** — 3 parallel subagents that stress-test test plans (service/API expert, component expert, integration/cross-cutting expert)
 - **Auto-reindex hook** — RAG index stays fresh on file changes
 - **Lean global CLAUDE.md** — 60-80 lines, universal rules only
 - **Project CLAUDE.md generator** — Created during init from codebase discovery
+- **Traceability tracker** — Structured markdown in working repo mapping requirements → Gherkin → tests → implementation
 
 ---
 
@@ -144,11 +179,28 @@
 Phase 1: DISCOVER     → Brainstorm, Research, Caucus, Reasoning Frameworks
 Phase 2: DEFINE       → Product Brief, PRD, Competitive Analysis
 Phase 3: DESIGN       → Tech Spec, UX Design, Architecture, Solutioning Gate
-Phase 4: PLAN         → Stories (with Gherkin AC), Sprint Planning, Backlog
-Phase 5: IMPLEMENT    → real-tdd, fix-issue, Worktrees, Parallel Agents, Debugging
-Phase 6: VERIFY       → Code Review, Security Review, PR-Ready, Verification
+Phase 4: PLAN         → Stories → Gherkin .feature files, Sprint Planning, Backlog
+Phase 5: IMPLEMENT    → SweetClaude TDD (level 0-3), fix-issue, Worktrees, Parallel Agents, Debugging
+                         TDD enforcement: test file guardian hook, auto-test runner hook, git checkpoints
+                         Context isolation: test writer agent ≠ implementer agent
+Phase 6: VERIFY       → Code Review, Security Review, PR-Ready, Verification, Mutation Testing (optional)
 Phase 7: SHIP         → Branch Finishing, CI/CD Gates, Deploy
-Phase 8: MAINTAIN     → Backlog Management, Document Reconciliation, RAG Updates
+Phase 8: MAINTAIN     → Backlog Management, Document Reconciliation, RAG Updates, Traceability Updates
+```
+
+**Phase 4→5 transition (the Gherkin bridge):**
+```
+BMAD Stories → Gherkin .feature files → Test Writer Agent (isolated) →
+QA Caucus (3 subagents) → User Approval → Tests committed to git →
+Implementer Agent (isolated, tests READ ONLY) → GREEN → Refactor
+```
+
+**TDD process levels (Phase 5):**
+```
+Level 0: HOTFIX    — Fix first, test in same session. No grace period.
+Level 1: LIGHT     — Simple CRUD. Single-context RED-GREEN-REFACTOR.
+Level 2: STANDARD  — Features/bugs. Subagent separation. Tests committed before impl.
+Level 3: FULL      — From Gherkin. Full pipeline with QA caucus + mutation testing.
 ```
 
 Each phase has:
@@ -156,15 +208,16 @@ Each phase has:
 - Available skills/workflows for that phase
 - Exit criteria (required outputs produced)
 - Checkpoint (commit to SweetClaude working repo)
+- Enforcement hooks active for that phase
 
 ---
 
 ## Statistics
 - Total capabilities mapped: 65+
 - Categories: 5 major branches
-- Key insights: 7
-- Techniques applied: 3
-- Sources analyzed: 4 (Superpowers, BMAD, Don Cheli, Custom Skills)
+- Key insights: 11 (7 from initial brainstorm + 4 from TDD analysis)
+- Techniques applied: 3 (Mind Mapping, SCAMPER, Reverse Brainstorming) + deep research
+- Sources analyzed: 4 systems (Superpowers, BMAD, Don Cheli, Custom Skills) + web research (MSR '26, Anthropic, Fowler, NIST, DORA, multiple practitioner reports)
 
 ## Recommended Next Steps
 
