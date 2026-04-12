@@ -206,9 +206,9 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 
 ## Supporting Documents
 
-- Brainstorm: `/Users/carsonsweet/dev/sweetclaude/docs/brainstorm-sweetclaude-2026-04-12.md`
-- TDD Analysis: `/Users/carsonsweet/dev/sweetclaude/docs/tdd-analysis-v1-2026-04-12.md`
-- Environment Audit: `/Users/carsonsweet/dev/sweetclaude/audit/2026-04-08-environment-audit.md`
+- Brainstorm: `docs/brainstorm-sweetclaude-2026-04-12.md`
+- TDD Analysis: `docs/tdd-analysis-v1-2026-04-12.md`
+- Environment Audit: `audit/2026-04-08-environment-audit.md`
 
 ---
 

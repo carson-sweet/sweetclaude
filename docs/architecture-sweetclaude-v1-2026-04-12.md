@@ -2,8 +2,8 @@
 
 **Author:** Carson Sweet
 **Status:** Draft
-**PRD:** `/Users/carsonsweet/dev/sweetclaude/docs/prd-sweetclaude-v1-2026-04-12.md`
-**Product Brief:** `/Users/carsonsweet/dev/sweetclaude/docs/product-brief-sweetclaude-v1-2026-04-12.md`
+**PRD:** `docs/prd-sweetclaude-v1-2026-04-12.md`
+**Product Brief:** `docs/product-brief-sweetclaude-v1-2026-04-12.md`
 
 ---
 
@@ -613,10 +613,10 @@ Features that require more infrastructure, testing, or dependency management.
 
 ## Supporting Documents
 
-- PRD: `/Users/carsonsweet/dev/sweetclaude/docs/prd-sweetclaude-v1-2026-04-12.md`
-- Product Brief: `/Users/carsonsweet/dev/sweetclaude/docs/product-brief-sweetclaude-v1-2026-04-12.md`
-- Brainstorm: `/Users/carsonsweet/dev/sweetclaude/docs/brainstorm-sweetclaude-2026-04-12.md`
-- TDD Analysis: `/Users/carsonsweet/dev/sweetclaude/docs/tdd-analysis-v1-2026-04-12.md`
+- PRD: `docs/prd-sweetclaude-v1-2026-04-12.md`
+- Product Brief: `docs/product-brief-sweetclaude-v1-2026-04-12.md`
+- Brainstorm: `docs/brainstorm-sweetclaude-2026-04-12.md`
+- TDD Analysis: `docs/tdd-analysis-v1-2026-04-12.md`
 
 ---
 

@@ -2,9 +2,9 @@
 
 **Author:** Carson Sweet
 **Status:** Draft
-**Product Brief:** `/Users/carsonsweet/dev/sweetclaude/docs/product-brief-sweetclaude-v1-2026-04-12.md`
-**Brainstorm:** `/Users/carsonsweet/dev/sweetclaude/docs/brainstorm-sweetclaude-2026-04-12.md`
-**TDD Analysis:** `/Users/carsonsweet/dev/sweetclaude/docs/tdd-analysis-v1-2026-04-12.md`
+**Product Brief:** `docs/product-brief-sweetclaude-v1-2026-04-12.md`
+**Brainstorm:** `docs/brainstorm-sweetclaude-2026-04-12.md`
+**TDD Analysis:** `docs/tdd-analysis-v1-2026-04-12.md`
 
 ---
 
@@ -608,10 +608,10 @@ Full pipeline.
 
 ## Supporting Documents
 
-- Product Brief: `/Users/carsonsweet/dev/sweetclaude/docs/product-brief-sweetclaude-v1-2026-04-12.md`
-- Brainstorm: `/Users/carsonsweet/dev/sweetclaude/docs/brainstorm-sweetclaude-2026-04-12.md`
-- TDD Analysis: `/Users/carsonsweet/dev/sweetclaude/docs/tdd-analysis-v1-2026-04-12.md`
-- Environment Audit: `/Users/carsonsweet/dev/sweetclaude/audit/2026-04-08-environment-audit.md`
+- Product Brief: `docs/product-brief-sweetclaude-v1-2026-04-12.md`
+- Brainstorm: `docs/brainstorm-sweetclaude-2026-04-12.md`
+- TDD Analysis: `docs/tdd-analysis-v1-2026-04-12.md`
+- Environment Audit: `audit/2026-04-08-environment-audit.md`
 
 ---
 

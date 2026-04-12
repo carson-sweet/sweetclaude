@@ -189,7 +189,7 @@
 - Templates, scripts, locales
 
 ### NEW — To Build
-- **SweetClaude TDD skill** — New unified TDD skill combining real-tdd philosophy + Superpowers language agnosticism + process levels (hotfix/light/standard/full-from-Gherkin) + hook-based enforcement. See `/Users/carsonsweet/dev/sweetclaude/docs/tdd-analysis-v1-2026-04-12.md` for full architecture.
+- **SweetClaude TDD skill** — New unified TDD skill combining real-tdd philosophy + Superpowers language agnosticism + process levels (hotfix/light/standard/full-from-Gherkin) + hook-based enforcement. See `docs/tdd-analysis-v1-2026-04-12.md` for full architecture.
 - **`sweetclaude-init`** — Single-command project bootstrap (two repos, GitHub, Notion, RAG, CLAUDE.md generation)
 - **Phase-aware skill router** — Tracks current phase, surfaces relevant capabilities
 - **Gherkin bridge** — Formal transition from BMAD stories to `.feature` files to isolated test writer agent

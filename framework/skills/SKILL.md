@@ -58,7 +58,7 @@ Never push for phase transition. The user decides when to advance.
 
 ## Interaction Rules
 
-Follow `/Users/carsonsweet/.claude/rules/sweetclaude/interaction-model.md` at all times:
+Follow `~/.claude/rules/sweetclaude/interaction-model.md` at all times:
 - Phase dwelling — never push advancement
 - Propose and challenge — don't just ask questions
 - Adaptive flow — follow the user's lead
