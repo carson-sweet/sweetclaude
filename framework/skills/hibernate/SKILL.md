@@ -3,6 +3,10 @@ name: sweetclaude-hibernate
 description: "Use when hibernating or unhibernating a project managed by SweetClaude. Extends hibernate-project with SweetClaude phase state, deference level, and improvement register handling. Triggers on 'hibernate', 'freeze', 'shelve', 'thaw', 'unhibernate', or presence of HIBERNATION.md."
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # SweetClaude Hibernate
 
 Extends `hibernate-project` with SweetClaude-specific state management. Invoke `hibernate-project` for the core process.

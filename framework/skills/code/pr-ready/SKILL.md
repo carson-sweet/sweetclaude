@@ -3,6 +3,10 @@ name: sweetclaude-code-pr-ready
 description: Final pre-PR quality gate. Verify tests pass, fill PR template, check for secrets and debug code, ensure acceptance criteria are met, update traceability. Use before opening any PR.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # PR Ready
 
 Prepare PR for the current branch.

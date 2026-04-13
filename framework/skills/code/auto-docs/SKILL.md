@@ -3,6 +3,10 @@ name: sweetclaude-code-auto-docs
 description: Automatically update documentation when implementation changes behavior. Runs during Verify phase. Detects which docs reference changed behavior, proposes updates for user approval.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Auto-Documentation Updates
 
 When implementation changes behavior, identify and update affected documentation.

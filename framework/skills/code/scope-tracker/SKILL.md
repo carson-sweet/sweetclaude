@@ -3,6 +3,10 @@ name: sweetclaude-code-scope-tracker
 description: Track scope changes when items move between in-scope and out-of-scope. Logs the change with rationale and date. Use when scope decisions are made during any phase.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Scope Change Tracker
 
 Log a scope change for: $ARGUMENTS

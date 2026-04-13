@@ -3,6 +3,10 @@ name: sweetclaude-strategy-reconciliation
 description: "Onboard unstructured files into the strategy/ system. Inventory, categorize, version, and optionally synthesize canonical-draft documents from source materials. Use when starting a new strategy project with existing files, or when new files need to be incorporated into an organized corpus."
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Strategy File Reconciliation
 
 Onboard unstructured files into `strategy/`, organize them, and optionally synthesize canonical-draft documents.

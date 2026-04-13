@@ -3,6 +3,10 @@ name: sweetclaude-work-router
 description: "Identify the type of work (code or strategy), classify the specific work type, and route to the correct pipeline entry point and skill track. Use at the start of any new work item. Prevents non-technical items from landing in docs/backlog/."
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Work-Type Router
 
 Determine what kind of work we're doing, which track it belongs to, and enter the pipeline at the right phase.

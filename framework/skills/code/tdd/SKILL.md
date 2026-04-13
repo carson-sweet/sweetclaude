@@ -3,6 +3,10 @@ name: sweetclaude-code-tdd
 description: SweetClaude TDD — unified test-driven development with four process levels, language-agnostic, hook-enforced. Tests first, from specs, immutable during implementation. Use for ALL implementation work.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # SweetClaude TDD
 
 Tests specify behavior. Implementation satisfies tests. Hooks enforce this. No exceptions.

@@ -3,6 +3,10 @@ name: sweetclaude-strategy-academic
 description: "Academic paper development — from first principles through submission. Six-phase pipeline: first principles, literature & positioning, structure & venue, modular drafting, review & revision, submission. Adapted from lishix520/academic-paper-skills (MIT). Use when writing research papers, position papers, or academic publications."
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Academic Paper Development
 
 Six-phase pipeline from first principles to submission. Each phase has quality gates that must pass before advancing. User controls pacing — never push for phase advancement.
