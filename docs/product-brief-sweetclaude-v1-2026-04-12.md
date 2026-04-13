@@ -41,6 +41,11 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 
 **Core features:**
 - Phase-gated pipeline (Discover → Define → Design → Plan → Implement → Verify → Ship) with entry/exit criteria and enforcement
+- Structured Discover phase for net-new products:
+  - Persona-driven discovery — iterative interview defining user personas with job titles, tasks, and success criteria; continues until all personas and use cases are captured
+  - Feature brainstorming — SweetClaude proposes features one at a time (batches of 10) for user to include or exclude; iterates until user is satisfied
+  - Competitive analysis — optional research of competing projects, technologies, and open-source alternatives with synopsis; can drill into individual competitors or generate a "table stakes" feature set from the landscape
+  - Scales to work type — full persona/competitive workflow for products and apps; lighter treatment for CLIs, libraries, and utilities
 - Work-type routing — SweetClaude identifies the type of work (net-new feature, bug fix, feature enhancement, iteration) and enters the pipeline at the appropriate phase:
   - Net-new features: full pipeline from Discover
   - Bug fixes, enhancements, iterations: enter at Define, escalate to Discover if deeper issues surface
@@ -65,7 +70,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - Dual context window management — manages Claude's token limits AND the human's cognitive load simultaneously; machine context via lazy loading, human context via deference levels, re-orientation, and persistent logs
 - Deference levels — user-declared autonomy setting (Collaborative/Guided/Autonomous) governing checkpoint frequency, changeable mid-stream
 - Phase dwelling — system stays present in current phase, never pushes advancement; user decides when to move on
-- Continuous improvement register — per-project log of what's working and what's not in the collaboration itself; read by future sessions
+- Continuous improvement register — per-project log of what's working and what's not in the collaboration itself; read by future sessions. Check-ins triggered at concrete milestones (phase transitions, after friction, after smooth stretches), not left to chance
 
 **Value proposition:** Stop assembling a Frankenstein of plugins. Start a project, tell SweetClaude what you're building, and it walks with you through every phase — doing the grind work for you with the right tools, enforced discipline, and full traceability — concept to deployed, tested code. It thinks with you, not for you, but remains creative and will challenge your ideas — in a healthy, productive way.
 

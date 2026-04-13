@@ -409,14 +409,17 @@ Full pipeline.
 
 #### FR-036: Continuous Improvement Register
 **Priority:** Must Have
-**Description:** Per-project register that captures what's working and what's not in the human-AI collaboration itself — not project decisions, but interaction quality. Populated after friction moments ("we just had a misalignment, here's what I'd do differently"), after smooth stretches ("what specifically worked?"), and periodically ("anything bugging you that you haven't mentioned?"). Lives in working repo, read by future sessions.
+**Description:** Per-project register that captures what's working and what's not in the human-AI collaboration itself — not project decisions, but interaction quality. Populated at concrete milestones, not left to chance. Lives in working repo, read by future sessions.
 **Acceptance Criteria:**
 - [ ] Stored in working repo (per-project, not global)
 - [ ] Captures both corrections AND confirmations (what works, not just what failed)
-- [ ] After friction: SweetClaude proposes what happened and what to change, saves on user confirmation
-- [ ] After smooth stretches: SweetClaude asks what worked, saves the answer
-- [ ] Periodic check-in: "anything about how I'm operating that's bugging you?"
+- [ ] **Mandatory trigger: every phase transition.** Before advancing, ask: "Before we move on — anything about how this phase went that I should do differently going forward?"
+- [ ] **Mandatory trigger: after code review.** The Verify phase includes the largest feedback surface — always check in after review findings are addressed
+- [ ] **Friction trigger:** After user corrections, misalignment, or frustration, SweetClaude proposes what happened and what to change, saves on user confirmation
+- [ ] **Success trigger:** After smooth stretches or user compliments, ask what specifically worked
+- [ ] **Session-start trigger:** If improvement register has entries, acknowledge them and confirm they still apply
 - [ ] Future sessions read the register and adjust behavior
+- [ ] Register must never be empty after a project completes Implement phase — if it is, the triggers weren't firing
 
 #### FR-037: Phase Dwelling
 **Priority:** Must Have
@@ -448,6 +451,56 @@ Full pipeline.
 - [ ] Superpowers skills invocable during Implement/Verify/Ship phases
 - [ ] No conflicts between SweetClaude hooks and upstream plugin hooks
 - [ ] Graceful behavior if either plugin is not installed (warn, don't crash)
+
+---
+
+### EPIC-009: Structured Discover Phase
+
+#### FR-038: Persona-Driven Discovery
+**Priority:** Must Have
+**Description:** During Discover for net-new products/apps, SweetClaude conducts an iterative persona interview. For each persona: job title, tasks they need to complete, and success criteria for each task. After each persona is defined, asks "Are there additional user personas?" and repeats until all personas are captured. Then presents all personas and tasks in a single consolidated view for user verification.
+**Acceptance Criteria:**
+- [ ] Each persona has: name/label, job title or role, list of tasks, success criteria per task
+- [ ] Iterative loop continues until user signals all personas are defined
+- [ ] Consolidated view presents all personas with their tasks in one list, separated by persona
+- [ ] User confirms or edits the consolidated view before proceeding
+- [ ] Scales down for non-product work types (CLIs, libraries) — lighter persona treatment
+**Dependencies:** FR-004
+
+#### FR-039: Iterative Feature Brainstorming
+**Priority:** Must Have
+**Description:** After personas and tasks are confirmed, SweetClaude asks if the user wants to brainstorm additional features and capabilities. If yes, proposes features one at a time for the user to include or exclude. Capped at 10 features per batch. User can request additional batches. Iterates until user is satisfied.
+**Acceptance Criteria:**
+- [ ] Triggered only after persona/task consolidation is confirmed
+- [ ] Features presented one at a time with rationale (not batched)
+- [ ] User includes or excludes each feature explicitly
+- [ ] Maximum 10 features per batch; user informed of the cap
+- [ ] User can request additional batches of 10
+- [ ] Iteration ends when user signals satisfaction
+- [ ] Included features are added to the working feature set for the product brief
+**Dependencies:** FR-038
+
+#### FR-040: Competitive Analysis
+**Priority:** Should Have
+**Description:** After feature brainstorming, SweetClaude offers to perform competitive research. Searches for competing projects, technologies, open-source alternatives on GitHub, product launch sites, and the web. Presents a list with ~25-word synopsis per competitor. User can drill into specific competitors for detailed analysis, or request a "table stakes" feature set derived from the competitive landscape.
+**Acceptance Criteria:**
+- [ ] Offered as optional step after feature brainstorming
+- [ ] Searches web, GitHub, product launch sites for similar applications/categories
+- [ ] Each competitor presented with name, URL, and ~25-word synopsis
+- [ ] "Nothing found" path handled gracefully — does not force user through empty exercise
+- [ ] User can select individual competitors for deeper analysis
+- [ ] User can request "table stakes" analysis across all competitors (common feature set)
+- [ ] Table stakes features presented for user to include/exclude from product scope
+**Dependencies:** FR-039
+
+#### FR-041: Discover Phase Scales to Work Type
+**Priority:** Must Have
+**Description:** The structured Discover workflow (personas, brainstorming, competitive analysis) is designed for net-new products and apps. For CLIs, libraries, utilities, and smaller work, the workflow scales down — lighter persona treatment, optional brainstorming, competitive analysis only if relevant. The master skill detects work type and adjusts Discover depth accordingly.
+**Acceptance Criteria:**
+- [ ] Products/apps: full persona + brainstorming + competitive workflow
+- [ ] CLIs/libraries: simplified persona (primary user only), skip brainstorming unless user requests
+- [ ] Utilities/scripts: minimal Discover — concept articulation and scope boundary only
+- [ ] User can always request the full workflow regardless of detected work type
 
 ---
 
@@ -529,22 +582,22 @@ Full pipeline.
 
 ## Epics & Traceability Matrix
 
-| Epic ID | Epic Name | FRs | Priority | Story Estimate |
-|---|---|---|---|---|
-| EPIC-001 | Project Bootstrap | FR-001, FR-002, FR-003 | Must Have | 4-6 |
-| EPIC-002 | Phase Pipeline & Work-Type Routing | FR-004, FR-005, FR-006, FR-025, FR-026 | Must Have | 6-8 |
-| EPIC-003 | TDD Enforcement | FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013 | Must Have | 10-14 |
-| EPIC-004 | Knowledge Layer | FR-014, FR-015, FR-016 | Must Have | 4-6 |
-| EPIC-005 | Quality & Verification | FR-017, FR-018, FR-019, FR-020 | Must Have | 6-8 |
-| EPIC-006 | Model Routing | FR-021 | Should Have | 2-3 |
-| EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037 | Must Have | 14-18 |
-| EPIC-008 | Global Configuration | FR-023, FR-024 | Must Have | 3-4 |
+| Epic ID | Epic Name | FRs | Priority |
+|---|---|---|---|
+| EPIC-001 | Project Bootstrap | FR-001, FR-002, FR-003 | Must Have |
+| EPIC-002 | Phase Pipeline & Work-Type Routing | FR-004, FR-005, FR-006, FR-025, FR-026 | Must Have |
+| EPIC-003 | TDD Enforcement | FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013 | Must Have |
+| EPIC-004 | Knowledge Layer | FR-014, FR-015, FR-016 | Must Have |
+| EPIC-005 | Quality & Verification | FR-017, FR-018, FR-019, FR-020 | Must Have |
+| EPIC-006 | Model Routing | FR-021 | Should Have |
+| EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037 | Must Have |
+| EPIC-008 | Global Configuration | FR-023, FR-024 | Must Have |
+| EPIC-009 | Structured Discover Phase | FR-038, FR-039, FR-040, FR-041 | Must Have |
 
 **Totals:**
-- Functional Requirements: 37 (26 Must, 9 Should, 2 Could)
+- Functional Requirements: 41 (29 Must, 10 Should, 2 Could)
 - Non-Functional Requirements: 8 (6 Must, 2 Should)
-- Epics: 8
-- Estimated Stories: 53-71
+- Epics: 9
 
 ---
 
@@ -552,8 +605,8 @@ Full pipeline.
 
 | Priority | FRs | NFRs | Total |
 |---|---|---|---|
-| Must Have | 26 | 6 | 32 |
-| Should Have | 9 | 2 | 11 |
+| Must Have | 29 | 6 | 35 |
+| Should Have | 10 | 2 | 12 |
 | Could Have | 2 | 0 | 2 |
 
 ---

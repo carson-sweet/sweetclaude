@@ -297,7 +297,22 @@ These ten constraints shape every design decision:
 **FRs addressed:** FR-017, FR-018 (doc update aspect)
 **Loads:** At start of Implement phase for existing codebases; on demand for document changes
 
-### Component 10: Subagent Suite
+### Component 10: Structured Discover Skill
+**Purpose:** Structured discovery workflow for net-new products and apps. Replaces freeform brainstorming with a persona-driven interview that produces concrete user definitions, vetted feature sets, and optional competitive analysis.
+**Responsibilities:**
+- Conduct iterative persona interviews: for each persona, capture job title, tasks, success criteria per task
+- Loop until user signals all personas are defined
+- Present consolidated persona/task view for user verification
+- Offer feature brainstorming: propose features one at a time (batches of 10), user includes/excludes each
+- Support multiple brainstorming batches until user is satisfied
+- Offer optional competitive analysis: search for competing projects, technologies, open-source alternatives
+- Present competitors with ~25-word synopsis; offer drill-down or "table stakes" feature extraction
+- Handle "nothing found" gracefully for novel/niche projects
+- Scale to work type: full workflow for products/apps, lighter for CLIs/libraries, minimal for utilities/scripts
+**FRs addressed:** FR-038, FR-039, FR-040, FR-041
+**Loads:** During Discover phase for net-new work types
+
+### Component 11: Subagent Suite
 **Purpose:** Isolated agents for specific tasks requiring context separation.
 **Agents:**
 
@@ -315,7 +330,7 @@ These ten constraints shape every design decision:
 **FRs addressed:** FR-007 (Level 2-3), FR-012, FR-019, FR-020
 **Loads:** On demand per TDD level and phase
 
-### Component 11: Working Repo State Manager
+### Component 12: Working Repo State Manager
 **Purpose:** Manages all persistent state in the working repo.
 **Responsibilities:**
 - Read/write `state/phase.yaml`
@@ -328,7 +343,7 @@ These ten constraints shape every design decision:
 **FRs addressed:** FR-016, FR-029, FR-030, FR-031, FR-032, FR-036
 **Loads:** Always (lightweight — reads YAML/MD, no heavy processing)
 
-### Component 12: Interaction Model Rules
+### Component 13: Interaction Model Rules
 **Purpose:** Behavioral guidance for creative partnership, encoded as rules and skill preambles.
 **Responsibilities:**
 - Propose-and-challenge mode (default interaction pattern)
@@ -493,6 +508,7 @@ Core pipeline, enforcement hooks, and project scaffolding.
 | Ripple-Effect | Skill | `skills/sweetclaude/ripple/SKILL.md` |
 | Fix-Issue | Skill | `skills/sweetclaude/fix-issue/SKILL.md` |
 | PR-Ready | Skill | `skills/sweetclaude/pr-ready/SKILL.md` |
+| Discover Deep | Skill | `skills/sweetclaude/discover-deep/SKILL.md` |
 | Test Guardian | Hook | `hooks/sweetclaude/test-guardian.sh` |
 | Auto-Test Runner | Hook | `hooks/sweetclaude/auto-test-runner.sh` |
 | Git Checkpoint | Hook | `hooks/sweetclaude/git-checkpoint.sh` |
@@ -606,8 +622,12 @@ Features that require more infrastructure, testing, or dependency management.
 | FR-033 | Master Skill + Defaults Config (deference level) | 2 |
 | FR-034 | Interaction Model Rules (detour management) | 2 |
 | FR-035 | Interaction Model Rules (dual context) | 2 |
-| FR-036 | Working Repo State Manager (improvement register) | 2 |
+| FR-036 | Working Repo State Manager (improvement register) + Interaction Model Rules (triggers) | 2 |
 | FR-037 | Interaction Model Rules (phase dwelling) | 2 |
+| FR-038 | Discover Deep Skill (persona discovery) | 1 |
+| FR-039 | Discover Deep Skill (feature brainstorming) | 1 |
+| FR-040 | Discover Deep Skill (competitive analysis) | 1 |
+| FR-041 | Discover Deep Skill + Master Skill (work-type scaling) | 1 |
 
 ---
 

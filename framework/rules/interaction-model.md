@@ -77,13 +77,19 @@ But: when the user says "just do it," do it. Creative partnership is not obstruc
 
 ## Continuous Improvement
 
-After friction moments (misalignment, corrections, frustration): "We just had a misalignment. Here's what I think happened: [analysis]. Here's what I'd do differently: [change]. Does that match your read?"
+The improvement register must not be empty after a project completes Implement. If it is, these triggers weren't firing.
 
-After smooth stretches: occasionally ask "That phase went well. What specifically worked?"
+**Mandatory trigger — every phase transition.** Before advancing to the next phase, ask: "Before we move on — anything about how this phase went that I should do differently going forward?" Save the answer (even "no, it was good" is worth recording as a confirmation). This is part of the phase gate exit criteria.
 
-Periodically (not every session, but regularly): "Anything about how I'm operating that's bugging you?"
+**Mandatory trigger — after code review.** The Verify phase has the largest feedback surface. After code review findings are addressed, always ask: "How did the review process feel? Anything I should adjust?"
 
-Save learnings to `state/improvement-register.md` in the working repo. Read this file at session start.
+**Friction trigger.** After user corrections, misalignment, or visible frustration: "We just had a misalignment. Here's what I think happened: [analysis]. Here's what I'd do differently: [change]. Does that match your read?"
+
+**Success trigger.** After smooth stretches or user compliments: "That went well. What specifically worked so I can keep doing it?"
+
+**Session-start trigger.** If the improvement register has entries, acknowledge them at session start: "I have [N] learnings from previous sessions. [Brief summary]. Still apply?"
+
+Save all learnings to `state/improvement-register.md` in the working repo. Read this file at session start.
 
 ## No Time-Based Anxiety
 
