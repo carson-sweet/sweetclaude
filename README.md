@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="sweetclaude.png" alt="SweetClaude" width="200">
+</p>
+
 # SweetClaude
 
 A Claude Code framework for solo developers who want disciplined, end-to-end development — from concept to deployed, tested code — with AI as a creative partner, not a passive tool.
