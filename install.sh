@@ -19,21 +19,97 @@ echo ""
 echo "Checking prerequisites..."
 
 PREREQ_OK=true
+PREREQ_WARN=false
 
+# --- Helper: compare semver (returns 0 if $1 >= $2) ---
+version_gte() {
+  [ "$(printf '%s\n' "$2" "$1" | sort -V | head -n1)" = "$2" ]
+}
+
+# Core tools
 if ! command -v claude &> /dev/null; then
   echo "  ERROR: Claude Code CLI not found."
-  echo "         Install: https://claude.ai/code"
+  echo "         Install: https://docs.anthropic.com/en/docs/claude-code/getting-started"
   PREREQ_OK=false
+else
+  CLAUDE_VER=$(claude --version 2>/dev/null | head -1)
+  echo "  Claude Code CLI: $CLAUDE_VER"
 fi
 
 if ! command -v git &> /dev/null; then
   echo "  ERROR: git not found."
+  echo "         Install: https://git-scm.com/downloads"
   PREREQ_OK=false
+else
+  GIT_VER=$(git --version 2>/dev/null)
+  echo "  $GIT_VER"
 fi
 
 if ! command -v gh &> /dev/null; then
   echo "  WARNING: GitHub CLI (gh) not found. sweetclaude init requires it."
   echo "           Install: https://cli.github.com/"
+  PREREQ_WARN=true
+else
+  GH_VER=$(gh --version 2>/dev/null | head -1)
+  echo "  $GH_VER"
+fi
+
+# Superpowers plugin
+SP_MIN="5.0.1"
+SP_REC="5.0.7"
+PLUGINS_JSON="$CLAUDE_DIR/plugins/installed_plugins.json"
+SP_VERSION=""
+
+if [ -f "$PLUGINS_JSON" ]; then
+  # Extract version from installed_plugins.json
+  SP_VERSION=$(grep -A5 '"superpowers@' "$PLUGINS_JSON" 2>/dev/null | grep '"version"' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
+fi
+
+if [ -z "$SP_VERSION" ] || [ "$SP_VERSION" = "unknown" ]; then
+  echo "  ERROR: Superpowers plugin not found."
+  echo "         Install in Claude Code: /install superpowers"
+  echo "         Minimum: $SP_MIN  Recommended: $SP_REC"
+  PREREQ_OK=false
+else
+  echo "  Superpowers: v$SP_VERSION"
+  if ! version_gte "$SP_VERSION" "$SP_MIN"; then
+    echo "  ERROR: Superpowers $SP_VERSION is below minimum ($SP_MIN)."
+    echo "         Update in Claude Code: /install superpowers"
+    PREREQ_OK=false
+  elif ! version_gte "$SP_VERSION" "$SP_REC"; then
+    echo "  WARNING: Superpowers $SP_VERSION is older than recommended ($SP_REC)."
+    echo "           Consider updating: /install superpowers"
+    PREREQ_WARN=true
+  fi
+fi
+
+# BMAD Method
+BMAD_MIN="6.0.0"
+BMAD_VERSION=""
+
+if [ -f "$CLAUDE_DIR/config/bmad/config.yaml" ]; then
+  BMAD_VERSION=$(grep '^version:' "$CLAUDE_DIR/config/bmad/config.yaml" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/')
+fi
+
+if [ -z "$BMAD_VERSION" ]; then
+  # Fallback: check if skill files exist at all
+  if [ -d "$CLAUDE_DIR/skills/bmad" ]; then
+    echo "  WARNING: BMAD skills found but version unknown. Expecting $BMAD_MIN+."
+    echo "           Check: https://github.com/bmad-code-org/BMAD-METHOD"
+    PREREQ_WARN=true
+  else
+    echo "  ERROR: BMAD Method not found."
+    echo "         Install: https://github.com/bmad-code-org/BMAD-METHOD#installation"
+    echo "         Minimum: $BMAD_MIN"
+    PREREQ_OK=false
+  fi
+else
+  echo "  BMAD Method: v$BMAD_VERSION"
+  if ! version_gte "$BMAD_VERSION" "$BMAD_MIN"; then
+    echo "  ERROR: BMAD $BMAD_VERSION is below minimum ($BMAD_MIN)."
+    echo "         Update: https://github.com/bmad-code-org/BMAD-METHOD#installation"
+    PREREQ_OK=false
+  fi
 fi
 
 if [ "$PREREQ_OK" = false ]; then
@@ -42,7 +118,12 @@ if [ "$PREREQ_OK" = false ]; then
   exit 1
 fi
 
-echo "  Prerequisites OK."
+if [ "$PREREQ_WARN" = true ]; then
+  echo ""
+  echo "  Warnings above are non-blocking. Continuing..."
+else
+  echo "  All prerequisites OK."
+fi
 echo ""
 
 # --- Conflict Scan ---
