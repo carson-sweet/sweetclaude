@@ -109,7 +109,7 @@
 **Why it matters:** Optimizing only for Claude's context window ignores half the problem. A system that's efficient for the machine but overwhelming for the human fails at partnership.
 
 ### Insight 13: Deference Levels — A Dial, Not a Switch
-**Description:** User-declared autonomy setting governing how frequently SweetClaude stops for approval. Level 1 (Collaborative) stops after every sub-step. Level 2 (Guided) stops at phase gates and major decisions. Level 3 (Autonomous) stops only at phase gates. Changeable mid-stream — early phases may need Level 1, later phases Level 3.
+**Description:** User-declared autonomy setting governing how frequently SweetClaude stops for approval. Collaborative stops after every sub-step. Guided stops at phase gates and major decisions. Autonomous stops only at phase gates. Changeable mid-stream — early phases may need Collaborative, later phases Autonomous.
 **Source:** Architecture session — Claude kept jumping ahead without approval, user corrected.
 **Impact:** High
 **Effort:** Low

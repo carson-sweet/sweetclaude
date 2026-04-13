@@ -1,9 +1,9 @@
 # SweetClaude Defaults
 # User-configurable defaults for SweetClaude behavior.
 
-# Deference level at session start (1=collaborative, 2=guided, 3=autonomous)
+# Deference level at session start: collaborative, guided, or autonomous
 # User is asked at session start and can change mid-stream.
-default_deference_level: 1
+default_deference_level: collaborative
 
 # Default TDD level for work types
 default_tdd_levels:

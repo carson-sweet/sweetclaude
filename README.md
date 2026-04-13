@@ -137,9 +137,9 @@ SweetClaude detects the project, asks your deference level, and you're working.
 
 At session start, SweetClaude asks how collaborative you want it to be:
 
-- **Level 1 — Collaborative:** Stops after every sub-step. Best for early phases.
-- **Level 2 — Guided:** Stops at phase gates and major decisions. Best for mid-project.
-- **Level 3 — Autonomous:** Stops only at phase gates. Best for implementation.
+- **Collaborative:** Stops after every sub-step. Best for early phases.
+- **Guided:** Stops at phase gates and major decisions. Best for mid-project.
+- **Autonomous:** Stops only at phase gates. Best for implementation.
 
 Change mid-stream anytime.
 

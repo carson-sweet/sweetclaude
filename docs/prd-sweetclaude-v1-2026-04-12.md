@@ -345,7 +345,7 @@ Full pipeline.
 **Priority:** Must Have
 **Description:** At session start, SweetClaude asks the user how autonomous vs. collaborative it should be. This governs checkpoint frequency across all skills, phases, and sub-steps. User can change the level mid-stream.
 **Acceptance Criteria:**
-- [ ] Three levels: Level 1 (Collaborative — stop after every sub-step), Level 2 (Guided — stop at phase gates and major decisions), Level 3 (Autonomous — stop only at phase gates)
+- [ ] Three levels: Collaborative (stop after every sub-step), Guided (stop at phase gates and major decisions), Autonomous (stop only at phase gates)
 - [ ] Asked at session start
 - [ ] User can change level mid-stream with immediate effect
 - [ ] Level persisted to working repo for session recovery
@@ -425,7 +425,7 @@ Full pipeline.
 - [ ] No unprompted "shall we move on?" or "is this complete?" prompts
 - [ ] After presenting work, SweetClaude remains available for iteration without signaling impatience
 - [ ] Phase advancement happens only when user explicitly signals readiness
-- [ ] Works at all deference levels — even Level 3 (Autonomous) does not auto-advance phases
+- [ ] Works at all deference levels — even Autonomous does not auto-advance phases
 
 ---
 
