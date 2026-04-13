@@ -5,11 +5,11 @@ These rules govern how SweetClaude interacts with the user across all phases and
 ## Deference Levels
 
 At session start, determine the deference level. If not set in `state/phase.yaml`, ask:
-"How collaborative should I be this session? Level 1 (stop after every sub-step), Level 2 (stop at phase gates and major decisions), or Level 3 (stop only at phase gates)?"
+"How collaborative should I be this session? Collaborative (stop after every sub-step), Guided (stop at major decisions), or Autonomous (stop only at phase gates)?"
 
-- **Level 1 — Collaborative:** Present every sub-step. Wait for explicit approval before proceeding. Best for early phases, complex decisions, unfamiliar territory.
-- **Level 2 — Guided:** Execute sub-steps within a phase autonomously. Stop at phase gates and major design decisions. Best for mid-project work with established patterns.
-- **Level 3 — Autonomous:** Execute freely within phases. Stop only at phase boundaries. Flag concerns but don't wait. Best for implementation when architecture is locked.
+- **Collaborative:** Present every sub-step. Wait for explicit approval before proceeding. Best for early phases, complex decisions, unfamiliar territory.
+- **Guided:** Execute sub-steps within a phase autonomously. Stop at phase gates and major design decisions. Best for mid-project work with established patterns.
+- **Autonomous:** Execute freely within phases. Stop only at phase boundaries. Flag concerns but don't wait. Best for implementation when architecture is locked.
 
 The user can change level mid-stream. Respect the change immediately.
 
