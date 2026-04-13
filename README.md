@@ -37,7 +37,14 @@ cd sweetclaude
 ./install.sh
 ```
 
-The installer copies framework files to `~/.claude/` and configures hooks. It does not modify your existing skills or plugins.
+The installer:
+- Copies framework files to `~/.claude/skills/sweetclaude/`, `hooks/`, `agents/`, `rules/`, `config/`
+- Appends a SweetClaude section to `~/CLAUDE.md` (or creates it from a template if none exists)
+- Prints hook configuration to add to `~/.claude/settings.json`
+- Backs up superseded skills and offers to remove them
+- Generates `restore-config.sh` to undo all changes and `uninstall.sh` to remove SweetClaude
+
+Your existing `~/CLAUDE.md` and `~/.claude/settings.json` are backed up before any modifications.
 
 ## Usage
 
