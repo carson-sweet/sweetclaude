@@ -200,14 +200,19 @@ When the user says a canonical-draft is ready:
 3. Update all archive frontmatter that referenced the draft to point to the canonical file
 4. Report: "{topic} is now canonical at v{N}."
 
-### Step 9: RAG Ingestion
+### Step 9: Offer RAG Ingestion
 
 After canonical documents are created (or after reorganization if user skipped synthesis):
 
-- Invoke `rag-index` to index or update the strategy/ directory
-- Canonical docs are indexed
-- Archived/deprecated files are NOT indexed
-- canonical-draft files ARE indexed (they're the best available until promoted)
+> "Would you like me to ingest these files into the RAG index for semantic search? This lets you query your strategy corpus by meaning, not just keywords."
+
+If the user declines, stop here.
+
+If the user accepts, invoke `rag-index` targeting the `strategy/` directory:
+- Canonical docs (`-canonical.md`) are indexed
+- Canonical-draft docs (`-canonical-draft.md`) are indexed (best available until promoted)
+- Archived/deprecated files in `reconciliation/archive/` are NOT indexed
+- The `rag-index` skill handles setup (`.mcp.json`, `.gitignore`, manifest) if this is the first run
 
 ---
 
