@@ -1,5 +1,5 @@
 ---
-name: auto-docs
+name: sweetclaude-code-auto-docs
 description: Automatically update documentation when implementation changes behavior. Runs during Verify phase. Detects which docs reference changed behavior, proposes updates for user approval.
 ---
 

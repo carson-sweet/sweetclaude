@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-fix-issue
+name: sweetclaude-code-fix-issue
 description: Implement a single GitHub issue end-to-end using the SweetClaude pipeline. Explore, plan, TDD, verify, PR. Use when working from a GitHub issue.
 ---
 
@@ -11,7 +11,7 @@ Implement GitHub issue $ARGUMENTS using the SweetClaude pipeline.
 
 1. **Explore.** Read the issue (`gh issue view $ARGUMENTS`). Follow any linked docs (Notion, specs, ADRs). Read relevant source files. Summarize current behavior and risks. Do not change code yet.
 
-2. **Ripple analysis.** Run `sweetclaude:ripple` on the affected area. Present impact assessment.
+2. **Ripple analysis.** Run `sweetclaude:code/ripple` on the affected area. Present impact assessment.
 
 3. **Plan.** Propose a stepwise plan with:
    - Files to modify
@@ -19,16 +19,16 @@ Implement GitHub issue $ARGUMENTS using the SweetClaude pipeline.
    - Verification commands
    Wait for approval (respecting deference level).
 
-4. **Implement.** Use `sweetclaude:tdd` at the appropriate level:
+4. **Implement.** Use `sweetclaude:code/tdd` at the appropriate level:
    - Bug fixes: Level 1-2 (regression test first, then fix)
    - Features: Level 2-3 (depends on whether Gherkin specs exist)
    - Change minimal code to satisfy acceptance criteria.
 
 5. **Verify.** Run lint + tests for affected packages. Invoke `superpowers:verification-before-completion`. Capture and report results.
 
-6. **Auto-docs.** Run `sweetclaude:auto-docs` to check if any documentation needs updating.
+6. **Auto-docs.** Run `sweetclaude:code/auto-docs` to check if any documentation needs updating.
 
-7. **PR.** Invoke `sweetclaude:pr-ready` for the pre-PR checklist. Create branch, commit, and open PR using `gh pr create`. Fill the PR template completely.
+7. **PR.** Invoke `sweetclaude:code/pr-ready` for the pre-PR checklist. Create branch, commit, and open PR using `gh pr create`. Fill the PR template completely.
 
 ## Rules
 

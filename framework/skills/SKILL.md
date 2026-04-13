@@ -32,17 +32,29 @@ Phase 1: DISCOVER  → Brainstorm, research, caucus, reasoning frameworks
 Phase 2: DEFINE    → Product brief, PRD, competitive analysis
 Phase 3: DESIGN    → Tech spec, architecture, UX, solutioning gate
 Phase 4: PLAN      → Stories → Gherkin .feature files, sprint planning, backlog
-Phase 5: IMPLEMENT → SweetClaude TDD (levels 0-3), fix-issue, worktrees, debugging
-Phase 6: VERIFY    → Code review, security review, PR-ready, verification, mutation testing
+Phase 5: IMPLEMENT → code/tdd (levels 0-3), code/fix-issue, worktrees, debugging
+Phase 6: VERIFY    → Code review, security review, code/pr-ready, verification, mutation testing
 Phase 7: SHIP      → Branch finishing, CI/CD gates, deploy
 ```
 
 **Work-type routing:**
+
+*Code track:*
 - Net-new features → enter at DISCOVER
 - Bug fixes → enter at DEFINE (reproduce, characterize, design fix)
 - Feature enhancements → enter at DEFINE
 - Iteration / tech debt → enter at DEFINE
-- Any type can escalate to DISCOVER if deeper issues surface
+
+*Strategy track:*
+- Research paper → enter at DISCOVER
+- Strategic positioning → enter at DISCOVER
+- Competitive analysis → enter at DISCOVER
+- Meeting prep → enter at DEFINE
+- Market messaging → enter at DEFINE
+- Biz planning → enter at DISCOVER
+- File reconciliation → enter at DEFINE
+
+Any type can escalate to DISCOVER if deeper issues surface.
 
 **Phase re-entry is normal.** When new information invalidates earlier assumptions, go back. Update the earlier-phase artifacts. This is not a failure — it's how good work happens.
 
@@ -103,7 +115,12 @@ Follow `~/.claude/rules/sweetclaude/interaction-model.md` at all times:
 
 ## Skill Surfacing
 
-Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available for the current phase. When the user asks to do something, check if the relevant skill is in the current phase's list. If not, inform the user it's typically used in a different phase but offer to invoke it anyway (override).
+Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available. The config has two tracks:
+
+- **`code:`** — skills for technical development (TDD, debugging, code review, deployment)
+- **`strategy:`** — skills for strategic product development (research, positioning, meeting prep)
+
+When the user asks to do something, the work router classifies it as code or strategy work. Surface skills from the appropriate track for the current phase. If a skill from the other track is requested, inform the user it's from a different track but offer to invoke it anyway (override).
 
 ## Delegation Depth
 
