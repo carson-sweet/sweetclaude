@@ -120,17 +120,18 @@ After copying files, add the following to your Claude Code `settings.json` (glob
 
 ## Usage
 
-SweetClaude is used inside Claude Code, not from the terminal. Start Claude Code first, then interact with SweetClaude through the Claude Code prompt.
+SweetClaude is used inside Claude Code, not from the terminal.
 
 ```bash
-# In your terminal — start Claude Code
+# Option 1: start Claude Code and pass the command directly
+claude "sweetclaude init my-project"
+
+# Option 2: start Claude Code first, then type in the prompt
 claude
-
-# Then in the Claude Code prompt — start a new project
-sweetclaude init my-project
-
-# SweetClaude detects the project, asks your deference level, and you're working
+> sweetclaude init my-project
 ```
+
+SweetClaude detects the project, asks your deference level, and you're working.
 
 ### Deference Levels
 
