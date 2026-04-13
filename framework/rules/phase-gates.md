@@ -5,17 +5,23 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 ## Phase 1: DISCOVER
 **Entry:** New project or escalation from later phase
 **Exit criteria:**
-- Problem/concept clearly articulated
-- Research complete (competitive landscape, prior art if applicable)
+- Concrete scenario: at least one specific user scenario or real-world example has been discussed — not just abstract problem framing
+- Challenged at least once: at least one alternative framing, potential gap, or questionable assumption was raised and addressed during discovery
+- Scope boundary: at least one thing has been explicitly identified as out of scope or "not this project"
 - Key decisions documented in decision log
-- Ready to define scope and requirements
+- Research artifacts saved to working repo, or research explicitly deemed unnecessary with documented rationale
 **Available skills:** bmad:brainstorm, bmad:research, caucus, reasoning-frameworks
 
 ## Phase 2: DEFINE
 **Entry:** DISCOVER complete, OR bug fix/enhancement/iteration entering pipeline
-**Exit criteria:**
-- Product brief approved (for net-new features)
-- PRD with FRs, NFRs, and epics (for larger work)
+**Exit criteria (net-new features):**
+- All 11 sections populated: product brief has substantive content in Executive Summary, Problem Statement, Target Audience, Solution Overview, Business Objectives, Scope, Stakeholders, Constraints/Assumptions, Success Criteria, Timeline, and Risks — a section with only a single sentence or generic filler ("TBD", "N/A" without justification) counts as missing
+- Concrete problem example: problem statement includes at least one specific scenario, user story, or real-world example
+- Explicit out-of-scope: scope section has 3+ items in the out-of-scope list — if fewer, either the scope is too narrow to need a brief or the boundaries haven't been thought through
+- Measurable success: each success criterion can be evaluated as true or false after the project ships — "users are happy" fails; "user completes primary workflow in under 3 steps" passes
+- BMAD validation checklist: the 9-item checklist has been run with all items passing or explicitly waived by the user with documented rationale
+- PRD with FRs, NFRs, and epics (for larger work requiring a PRD)
+**Exit criteria (other work types):**
 - Bug reproduction documented (for bug fixes)
 - Enhancement scope defined (for enhancements)
 - Improvement criteria defined (for iteration)
