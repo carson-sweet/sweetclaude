@@ -541,7 +541,8 @@ if [ "$HOOK_CONFLICT" = true ]; then
   echo ""
 fi
 echo "Getting started:"
-echo "  Open Claude Code and say: sweetclaude init my-project"
+echo "  1. Open Claude Code:  claude"
+echo "  2. In the Claude Code prompt, type:  sweetclaude init my-project"
 echo ""
 echo "To restore pre-install config:  ./restore-config.sh"
 echo "To uninstall SweetClaude:       ./uninstall.sh"
