@@ -121,57 +121,11 @@ else
 fi
 echo ""
 
-# --- Conflict Scan ---
-
-echo "Scanning for potential conflicts..."
-CONFLICTS=()
-
-# Skills that SweetClaude supersedes
-CONFLICT_SKILLS=("real-tdd" "fix-issue" "pr-ready")
-for skill in "${CONFLICT_SKILLS[@]}"; do
-  SKILL_PATH="$CLAUDE_DIR/skills/$skill"
-  if [ -d "$SKILL_PATH" ]; then
-    CONFLICTS+=("Skill: $skill → $SKILL_PATH (SweetClaude includes sweetclaude:$skill)")
-  fi
-done
-
-# Don Cheli (should be removed but check)
-if [ -d "$CLAUDE_DIR/don-cheli" ]; then
-  CONFLICTS+=("Framework: Don Cheli SDD → $CLAUDE_DIR/don-cheli/ (redundant with SweetClaude)")
-fi
-
-# Check for existing hooks that might conflict
-if [ -f "$CLAUDE_DIR/settings.json" ]; then
-  if grep -q "test-guardian\|auto-test-runner\|test.guard\|tdd.guard" "$CLAUDE_DIR/settings.json" 2>/dev/null; then
-    CONFLICTS+=("Hooks: Existing TDD-related hooks in settings.json may conflict")
-  fi
-fi
-
-if [ ${#CONFLICTS[@]} -gt 0 ]; then
-  echo ""
-  echo "  Found ${#CONFLICTS[@]} potential conflict(s):"
-  for conflict in "${CONFLICTS[@]}"; do
-    echo "    - $conflict"
-  done
-  echo ""
-  echo "  These won't be removed automatically. SweetClaude will be installed"
-  echo "  alongside them. You can clean them up after verifying SweetClaude works."
-  echo ""
-  read -p "  Continue? (y/n) " -n 1 -r
-  echo ""
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 0
-  fi
-else
-  echo "  No conflicts found."
-fi
-echo ""
-
 # --- Backup ---
 
 echo "Creating backup of current ~/.claude/ config..."
 mkdir -p "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR/conflicts"
 
 # Backup existing SweetClaude files if upgrading
 if [ -d "$CLAUDE_DIR/skills/sweetclaude" ]; then
@@ -199,6 +153,96 @@ if [ -f "$HOME/CLAUDE.md" ]; then
 fi
 
 echo "  Backup saved to: $BACKUP_DIR"
+echo ""
+
+# --- Conflict Scan & Cleanup ---
+
+echo "Scanning for potential conflicts..."
+CONFLICTS=()
+CLEANED_SKILLS=()
+CLEANED_DONCHELI=false
+HOOK_CONFLICT=false
+
+# Skills that SweetClaude supersedes
+CONFLICT_SKILLS=("real-tdd" "fix-issue" "pr-ready")
+for skill in "${CONFLICT_SKILLS[@]}"; do
+  SKILL_PATH="$CLAUDE_DIR/skills/$skill"
+  if [ -d "$SKILL_PATH" ]; then
+    CONFLICTS+=("$skill")
+  fi
+done
+
+# Don Cheli (redundant with SweetClaude)
+if [ -d "$CLAUDE_DIR/don-cheli" ]; then
+  CONFLICTS+=("don-cheli")
+fi
+
+# Check for existing hooks that might conflict
+if [ -f "$CLAUDE_DIR/settings.json" ]; then
+  if grep -q "test-guardian\|auto-test-runner\|test.guard\|tdd.guard" "$CLAUDE_DIR/settings.json" 2>/dev/null; then
+    HOOK_CONFLICT=true
+  fi
+fi
+
+if [ ${#CONFLICTS[@]} -eq 0 ] && [ "$HOOK_CONFLICT" = false ]; then
+  echo "  No conflicts found."
+else
+  # Report what was found
+  SKILL_CONFLICTS=()
+  HAS_DONCHELI=false
+  for item in "${CONFLICTS[@]}"; do
+    if [ "$item" = "don-cheli" ]; then
+      HAS_DONCHELI=true
+    else
+      SKILL_CONFLICTS+=("$item")
+    fi
+  done
+
+  if [ ${#SKILL_CONFLICTS[@]} -gt 0 ]; then
+    echo ""
+    echo "  Found ${#SKILL_CONFLICTS[@]} superseded skill(s):"
+    for skill in "${SKILL_CONFLICTS[@]}"; do
+      echo "    - $skill → $CLAUDE_DIR/skills/$skill/ (replaced by sweetclaude:$skill)"
+    done
+    echo ""
+    read -p "  Back up and remove these skills? (y/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      for skill in "${SKILL_CONFLICTS[@]}"; do
+        cp -r "$CLAUDE_DIR/skills/$skill" "$BACKUP_DIR/conflicts/skill-$skill"
+        rm -rf "$CLAUDE_DIR/skills/$skill"
+        CLEANED_SKILLS+=("$skill")
+        echo "    Backed up and removed: $skill"
+      done
+    else
+      echo "    Skipped — these skills will remain alongside SweetClaude."
+    fi
+  fi
+
+  if [ "$HAS_DONCHELI" = true ]; then
+    DONCHELI_SIZE=$(du -sh "$CLAUDE_DIR/don-cheli" 2>/dev/null | cut -f1)
+    echo ""
+    echo "  Found Don Cheli SDD framework ($DONCHELI_SIZE) — redundant with SweetClaude."
+    echo "    Location: $CLAUDE_DIR/don-cheli/"
+    echo ""
+    read -p "  Back up and remove Don Cheli? (y/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      cp -r "$CLAUDE_DIR/don-cheli" "$BACKUP_DIR/conflicts/don-cheli"
+      rm -rf "$CLAUDE_DIR/don-cheli"
+      CLEANED_DONCHELI=true
+      echo "    Backed up and removed: don-cheli"
+    else
+      echo "    Skipped — Don Cheli will remain alongside SweetClaude."
+    fi
+  fi
+
+  if [ "$HOOK_CONFLICT" = true ]; then
+    echo ""
+    echo "  WARNING: Existing TDD-related hooks found in settings.json."
+    echo "  These cannot be auto-cleaned — review settings.json manually after install."
+  fi
+fi
 echo ""
 
 # --- Install ---
@@ -317,17 +361,107 @@ else
   echo "  Created ~/CLAUDE.md from SweetClaude template."
 fi
 
-# --- Generate Uninstaller ---
+# --- Generate restore-config.sh ---
 
-cat > "$SCRIPT_DIR/uninstall.sh" << UNINSTALL
+RESTORE_FILE="$SCRIPT_DIR/restore-config.sh"
+cat > "$RESTORE_FILE" << RESTORE
 #!/bin/bash
-# SweetClaude Uninstaller
-# Removes SweetClaude and restores from backup.
+# SweetClaude Config Restore
+# Restores pre-install configuration from backup.
 
 set -e
 
 CLAUDE_DIR="\$HOME/.claude"
 BACKUP_DIR="$BACKUP_DIR"
+
+echo "SweetClaude Config Restore"
+echo "=========================="
+echo ""
+
+if [ ! -d "\$BACKUP_DIR" ]; then
+  echo "  No backup found at \$BACKUP_DIR"
+  echo "  Nothing to restore."
+  exit 1
+fi
+
+echo "Backup contents:"
+ls "\$BACKUP_DIR/" 2>/dev/null | sed 's/^/  /'
+if [ -d "\$BACKUP_DIR/conflicts" ] && [ "\$(ls -A "\$BACKUP_DIR/conflicts" 2>/dev/null)" ]; then
+  echo "  conflicts/"
+  ls "\$BACKUP_DIR/conflicts/" 2>/dev/null | sed 's/^/    /'
+fi
+echo ""
+RESTORE
+
+# Add conflict restoration commands based on what was actually cleaned
+if [ ${#CLEANED_SKILLS[@]} -gt 0 ] || [ "$CLEANED_DONCHELI" = true ]; then
+  cat >> "$RESTORE_FILE" << 'RESTORE_CONFLICTS_HEADER'
+read -p "Restore cleaned-up conflicts? (y/n) " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+RESTORE_CONFLICTS_HEADER
+
+  for skill in "${CLEANED_SKILLS[@]}"; do
+    cat >> "$RESTORE_FILE" << RESTORE_SKILL
+  if [ -d "\$BACKUP_DIR/conflicts/skill-$skill" ]; then
+    cp -r "\$BACKUP_DIR/conflicts/skill-$skill" "\$CLAUDE_DIR/skills/$skill"
+    echo "  Restored skill: $skill"
+  fi
+RESTORE_SKILL
+  done
+
+  if [ "$CLEANED_DONCHELI" = true ]; then
+    cat >> "$RESTORE_FILE" << 'RESTORE_DONCHELI'
+  if [ -d "$BACKUP_DIR/conflicts/don-cheli" ]; then
+    cp -r "$BACKUP_DIR/conflicts/don-cheli" "$CLAUDE_DIR/don-cheli"
+    echo "  Restored: Don Cheli SDD framework"
+  fi
+RESTORE_DONCHELI
+  fi
+
+  cat >> "$RESTORE_FILE" << 'RESTORE_CONFLICTS_FOOTER'
+  echo "  Conflicts restored."
+else
+  echo "  Skipped conflict restore."
+fi
+echo ""
+RESTORE_CONFLICTS_FOOTER
+fi
+
+cat >> "$RESTORE_FILE" << 'RESTORE_SETTINGS'
+read -p "Restore settings.json and CLAUDE.md? (y/n) " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  if [ -f "$BACKUP_DIR/settings.json" ]; then
+    cp "$BACKUP_DIR/settings.json" "$CLAUDE_DIR/settings.json"
+    echo "  Restored settings.json"
+  fi
+  if [ -f "$BACKUP_DIR/CLAUDE.md" ]; then
+    cp "$BACKUP_DIR/CLAUDE.md" "$HOME/CLAUDE.md"
+    echo "  Restored CLAUDE.md"
+  fi
+  echo "  Settings restored."
+else
+  echo "  Skipped settings restore."
+fi
+
+echo ""
+echo "Config restore complete."
+RESTORE_SETTINGS
+
+chmod +x "$RESTORE_FILE"
+
+# --- Generate Uninstaller ---
+
+cat > "$SCRIPT_DIR/uninstall.sh" << UNINSTALL
+#!/bin/bash
+# SweetClaude Uninstaller
+# Removes SweetClaude files, then offers to restore pre-install config.
+
+set -e
+
+SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
+CLAUDE_DIR="\$HOME/.claude"
 
 echo "SweetClaude Uninstaller"
 echo "======================="
@@ -340,24 +474,16 @@ rm -rf "\$CLAUDE_DIR/agents/sweetclaude"
 rm -rf "\$CLAUDE_DIR/rules/sweetclaude"
 rm -rf "\$CLAUDE_DIR/config/sweetclaude"
 echo "  SweetClaude files removed."
+echo ""
 
-if [ -d "\$BACKUP_DIR" ]; then
-  echo ""
-  read -p "Restore from backup at \$BACKUP_DIR? (y/n) " -n 1 -r
+if [ -f "\$SCRIPT_DIR/restore-config.sh" ]; then
+  read -p "Restore pre-install configuration? (y/n) " -n 1 -r
   echo ""
   if [[ \$REPLY =~ ^[Yy]\$ ]]; then
-    if [ -f "\$BACKUP_DIR/settings.json" ]; then
-      cp "\$BACKUP_DIR/settings.json" "\$CLAUDE_DIR/settings.json"
-      echo "  Restored settings.json"
-    fi
-    if [ -f "\$BACKUP_DIR/CLAUDE.md" ]; then
-      cp "\$BACKUP_DIR/CLAUDE.md" "\$HOME/CLAUDE.md"
-      echo "  Restored CLAUDE.md"
-    fi
-    echo "  Backup restored."
+    "\$SCRIPT_DIR/restore-config.sh"
   fi
 else
-  echo "  No backup found. Manual cleanup of settings.json and CLAUDE.md may be needed."
+  echo "  No restore-config.sh found. Manual cleanup of settings.json and CLAUDE.md may be needed."
 fi
 
 echo ""
@@ -377,7 +503,6 @@ echo "================================================"
 echo ""
 echo "  Files installed: $FILE_COUNT"
 echo "  Backup location: $BACKUP_DIR"
-echo "  Uninstaller:     $SCRIPT_DIR/uninstall.sh"
 echo ""
 echo "  Skills:  $CLAUDE_DIR/skills/sweetclaude/"
 echo "  Hooks:   $CLAUDE_DIR/hooks/sweetclaude/"
@@ -385,13 +510,22 @@ echo "  Agents:  $CLAUDE_DIR/agents/sweetclaude/"
 echo "  Rules:   $CLAUDE_DIR/rules/sweetclaude/"
 echo "  Config:  $CLAUDE_DIR/config/sweetclaude/"
 echo ""
+if [ ${#CLEANED_SKILLS[@]} -gt 0 ] || [ "$CLEANED_DONCHELI" = true ]; then
+  echo "Cleaned up:"
+  for skill in "${CLEANED_SKILLS[@]}"; do
+    echo "  - Skill: $skill (backed up to $BACKUP_DIR/conflicts/)"
+  done
+  if [ "$CLEANED_DONCHELI" = true ]; then
+    echo "  - Don Cheli SDD (backed up to $BACKUP_DIR/conflicts/)"
+  fi
+  echo ""
+fi
+if [ "$HOOK_CONFLICT" = true ]; then
+  echo "ACTION NEEDED: Review TDD-related hooks in ~/.claude/settings.json."
+  echo ""
+fi
 echo "Getting started:"
 echo "  Open Claude Code and say: sweetclaude init my-project"
 echo ""
-if [ ${#CONFLICTS[@]} -gt 0 ]; then
-  echo "Reminder: ${#CONFLICTS[@]} potential conflict(s) detected."
-  echo "Review and clean up after verifying SweetClaude works."
-  echo ""
-fi
-echo "To uninstall and restore your previous config:"
-echo "  ./uninstall.sh"
+echo "To restore pre-install config:  ./restore-config.sh"
+echo "To uninstall SweetClaude:       ./uninstall.sh"
