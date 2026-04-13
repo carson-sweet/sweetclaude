@@ -79,13 +79,15 @@ Present with pass/fail marks. If all pass, proceed. If any fail, present the gap
 
 If the user overrides, log it in the decision log with which criteria were waived. In Autonomous mode, auto-proceed if all pass; pause if any fail.
 
-**Step 2:** Generate a decision summary — what was decided, why, alternatives considered.
+**Step 2: Improvement check-in (all phases).** Ask: "Before we move on — anything about how this phase went that I should do differently going forward?" Save the response to `state/improvement-register.md`. Even "no, it was good" is worth recording as a confirmation. This step is not optional.
 
-**Step 3:** Present to user for confirmation (at all deference levels).
+**Step 3:** Generate a decision summary — what was decided, why, alternatives considered.
 
-**Step 4:** Commit to working repo: phase state, decision log, assumption register.
+**Step 4:** Present to user for confirmation (at all deference levels).
 
-**Step 5:** Surface the skills available in the next phase.
+**Step 5:** Commit to working repo: phase state, decision log, assumption register, improvement register.
+
+**Step 6:** Surface the skills available in the next phase.
 
 Never push for phase transition. The user decides when to advance.
 
@@ -106,6 +108,8 @@ Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills 
 ## Delegation Depth
 
 When delegating to early-phase skills, set depth expectations:
+
+**For `sweetclaude:discover-deep`:** Invoke during Discover phase for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal Discover directly.
 
 **For `bmad:product-brief`:** Conduct the full 11-section interview. One section at a time — never batch. Probe vague answers with follow-ups before moving to the next section. The interview is a discovery conversation, not a form to fill. After generating the document, run the BMAD validation checklist and present results before the phase gate.
 
