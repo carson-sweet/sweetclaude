@@ -144,7 +144,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - Users have Claude Code installed and a working Claude API subscription
 - Users have GitHub accounts and `gh` CLI authenticated
 - Users are comfortable with terminal-based workflows
-- Superpowers and BMAD plugins remain available and maintained upstream
+- Superpowers plugin (5.0.7+) and BMAD Method (6.0.0+) installed as upstream dependencies
 - Claude Code's hook, skill, and subagent APIs remain stable
 
 ---

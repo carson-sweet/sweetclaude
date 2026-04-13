@@ -485,7 +485,8 @@ Full pipeline.
 **Description:** SweetClaude installs with minimal steps. No complex dependency chains or manual configuration.
 **Acceptance Criteria:**
 - [ ] Install in 3 steps or fewer
-- [ ] Prerequisites clearly documented (Claude Code, gh CLI, git)
+- [ ] Prerequisites clearly documented with minimum versions (Claude Code CLI, git, GitHub CLI, Superpowers 5.0.7+, BMAD 6.0.0+)
+- [ ] Installer validates all prerequisites and versions before proceeding
 - [ ] No compilation or build step required
 - [ ] Verify installation with a single command
 
@@ -566,9 +567,10 @@ Full pipeline.
 
 **External:**
 - Claude Code CLI (runtime environment)
-- Superpowers plugin (upstream dependency)
-- BMAD plugin (upstream dependency)
-- GitHub / `gh` CLI (project hosting)
+- Superpowers plugin 5.0.7+ (upstream dependency — dev mechanics)
+- BMAD Method 6.0.0+ (upstream dependency — product lifecycle)
+- GitHub CLI (`gh`) (project hosting)
+- Git
 - mcp-local-rag (RAG functionality)
 - Notion MCP (optional — Notion integration)
 
@@ -579,7 +581,7 @@ Full pipeline.
 - Users have Claude Code installed and a working Claude API subscription
 - Users have GitHub accounts and `gh` CLI authenticated
 - Users are comfortable with terminal-based workflows
-- Superpowers and BMAD plugins remain available and maintained upstream
+- Superpowers plugin (5.0.7+) and BMAD Method (6.0.0+) installed as upstream dependencies
 - Claude Code's hook, skill, and subagent APIs remain stable
 - mcp-local-rag remains available for RAG functionality
 
