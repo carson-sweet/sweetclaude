@@ -31,6 +31,10 @@ The installer checks all of the above and warns if anything is missing or outdat
 
 ## Install
 
+### macOS (automated)
+
+The install script is macOS only. It handles prereq checks, backups, conflict cleanup, and generates an uninstaller.
+
 ```bash
 git clone https://github.com/carson-sweet/sweetclaude.git
 cd sweetclaude
@@ -38,6 +42,7 @@ cd sweetclaude
 ```
 
 The installer:
+- Validates all prerequisites and versions
 - Copies framework files to `~/.claude/skills/sweetclaude/`, `hooks/`, `agents/`, `rules/`, `config/`
 - Appends a SweetClaude section to `~/CLAUDE.md` (or creates it from a template if none exists)
 - Prints hook configuration to add to `~/.claude/settings.json`
@@ -45,6 +50,73 @@ The installer:
 - Generates `restore-config.sh` to undo all changes and `uninstall.sh` to remove SweetClaude
 
 Your existing `~/CLAUDE.md` and `~/.claude/settings.json` are backed up before any modifications.
+
+### Linux (manual)
+
+Claude Code on Linux uses the same `~/.claude/` config path as macOS. The install script may work but is untested — manual install is recommended.
+
+```bash
+git clone https://github.com/carson-sweet/sweetclaude.git
+cd sweetclaude
+
+# Copy framework files
+cp -r framework/skills/* ~/.claude/skills/sweetclaude/
+cp -r framework/hooks/* ~/.claude/hooks/sweetclaude/
+cp -r framework/agents/* ~/.claude/agents/sweetclaude/
+cp -r framework/rules/* ~/.claude/rules/sweetclaude/
+cp -r framework/config/* ~/.claude/config/sweetclaude/
+chmod +x ~/.claude/hooks/sweetclaude/*.sh
+```
+
+Then add the SweetClaude section to your `~/CLAUDE.md` (create the file if it doesn't exist):
+
+```markdown
+## SweetClaude
+
+- If a SweetClaude working repo exists for the current project, read `state/phase.yaml` and `state/improvement-register.md` at session start.
+- Follow the interaction model in `~/.claude/rules/sweetclaude/interaction-model.md`.
+- Respect the current deference level. Ask if not set.
+- Never push for phase advancement. The user decides when to move on.
+```
+
+### Windows (manual)
+
+Claude Code on Windows uses `%USERPROFILE%\.claude\` (typically `C:\Users\<you>\.claude\`).
+
+```powershell
+git clone https://github.com/carson-sweet/sweetclaude.git
+cd sweetclaude
+
+# Copy framework files
+Copy-Item -Recurse framework\skills\* $env:USERPROFILE\.claude\skills\sweetclaude\
+Copy-Item -Recurse framework\hooks\* $env:USERPROFILE\.claude\hooks\sweetclaude\
+Copy-Item -Recurse framework\agents\* $env:USERPROFILE\.claude\agents\sweetclaude\
+Copy-Item -Recurse framework\rules\* $env:USERPROFILE\.claude\rules\sweetclaude\
+Copy-Item -Recurse framework\config\* $env:USERPROFILE\.claude\config\sweetclaude\
+```
+
+Then add the same SweetClaude section (shown above under Linux) to your `%USERPROFILE%\CLAUDE.md`.
+
+**Note:** The `.sh` hook scripts in `hooks/sweetclaude/` require a bash-compatible shell (Git Bash, WSL). If you run Claude Code from PowerShell or cmd without WSL, the hooks will not execute — SweetClaude will still work but without TDD enforcement hooks.
+
+### All platforms — hook configuration
+
+After copying files, add the following to your Claude Code `settings.json` (global: `~/.claude/settings.json` on macOS/Linux, `%USERPROFILE%\.claude\settings.json` on Windows) under the `"hooks"` key:
+
+```json
+"PreToolUse": [
+  {
+    "matcher": "Write|Edit",
+    "hooks": [{ "type": "command", "command": "~/.claude/hooks/sweetclaude/test-guardian.sh" }]
+  }
+],
+"PostToolUse": [
+  {
+    "matcher": "Write|Edit",
+    "hooks": [{ "type": "command", "command": "~/.claude/hooks/sweetclaude/auto-test-runner.sh" }]
+  }
+]
+```
 
 ## Usage
 
