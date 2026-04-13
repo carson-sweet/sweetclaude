@@ -3,6 +3,10 @@ name: sweetclaude-code-gherkin-bridge
 description: Transition BMAD user stories into Gherkin .feature files. The .feature files become the contract for TDD test generation. Use during PLAN phase after stories are written.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Gherkin Bridge
 
 Convert user story $ARGUMENTS into a Gherkin .feature file.

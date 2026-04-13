@@ -3,6 +3,10 @@ name: sweetclaude-code-mutation-testing
 description: Run mutation testing to verify test quality after implementation. Introduces small code changes and checks if tests catch them. Use after TDD GREEN phase to validate test effectiveness.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Mutation Testing
 
 Verify that tests actually detect faults, not just achieve coverage.

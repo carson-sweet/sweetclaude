@@ -3,6 +3,10 @@ name: sweetclaude-discover-deep
 description: Structured Discover phase for net-new products and apps. Persona-driven discovery, iterative feature brainstorming, optional competitive analysis. Scales to work type.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Discover Deep — Structured Discovery for Net-New Work
 
 You are conducting the Discover phase for a new product or application. This is not a freeform brainstorm — it is a structured interview that produces concrete personas, vetted features, and optional competitive intelligence.

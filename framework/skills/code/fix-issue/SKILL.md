@@ -3,6 +3,10 @@ name: sweetclaude-code-fix-issue
 description: Implement a single GitHub issue end-to-end using the SweetClaude pipeline. Explore, plan, TDD, verify, PR. Use when working from a GitHub issue.
 ---
 
+<preflight-guard>
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
 # Fix Issue
 
 Implement GitHub issue $ARGUMENTS using the SweetClaude pipeline.
