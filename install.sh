@@ -428,16 +428,13 @@ echo ""
 RESTORE_CONFLICTS_FOOTER
 fi
 
-cat >> "$RESTORE_FILE" << 'RESTORE_CLAUDEMD'
+cat >> "$RESTORE_FILE" << 'RESTORE_SETTINGS'
+# CLAUDE.md is NOT restored here — the uninstaller surgically removes only
+# the SweetClaude section, preserving any changes you made since install.
+# The pre-install backup is still available if you need it:
 if [ -f "$BACKUP_DIR/CLAUDE.md" ]; then
-  read -p "Restore ~/CLAUDE.md to pre-install version? (y/n) " -n 1 -r
-  echo ""
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cp "$BACKUP_DIR/CLAUDE.md" "$HOME/CLAUDE.md"
-    echo "  Restored ~/CLAUDE.md"
-  else
-    echo "  Skipped CLAUDE.md restore."
-  fi
+  echo "Note: ~/CLAUDE.md was cleaned surgically (SweetClaude section removed)."
+  echo "  Pre-install backup: $BACKUP_DIR/CLAUDE.md"
   echo ""
 fi
 
@@ -454,7 +451,7 @@ if [ -f "$BACKUP_DIR/settings.json" ]; then
 fi
 
 echo "Config restore complete."
-RESTORE_CLAUDEMD
+RESTORE_SETTINGS
 
 chmod +x "$RESTORE_FILE"
 
