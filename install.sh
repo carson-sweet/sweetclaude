@@ -55,8 +55,7 @@ else
 fi
 
 # Superpowers plugin
-SP_MIN="5.0.1"
-SP_REC="5.0.7"
+SP_MIN="5.0.7"
 PLUGINS_JSON="$CLAUDE_DIR/plugins/installed_plugins.json"
 SP_VERSION=""
 
@@ -68,7 +67,7 @@ fi
 if [ -z "$SP_VERSION" ] || [ "$SP_VERSION" = "unknown" ]; then
   echo "  ERROR: Superpowers plugin not found."
   echo "         Install in Claude Code: /install superpowers"
-  echo "         Minimum: $SP_MIN  Recommended: $SP_REC"
+  echo "         Minimum: $SP_MIN"
   PREREQ_OK=false
 else
   echo "  Superpowers: v$SP_VERSION"
@@ -76,10 +75,6 @@ else
     echo "  ERROR: Superpowers $SP_VERSION is below minimum ($SP_MIN)."
     echo "         Update in Claude Code: /install superpowers"
     PREREQ_OK=false
-  elif ! version_gte "$SP_VERSION" "$SP_REC"; then
-    echo "  WARNING: Superpowers $SP_VERSION is older than recommended ($SP_REC)."
-    echo "           Consider updating: /install superpowers"
-    PREREQ_WARN=true
   fi
 fi
 
