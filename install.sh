@@ -280,6 +280,15 @@ if [ -f "$SETTINGS_FILE" ]; then
     cat << 'HOOKCONFIG'
   "PreToolUse": [
     {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "~/.claude/hooks/sweetclaude/preflight-guard.sh"
+        }
+      ]
+    },
+    {
       "matcher": "Write|Edit",
       "hooks": [
         {
@@ -310,6 +319,15 @@ else
 {
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/sweetclaude/preflight-guard.sh"
+          }
+        ]
+      },
       {
         "matcher": "Write|Edit",
         "hooks": [

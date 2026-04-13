@@ -110,6 +110,10 @@ After copying files, add the following to your Claude Code `settings.json` (glob
 ```json
 "PreToolUse": [
   {
+    "matcher": "",
+    "hooks": [{ "type": "command", "command": "~/.claude/hooks/sweetclaude/preflight-guard.sh" }]
+  },
+  {
     "matcher": "Write|Edit",
     "hooks": [{ "type": "command", "command": "~/.claude/hooks/sweetclaude/test-guardian.sh" }]
   }
@@ -193,6 +197,10 @@ SweetClaude orchestrates Superpowers and BMAD — it does not fork or modify the
 | [Superpowers](https://github.com/obra/superpowers) | 5.0.7 | MIT | Dev mechanics (plans, worktrees, debugging, code review) |
 | [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) | 6.0.0 | MIT | Product lifecycle (brainstorm, PRD, architecture, stories) |
 | [Gherkin](https://github.com/cucumber/gherkin) | — | MIT | Specification language for acceptance criteria |
+
+## Known Issues
+
+- **"Unhandled node type: string" in Claude Code** — Cosmetic bug in Claude Code's bash command renderer ([#42085](https://github.com/anthropics/claude-code/issues/42085), [#43246](https://github.com/anthropics/claude-code/issues/43246)). Appears when shell commands contain quoted string literals in test expressions (e.g., `[ -f "docs/$name" ]`). Commands execute fine — only the display is affected. Regression in v2.1.89, no fix merged yet.
 
 ## License
 
