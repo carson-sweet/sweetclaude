@@ -200,4 +200,8 @@ SweetClaude orchestrates Superpowers and BMAD — it does not fork or modify the
 
 ## Contributing
 
+<p align="center">
+  <img src="sweetclaude-workshop.png" alt="SweetClaude Workshop" width="600">
+</p>
+
 Contributions welcome. SweetClaude is built by solo developers, for solo developers. If you have ideas, skills, or improvements — open an issue or PR.
