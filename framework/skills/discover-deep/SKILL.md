@@ -1,5 +1,5 @@
 ---
-name: sweetclaude:discover-deep
+name: sweetclaude-discover-deep
 description: Structured Discover phase for net-new products and apps. Persona-driven discovery, iterative feature brainstorming, optional competitive analysis. Scales to work type.
 ---
 

@@ -2,6 +2,8 @@
 
 Entry and exit criteria for each phase. A phase cannot advance until exit criteria are met (user can override).
 
+> These phase gates describe the default code-track skills. Strategy-track skills are listed in `phase-skills.yaml` under the `strategy:` key and will be documented here as they are built.
+
 ## Phase 1: DISCOVER
 **Entry:** New project or escalation from later phase
 **Exit criteria (net-new products/apps):**
@@ -35,7 +37,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Bug reproduction documented (for bug fixes)
 - Enhancement scope defined (for enhancements)
 - Improvement criteria defined (for iteration)
-**Available skills:** bmad:product-brief, bmad:prd, sweetclaude:work-router, sweetclaude:ripple, reconciling-documents, backlog-management
+**Available skills:** bmad:product-brief, bmad:prd, sweetclaude:work-router, sweetclaude:code/ripple, reconciling-documents, backlog-management
 
 ## Phase 3: DESIGN
 **Entry:** DEFINE complete
@@ -45,7 +47,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Design change identified (for bug fixes — may be trivial)
 - Solutioning gate passed (for complex work)
 - Improvement check-in
-**Available skills:** bmad:tech-spec, bmad:architecture, bmad:create-ux-design, bmad:solutioning-gate-check, sweetclaude:ripple, caucus, reasoning-frameworks
+**Available skills:** bmad:tech-spec, bmad:architecture, bmad:create-ux-design, bmad:solutioning-gate-check, sweetclaude:code/ripple, caucus, reasoning-frameworks
 
 ## Phase 4: PLAN
 **Entry:** DESIGN complete
@@ -55,7 +57,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Sprint plan (if applicable)
 - Traceability map started
 - Improvement check-in
-**Available skills:** bmad:create-story, bmad:sprint-planning, sweetclaude:gherkin-bridge, backlog-management
+**Available skills:** bmad:create-story, bmad:sprint-planning, sweetclaude:code/gherkin-bridge, backlog-management
 
 ## Phase 5: IMPLEMENT
 **Entry:** PLAN complete (or DEFINE/DESIGN complete for simpler work types)
@@ -65,7 +67,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Ripple-effect analysis completed (for changes to existing code)
 - Code committed
 - Improvement check-in
-**Available skills:** sweetclaude:tdd, sweetclaude:fix-issue, sweetclaude:ripple, superpowers:writing-plans, superpowers:executing-plans, superpowers:using-git-worktrees, superpowers:systematic-debugging, superpowers:dispatching-parallel-agents
+**Available skills:** sweetclaude:code/tdd, sweetclaude:code/fix-issue, sweetclaude:code/ripple, superpowers:writing-plans, superpowers:executing-plans, superpowers:using-git-worktrees, superpowers:systematic-debugging, superpowers:dispatching-parallel-agents
 **Hooks active:** test-guardian, auto-test-runner, git-checkpoint
 
 ## Phase 6: VERIFY
@@ -76,7 +78,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - PR template filled
 - Documentation updated
 - Traceability map complete
-**Available skills:** sweetclaude:pr-ready, sweetclaude:ripple, sweetclaude:auto-docs, superpowers:requesting-code-review, superpowers:verification-before-completion, superpowers:simplify
+**Available skills:** sweetclaude:code/pr-ready, sweetclaude:code/ripple, sweetclaude:code/auto-docs, superpowers:requesting-code-review, superpowers:verification-before-completion, superpowers:simplify
 
 ## Phase 7: SHIP
 **Entry:** VERIFY complete
@@ -84,4 +86,10 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - PR merged
 - Deployment successful (if applicable)
 - Post-deploy verification (if applicable)
-**Available skills:** superpowers:finishing-a-development-branch, sweetclaude:pr-ready
+**Available skills:** superpowers:finishing-a-development-branch, sweetclaude:code/pr-ready, sweetclaude:hibernate
+
+## Cross-Phase Skills
+
+These skills are available in ALL phases via `always_loaded` in phase-skills.yaml:
+
+- **sweetclaude:hibernate** — Freeze or thaw a project. Can be invoked at any point, not just during SHIP. When invoked mid-phase, hibernation captures the current phase state for resumption.

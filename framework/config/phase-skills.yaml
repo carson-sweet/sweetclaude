@@ -1,17 +1,20 @@
 # SweetClaude Phase-Skill Mapping
 # Defines which skills, agents, and hooks are available per phase.
-# The master skill reads this to surface only relevant capabilities.
+# Two tracks: code (technical development) and strategy (strategic product development).
+# The work router classifies work type and surfaces skills from the appropriate track.
 
 always_loaded:
   skills:
-    - sweetclaude              # Master skill (phase router + interaction model)
-    - sweetclaude:work-router   # Work-type routing
+    - sweetclaude
+    - sweetclaude:work-router
+    - sweetclaude:hibernate
+    - hibernate-project
   rules:
     - sweetclaude/interaction-model.md
     - sweetclaude/phase-gates.md
     - sweetclaude/tdd-levels.md
 
-phases:
+code:
   discover:
     skills:
       - sweetclaude:discover-deep
@@ -26,7 +29,7 @@ phases:
     skills:
       - bmad:product-brief
       - bmad:prd
-      - sweetclaude:ripple
+      - sweetclaude:code/ripple
       - reconciling-documents
       - backlog-management
     agents: []
@@ -38,7 +41,7 @@ phases:
       - bmad:architecture
       - bmad:create-ux-design
       - bmad:solutioning-gate-check
-      - sweetclaude:ripple
+      - sweetclaude:code/ripple
       - caucus
       - reasoning-frameworks
     agents: []
@@ -48,16 +51,16 @@ phases:
     skills:
       - bmad:create-story
       - bmad:sprint-planning
-      - sweetclaude:gherkin-bridge
+      - sweetclaude:code/gherkin-bridge
       - backlog-management
     agents: []
     hooks: []
 
   implement:
     skills:
-      - sweetclaude:tdd
-      - sweetclaude:fix-issue
-      - sweetclaude:ripple
+      - sweetclaude:code/tdd
+      - sweetclaude:code/fix-issue
+      - sweetclaude:code/ripple
       - superpowers:writing-plans
       - superpowers:executing-plans
       - superpowers:using-git-worktrees
@@ -77,9 +80,9 @@ phases:
 
   verify:
     skills:
-      - sweetclaude:pr-ready
-      - sweetclaude:ripple
-      - sweetclaude:auto-docs
+      - sweetclaude:code/pr-ready
+      - sweetclaude:code/ripple
+      - sweetclaude:code/auto-docs
       - superpowers:requesting-code-review
       - superpowers:receiving-code-review
       - superpowers:verification-before-completion
@@ -93,6 +96,61 @@ phases:
   ship:
     skills:
       - superpowers:finishing-a-development-branch
-      - sweetclaude:pr-ready
+      - sweetclaude:code/pr-ready
+      - sweetclaude:hibernate
+    agents: []
+    hooks: []
+
+strategy:
+  discover:
+    skills:
+      - sweetclaude:discover-deep
+      - sweetclaude:strategy/academic
+      - caucus
+      - reasoning-frameworks
+    agents: []
+    hooks: []
+
+  define:
+    skills:
+      - sweetclaude:strategy/reconciliation
+      - sweetclaude:strategy/academic
+      - reconciling-documents
+    agents: []
+    hooks: []
+
+  design:
+    skills:
+      - sweetclaude:strategy/academic
+      - caucus
+      - reasoning-frameworks
+    agents: []
+    hooks: []
+
+  plan:
+    skills:
+      - sweetclaude:strategy/academic
+    agents: []
+    hooks: []
+
+  implement:
+    skills:
+      - sweetclaude:strategy/academic
+      - superpowers:writing-plans
+      - superpowers:executing-plans
+    agents: []
+    hooks: []
+
+  verify:
+    skills:
+      - sweetclaude:strategy/academic
+      - superpowers:verification-before-completion
+      - caucus
+    agents: []
+    hooks: []
+
+  ship:
+    skills:
+      - sweetclaude:hibernate
     agents: []
     hooks: []

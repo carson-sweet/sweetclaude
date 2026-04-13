@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-tdd
+name: sweetclaude-code-tdd
 description: SweetClaude TDD — unified test-driven development with four process levels, language-agnostic, hook-enforced. Tests first, from specs, immutable during implementation. Use for ALL implementation work.
 ---
 
@@ -82,7 +82,7 @@ Propose the level based on work complexity. User confirms.
 
 9. **REFACTOR.**
 
-10. **Optional: Mutation testing.** Run `sweetclaude:mutation-testing` to verify test quality.
+10. **Optional: Mutation testing.** Run `sweetclaude:code/mutation-testing` to verify test quality.
 
 ## Rules — Non-Negotiable
 
