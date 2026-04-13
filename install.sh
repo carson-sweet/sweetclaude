@@ -428,62 +428,81 @@ echo ""
 RESTORE_CONFLICTS_FOOTER
 fi
 
-cat >> "$RESTORE_FILE" << 'RESTORE_SETTINGS'
-read -p "Restore settings.json and CLAUDE.md? (y/n) " -n 1 -r
-echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  if [ -f "$BACKUP_DIR/settings.json" ]; then
-    cp "$BACKUP_DIR/settings.json" "$CLAUDE_DIR/settings.json"
-    echo "  Restored settings.json"
-  fi
-  if [ -f "$BACKUP_DIR/CLAUDE.md" ]; then
+cat >> "$RESTORE_FILE" << 'RESTORE_CLAUDEMD'
+if [ -f "$BACKUP_DIR/CLAUDE.md" ]; then
+  read -p "Restore ~/CLAUDE.md to pre-install version? (y/n) " -n 1 -r
+  echo ""
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
     cp "$BACKUP_DIR/CLAUDE.md" "$HOME/CLAUDE.md"
-    echo "  Restored CLAUDE.md"
+    echo "  Restored ~/CLAUDE.md"
+  else
+    echo "  Skipped CLAUDE.md restore."
   fi
-  echo "  Settings restored."
-else
-  echo "  Skipped settings restore."
+  echo ""
 fi
 
-echo ""
+if [ -f "$BACKUP_DIR/settings.json" ]; then
+  read -p "Restore ~/.claude/settings.json to pre-install version? (y/n) " -n 1 -r
+  echo ""
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    cp "$BACKUP_DIR/settings.json" "$CLAUDE_DIR/settings.json"
+    echo "  Restored settings.json"
+  else
+    echo "  Skipped settings.json restore."
+  fi
+  echo ""
+fi
+
 echo "Config restore complete."
-RESTORE_SETTINGS
+RESTORE_CLAUDEMD
 
 chmod +x "$RESTORE_FILE"
 
 # --- Generate Uninstaller ---
 
-cat > "$SCRIPT_DIR/uninstall.sh" << UNINSTALL
+cat > "$SCRIPT_DIR/uninstall.sh" << 'UNINSTALL'
 #!/bin/bash
 # SweetClaude Uninstaller
-# Removes SweetClaude files, then offers to restore pre-install config.
+# Removes SweetClaude files and cleans CLAUDE.md, then offers to restore pre-install config.
 
 set -e
 
-SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-CLAUDE_DIR="\$HOME/.claude"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CLAUDE_DIR="$HOME/.claude"
+CLAUDE_MD="$HOME/CLAUDE.md"
 
 echo "SweetClaude Uninstaller"
 echo "======================="
 echo ""
 
-echo "Removing SweetClaude files..."
-rm -rf "\$CLAUDE_DIR/skills/sweetclaude"
-rm -rf "\$CLAUDE_DIR/hooks/sweetclaude"
-rm -rf "\$CLAUDE_DIR/agents/sweetclaude"
-rm -rf "\$CLAUDE_DIR/rules/sweetclaude"
-rm -rf "\$CLAUDE_DIR/config/sweetclaude"
-echo "  SweetClaude files removed."
+echo "Removing SweetClaude framework files..."
+rm -rf "$CLAUDE_DIR/skills/sweetclaude"
+rm -rf "$CLAUDE_DIR/hooks/sweetclaude"
+rm -rf "$CLAUDE_DIR/agents/sweetclaude"
+rm -rf "$CLAUDE_DIR/rules/sweetclaude"
+rm -rf "$CLAUDE_DIR/config/sweetclaude"
+echo "  Framework files removed."
+
+# Always strip the SweetClaude section from CLAUDE.md — it references
+# files we just deleted, so leaving it creates broken instructions.
+if [ -f "$CLAUDE_MD" ] && grep -q "## SweetClaude" "$CLAUDE_MD" 2>/dev/null; then
+  # Remove from "## SweetClaude" to the next heading or EOF
+  sed -i.bak '/^## SweetClaude$/,/^## /{/^## SweetClaude$/d;/^## /!d;}' "$CLAUDE_MD"
+  # Also remove any trailing blank lines left behind
+  sed -i.bak -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$CLAUDE_MD"
+  rm -f "$CLAUDE_MD.bak"
+  echo "  Removed SweetClaude section from ~/CLAUDE.md."
+fi
 echo ""
 
-if [ -f "\$SCRIPT_DIR/restore-config.sh" ]; then
+if [ -f "$SCRIPT_DIR/restore-config.sh" ]; then
   read -p "Restore pre-install configuration? (y/n) " -n 1 -r
   echo ""
-  if [[ \$REPLY =~ ^[Yy]\$ ]]; then
-    "\$SCRIPT_DIR/restore-config.sh"
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    "$SCRIPT_DIR/restore-config.sh"
   fi
 else
-  echo "  No restore-config.sh found. Manual cleanup of settings.json and CLAUDE.md may be needed."
+  echo "  No restore-config.sh found. Manual cleanup of settings.json may be needed."
 fi
 
 echo ""
