@@ -101,11 +101,11 @@ framework/
 
 SweetClaude orchestrates Superpowers and BMAD — it does not fork or modify them.
 
-| Dependency | License | Role |
-|---|---|---|
-| [Superpowers](https://github.com/obra/superpowers) | MIT | Dev mechanics (plans, worktrees, debugging, code review) |
-| [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) | MIT | Product lifecycle (brainstorm, PRD, architecture, stories) |
-| [Gherkin](https://github.com/cucumber/gherkin) | MIT | Specification language for acceptance criteria |
+| Dependency | Min Version | License | Role |
+|---|---|---|---|
+| [Superpowers](https://github.com/obra/superpowers) | 5.0.7 | MIT | Dev mechanics (plans, worktrees, debugging, code review) |
+| [BMAD](https://github.com/bmad-code-org/BMAD-METHOD) | 6.0.0 | MIT | Product lifecycle (brainstorm, PRD, architecture, stories) |
+| [Gherkin](https://github.com/cucumber/gherkin) | — | MIT | Specification language for acceptance criteria |
 
 ## License
 

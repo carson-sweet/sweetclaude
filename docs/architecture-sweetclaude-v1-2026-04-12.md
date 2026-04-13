@@ -457,7 +457,7 @@ phases:
 **Validation:** Kill session mid-phase, restart, verify resume from last checkpoint.
 
 ### NFR-004: Installation Simplicity
-**Solution:** Single install mechanism — copy/clone SweetClaude files into `~/.claude/`. No compilation. Prerequisites: Claude Code, gh CLI, git, mcp-local-rag.
+**Solution:** Single install mechanism — copy/clone SweetClaude files into `~/.claude/`. No compilation. Prerequisites: Claude Code CLI, git, GitHub CLI (`gh`), Superpowers plugin (5.0.7+), BMAD Method (6.0.0+). The installer validates all prerequisites and versions before proceeding.
 **Validation:** Fresh machine install in under 5 minutes following docs.
 
 ### NFR-005: Upstream Compatibility
