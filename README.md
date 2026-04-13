@@ -24,7 +24,7 @@ SweetClaude combines the best of [Superpowers](https://github.com/obra/superpowe
 | [Claude Code CLI](https://claude.ai/code) | any | `claude --version` | [Install guide](https://docs.anthropic.com/en/docs/claude-code/getting-started) |
 | Git | any | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
 | [GitHub CLI](https://cli.github.com/) | any | `gh --version` | `brew install gh` or [cli.github.com](https://cli.github.com/) |
-| [Superpowers](https://github.com/obra/superpowers) | 5.0.1+ (tested on 5.0.7) | `/plugins` in Claude Code | `/install superpowers` in Claude Code |
+| [Superpowers](https://github.com/obra/superpowers) | 5.0.7+ | `/plugins` in Claude Code | `/install superpowers` in Claude Code |
 | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | 6.0.0+ | Check `~/.claude/skills/bmad/` exists | See [BMAD install docs](https://github.com/bmad-code-org/BMAD-METHOD#installation) |
 
 The installer checks all of the above and warns if anything is missing or outdated.
