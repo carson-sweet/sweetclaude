@@ -4,13 +4,22 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 
 ## Phase 1: DISCOVER
 **Entry:** New project or escalation from later phase
-**Exit criteria:**
-- Concrete scenario: at least one specific user scenario or real-world example has been discussed — not just abstract problem framing
-- Challenged at least once: at least one alternative framing, potential gap, or questionable assumption was raised and addressed during discovery
-- Scope boundary: at least one thing has been explicitly identified as out of scope or "not this project"
+**Exit criteria (net-new products/apps):**
+- User personas defined: at least one persona with job title, tasks, and success criteria per task — iterative loop completed until user confirmed all personas captured
+- Personas and tasks consolidated: single view presented to user, verified correct
+- Feature set established: core features defined, with optional brainstorming round(s) completed if user requested
+- Concrete scenario: at least one specific user scenario or real-world example per persona
+- Challenged at least once: at least one alternative framing, potential gap, or questionable assumption was raised and addressed
+- Scope boundary: at least one thing has been explicitly identified as out of scope
 - Key decisions documented in decision log
-- Research artifacts saved to working repo, or research explicitly deemed unnecessary with documented rationale
-**Available skills:** bmad:brainstorm, bmad:research, caucus, reasoning-frameworks
+- Competitive analysis offered: user accepted or declined; if accepted, research artifacts saved
+- Improvement check-in: "Before we move on — anything about how this phase went that I should do differently?"
+**Exit criteria (CLIs, libraries, utilities):**
+- Primary user identified with tasks and success criteria
+- Core features defined
+- Scope boundary established
+- Key decisions documented in decision log
+**Available skills:** bmad:brainstorm, bmad:research, caucus, reasoning-frameworks, sweetclaude:discover-deep
 
 ## Phase 2: DEFINE
 **Entry:** DISCOVER complete, OR bug fix/enhancement/iteration entering pipeline
@@ -21,6 +30,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Measurable success: each success criterion can be evaluated as true or false after the project ships — "users are happy" fails; "user completes primary workflow in under 3 steps" passes
 - BMAD validation checklist: the 9-item checklist has been run with all items passing or explicitly waived by the user with documented rationale
 - PRD with FRs, NFRs, and epics (for larger work requiring a PRD)
+- Improvement check-in: "Before we move on — anything about how this phase went that I should do differently?"
 **Exit criteria (other work types):**
 - Bug reproduction documented (for bug fixes)
 - Enhancement scope defined (for enhancements)
@@ -34,6 +44,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Tech spec approved (for features requiring technical design)
 - Design change identified (for bug fixes — may be trivial)
 - Solutioning gate passed (for complex work)
+- Improvement check-in
 **Available skills:** bmad:tech-spec, bmad:architecture, bmad:create-ux-design, bmad:solutioning-gate-check, sweetclaude:ripple, caucus, reasoning-frameworks
 
 ## Phase 4: PLAN
@@ -43,6 +54,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Gherkin .feature files generated (for TDD Level 3)
 - Sprint plan (if applicable)
 - Traceability map started
+- Improvement check-in
 **Available skills:** bmad:create-story, bmad:sprint-planning, sweetclaude:gherkin-bridge, backlog-management
 
 ## Phase 5: IMPLEMENT
@@ -52,6 +64,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Implementation satisfies acceptance criteria
 - Ripple-effect analysis completed (for changes to existing code)
 - Code committed
+- Improvement check-in
 **Available skills:** sweetclaude:tdd, sweetclaude:fix-issue, sweetclaude:ripple, superpowers:writing-plans, superpowers:executing-plans, superpowers:using-git-worktrees, superpowers:systematic-debugging, superpowers:dispatching-parallel-agents
 **Hooks active:** test-guardian, auto-test-runner, git-checkpoint
 
