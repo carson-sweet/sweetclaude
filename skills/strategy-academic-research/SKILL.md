@@ -1,5 +1,5 @@
 ---
-description: "Academic paper development — from first principles through submission. Six-phase pipeline: first principles, literature & positioning, structure & venue, modular drafting, review & revision, submission. Adapted from lishix520/academic-paper-skills (MIT). Use when writing research papers, position papers, or academic publications."
+description: "Academic paper development — from first principles through submission. Six-phase pipeline: first principles, literature & positioning, structure & venue, modular drafting, review & revision, submission. Use when writing research papers, position papers, or academic publications."
 ---
 
 <preflight-guard>
@@ -278,7 +278,3 @@ This skill reads the narrative arc but does not write to it.
 ## Reconciliation Integration
 
 If `strategy/academic/` contains files from reconciliation (versioned source materials, canonical-drafts, or canonical docs), read them as starting context for Phase 0. Don't start from zero if the corpus has material on this topic.
-
-## Attribution
-
-Quality gate architecture and rubric framework adapted from [lishix520/academic-paper-skills](https://github.com/lishix520/academic-paper-skills) (MIT License).
