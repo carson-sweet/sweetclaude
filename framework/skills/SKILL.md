@@ -58,38 +58,26 @@ Runs after pre-flight passes.
 
 5. **If no project exists,** offer: "Want to start a new project? I can run `sweetclaude init`."
 
-## Phase Pipeline
+## Domain Buckets
+
+SweetClaude organizes skills into five domain buckets. The `new-task` skill classifies work into the right bucket.
 
 ```
-Phase 1: DISCOVER  → Brainstorm, research, caucus, reasoning frameworks
-Phase 2: DEFINE    → Product brief, PRD, competitive analysis
-Phase 3: DESIGN    → Tech spec, architecture, UX, solutioning gate
-Phase 4: PLAN      → Stories → Gherkin .feature files, sprint planning, backlog
-Phase 5: IMPLEMENT → code/tdd (levels 0-3), code/fix-issue, worktrees, debugging
-Phase 6: VERIFY    → Code review, security review, code/pr-ready, verification, mutation testing
-Phase 7: SHIP      → Branch finishing, CI/CD gates, deploy
+strategy/  — Why does this matter and to whom? Concept, pain, ICP, competitive, research, messaging.
+product/   — What to build and why? Discovery, brief, PRD, stories, scope, backlog.
+design/    — How is it structured? Architecture, tech spec, UX, data model, API, services, infra.
+code/      — Writing and verifying code. TDD, issues, debt, testing, review.
+deploy/    — Shipping it. (Deferred — not yet scoped.)
 ```
 
-**Work-type routing:**
+**Work-type routing (via `/sweetclaude:new-task`):**
 
-*Code track:*
-- Net-new features → enter at DISCOVER
-- Bug fixes → enter at DEFINE (reproduce, characterize, design fix)
-- Feature enhancements → enter at DEFINE
-- Iteration / tech debt → enter at DEFINE
+*strategy/* — concept articulation, pain analysis, customer profiling, strategic competitive analysis, research papers, meeting prep, market messaging
+*product/* — new features, product briefs, PRDs, user stories, scope changes, backlog, sprint planning, product-level competitive analysis
+*design/* — architecture, tech specs, UX, data models, API design, services, infrastructure, impact analysis
+*code/* — bug fixes, feature implementation, tech debt, TDD, testing, code review, PR preparation
 
-*Strategy track:*
-- Research paper → enter at DISCOVER
-- Strategic positioning → enter at DISCOVER
-- Competitive analysis → enter at DISCOVER
-- Meeting prep → enter at DEFINE
-- Market messaging → enter at DEFINE
-- Biz planning → enter at DISCOVER
-- File reconciliation → enter at DEFINE
-
-Any type can escalate to DISCOVER if deeper issues surface.
-
-**Phase re-entry is normal.** When new information invalidates earlier assumptions, go back. Update the earlier-phase artifacts. This is not a failure — it's how good work happens.
+Any work can shift buckets as understanding deepens. This is normal.
 
 ## Phase Transitions
 
@@ -148,18 +136,21 @@ Follow `~/.claude/rules/sweetclaude/interaction-model.md` at all times:
 
 ## Skill Surfacing
 
-Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available. The config has two tracks:
+Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available. The config has five domain buckets:
 
-- **`code:`** — skills for technical development (TDD, debugging, code review, deployment)
-- **`strategy:`** — skills for strategic product development (research, positioning, meeting prep)
+- **`strategy:`** — strategic positioning, competitive analysis, research, messaging
+- **`product:`** — discovery, product definition, stories, scope, backlog
+- **`design:`** — architecture, specs, UX, data model, API, services, infrastructure
+- **`code:`** — TDD, implementation, testing, code review
+- **`deploy:`** — shipping (deferred)
 
-When the user asks to do something, the work router classifies it as code or strategy work. Surface skills from the appropriate track for the current phase. If a skill from the other track is requested, inform the user it's from a different track but offer to invoke it anyway (override).
+When the user asks to do something, the `new-task` skill classifies it into the appropriate bucket and surfaces relevant skills. Skills from other buckets are available on request (override).
 
 ## Delegation Depth
 
 When delegating to early-phase skills, set depth expectations:
 
-**For `sweetclaude:discover`:** Invoke during Discover phase for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal Discover directly.
+**For `sweetclaude:product/discovery`:** Invoke for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal discovery directly.
 
 **For `bmad:product-brief`:** Conduct the full 11-section interview. One section at a time — never batch. Probe vague answers with follow-ups before moving to the next section. The interview is a discovery conversation, not a form to fill. After generating the document, run the BMAD validation checklist and present results before the phase gate.
 

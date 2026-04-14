@@ -2,7 +2,7 @@
 
 Entry and exit criteria for each phase. A phase cannot advance until exit criteria are met (user can override).
 
-> These phase gates describe the default code-track skills. Strategy-track skills are listed in `phase-skills.yaml` under the `strategy:` key and will be documented here as they are built.
+> Skills are organized into five domain buckets (strategy, product, design, code, deploy). Phase gates reference skills by their bucket path. See `phase-skills.yaml` for the full mapping.
 
 ## Phase 1: DISCOVER
 **Entry:** New project or escalation from later phase
@@ -21,7 +21,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Core features defined
 - Scope boundary established
 - Key decisions documented in decision log
-**Available skills:** bmad:brainstorm, bmad:research, caucus, reasoning-frameworks, sweetclaude:discover
+**Available skills:** product/discovery, strategy/concept, strategy/pain-thesis, strategy/competitive-analysis, product/research, caucus, reasoning-frameworks
 
 ## Phase 2: DEFINE
 **Entry:** DISCOVER complete, OR bug fix/enhancement/iteration entering pipeline
@@ -37,7 +37,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Bug reproduction documented (for bug fixes)
 - Enhancement scope defined (for enhancements)
 - Improvement criteria defined (for iteration)
-**Available skills:** bmad:product-brief, bmad:prd, sweetclaude:new-task, sweetclaude:code/ripple, reconciling-documents, backlog-management
+**Available skills:** product/product-brief, product/prd, product/manage-scope, product/backlog, product/user-success-criteria, design/change-impact-analysis, reconciling-documents
 
 ## Phase 3: DESIGN
 **Entry:** DEFINE complete
@@ -47,7 +47,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Design change identified (for bug fixes — may be trivial)
 - Solutioning gate passed (for complex work)
 - Improvement check-in
-**Available skills:** bmad:tech-spec, bmad:architecture, bmad:create-ux-design, bmad:solutioning-gate-check, sweetclaude:code/ripple, caucus, reasoning-frameworks
+**Available skills:** design/architecture, design/tech-spec, design/ux, design/solutioning-gate, design/data-model, design/api-design, design/services-design, design/infra-design, design/change-impact-analysis, design/manage-decisions, caucus, reasoning-frameworks
 
 ## Phase 4: PLAN
 **Entry:** DESIGN complete
@@ -57,17 +57,17 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Sprint plan (if applicable)
 - Traceability map started
 - Improvement check-in
-**Available skills:** bmad:create-story, bmad:sprint-planning, sweetclaude:code/gherkin-bridge, backlog-management
+**Available skills:** product/user-story, product/user-tdd-tests, product/user-workflows, product/sprint-plan, product/backlog
 
 ## Phase 5: IMPLEMENT
 **Entry:** PLAN complete (or DEFINE/DESIGN complete for simpler work types)
 **Exit criteria:**
 - All tests pass (RED → GREEN completed)
 - Implementation satisfies acceptance criteria
-- Ripple-effect analysis completed (for changes to existing code)
+- Change-impact analysis completed (for changes to existing code)
 - Code committed
 - Improvement check-in
-**Available skills:** sweetclaude:code/tdd, sweetclaude:code/fix-issue, sweetclaude:code/ripple, superpowers:writing-plans, superpowers:executing-plans, superpowers:using-git-worktrees, superpowers:systematic-debugging, superpowers:dispatching-parallel-agents
+**Available skills:** code/tdd, code/work-issue, code/work-debt, design/change-impact-analysis, superpowers:writing-plans, superpowers:executing-plans, superpowers:using-git-worktrees, superpowers:systematic-debugging, superpowers:dispatching-parallel-agents
 **Hooks active:** test-guardian, auto-test-runner, git-checkpoint
 
 ## Phase 6: VERIFY
@@ -78,7 +78,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - PR template filled
 - Documentation updated
 - Traceability map complete
-**Available skills:** sweetclaude:code/pr-ready, sweetclaude:code/ripple, sweetclaude:code/auto-docs, superpowers:requesting-code-review, superpowers:verification-before-completion, superpowers:simplify
+**Available skills:** code/pr-precheck, code/qa-testing, code/mutation-testing, code/security-testing, code/code-review, design/update-docs, superpowers:verification-before-completion
 
 ## Phase 7: SHIP
 **Entry:** VERIFY complete
@@ -86,10 +86,12 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - PR merged
 - Deployment successful (if applicable)
 - Post-deploy verification (if applicable)
-**Available skills:** superpowers:finishing-a-development-branch, sweetclaude:code/pr-ready, sweetclaude:hibernate
+**Available skills:** superpowers:finishing-a-development-branch, sweetclaude:hibernate
 
 ## Cross-Phase Skills
 
 These skills are available in ALL phases via `always_loaded` in phase-skills.yaml:
 
-- **sweetclaude:hibernate** — Freeze or thaw a project. Can be invoked at any point, not just during SHIP. When invoked mid-phase, hibernation captures the current phase state for resumption.
+- **sweetclaude** — Master router, session entry point
+- **sweetclaude:new-task** — Classify work and enter pipeline
+- **sweetclaude:hibernate** — Freeze or thaw a project at any point
