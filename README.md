@@ -11,7 +11,8 @@ SweetClaude combines the best of [Superpowers](https://github.com/obra/superpowe
 ## What It Does
 
 - **7-phase pipeline:** Discover, Define, Design, Plan, Implement, Verify, Ship — with quality gates, not time gates
-- **Dual-track architecture:** Code track for technical development, strategy track for positioning, competitive analysis, research papers, meeting prep, and business planning
+- **Five-bucket architecture:** Strategy, product, design, code, deploy — skills organized by domain, not phase
+- **Auto-flow and status:** `sweetclaude auto` runs the full pipeline hands-free at current deference level; `sweetclaude status` shows phase state and pending gates
 - **Work-type routing:** Bug fixes, enhancements, iterations, and net-new features each enter the pipeline at the right phase
 - **Hook-enforced TDD:** Four levels (Hotfix, Light, Standard, Full). Test files are physically blocked from modification during implementation. Tests run automatically after every source edit.
 - **Pre-flight guard:** Deterministic hook blocks on first tool use if SweetClaude isn't configured for the project. Per-project opt-out via `.sweetclaude-skip`.
@@ -171,26 +172,27 @@ DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP
 
 Net-new features enter at Discover. Bug fixes, enhancements, and iterations enter at Define. Any work type can escalate to Discover if deeper issues surface. Phase re-entry is normal and expected.
 
-### Strategy Track
+### Skill Domains
 
-The strategy track handles non-code work that still benefits from structured process:
+Skills are organized into five domain buckets, each usable from any phase:
 
-- **Reconciliation** — Onboard files into an organized corpus with canonical-draft synthesis. Ingests messy document collections, deduplicates, and produces structured outputs.
-- **Academic** — Research paper development pipeline from literature review through draft.
-- **Narrative Arc** *(planned)* — Knowledge graph construction for strategic narratives.
-- **Meeting Prep** *(planned)* — Structured preparation for high-stakes meetings.
+- **strategy/** (8 skills) — concept, pain thesis, ICP, competitive analysis, academic research, meeting prep, narrative arc, market messaging
+- **product/** (12 skills) — discovery, positioning, product brief, PRD, user stories, Gherkin tests, success criteria, workflows, scope management, backlog, sprint planning, feature competitive
+- **design/** (11 skills) — architecture, tech spec, UX, solutioning gate, change impact analysis, doc updates, data model, API design, services design, infra design, decision management
+- **code/** (8 skills) — TDD, issue implementation, tech debt, PR precheck, QA testing, mutation testing, security testing, code review
+- **deploy/** — deferred
 
-Strategy skills live in `skills/strategy/` and share utilities from `skills/shared/`.
+All buckets share utilities from `skills/shared/`.
 
 ## What's in the Box
 
 ```
 framework/
-  skills/         14 skills across code/ (8), strategy/ (2), and orchestration (4)
-  hooks/           5 hooks (test guardian, auto-test runner, git checkpoint, auto-reindex, pre-flight guard)
-  agents/          8 subagents (test writer, implementer, QA caucus x3, security, workflow, code review)
-  rules/           3 rules files (interaction model, phase gates, TDD levels)
-  config/          6 config files (defaults, phase-skill mapping, model routing, templates)
+  skills/         46 skills across strategy/ (8), product/ (12), design/ (11), code/ (8), orchestration (7)
+  hooks/           6 hooks (test guardian, auto-test runner, git checkpoint, auto-reindex, pre-flight guard, session preflight)
+  agents/          8 subagents
+  rules/           3 rules files
+  config/          6 config files
 ```
 
 ## Design Principles
@@ -198,7 +200,7 @@ framework/
 - **Quality gates, not time gates.** SweetClaude never generates time estimates. Progress is measured in artifacts produced and criteria met.
 - **Enforcement beats guidance.** TDD discipline is enforced by hooks, not advisory text. Tests are physically blocked from modification during implementation.
 - **Dual context windows.** The system manages Claude's token limits AND your cognitive load simultaneously.
-- **Dual tracks, shared spine.** Code and strategy work share the same phase-gate pipeline, deference model, and interaction rules — but use different skills. The architecture extends without forking.
+- **Five buckets, shared spine.** Strategy, product, design, code, and deploy share the same phase-gate pipeline, deference model, and interaction rules — but use different skills. The architecture extends without forking.
 - **Phase dwelling.** The system stays present in the current phase. It never pushes advancement. You decide when to move on.
 - **Creative partnership.** SweetClaude proposes and challenges. It thinks with you, not just for you.
 - **Language agnostic.** Works with any language and framework. Codebase discovery drives configuration.
