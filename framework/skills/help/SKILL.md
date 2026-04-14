@@ -4,7 +4,7 @@ description: List all SweetClaude commands and check project configuration statu
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # SweetClaude Help
@@ -28,7 +28,7 @@ SweetClaude Status
 
 ```
 Orchestration
-  /sweetclaude                Start session, pre-flight check, phase routing
+  /sweetclaude:master         Start session, pre-flight check, phase routing
   /sweetclaude:help           This help (you are here)
   /sweetclaude:status         Orient to project: what's done, what's pending, what's next
   /sweetclaude:auto-flow      Walk through pipeline step by step
