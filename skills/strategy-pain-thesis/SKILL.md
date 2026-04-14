@@ -41,7 +41,12 @@ Draft the framing: this is a narrative diagnostic, not a pitch deck. Define the 
 
 Ask: "What is the core hypothesis — the thing that must be true for this business to work?"
 
-Then ask: "Is this medicine (must-have, budget already exists) or a vitamin (nice-to-have, discretionary)?"
+Wait for the answer. Then ask separately:
+
+Use AskUserQuestion:
+- "Medicine" — must-have, budget already exists for this category
+- "Vitamin" — nice-to-have, discretionary spending
+- "Not sure" — discuss further
 
 ---
 
@@ -51,7 +56,12 @@ What structural forces created this pain? Why is it acute now? What analogous pa
 
 Ask: "What changed in the industry that makes this problem worse or more urgent than it was two years ago?"
 
-Then ask: "Research industry trends, regulatory changes, or market dynamics that create the structural pressure?"
+Wait for the answer. Then offer:
+
+Use AskUserQuestion:
+- "I know this well" — move to next section
+- "Research this for me" — research industry trends, regulatory changes, and market dynamics
+- "Brainstorm together" — discuss what forces are at play
 
 ---
 
@@ -59,7 +69,11 @@ Then ask: "Research industry trends, regulatory changes, or market dynamics that
 
 Who is personally accountable if this problem is not solved? Why do they lack control over the forces that create it? What is the accountability-control asymmetry?
 
-Ask: "Who gets fired, fined, or blamed when this goes wrong? And why can't they just fix it themselves?"
+Ask: "Who gets fired, fined, or blamed when this goes wrong?"
+
+Wait for the answer. Then ask separately:
+
+Ask: "Why can they not fix it themselves?"
 
 ---
 
@@ -67,9 +81,13 @@ Ask: "Who gets fired, fined, or blamed when this goes wrong? And why can't they 
 
 What does this problem look and feel like from the inside? What questions can the pain bearer not answer? How does the pain compound over time? What is the escalation chain?
 
-Ask: "Walk me through what happens when this problem hits. What is the sequence of events, and how does it get worse if nobody intervenes?"
+Ask: "Walk me through what happens when this problem hits — from the first sign through the worst case."
 
-Then ask: "Map the escalation chain from first symptom through worst-case outcome?"
+Wait for the answer. Then offer:
+
+Use AskUserQuestion:
+- "Move on" — enough detail, next section
+- "Map the escalation chain" — help me trace from first symptom through worst-case outcome
 
 ---
 
@@ -79,9 +97,15 @@ What have buyers tried? What are the structural reasons those approaches are ins
 
 Ask: "What do people do today to deal with this?"
 
-Then ask: "Why does that fail — what specifically breaks?"
+Wait for the answer. Then ask separately:
 
-Then ask: "Research existing solutions and their failure modes?"
+Ask: "Why does that fail — what specifically breaks?"
+
+Wait for the answer. Then offer:
+
+Use AskUserQuestion:
+- "Move on" — enough detail, next section
+- "Research alternatives" — research existing solutions and analyze their failure modes
 
 ---
 
@@ -91,7 +115,9 @@ What functional capabilities are required? What non-functional constraints must 
 
 Ask: "If you could wave a magic wand, what would the solution need to do?"
 
-Then ask: "What would make a buyer reject it even if it technically works?"
+Wait for the answer. Then ask separately:
+
+Ask: "What would make a buyer reject it even if it technically works?"
 
 ---
 
@@ -103,7 +129,11 @@ A wedge is not a feature — it is a market entry strategy. The right wedge gets
 
 Ask: "What is the narrowest, most painful slice of this problem that a buyer would pay to solve on its own — before seeing anything else on your roadmap?"
 
-Then ask: "Evaluate candidate wedges using the checkbook test? (If you walked into a meeting and described only this one capability, would they write a check?)"
+Wait for the answer. Then offer:
+
+Use AskUserQuestion:
+- "Move on" — wedge is clear
+- "Evaluate with checkbook test" — for each candidate: if you described only this capability in a meeting, would they write a check?
 
 ---
 
@@ -137,9 +167,19 @@ How many buyers will you interview? What are your validation criteria? What happ
 
 Ask: "How will you test this thesis with real buyers?"
 
-Then ask: "How many conversations do you need, and what signals tell you the thesis is right vs. wrong?"
+Wait for the answer. Then ask separately:
 
-Then ask: "Design a validation interview guide using the 10-ICP interview framework?"
+Ask: "How many conversations do you need?"
+
+Wait for the answer. Then ask separately:
+
+Ask: "What signals would tell you the thesis is right vs. wrong?"
+
+Wait for the answer. Then offer:
+
+Use AskUserQuestion:
+- "Move on" — validation plan is clear
+- "Design interview guide" — build a validation interview guide using the 10-ICP framework
 
 ---
 

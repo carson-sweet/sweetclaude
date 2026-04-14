@@ -143,7 +143,11 @@ Use AskUserQuestion with these options:
 
 Record the answer. If new repo, the subagent in Step 3 will create it.
 
-Then ask about existing strategy documents (same as A/B).
+Wait for the above to complete. Then ask separately:
+
+Ask: "Do you have existing strategy documents to bring in? These can be positioning docs, research, meeting notes, or strategy files from anywhere."
+
+Wait for the answer. If yes, ask where they are. If no, move on.
 
 ---
 
