@@ -1,4 +1,4 @@
-# PRD: SweetClaude v1.1 — 2026-04-13
+# PRD: SweetClaude v1.2 — 2026-04-13
 
 **Author:** Carson Sweet
 **Status:** Draft
@@ -504,72 +504,163 @@ Full pipeline.
 
 ---
 
-### EPIC-010: Strategy Track
+### EPIC-010: Strategy Domain
 
-#### FR-042: Strategy File Reconciliation
-**Priority:** Must Have
-**Description:** Onboard unstructured files into the `strategy/` system. Inventories files in a target directory, categorizes each by domain and document type, applies versioning conventions, and optionally synthesizes content into canonical-draft documents that follow the strategy corpus structure.
-**Acceptance Criteria:**
-- [ ] Scans target directory and produces a typed inventory (file, domain, doc-type, status)
-- [ ] Categorizes files by domain (e.g., market, product, technical, organizational) and document type (e.g., memo, analysis, presentation, raw notes)
-- [ ] Applies versioning to onboarded files consistent with strategy corpus conventions
-- [ ] Optional synthesis: generates canonical-draft documents from clusters of related files
-- [ ] Non-destructive — originals preserved, copies/symlinks placed into `strategy/`
+#### FR-042: Concept Articulation
+**Priority:** Must Have — Built
+**Description:** Skill for articulating and refining early-stage concepts. Guides users from vague idea to structured concept statement through iterative questioning and reframing.
 
-#### FR-043: Academic Paper Development
-**Priority:** Must Have
-**Description:** Six-phase pipeline for developing academic papers: first principles exploration, literature review, structure and venue selection, drafting, review and revision, and submission preparation. Adapted from lishix520/academic-paper-skills (MIT license).
-**Acceptance Criteria:**
-- [ ] Phase 1 (First Principles): guided exploration of research question, contribution, and novelty
-- [ ] Phase 2 (Literature Review): structured search, synthesis, and gap identification
-- [ ] Phase 3 (Structure & Venue): paper outline generation and venue matching
-- [ ] Phase 4 (Drafting): section-by-section drafting with citation integration
-- [ ] Phase 5 (Review & Revision): structured self-review, peer-review simulation, revision tracking
-- [ ] Phase 6 (Submission): formatting, compliance checks, cover letter generation
-- [ ] Each phase has defined entry/exit criteria
-- [ ] Attribution: adapted from lishix520/academic-paper-skills (MIT)
+#### FR-043: Pain Thesis Analysis
+**Priority:** Must Have — Built
+**Description:** Structured analysis of the pain point a product or strategy addresses. Validates that the pain is real, quantifiable, and worth solving before committing resources.
 
-#### FR-044: Narrative Arc Knowledge Graph
-**Priority:** Must Have
-**Description:** Typed knowledge graph connecting strategy domains — objectives, claims, proof points, and literature references. Enables traversal queries such as "what evidence supports claim X?" or "which objectives lack proof points?" Design deferred to its own cycle; interface contract locked now.
-**Acceptance Criteria:**
-- [ ] Node types defined: Objective, Claim, ProofPoint, LiteratureRef (minimum)
-- [ ] Edge types defined: supports, contradicts, cites, derives-from (minimum)
-- [ ] Interface contract published: query API, ingestion API, export format
-- [ ] Interface contract is stable — implementation may change, contract does not
-- [ ] Design and implementation deferred to dedicated cycle
+#### FR-044: Ideal Customer Profile
+**Priority:** Must Have — Built
+**Description:** Develops a detailed ideal customer profile (ICP) from market context and pain thesis. Identifies demographics, psychographics, buying behavior, and qualification criteria.
 
-#### FR-045: Meeting Prep
-**Priority:** Should Have
+#### FR-045: Strategic Competitive Analysis
+**Priority:** Must Have — Built
+**Description:** Deep competitive landscape analysis at the strategic level — market positioning, differentiation vectors, competitive moats, and vulnerability assessment across the full competitive field.
+
+#### FR-046: Academic Research Pipeline
+**Priority:** Must Have — Built
+**Description:** Multi-phase pipeline for academic research: first principles exploration, literature review, structure and venue selection, drafting, review and revision, and submission preparation. Adapted from lishix520/academic-paper-skills (MIT license).
+
+#### FR-047: Meeting Prep
+**Priority:** Should Have — Built
 **Description:** Generate stakeholder-specific meeting deliverables from the strategy corpus and narrative arc knowledge graph. Given a meeting context (attendees, agenda, objectives), produces tailored briefing documents, talking points, and anticipated questions with sourced answers.
-**Acceptance Criteria:**
-- [ ] Accepts meeting context: attendees (with roles), agenda items, meeting objectives
-- [ ] Generates stakeholder-specific briefing documents (different emphasis per audience)
-- [ ] Produces talking points aligned to agenda items
-- [ ] Generates anticipated questions with sourced answers from strategy corpus
-- [ ] Sources all claims back to strategy corpus documents or knowledge graph nodes
-- [ ] Degrades gracefully when knowledge graph is not yet populated (falls back to corpus search)
 
-#### FR-046: Dual-Track Work Router
-**Priority:** Must Have
-**Description:** Extends the existing work router (FR-005) to classify incoming work as code-track or strategy-track, then surfaces the appropriate skill set for the identified track. Code-track routes through the existing phase pipeline. Strategy-track routes to strategy-specific skills.
-**Acceptance Criteria:**
-- [ ] Classifies work as code-track or strategy-track based on user intent
-- [ ] Code-track work routes through existing phase pipeline (FR-004, FR-005)
-- [ ] Strategy-track work surfaces strategy skills (FR-042 through FR-045)
-- [ ] Ambiguous work prompts user for clarification
-- [ ] User can override classification at any time
+#### FR-048: Narrative Arc Knowledge Graph
+**Priority:** Must Have — Built
+**Description:** Typed knowledge graph connecting strategy domains — objectives, claims, proof points, and literature references. Enables traversal queries such as "what evidence supports claim X?" or "which objectives lack proof points?"
 
-#### FR-047: Pre-Flight Guard Hook
-**Priority:** Must Have
-**Description:** Deterministic `PreToolUse` hook that blocks the first tool use in a session if SweetClaude is not configured for the current project. Ensures the framework is initialized before any work begins. Per-project opt-out via `.sweetclaude-skip` marker file in the project root.
-**Acceptance Criteria:**
-- [ ] Fires on first `PreToolUse` event of a session
-- [ ] Blocks tool use if SweetClaude working repo not found or not configured
-- [ ] Returns clear error message with instructions to run `sweetclaude init` or create `.sweetclaude-skip`
-- [ ] `.sweetclaude-skip` in project root bypasses the guard for that project
-- [ ] Does not fire on subsequent tool uses after first pass/fail
-- [ ] Deterministic — no LLM reasoning, pure file-existence checks
+#### FR-049: Market Messaging
+**Priority:** Should Have — Built
+**Description:** Generates market-facing messaging frameworks — value propositions, taglines, elevator pitches, and messaging matrices tailored to audience segments derived from ICP and competitive positioning.
+
+---
+
+### EPIC-011: Product Domain
+
+#### FR-050: Product Discovery
+**Priority:** Must Have — Built
+**Description:** Structured product discovery skill — moved from orchestration. Guides the full Discover phase workflow: persona interviews, feature brainstorming, competitive analysis, and scope boundary setting.
+
+#### FR-051: Positioning Statement
+**Priority:** Must Have — Built
+**Description:** Generates a positioning statement following the classic framework: For [target customer] who [need], [product] is a [category] that [key benefit]. Unlike [alternatives], [product] [differentiator].
+
+#### FR-052: Product Brief Wrapper
+**Priority:** Must Have — Built
+**Description:** BMAD wrapper that invokes the Product Brief workflow with SweetClaude orchestration — phase awareness, deference levels, and decision logging integrated.
+
+#### FR-053: PRD Wrapper
+**Priority:** Must Have — Built
+**Description:** BMAD wrapper that invokes the PRD workflow with SweetClaude orchestration — phase awareness, deference levels, and decision logging integrated.
+
+#### FR-054: User Story Wrapper
+**Priority:** Must Have — Built
+**Description:** BMAD wrapper that invokes the Create Story workflow with SweetClaude orchestration — phase awareness, deference levels, and decision logging integrated.
+
+#### FR-055: User TDD Tests / Gherkin Bridge
+**Priority:** Must Have — Built
+**Description:** Formal transition from user stories to Gherkin `.feature` files that serve as the contract for TDD test generation. Stories with acceptance criteria become Given/When/Then scenarios.
+
+#### FR-056: User Success Criteria
+**Priority:** Must Have — Built
+**Description:** Defines measurable success criteria for user-facing features. Each criterion is evaluable as true/false after ship — no subjective measures.
+
+#### FR-057: User Workflows
+**Priority:** Must Have — Built
+**Description:** Maps end-to-end user workflows for features, identifying entry points, decision points, error paths, and success states.
+
+#### FR-058: Scope Management
+**Priority:** Must Have — Built
+**Description:** Tracks scope changes with rationale — items moving in/out of scope are logged with direction, reason, and date. Queryable history.
+
+#### FR-059: Sprint Plan Wrapper
+**Priority:** Should Have — Built
+**Description:** BMAD wrapper that invokes the Sprint Planning workflow with SweetClaude orchestration.
+
+#### FR-060: Research Wrapper
+**Priority:** Should Have — Built
+**Description:** BMAD wrapper that invokes the Research workflow with SweetClaude orchestration.
+
+#### FR-061: Feature Competitive Analysis
+**Priority:** Should Have — Built
+**Description:** Feature-level competitive analysis — compares specific feature implementations across competitors, identifies table-stakes features, and highlights differentiation opportunities at the feature granularity.
+
+---
+
+### EPIC-012: Design Domain
+
+#### FR-062: Architecture Wrapper
+**Priority:** Must Have — Built
+**Description:** BMAD wrapper that invokes the Architecture workflow with SweetClaude orchestration — phase awareness, deference levels, and decision logging integrated.
+
+#### FR-063: Tech Spec Wrapper
+**Priority:** Must Have — Built
+**Description:** BMAD wrapper that invokes the Tech Spec workflow with SweetClaude orchestration.
+
+#### FR-064: UX Design Wrapper
+**Priority:** Should Have — Built
+**Description:** BMAD wrapper that invokes the Create UX Design workflow with SweetClaude orchestration.
+
+#### FR-065: Solutioning Gate Wrapper
+**Priority:** Must Have — Built
+**Description:** BMAD wrapper that invokes the Solutioning Gate Check workflow with SweetClaude orchestration.
+
+#### FR-066: Change Impact Analysis
+**Priority:** Must Have — Built
+**Description:** Traces the impact of a proposed change across the codebase — dependencies, tests, APIs, consumers. Presents impact assessment before implementation proceeds. Formerly named "ripple-effect analysis."
+
+#### FR-067: Update Docs
+**Priority:** Must Have — Built
+**Description:** When implementation changes behavior, identifies and updates relevant documentation (README, API docs, ADRs, CLAUDE.md). Proposes updates for user approval. Formerly named "auto-docs."
+
+#### FR-068: Data Model Design
+**Priority:** Must Have — Built
+**Description:** Designs data models — entities, relationships, constraints, migrations. Produces schema definitions and migration plans for the chosen persistence layer.
+
+#### FR-069: API Design
+**Priority:** Must Have — Built
+**Description:** Designs API contracts — endpoints, request/response schemas, error handling, versioning strategy. Produces OpenAPI specs or equivalent contract documents.
+
+#### FR-070: Services Design
+**Priority:** Should Have — Built
+**Description:** Designs service boundaries, inter-service communication patterns, and service contracts for distributed architectures.
+
+#### FR-071: Infrastructure Design
+**Priority:** Should Have — Built
+**Description:** Designs infrastructure topology — compute, storage, networking, CI/CD pipelines. Produces infrastructure-as-code templates or deployment specifications.
+
+#### FR-072: Decision Management
+**Priority:** Must Have — Built
+**Description:** Manages architectural and design decisions — captures decisions with context, rationale, alternatives considered, and consequences. Produces ADR-formatted records.
+
+---
+
+### EPIC-013: Orchestration Enhancements
+
+#### FR-073: Status Command
+**Priority:** Must Have — Built
+**Description:** Displays current project state — active phase, deference level, recent decisions, pending work, and skill availability. Single command for full situational awareness.
+
+#### FR-074: Auto-Flow Pipeline Walker
+**Priority:** Must Have — Built
+**Description:** Walks the phase pipeline automatically at Autonomous deference — executes skills in sequence, pausing only at phase gates. Reduces manual invocation overhead for experienced users.
+
+#### FR-075: Pre-Flight Guard in Skills
+**Priority:** Must Have — Built
+**Description:** Each skill validates its own preconditions before executing — checks phase eligibility, required artifacts, and configuration state. Returns clear error with remediation steps on failure.
+
+#### FR-076: Help Command
+**Priority:** Must Have — Built
+**Description:** Displays available skills for the current phase, their descriptions, and invocation syntax. Context-aware — shows only what is relevant now.
+
+#### FR-077: Five-Bucket Work Classification
+**Priority:** Must Have — Built
+**Description:** Classifies incoming work into five domain buckets (Strategy, Product, Design, Code, Orchestration) and routes to the appropriate skill set. Extends the original dual-track router to the full five-bucket architecture.
 
 ---
 
@@ -662,12 +753,15 @@ Full pipeline.
 | EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037 | Must Have |
 | EPIC-008 | Global Configuration | FR-023, FR-024 | Must Have |
 | EPIC-009 | Structured Discover Phase | FR-038, FR-039, FR-040, FR-041 | Must Have |
-| EPIC-010 | Strategy Track | FR-042, FR-043, FR-044, FR-045, FR-046, FR-047 | Must Have |
+| EPIC-010 | Strategy Domain | FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049 | Must Have |
+| EPIC-011 | Product Domain | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061 | Must Have |
+| EPIC-012 | Design Domain | FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072 | Must Have |
+| EPIC-013 | Orchestration Enhancements | FR-073, FR-074, FR-075, FR-076, FR-077 | Must Have |
 
 **Totals:**
-- Functional Requirements: 47 (34 Must, 11 Should, 2 Could)
+- Functional Requirements: 77 (57 Must, 18 Should, 2 Could)
 - Non-Functional Requirements: 8 (6 Must, 2 Should)
-- Epics: 10
+- Epics: 13
 
 ---
 
@@ -675,8 +769,8 @@ Full pipeline.
 
 | Priority | FRs | NFRs | Total |
 |---|---|---|---|
-| Must Have | 34 | 6 | 40 |
-| Should Have | 11 | 2 | 13 |
+| Must Have | 57 | 6 | 63 |
+| Should Have | 18 | 2 | 20 |
 | Could Have | 2 | 0 | 2 |
 
 ---
