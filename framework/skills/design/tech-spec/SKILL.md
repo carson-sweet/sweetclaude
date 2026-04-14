@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-design-tech-spec
+name: sweetclaude:design/tech-spec
 description: "Produce a technical specification: detailed design, data structures, algorithms, error handling, edge cases. Wraps bmad:tech-spec."
 ---
 

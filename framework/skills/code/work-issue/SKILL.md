@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-code-work-issue
+name: sweetclaude:code/work-issue
 description: Implement a single GitHub issue end-to-end using the SweetClaude pipeline. Explore, plan, TDD, verify, PR. Use when working from a GitHub issue.
 ---
 

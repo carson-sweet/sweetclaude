@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-strategy-ideal-customer-profile
+name: sweetclaude:strategy/ideal-customer-profile
 description: "Define who specifically has this pain and will pay or use your solution. Demographics, behaviors, triggers, deal-breakers. Builds on concept and pain-thesis."
 ---
 

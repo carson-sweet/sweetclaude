@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-new-task
+name: sweetclaude:new-task
 description: "Start a new task. Asks what you want to do, classifies the work into one of five domain buckets (strategy, product, design, code, deploy), and routes to the correct pipeline entry point. Use when beginning any new work."
 ---
 

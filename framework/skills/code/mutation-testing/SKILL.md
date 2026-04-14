@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-code-mutation-testing
+name: sweetclaude:code/mutation-testing
 description: Run mutation testing to verify test quality after implementation. Introduces small code changes and checks if tests catch them. Use after TDD GREEN phase to validate test effectiveness.
 ---
 

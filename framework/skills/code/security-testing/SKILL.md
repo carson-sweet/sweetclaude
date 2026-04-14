@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-code-security-testing
+name: sweetclaude:code/security-testing
 description: "Review code changes for security issues: auth problems, injection vulnerabilities, secrets exposure, tenant boundary violations. Returns prioritized findings."
 ---
 

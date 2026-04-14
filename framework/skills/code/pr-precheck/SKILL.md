@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-code-pr-precheck
+name: sweetclaude:code/pr-precheck
 description: Final pre-PR quality gate. Verify tests pass, fill PR template, check for secrets and debug code, ensure acceptance criteria are met, update traceability. Use before opening any PR.
 ---
 
