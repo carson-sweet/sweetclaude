@@ -1,5 +1,5 @@
 ---
-description: "Build a pain thesis document — a narrative diagnostic that determines whether your company is solving a necessary problem. Walks through 11 sections from industry background through validation plan. Based on The Pain Thesis: A Founder's Guide by Carson Sweet."
+description: "Build a pain thesis document — a narrative diagnostic that determines whether your company is solving a necessary problem. Walks through 11 sections from industry background through validation plan. "
 ---
 
 <preflight-guard>
@@ -202,7 +202,3 @@ Present the rubric results. The goal: move every critical element from Red to Ye
 3. **Save** to `strategy/pain-thesis.md`.
 
 4. Do not push to the next step. Present the thesis and wait.
-
-## Attribution
-
-Based on *The Pain Thesis: A Founder's Guide* by Carson Sweet.
