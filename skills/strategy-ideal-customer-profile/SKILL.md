@@ -12,7 +12,7 @@ Define who specifically has this pain and will use this solution.
 
 ## Context
 
-Read `strategy/concept.md` and `strategy/pain-thesis.md` if they exist. The pain thesis identifies who feels the pain — this skill sharpens that into a targetable profile.
+Read `strategy/concept.md` and `strategy/pain-thesis.md` if they exist. The pain thesis identifies who feels the pain. This skill sharpens that into a targetable profile.
 
 ## Process
 
@@ -20,12 +20,12 @@ Work through each section one at a time.
 
 ### 1. Demographics
 
-Not a market segment — a describable person or organization:
+Describe a person or organization, not a market segment:
 - **For B2B:** company size, industry, stage, tech stack, team structure
 - **For B2C:** role, experience level, context (work, personal, both)
 - **For developer tools:** language/framework, team size, deployment model, pain frequency
 
-Ask: "Describe your ideal first 10 users. Not a category — specific kinds of people."
+Ask: "Describe your ideal first 10 users. Specific kinds of people, not a category."
 
 ### 2. Behaviors
 
@@ -46,7 +46,7 @@ Ask: "What would make someone google for this today?"
 
 ### 4. Deal-breakers
 
-What would make them walk away even if the product is good?
+What makes them walk away even if the product is good?
 - Price threshold
 - Missing integration
 - Required expertise
@@ -55,10 +55,10 @@ What would make them walk away even if the product is good?
 
 ### 5. Anti-profile
 
-Who is explicitly NOT the target? Defining who you're not building for is as important as who you are.
-- Who would use it wrong?
-- Who would churn immediately?
-- Who would demand features that dilute the core value?
+Who is explicitly NOT the target? Defining who you are not building for is as important as who you are.
+- Who uses it wrong?
+- Who churns immediately?
+- Who demands features that dilute the core value?
 
 ### 6. The profile
 

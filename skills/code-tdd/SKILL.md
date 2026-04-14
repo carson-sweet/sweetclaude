@@ -3,7 +3,7 @@ description: SweetClaude TDD — unified test-driven development with four proce
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Running the pre-flight check now." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # SweetClaude TDD
@@ -19,7 +19,13 @@ Tests specify behavior. Implementation satisfies tests. Hooks enforce this. No e
 | 2: Standard | Features, bug fixes, behavior changes | Subagent separation: test writer ≠ implementer. Tests committed before impl. |
 | 3: Full | Net-new features with Gherkin specs | Gherkin → test writer → QA caucus → user approval → implementer → verify |
 
-Propose the level based on work complexity. User confirms.
+Propose a level based on work complexity.
+
+Use AskUserQuestion with these options:
+- "Level 0: Hotfix" — production emergency, fix first, regression test immediately
+- "Level 1: Light" — simple change, single-context RED-GREEN-REFACTOR
+- "Level 2: Standard" — separate test writer and implementer, tests committed before implementation
+- "Level 3: Full" — from Gherkin specs with QA caucus review
 
 ## Level 0: Hotfix
 
@@ -39,9 +45,9 @@ Propose the level based on work complexity. User confirms.
 
 ## Level 2: Standard
 
-1. **Write tests** in the main context. Design the interface first — function names, module paths, parameter signatures, return types. Then write tests that import from modules that don't exist yet. Tests are complete behavioral contracts: happy path, validation errors, edge cases, side effects.
+1. **Write tests** in the main context. Design the interface first: function names, module paths, parameter signatures, return types. Then write tests that import from modules that do not exist yet. Tests are complete behavioral contracts: happy path, validation errors, edge cases, side effects.
 
-2. **Verify RED:** Run tests. All must fail (because the modules don't exist).
+2. **Verify RED:** Run tests. All must fail (the modules do not exist).
 
 3. **Commit tests:** Auto-commit with `test: RED - [story-id] failing tests`. This is the git checkpoint. Test files are now immutable.
 
@@ -49,9 +55,9 @@ Propose the level based on work complexity. User confirms.
    - Test files (READ ONLY)
    - Existing codebase for context
    - One instruction: **make the tests pass with minimum code**
-   - The implementer NEVER sees user stories, Gherkin specs, or your test-writing reasoning
+   - The implementer never sees user stories, Gherkin specs, or test-writing reasoning
 
-5. **Implementer works.** If tests fail, the implementer fixes the IMPLEMENTATION, never the tests. If a test seems wrong, the implementer reports back — it does NOT modify test files.
+5. **Implementer works.** If tests fail, the implementer fixes the implementation, never the tests. If a test looks wrong, the implementer reports back. It does not modify test files.
 
 6. **Verify GREEN:** All tests pass.
 
@@ -64,7 +70,7 @@ Propose the level based on work complexity. User confirms.
 2. **Spawn test writer subagent.** The test writer receives:
    - The `.feature` file
    - The existing codebase (for patterns, imports, conventions)
-   - NO knowledge of how the implementation will work
+   - No knowledge of how the implementation works
    - Instruction: write failing tests that fully specify the behavior in the `.feature` file
 
 3. **QA Caucus.** Spawn three parallel subagents to review the test plan:
@@ -79,7 +85,7 @@ Propose the level based on work complexity. User confirms.
 
 6. **Commit tests.** Git checkpoint.
 
-7. **Spawn implementer subagent.** Same rules as Level 2 — tests are READ ONLY, implementer never sees the Gherkin spec.
+7. **Spawn implementer subagent.** Same rules as Level 2. Tests are read-only. The implementer never sees the Gherkin spec.
 
 8. **Verify GREEN.** All tests pass.
 
@@ -90,7 +96,7 @@ Propose the level based on work complexity. User confirms.
 ## Rules — Non-Negotiable
 
 ### Tests Are Immutable During Implementation
-The test-guardian hook enforces this. If you attempt to edit a test file during implementation, the hook blocks it with: "Test files are immutable during implementation. Fix your code, not the tests."
+The test-guardian hook enforces this. Editing a test file during implementation triggers: "Test files are immutable during implementation. Fix your code, not the tests."
 
 Override requires explicit user approval.
 
@@ -98,16 +104,16 @@ Override requires explicit user approval.
 Use real dependencies. Real databases with transaction rollback or fixture cleanup. Real file systems. Real function calls.
 
 Exceptions (require justification):
-- External APIs with rate limits or cost → use contract testing with recorded responses
-- Third-party services not available locally → use contract testing
-- Time-dependent behavior → clock injection, not mocks
+- External APIs with rate limits or cost: use contract testing with recorded responses
+- Third-party services not available locally: use contract testing
+- Time-dependent behavior: clock injection, not mocks
 - Never mock the database
 
 ### Tests Are Behavioral Specifications
-Tests don't check "does this function exist?" They assert: "when called with X, returns Y and creates Z in the database." Every test is a concrete assertion about expected behavior.
+Tests do not check "does this function exist?" They assert: "when called with X, returns Y and creates Z in the database." Every test is a concrete assertion about expected behavior.
 
 ### No Implementation Without Failing Tests
-If you catch yourself writing implementation code without failing tests, stop. Write the tests. Watch them fail. Then implement.
+If you start writing implementation code without failing tests, stop. Write the tests. Watch them fail. Then implement.
 
 ### Language Agnostic
 Read the project's `CLAUDE.md` or `project.yaml` for:
@@ -122,8 +128,8 @@ Never hardcode language-specific commands.
 
 | Excuse | Reality |
 |---|---|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
+| "Too simple to test" | Simple code breaks. The test takes 30 seconds. |
+| "I'll test after" | Tests that pass immediately prove nothing. |
+| "Need to explore first" | Fine. Throw away the exploration. Start with TDD. |
 | "Tests are slowing me down" | TDD is faster than debugging. |
 | "Just this once" | No. |

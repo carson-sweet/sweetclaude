@@ -18,7 +18,7 @@ Read `strategy/concept.md`, `strategy/pain-thesis.md`, and `strategy/ideal-custo
 
 ### 1. Category
 
-What category does this product belong in? If it's creating a new category, what existing categories is it adjacent to? The category determines what the user compares you to.
+What category does this product belong in? If it creates a new category, what existing categories is it adjacent to? The category determines what the user compares you to.
 
 ### 2. Positioning framework
 
@@ -34,8 +34,8 @@ Work through this structure with the user:
 ### 3. Challenge and refine
 
 - Is the differentiation defensible? Can a competitor copy it in 6 months?
-- Is the benefit the one the ICP actually cares most about, or the one you're proudest of?
-- Is the category right? Too broad = invisible. Too narrow = limited.
+- Is the benefit the one the ICP cares most about, or the one you are proudest of?
+- Is the category right? Too broad means invisible. Too narrow means limited.
 
 ### 4. Produce the statement
 

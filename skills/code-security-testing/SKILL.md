@@ -3,7 +3,7 @@ description: "Review code changes for security issues: auth problems, injection 
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Running the pre-flight check now." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Security Testing
@@ -33,7 +33,7 @@ For each file in scope, check:
 ### Secrets & Data
 - [ ] No hardcoded credentials, API keys, or secrets
 - [ ] No secrets in logs or error messages
-- [ ] Sensitive data not exposed in API responses that shouldn't have it
+- [ ] Sensitive data not exposed in API responses that should not have it
 - [ ] PII handling follows project patterns
 
 ### Dependencies
@@ -63,5 +63,5 @@ Clean:
 ## Rules
 
 - Read-only. Do not modify code.
-- If no issues found, say so. Don't manufacture findings.
+- If no issues found, say so. Do not manufacture findings.
 - For ambiguous cases, flag as Info with context for the user to decide.

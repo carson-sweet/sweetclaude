@@ -4,7 +4,7 @@ description: "The ultimate starting point for a brand new project. Empty folder,
 
 # SweetClaude Sherpa — New Project
 
-You're starting from scratch. This skill walks you through the entire early process, one step at a time.
+Starting from scratch. This skill walks through the entire early process, one step at a time.
 
 **Follow these steps in order. Do not skip. Do not fast-track. Complete each step before moving to the next.**
 
@@ -19,7 +19,7 @@ Before anything else, check the current directory:
 
 **If any of these exist**, stop immediately:
 
-> "This folder already has a project in it. `/sweetclaude:sherpa-start` is for brand new projects starting from an empty folder. If you want to start using SweetClaude on this existing project, run `/sweetclaude:sherpa-adopt` instead."
+> "This folder already has a project in it. `/sweetclaude:sherpa-start` is for empty folders. Run `/sweetclaude:sherpa-adopt` to set up SweetClaude on an existing project."
 
 Do not proceed. Wait for the user to decide.
 
@@ -27,21 +27,21 @@ Do not proceed. Wait for the user to decide.
 
 ---
 
-## Step 1: What's the idea?
+## Step 1: What is the idea?
 
 Ask the user one question:
 
-> "What do you want to build? Don't worry about being precise — just tell me the idea in whatever words come naturally."
+> "What do you want to build?"
 
-Listen. Don't correct. Don't structure. Let them talk. Ask one follow-up if the answer is very short:
+Listen. Do not correct. Do not structure. Let them talk. Ask one follow-up if the answer is very short:
 
-> "Tell me more — what problem does this solve, and for whom?"
+> "What problem does this solve, and for whom?"
 
 ---
 
 ## Step 2: Initialize the project
 
-Run `/sweetclaude:init` to set up the project. This creates the repo, `.sweetclaude/` state directory, `strategy/` structure, and CLAUDE.md.
+Run `/sweetclaude:init` to set up the project. This creates the repo, `.sweetclaude/` state directory (a folder inside the project that tracks progress, decisions, and configuration), `strategy/` structure, and CLAUDE.md.
 
 The user's answer from Step 1 provides the project description for CLAUDE.md.
 
@@ -53,7 +53,7 @@ Wait for init to complete before proceeding.
 
 Run `/sweetclaude:strategy/concept` using the user's idea from Step 1 as the starting input.
 
-This produces `strategy/concept.md` — a sharpened statement of what the project is, the problem it solves, why it matters, key assumptions, and what it's NOT.
+This produces `strategy/concept.md` — a clear statement of what the project is, the problem it solves, why it matters, key assumptions, and what it is NOT.
 
 Wait for the user to be satisfied with the concept before proceeding.
 
@@ -65,7 +65,7 @@ Run `/sweetclaude:strategy/pain-thesis`.
 
 This walks through 11 sections: industry background, pain ownership, pain detail, existing failures, solution requirements, strategic wedge, buyer success criteria, ICP, solution mapping, validation plan.
 
-This is the longest step. The user may want to do it across multiple sessions. That's fine — `.sweetclaude/state/` tracks progress.
+This is the longest step. The user may spread it across multiple sessions. `.sweetclaude/state/` tracks progress between sessions.
 
 Wait for completion before proceeding.
 
@@ -75,7 +75,7 @@ Wait for completion before proceeding.
 
 Run `/sweetclaude:strategy/ideal-customer-profile`.
 
-This sharpens the "who" from the pain thesis into a targetable profile: demographics, behaviors, triggers, deal-breakers, anti-profile.
+This turns the "who" from the pain thesis into a targetable profile: demographics, behaviors, triggers, deal-breakers, anti-profile.
 
 Wait for completion.
 
@@ -101,7 +101,7 @@ At this point the project has:
 
 Tell the user:
 
-> "The strategic foundation is set. From here, the next steps are product definition (product brief, PRD), then design, then implementation. Run `/sweetclaude:auto-flow` to continue step by step, or pick any specific command from `/sweetclaude:help`."
+> "The strategic foundation is set. Next steps: product definition (product brief, PRD), then design, then implementation. Run `/sweetclaude:auto-flow` to continue step by step, or pick a command from `/sweetclaude:help`."
 
 Do not auto-invoke auto-flow. The user decides when to continue.
 
@@ -109,4 +109,4 @@ Do not auto-invoke auto-flow. The user decides when to continue.
 
 ## Session continuity
 
-If a session ends mid-process, `.sweetclaude/state/phase.yaml` tracks where you are. The next session can resume with `/sweetclaude:status` to see what's done and what's next, then continue with the appropriate step.
+If a session ends mid-process, `.sweetclaude/state/phase.yaml` tracks progress. The next session can resume with `/sweetclaude:status` to see what is done and what is next.

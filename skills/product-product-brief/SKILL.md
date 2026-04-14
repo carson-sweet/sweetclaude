@@ -12,12 +12,12 @@ Walk through an 11-section product brief for: $ARGUMENTS
 
 ## SweetClaude Context
 
-Before invoking BMAD, set expectations:
-- One section at a time — never batch multiple sections
-- Probe vague answers with follow-ups before moving to the next section
-- The interview is a discovery conversation, not a form to fill
-- After generating the document, run the BMAD validation checklist
-- Save the output to `specs/product-brief.md` in `.sweetclaude/`
+Before invoking BMAD:
+- One section at a time. Never batch multiple sections.
+- Probe vague answers with follow-ups before moving on.
+- This is a discovery conversation, not a form to fill.
+- After generating the document, run the BMAD validation checklist.
+- Save output to `specs/product-brief.md` in `.sweetclaude/`.
 
 ## Execute
 

@@ -3,7 +3,7 @@ description: "Design the data model: entities, relationships, constraints, index
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Running the pre-flight check now." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Data Model Design
@@ -18,7 +18,7 @@ Read architecture doc and tech spec from `specs/` if they exist. Read existing s
 
 ### 1. Identify entities
 
-From the PRD, user stories, and domain language — what are the core things this system tracks? For each entity:
+From the PRD, user stories, and domain language, identify the core things this system tracks. For each entity:
 - Name (singular, domain language)
 - Purpose (one sentence)
 - Key attributes (not exhaustive — the important ones)
@@ -48,7 +48,7 @@ Present in the project's ORM/migration format if one is detected (Drizzle, Prism
 
 If modifying an existing schema:
 - What migrations are needed?
-- Are any destructive (DROP, rename)? Flag for expand/contract pattern.
+- Are any destructive (DROP, rename)? Flag them for expand/contract pattern.
 - What's the rollback plan?
 - Data backfill needed?
 

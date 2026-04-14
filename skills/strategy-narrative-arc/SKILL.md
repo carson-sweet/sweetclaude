@@ -12,7 +12,7 @@ Build and query the strategic narrative graph.
 
 ## What This Is
 
-The narrative arc is a typed knowledge graph that connects everything in your strategy:
+A typed knowledge graph that connects everything in your strategy:
 - **Objectives** — what you're trying to achieve
 - **Claims** — assertions you make about the world, the problem, or your solution
 - **Proof points** — evidence that supports claims (data, research, testimonials, demonstrations)
@@ -21,7 +21,7 @@ The narrative arc is a typed knowledge graph that connects everything in your st
 - **Conclusions** — what follows from the claims + evidence
 - **Open questions** — things you don't know yet that matter
 
-Documents (papers, briefs, specs) grow as leaves on this framework — each one exists to strengthen the arc's ability to achieve its objectives.
+Documents (papers, briefs, specs) grow as leaves on this framework. Each one strengthens the arc's ability to achieve its objectives.
 
 ## Commands
 
@@ -59,6 +59,6 @@ When new evidence, documents, or claims are added, update the graph:
 
 ## Rules
 
-- Other skills READ the arc (meeting-prep checks confidence, academic checks what to prove). Only this skill WRITES to it.
-- Confidence ratings are honest. "Low" means "we believe this but can't prove it yet." That's fine — it tells you where to focus.
-- The arc is never "done." It evolves as evidence accumulates.
+- Other skills read the arc (meeting-prep checks confidence, academic checks what to prove). Only this skill writes to it.
+- Confidence ratings are honest. "Low" means "we believe this but cannot prove it yet." That is useful — it tells you where to focus.
+- The arc is never done. It evolves as evidence accumulates.

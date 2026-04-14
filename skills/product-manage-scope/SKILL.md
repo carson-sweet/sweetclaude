@@ -16,9 +16,9 @@ Log a scope change for: $ARGUMENTS
 
 2. **Identify the change:**
    - What item is moving?
-   - Direction: in-scope → out-of-scope, or out-of-scope → in-scope?
+   - Direction: in-scope to out-of-scope, or out-of-scope to in-scope?
    - Which phase are we in?
-   - What's the rationale?
+   - What is the rationale?
 
 3. **Append to scope log** at `.sweetclaude/state/scope-changes.md` in `.sweetclaude/`:
 
@@ -36,6 +36,6 @@ Log a scope change for: $ARGUMENTS
 
 ## Rules
 
-- Always log with rationale — "because we decided" is not a rationale.
-- Scope changes are normal, not failures. Don't frame them negatively.
-- If a scope change invalidates existing work, flag it but don't delete the work — the user decides what to do.
+- Always log with rationale. "Because we decided" is not a rationale.
+- Scope changes are normal, not failures. Do not frame them negatively.
+- If a scope change invalidates existing work, flag it but do not delete the work. The user decides what to do.

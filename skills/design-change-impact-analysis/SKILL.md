@@ -1,9 +1,9 @@
 ---
-description: Ripple-effect analysis — before implementing a change, trace what's affected across code, tests, docs, APIs, and specs. Use at the start of IMPLEMENT phase for existing codebases, or on demand when any artifact changes.
+description: Ripple-effect analysis — before implementing a change, trace what is affected across code, tests, docs, APIs, and specs. Use at the start of IMPLEMENT phase for existing codebases, or on demand when any artifact changes.
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Running the pre-flight check now." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Ripple-Effect Analysis
@@ -14,30 +14,30 @@ Analyze the impact of changing: $ARGUMENTS
 
 ### For code changes:
 
-1. **Identify the change target.** What file(s), function(s), or module(s) will change?
+1. **Identify the change target.** Which file(s), function(s), or module(s) change?
 
 2. **Trace code dependencies:**
-   - What imports/requires this module?
+   - What imports or requires this module?
    - What calls this function?
    - What interfaces does this implement?
    - Use `Grep` to find all references across the codebase.
 
 3. **Trace test coverage:**
-   - What test files test this module/function?
-   - Are there integration tests that exercise this path?
-   - What test fixtures depend on this behavior?
+   - Which test files cover this module or function?
+   - Do integration tests exercise this path?
+   - Do test fixtures depend on this behavior?
 
 4. **Trace API contracts:**
-   - Does this change affect any public API endpoint?
-   - Does it change request/response shapes?
-   - Does it change error behaviors?
-   - Are there consumers (other services, frontends) that depend on this?
+   - Does this affect a public API endpoint?
+   - Does it change request or response shapes?
+   - Does it change error behavior?
+   - Do other services or frontends depend on this?
 
 5. **Trace documentation:**
    - Does the README reference this behavior?
-   - Does the CLAUDE.md reference this?
-   - Are there ADRs that depend on this decision?
-   - Does the `.sweetclaude/specs/` PRD/tech spec reference this?
+   - Does CLAUDE.md reference this?
+   - Do any ADRs depend on this decision?
+   - Does the `.sweetclaude/specs/` PRD or tech spec reference this?
 
 6. **Present impact summary:**
    ```
@@ -53,7 +53,7 @@ Analyze the impact of changing: $ARGUMENTS
    - [endpoint] — [what changes]
 
    Docs affected:
-   - [doc file] — [what's now stale]
+   - [doc file] — [what is now stale]
 
    Risk: [Low/Medium/High]
    Recommendation: [proceed / investigate further / reconsider approach]
@@ -77,6 +77,6 @@ Analyze the impact of changing: $ARGUMENTS
 
 - Run automatically at the start of IMPLEMENT phase for existing codebases.
 - Available on demand at any phase for any artifact type.
-- Be thorough but concise — list affected items, don't dump entire files.
+- Be thorough but concise. List affected items. Do not dump entire files.
 - Flag items as "definitely affected" vs "possibly affected" when uncertain.
 - If ripple analysis reveals the change is larger than expected, flag it and let the user decide how to proceed.
