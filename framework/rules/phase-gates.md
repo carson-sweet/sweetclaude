@@ -37,7 +37,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Bug reproduction documented (for bug fixes)
 - Enhancement scope defined (for enhancements)
 - Improvement criteria defined (for iteration)
-**Available skills:** bmad:product-brief, bmad:prd, sweetclaude:work-router, sweetclaude:code/ripple, reconciling-documents, backlog-management
+**Available skills:** bmad:product-brief, bmad:prd, sweetclaude:start-task, sweetclaude:code/ripple, reconciling-documents, backlog-management
 
 ## Phase 3: DESIGN
 **Entry:** DEFINE complete

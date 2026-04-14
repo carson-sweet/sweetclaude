@@ -1,6 +1,6 @@
 ---
-name: sweetclaude-work-router
-description: "Identify the type of work (code or strategy), classify the specific work type, and route to the correct pipeline entry point and skill track. Use at the start of any new work item. Prevents non-technical items from landing in docs/backlog/."
+name: sweetclaude-start-task
+description: "Start a new task. Asks what you want to do, classifies the work type (code or strategy), and routes to the correct pipeline entry point and skill track. Use when beginning any new work."
 ---
 
 <preflight-guard>
