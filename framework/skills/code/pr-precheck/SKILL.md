@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-code-pr-ready
+name: sweetclaude-code-pr-precheck
 description: Final pre-PR quality gate. Verify tests pass, fill PR template, check for secrets and debug code, ensure acceptance criteria are met, update traceability. Use before opening any PR.
 ---
 
@@ -20,7 +20,7 @@ Prepare PR for the current branch.
 5. **PR template filled.** What, Why, Scope, How to verify, Rollout plan, Security checklist.
 6. **Commit messages descriptive.** Conventional commit format, no "fix stuff" or "wip".
 7. **Branch rebased on latest main** if needed.
-8. **Docs updated.** Run `sweetclaude:code/auto-docs` — any stale docs flagged and updated.
+8. **Docs updated.** Run `sweetclaude:design/update-docs` — any stale docs flagged and updated.
 9. **Traceability updated.** Working repo `traceability/requirements-map.md` reflects the implementation.
 
 If any item fails, report what's missing and fix it before proceeding.

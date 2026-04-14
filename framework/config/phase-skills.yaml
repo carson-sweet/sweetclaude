@@ -1,7 +1,7 @@
 # SweetClaude Phase-Skill Mapping
-# Defines which skills, agents, and hooks are available per phase.
-# Two tracks: code (technical development) and strategy (strategic product development).
-# The work router classifies work type and surfaces skills from the appropriate track.
+# Five domain buckets: strategy, product, design, code, deploy.
+# The new-task and auto-flow skills classify work into a bucket
+# and surface appropriate skills.
 
 always_loaded:
   skills:
@@ -14,143 +14,86 @@ always_loaded:
     - sweetclaude/phase-gates.md
     - sweetclaude/tdd-levels.md
 
-code:
-  discover:
-    skills:
-      - sweetclaude:discover
-      - bmad:brainstorm
-      - bmad:research
-      - caucus
-      - reasoning-frameworks
-    agents: []
-    hooks: []
-
-  define:
-    skills:
-      - bmad:product-brief
-      - bmad:prd
-      - sweetclaude:code/ripple
-      - reconciling-documents
-      - backlog-management
-    agents: []
-    hooks: []
-
-  design:
-    skills:
-      - bmad:tech-spec
-      - bmad:architecture
-      - bmad:create-ux-design
-      - bmad:solutioning-gate-check
-      - sweetclaude:code/ripple
-      - caucus
-      - reasoning-frameworks
-    agents: []
-    hooks: []
-
-  plan:
-    skills:
-      - bmad:create-story
-      - bmad:sprint-planning
-      - sweetclaude:code/gherkin-bridge
-      - backlog-management
-    agents: []
-    hooks: []
-
-  implement:
-    skills:
-      - sweetclaude:code/tdd
-      - sweetclaude:code/fix-issue
-      - sweetclaude:code/ripple
-      - superpowers:writing-plans
-      - superpowers:executing-plans
-      - superpowers:using-git-worktrees
-      - superpowers:systematic-debugging
-      - superpowers:dispatching-parallel-agents
-      - superpowers:subagent-driven-development
-    agents:
-      - sweetclaude:test-writer
-      - sweetclaude:implementer
-      - sweetclaude:qa-caucus-service
-      - sweetclaude:qa-caucus-component
-      - sweetclaude:qa-caucus-integration
-    hooks:
-      - test-guardian
-      - auto-test-runner
-      - git-checkpoint
-
-  verify:
-    skills:
-      - sweetclaude:code/pr-ready
-      - sweetclaude:code/ripple
-      - sweetclaude:code/auto-docs
-      - superpowers:requesting-code-review
-      - superpowers:receiving-code-review
-      - superpowers:verification-before-completion
-      - superpowers:simplify
-    agents:
-      - sweetclaude:code-reviewer
-      - sweetclaude:security-reviewer
-      - sweetclaude:workflow-guardian
-    hooks: []
-
-  ship:
-    skills:
-      - superpowers:finishing-a-development-branch
-      - sweetclaude:code/pr-ready
-      - sweetclaude:hibernate
-    agents: []
-    hooks: []
-
 strategy:
-  discover:
-    skills:
-      - sweetclaude:discover
-      - sweetclaude:strategy/academic
-      - caucus
-      - reasoning-frameworks
-    agents: []
-    hooks: []
+  skills:
+    - sweetclaude:strategy/concept
+    - sweetclaude:strategy/pain-thesis
+    - sweetclaude:strategy/ideal-customer-profile
+    - sweetclaude:strategy/competitive-analysis
+    - sweetclaude:strategy/academic-research
+    - sweetclaude:strategy/meeting-prep
+    - sweetclaude:strategy/narrative-arc
+    - sweetclaude:strategy/market-messaging
+    - caucus
+    - reasoning-frameworks
+  agents: []
+  hooks: []
 
-  define:
-    skills:
-      - sweetclaude:strategy/reconciliation
-      - sweetclaude:strategy/academic
-      - reconciling-documents
-    agents: []
-    hooks: []
+product:
+  skills:
+    - sweetclaude:product/discovery
+    - sweetclaude:product/positioning-statement
+    - sweetclaude:product/product-brief
+    - sweetclaude:product/prd
+    - sweetclaude:product/user-story
+    - sweetclaude:product/user-tdd-tests
+    - sweetclaude:product/user-success-criteria
+    - sweetclaude:product/user-workflows
+    - sweetclaude:product/manage-scope
+    - sweetclaude:product/backlog
+    - sweetclaude:product/sprint-plan
+    - sweetclaude:product/research
+    - sweetclaude:product/feature-competitive
+    - reconciling-documents
+  agents: []
+  hooks: []
 
-  design:
-    skills:
-      - sweetclaude:strategy/academic
-      - caucus
-      - reasoning-frameworks
-    agents: []
-    hooks: []
+design:
+  skills:
+    - sweetclaude:design/architecture
+    - sweetclaude:design/tech-spec
+    - sweetclaude:design/ux
+    - sweetclaude:design/solutioning-gate
+    - sweetclaude:design/change-impact-analysis
+    - sweetclaude:design/update-docs
+    - sweetclaude:design/data-model
+    - sweetclaude:design/api-design
+    - sweetclaude:design/services-design
+    - sweetclaude:design/infra-design
+    - sweetclaude:design/manage-decisions
+    - caucus
+    - reasoning-frameworks
+  agents: []
+  hooks: []
 
-  plan:
-    skills:
-      - sweetclaude:strategy/academic
-    agents: []
-    hooks: []
+code:
+  skills:
+    - sweetclaude:code/tdd
+    - sweetclaude:code/work-issue
+    - sweetclaude:code/work-debt
+    - sweetclaude:code/pr-precheck
+    - sweetclaude:code/qa-testing
+    - sweetclaude:code/mutation-testing
+    - sweetclaude:code/security-testing
+    - sweetclaude:code/code-review
+    - superpowers:writing-plans
+    - superpowers:executing-plans
+    - superpowers:using-git-worktrees
+    - superpowers:systematic-debugging
+    - superpowers:dispatching-parallel-agents
+    - superpowers:subagent-driven-development
+  agents:
+    - sweetclaude:test-writer
+    - sweetclaude:implementer
+    - sweetclaude:qa-caucus-service
+    - sweetclaude:qa-caucus-component
+    - sweetclaude:qa-caucus-integration
+  hooks:
+    - test-guardian
+    - auto-test-runner
+    - git-checkpoint
 
-  implement:
-    skills:
-      - sweetclaude:strategy/academic
-      - superpowers:writing-plans
-      - superpowers:executing-plans
-    agents: []
-    hooks: []
-
-  verify:
-    skills:
-      - sweetclaude:strategy/academic
-      - superpowers:verification-before-completion
-      - caucus
-    agents: []
-    hooks: []
-
-  ship:
-    skills:
-      - sweetclaude:hibernate
-    agents: []
-    hooks: []
+deploy:
+  skills: []
+  agents: []
+  hooks: []

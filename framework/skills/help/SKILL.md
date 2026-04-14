@@ -18,9 +18,8 @@ Check and report:
 ```
 SweetClaude Status
   Project:     {project name from git root}
-  Configured:  {Yes/No — does state/phase.yaml exist?}
+  Configured:  {Yes/No}
   Phase:       {current phase from phase.yaml, or "not set"}
-  Track:       {code/strategy from phase.yaml, or "not set"}
   Deference:   {level from phase.yaml, or "not set"}
   Working repo: {path if exists, or "none"}
 ```
@@ -29,26 +28,61 @@ SweetClaude Status
 
 ```
 Orchestration
-  /sweetclaude              Session entry point, phase router, pre-flight check
-  /sweetclaude:init         Set up SweetClaude for this project
-  /sweetclaude:help         This help (you are here)
-  /sweetclaude:hibernate    Freeze or thaw a project mid-phase
-  /sweetclaude:discover  Structured persona/feature/competitive discovery
-  /sweetclaude:new-task  Classify work type and enter pipeline
+  /sweetclaude                Start session, pre-flight check, phase routing
+  /sweetclaude:help           This help (you are here)
+  /sweetclaude:status         Orient to project: what's done, what's pending, what's next
+  /sweetclaude:auto-flow      Walk through pipeline step by step
+  /sweetclaude:init           Set up SweetClaude for this project
+  /sweetclaude:new-task       Classify work and enter the pipeline
+  /sweetclaude:hibernate      Freeze or thaw a project mid-phase
 
-Code Track
-  /sweetclaude:code/tdd             TDD enforcement (4 levels: hotfix, light, standard, full)
-  /sweetclaude:code/fix-issue       End-to-end GitHub issue implementation
-  /sweetclaude:code/pr-ready        Pre-PR quality gate checklist
-  /sweetclaude:code/ripple          Ripple-effect analysis before changes
-  /sweetclaude:code/auto-docs       Update docs when behavior changes
-  /sweetclaude:code/gherkin-bridge  Convert user stories to .feature files
-  /sweetclaude:code/mutation-testing Verify test quality via mutation testing
-  /sweetclaude:code/scope-tracker   Track scope changes with rationale
+Strategy
+  /sweetclaude:strategy/concept              Articulate what this is and why it exists
+  /sweetclaude:strategy/pain-thesis          Structured pain analysis
+  /sweetclaude:strategy/ideal-customer-profile  Who has this pain and will pay
+  /sweetclaude:strategy/competitive-analysis Strategic landscape and differentiation
+  /sweetclaude:strategy/academic-research    Research paper development pipeline
+  /sweetclaude:strategy/meeting-prep         Stakeholder meeting deliverables
+  /sweetclaude:strategy/narrative-arc        Knowledge graph of strategic claims
+  /sweetclaude:strategy/market-messaging     External communications
 
-Strategy Track
-  /sweetclaude:strategy/reconciliation  Onboard and organize unstructured files
-  /sweetclaude:strategy/academic        Research paper development pipeline
+Product
+  /sweetclaude:product/discovery             Persona interviews, feature brainstorming
+  /sweetclaude:product/positioning-statement Product positioning
+  /sweetclaude:product/product-brief         11-section product brief
+  /sweetclaude:product/prd                   Full PRD with FRs, NFRs, epics
+  /sweetclaude:product/user-story            User stories with acceptance criteria
+  /sweetclaude:product/user-tdd-tests        Stories → Gherkin .feature files
+  /sweetclaude:product/user-success-criteria Measurable success per persona
+  /sweetclaude:product/user-workflows        Stories → UX/UI flows
+  /sweetclaude:product/manage-scope          Track scope changes with rationale
+  /sweetclaude:product/backlog               Manage deferred work
+  /sweetclaude:product/sprint-plan           Plan sprints from backlog
+  /sweetclaude:product/research              Market or technical research
+  /sweetclaude:product/feature-competitive   Product-level feature comparison
+
+Design
+  /sweetclaude:design/architecture           System architecture
+  /sweetclaude:design/tech-spec              Technical specification
+  /sweetclaude:design/ux                     UX design and wireframes
+  /sweetclaude:design/solutioning-gate       Validate design before implementation
+  /sweetclaude:design/change-impact-analysis Trace blast radius before changes
+  /sweetclaude:design/update-docs            Keep docs in sync after changes
+  /sweetclaude:design/data-model             Schema, entities, migrations
+  /sweetclaude:design/api-design             Endpoints, contracts, versioning
+  /sweetclaude:design/services-design        Service boundaries and communication
+  /sweetclaude:design/infra-design           Infrastructure and deployment
+  /sweetclaude:design/manage-decisions       Record decisions with rationale
+
+Code
+  /sweetclaude:code/tdd              TDD at 4 levels (hotfix → full from Gherkin)
+  /sweetclaude:code/work-issue       Implement a GitHub issue end-to-end
+  /sweetclaude:code/work-debt        Tech debt cleanup (lock behavior first)
+  /sweetclaude:code/pr-precheck      Pre-PR quality gate
+  /sweetclaude:code/qa-testing       Run tests, report failures concisely
+  /sweetclaude:code/mutation-testing  Verify tests catch real faults
+  /sweetclaude:code/security-testing Security review of code changes
+  /sweetclaude:code/code-review      Adversarial code review
 ```
 
 ## Step 3: Quick Start
@@ -57,4 +91,4 @@ If the project is not configured:
 > "Run `/sweetclaude:init` to set up this project, or `/sweetclaude` to start the pre-flight check."
 
 If configured:
-> "You're in the {phase} phase on the {track} track. Run `/sweetclaude` to continue, or any command above."
+> "You're in the {phase} phase. Run `/sweetclaude:status` to orient, `/sweetclaude:auto-flow` to keep moving, or any command above."
