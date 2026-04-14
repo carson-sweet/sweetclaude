@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-code-work-debt
+name: sweetclaude:code/work-debt
 description: "Tech debt cleanup. Locks current behavior with tests first, then refactors. Tests before touch, always. Use for refactoring, cleanup, performance work, or maintainability improvements."
 ---
 

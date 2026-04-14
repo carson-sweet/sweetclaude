@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-init
+name: sweetclaude:init
 description: "Project bootstrap supporting three scenarios: code repo with external strategy files, code repo without strategy files, and strategy-only projects (no code). Creates strategy/ directory structure, offers file onboarding via reconciliation, scaffolds working repo, sets up RAG. Use to start any new SweetClaude project."
 ---
 

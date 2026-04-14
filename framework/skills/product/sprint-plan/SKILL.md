@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-product-sprint-plan
+name: sweetclaude:product/sprint-plan
 description: "Plan a sprint by selecting stories from the backlog, estimating scope, and producing a sprint commitment. Wraps bmad:sprint-planning."
 ---
 

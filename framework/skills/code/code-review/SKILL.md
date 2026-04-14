@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-code-code-review
+name: sweetclaude:code/code-review
 description: "Adversarial code review focused on logic errors, edge cases, regressions, performance, and missing error handling. Does not flag style issues."
 ---
 

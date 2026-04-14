@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-strategy-concept
+name: sweetclaude:strategy/concept
 description: "Articulate what this project is and why it exists. Produces a clear concept statement grounded in the problem being solved. Use at the very start of strategic work."
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-design-manage-decisions
+name: sweetclaude:design/manage-decisions
 description: "Record and track design and architecture decisions with context, options considered, decision made, and rationale. Queryable later. Replaces ADR templates."
 ---
 

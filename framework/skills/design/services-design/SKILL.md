@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-design-services-design
+name: sweetclaude:design/services-design
 description: "Design service boundaries: which services exist, how they communicate, what each owns, and where the boundaries are."
 ---
 

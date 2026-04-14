@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-hibernate
+name: sweetclaude:hibernate
 description: "Use when hibernating or unhibernating a project managed by SweetClaude. Extends hibernate-project with SweetClaude phase state, deference level, and improvement register handling. Triggers on 'hibernate', 'freeze', 'shelve', 'thaw', 'unhibernate', or presence of HIBERNATION.md."
 ---
 
