@@ -6,7 +6,7 @@
 always_loaded:
   skills:
     - sweetclaude
-    - sweetclaude:work-router
+    - sweetclaude:start-task
     - sweetclaude:hibernate
     - hibernate-project
   rules:

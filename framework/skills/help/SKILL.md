@@ -34,7 +34,7 @@ Orchestration
   /sweetclaude:help         This help (you are here)
   /sweetclaude:hibernate    Freeze or thaw a project mid-phase
   /sweetclaude:discover  Structured persona/feature/competitive discovery
-  /sweetclaude:work-router  Classify work type and enter pipeline
+  /sweetclaude:start-task  Classify work type and enter pipeline
 
 Code Track
   /sweetclaude:code/tdd             TDD enforcement (4 levels: hotfix, light, standard, full)
