@@ -18,7 +18,7 @@ Read relevant user stories from `stories/` and personas from product/discovery o
 
 ### For each user story:
 
-1. **Identify the trigger.** What event or action initiates this workflow? (button click, page load, notification, time-based)
+1. **Identify the trigger.** What event or action starts this workflow? (button click, page load, notification, time-based)
 
 2. **Map the happy path.** Step by step, what does the user see and do?
    ```
@@ -29,7 +29,7 @@ Read relevant user stories from `stories/` and personas from product/discovery o
    ```
 
 3. **Map error paths.** For each step where something can go wrong:
-   - What's the error condition?
+   - What is the error condition?
    - What does the user see?
    - How do they recover?
 

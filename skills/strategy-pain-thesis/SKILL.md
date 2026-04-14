@@ -10,7 +10,7 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Build a pain thesis for: $ARGUMENTS
 
-A pain thesis is a narrative diagnostic. It determines whether the company is solving a necessary problem — one that reliably commands budget and executive attention — or a merely interesting one.
+A pain thesis is a narrative diagnostic. It determines whether the company solves a necessary problem — one that commands budget and executive attention — or a merely interesting one.
 
 ## Context
 
@@ -20,9 +20,9 @@ Read `strategy/concept.md` if it exists. The concept statement provides the star
 
 These govern the entire process:
 
-- **Empathy before ideation.** You are a researcher, not a salesperson. Understand the pain bearer's world, not your solution.
+- **Empathy before ideation.** Understand the pain bearer's world, not your solution.
 - **Evidence over assumption.** Every belief is an assumption until validated by specific quotes from specific buyers describing specific experiences. Observed behavior, not stated intentions. Money spent on workarounds, not theoretical willingness to pay.
-- **Iteration as discovery.** You will not get this right on the first pass. Every conversation refines the thesis. Treat surprises as data.
+- **Iteration as discovery.** The first pass will be wrong. Every conversation refines the thesis. Surprises are data.
 
 ## Process
 
@@ -37,9 +37,11 @@ Work through each section one at a time. For each section:
 
 ### Section 0: How to Read This Document
 
-Draft the framing: state that this is a narrative diagnostic, not a pitch deck. Define the core hypothesis. Explain the medicine vs. vitamins distinction as it applies to this domain.
+Draft the framing: this is a narrative diagnostic, not a pitch deck. Define the core hypothesis. Explain the medicine vs. vitamins distinction as it applies to this domain.
 
-Ask: "What is the core hypothesis — the thing that must be true for this business to work? And is your product medicine (must-have, budget already exists) or a vitamin (nice-to-have, discretionary)?"
+Ask: "What is the core hypothesis — the thing that must be true for this business to work?"
+
+Then ask: "Is this medicine (must-have, budget already exists) or a vitamin (nice-to-have, discretionary)?"
 
 ---
 
@@ -47,9 +49,9 @@ Ask: "What is the core hypothesis — the thing that must be true for this busin
 
 What structural forces created this pain? Why is it acute now? What analogous pattern has played out before in a related industry?
 
-Ask: "What's changing in the industry that makes this problem worse or more urgent than it was two years ago?"
+Ask: "What changed in the industry that makes this problem worse or more urgent than it was two years ago?"
 
-Offer: "Want me to research industry trends, regulatory changes, or market dynamics that create the structural pressure?"
+Then ask: "Research industry trends, regulatory changes, or market dynamics that create the structural pressure?"
 
 ---
 
@@ -65,9 +67,9 @@ Ask: "Who gets fired, fined, or blamed when this goes wrong? And why can't they 
 
 What does this problem look and feel like from the inside? What questions can the pain bearer not answer? How does the pain compound over time? What is the escalation chain?
 
-Ask: "Walk me through what happens when this problem hits. What's the sequence of events, and how does it get worse if nobody intervenes?"
+Ask: "Walk me through what happens when this problem hits. What is the sequence of events, and how does it get worse if nobody intervenes?"
 
-Offer: "Want me to help map the escalation chain — from first symptom through worst-case outcome?"
+Then ask: "Map the escalation chain from first symptom through worst-case outcome?"
 
 ---
 
@@ -75,9 +77,11 @@ Offer: "Want me to help map the escalation chain — from first symptom through 
 
 What have buyers tried? What are the structural reasons those approaches are insufficient? Why is this an unsolved problem rather than an ignored one?
 
-Ask: "What do people do today to deal with this? And why doesn't it work — what specifically fails?"
+Ask: "What do people do today to deal with this?"
 
-Offer: "Want me to research existing solutions and analyze their failure modes?"
+Then ask: "Why does that fail — what specifically breaks?"
+
+Then ask: "Research existing solutions and their failure modes?"
 
 ---
 
@@ -85,7 +89,9 @@ Offer: "Want me to research existing solutions and analyze their failure modes?"
 
 What functional capabilities are required? What non-functional constraints must be met? What will cause a technically good solution to be rejected?
 
-Ask: "If you could wave a magic wand, what would the solution need to do? And what would make a buyer reject it even if it technically works?"
+Ask: "If you could wave a magic wand, what would the solution need to do?"
+
+Then ask: "What would make a buyer reject it even if it technically works?"
 
 ---
 
@@ -93,11 +99,11 @@ Ask: "If you could wave a magic wand, what would the solution need to do? And wh
 
 What are your candidate wedges? Which one do you choose and why? What are you deferring and why?
 
-A wedge is not a feature — it's a market entry strategy. The right wedge gets you into accounts quickly, generates revenue, creates reference customers, and establishes trust.
+A wedge is not a feature — it is a market entry strategy. The right wedge gets you into accounts quickly, generates revenue, creates reference customers, and establishes trust.
 
-Ask: "What's the narrowest, most painful slice of this problem that a buyer would pay to solve on its own — before seeing anything else on your roadmap?"
+Ask: "What is the narrowest, most painful slice of this problem that a buyer would pay to solve on its own — before seeing anything else on your roadmap?"
 
-Offer: "Want me to help evaluate candidate wedges using the checkbook test — if you walked into a meeting and described only this one capability, would they write a check?"
+Then ask: "Evaluate candidate wedges using the checkbook test? (If you walked into a meeting and described only this one capability, would they write a check?)"
 
 ---
 
@@ -129,9 +135,11 @@ Ask: "Map your current capabilities against what sections 5 and 6 require. Where
 
 How many buyers will you interview? What are your validation criteria? What happens if the thesis is validated? What happens if it is not?
 
-Ask: "How will you test this thesis with real buyers? How many conversations do you need, and what signals would tell you the thesis is right vs. wrong?"
+Ask: "How will you test this thesis with real buyers?"
 
-Offer: "Want me to help design the validation interview guide using the 10-ICP interview framework?"
+Then ask: "How many conversations do you need, and what signals tell you the thesis is right vs. wrong?"
+
+Then ask: "Design a validation interview guide using the 10-ICP interview framework?"
 
 ---
 
@@ -149,7 +157,7 @@ Offer: "Want me to help design the validation interview guide using the 10-ICP i
 | Existing solutions fail | Evaluated competitors | Buyers describe specific failures | Buyers quantify gap between current and need |
 | Wedge resonates | Believe it solves right problem first | Buyers confirm most immediate need | Buyers express willingness to pilot specifically |
 
-Present the rubric results. The goal is to move every critical element from Red to Yellow, and the top three from Yellow to Green, before committing to a wedge.
+Present the rubric results. The goal: move every critical element from Red to Yellow, and the top three from Yellow to Green, before committing to a wedge.
 
 3. **Save** to `strategy/pain-thesis.md`.
 

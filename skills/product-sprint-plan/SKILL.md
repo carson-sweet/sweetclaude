@@ -12,9 +12,9 @@ Plan a sprint for: $ARGUMENTS
 
 ## SweetClaude Context
 
-- Pull candidate stories from `stories/` and `product/backlog`
-- Respect scope boundaries from `product/manage-scope`
-- No time estimates — scope by artifact count and complexity, not calendar days
+- Pull candidate stories from `stories/` and `product/backlog`.
+- Respect scope boundaries from `product/manage-scope`.
+- No time estimates. Scope by artifact count and complexity, not calendar days.
 
 ## Execute
 

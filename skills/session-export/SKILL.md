@@ -1,10 +1,10 @@
 ---
-description: Export a Claude.ai session as a complete, portable package — including a full conversation transcript, inventory of all deliverables produced, manifest of uploaded and project files referenced, web searches conducted, key decisions made, open action items, entity index, and a continuity prompt for the next session. Use this skill whenever the user says things like "export this session", "wrap up this session", "package this conversation", "generate a session handoff", "produce a session report", "give me a transcript", "save this conversation", or "I want to download everything from this session." Also trigger when the user asks for a summary + files together, or says they're about to switch models and need context preserved. This is a high-value skill — use it proactively whenever a long or complex session is wrapping up, even if the user only asks for one piece (transcript or files) — offer the full export.
+description: Export a Claude.ai session as a complete, portable package. Includes conversation transcript, deliverables inventory, file manifest, web searches, decisions, open items, entity index, and continuity prompt. Trigger on "export this session", "wrap up", "package this conversation", "session handoff", "session report", "save this conversation", or when switching models. Also trigger when the user asks for summary + files together.
 ---
 
 # Session Export Skill
 
-Produces a complete, portable record of a Claude.ai session. The export captures not just the conversation but the full work product, reasoning, decisions, and continuity artifacts needed to resume work later — in a new session, with a different model, or by a collaborator.
+Produces a complete, portable record of a Claude.ai session. Captures the conversation, work product, reasoning, decisions, and continuity artifacts needed to resume work later.
 
 ---
 
@@ -40,9 +40,9 @@ Do not attempt features marked ✗. Note the limitation in the relevant section 
 
 ## Step 1: Scope Selection
 
-If the user asked for everything, proceed through all sections below in order.
+If the user asked for everything, proceed through all sections in order.
 
-If the user asked for a specific subset (e.g., "just the transcript" or "just the files"), produce only those sections — but always offer the full export at the end: "I've produced [X]. Want me to generate the full session export with decisions, open items, and continuity prompt as well?"
+If the user asked for a subset (e.g., "just the transcript" or "just the files"), produce only those sections. Then offer the full export: "Produced [X]. Generate the full session export with decisions, open items, and continuity prompt too?"
 
 **Standard sections (always include unless user says otherwise):**
 1. Executive Summary
@@ -76,13 +76,13 @@ Use this structure:
 
 ### Section 1: Executive Summary
 
-3–5 paragraphs. Write for a reader who was not in the conversation. Cover:
-- What was the session about and what was the central question or goal
-- What was accomplished (decisions made, documents produced, research conducted)
-- What was NOT resolved or remains open
-- What the recommended next step is
+3-5 paragraphs. Write for a reader who was not in the conversation. Cover:
+- What the session was about and the central goal
+- What was accomplished (decisions, documents, research)
+- What remains open
+- The recommended next step
 
-Do not use bullet points in this section. Prose only.
+Prose only. No bullet points in this section.
 
 ---
 
@@ -106,7 +106,7 @@ tool_name(param1="value", param2="value")
 # Result summary: [1-2 sentence summary of what was returned]
 ```
 
-For turns with very long voice transcriptions, summarize the key content accurately rather than reproducing raw transcription artifacts. Note when summarized: `[Summarized from voice transcription]`
+For long voice transcriptions, summarize the key content accurately. Do not reproduce raw transcription artifacts. Note when summarized: `[Summarized from voice transcription]`
 
 If timestamps are not available, note once at the top: `Note: Turn timestamps are not available in this environment.` Do not fabricate timestamps.
 
@@ -114,7 +114,7 @@ If timestamps are not available, note once at the top: `Note: Turn timestamps ar
 
 ### Section 3: Deliverables Inventory
 
-Every file created during this session via `create_file`, `bash_tool`, or other file-generating tools. Format as a table:
+Every file created during this session via `create_file`, `bash_tool`, or other file-generating tools. Format as:
 
 | # | Filename | Type | Location | Description | Presented to User |
 |---|----------|------|----------|-------------|-------------------|
@@ -128,7 +128,7 @@ If no files were created: "No files were created during this session."
 
 ### Section 4: Input File Manifest
 
-Every file uploaded by the user during the session. Format as a table:
+Every file uploaded by the user during the session. Format as:
 
 | # | Filename | Upload Path | Referenced in Turn(s) | Content Summary |
 |---|----------|-------------|----------------------|-----------------|
@@ -173,7 +173,7 @@ If not in a Project: omit this section entirely.
 
 ### Section 7: Decision Log
 
-Every significant decision made during the session — including options considered and reasoning. This is not a summary; it is a structured record.
+Every significant decision made during the session, including options considered and reasoning. This is a structured record, not a summary.
 
 Format each entry as:
 
@@ -184,13 +184,13 @@ Format each entry as:
 - Reasoning: [why]
 - Reversible: [Yes / No / Partially]
 
-Focus on decisions that affect future work, architecture, relationships, or strategy. Skip trivial formatting decisions.
+Focus on decisions that affect future work, architecture, relationships, or strategy. Skip formatting decisions.
 
 ---
 
 ### Section 8: Open Items / Next Actions
 
-Everything stated or implied as a next step, open question, unresolved issue, or pending action. Format as a checklist:
+Every stated or implied next step, open question, unresolved issue, or pending action. Format as a checklist:
 
 **Next Actions:**
 - [ ] [Action] — Owner: [User / Claude / Third party] — Priority: [High / Medium / Low]
@@ -205,7 +205,7 @@ Everything stated or implied as a next step, open question, unresolved issue, or
 
 ### Section 9: Key Entities Index
 
-Named people, organizations, technologies, documents, and concepts that appear in the session. Format as a table:
+Named people, organizations, technologies, documents, and concepts in the session. Format as:
 
 | Entity | Type | Description | First appears in Turn |
 |--------|------|-------------|----------------------|
@@ -218,7 +218,7 @@ Types: Person, Organization, Technology, Document, Concept, Location
 
 ### Section 10: Artifact Dependency Map
 
-Shows which files reference or depend on which other files. Format as:
+Shows which files reference or depend on other files. Format as:
 
 ```
 session-export-2026-04-12.md
@@ -237,8 +237,8 @@ If no dependencies exist between files, note: "Files produced in this session ar
 
 ### Section 11: Continuity Prompt
 
-A ready-to-paste prompt for starting the next session. Write this as if you are briefing the next Claude instance. Keep it under 200 words. It should convey:
-- Who the user is and what they're working on
+A ready-to-paste prompt for the next session. Write as a briefing for the next Claude instance. Keep it under 200 words. Convey:
+- Who the user is and what they are working on
 - What was accomplished in this session
 - What the most important open item or next step is
 - What documents to load or reference
@@ -256,7 +256,7 @@ In the previous session, [key accomplishments in 1-2 sentences]. The most import
 
 ### Optional Section: Sensitive Content Flag
 
-*(Include if session contained PII, credentials, legal content, financial figures, or named third parties)*
+*(Include if the session contained PII, credentials, legal content, financial figures, or named third parties)*
 
 Review the conversation text and flag:
 - Named individuals (non-public) — turns where they appear
@@ -315,9 +315,9 @@ Tools invoked this session:
 
 After generating the markdown file:
 
-1. Run `present_files` with the export file first, then any other session deliverables
-2. Tell the user exactly what was included and what was omitted due to platform limitations
-3. If the session is in a Project, note that the export file itself is not automatically added to project knowledge — they would need to upload it manually if they want it searchable in future sessions
+1. Run `present_files` with the export file first, then any other session deliverables.
+2. Tell the user what was included and what was omitted due to platform limits.
+3. If the session is in a Project, note that the export file is not added to project knowledge automatically. The user must upload it manually for future searchability.
 
 Example closing:
 ```
@@ -338,12 +338,12 @@ at the start of the conversation, then upload the session export file for full c
 
 ## Quality Standards
 
-- Never fabricate timestamps, token counts, or file metadata
-- Never reproduce full tool output verbatim — always summarize
-- For voice transcription turns, summarize accurately — do not clean up or editorialize
-- Decision log entries must reflect what was actually decided, not what seemed optimal in hindsight
-- Open items must be exhaustive — err on the side of including too many rather than too few
-- The continuity prompt must be usable by a Claude instance with zero other context
+- Never fabricate timestamps, token counts, or file metadata.
+- Never reproduce full tool output verbatim. Summarize.
+- For voice transcription turns, summarize accurately. Do not editorialize.
+- Decision log entries reflect what was decided, not what seems optimal in hindsight.
+- Open items must be exhaustive. Include too many rather than too few.
+- The continuity prompt must work for a Claude instance with zero other context.
 
 ---
 
@@ -358,4 +358,4 @@ at the start of the conversation, then upload the session export file for full c
 | Project knowledge directory listing | Partial | Query-based only; shows what was accessed, not full index |
 | Session metadata (duration, model version) | Partial | Model name available from system context; duration not available |
 
-All of the above ARE available in Claude Code with appropriate tooling. If the user wants richer exports, suggest running sessions in Claude Code for projects where full audit trail matters.
+All of the above are available in Claude Code with appropriate tooling. For richer exports, run sessions in Claude Code where full audit trail matters.

@@ -12,7 +12,7 @@ Analyze the competitive landscape for: $ARGUMENTS
 
 ## Context
 
-Read `strategy/concept.md` and `strategy/pain-thesis.md` if they exist. This analysis is strategic — positioning, business model, market dynamics — not feature-level (use `product/feature-competitive` for that).
+Read `strategy/concept.md` and `strategy/pain-thesis.md` if they exist. This analysis covers positioning, business model, and market dynamics. For feature-level comparison, use `product/feature-competitive`.
 
 ## Process
 
@@ -36,10 +36,10 @@ Search for organizations, projects, and products operating in the same space. In
 
 ### 3. Strategic patterns
 
-- **Market dynamics** — is this space growing, consolidating, fragmenting?
+- **Market dynamics** — growing, consolidating, or fragmenting?
 - **Barriers to entry** — what makes it hard to compete here?
 - **Differentiation opportunities** — where can you be meaningfully different, not just incrementally better?
-- **Threats** — what could a well-funded competitor do that would undermine your position?
+- **Threats** — what could a well-funded competitor do to undermine your position?
 
 ### 4. SWOT
 

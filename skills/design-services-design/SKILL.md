@@ -3,7 +3,7 @@ description: "Design service boundaries: which services exist, how they communic
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Running the pre-flight check now." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Services Design
@@ -12,7 +12,7 @@ Design service boundaries for: $ARGUMENTS
 
 ## Context
 
-Read architecture doc from `specs/`. This skill details the service-level design that the architecture doc outlines at a higher level.
+Read architecture doc from `specs/`. This skill fills in the service-level detail that the architecture doc outlines at a higher level.
 
 ## Process
 
@@ -20,7 +20,7 @@ Read architecture doc from `specs/`. This skill details the service-level design
 
 List each service or module. For each:
 - Name
-- Responsibility (one sentence — if you need two, it might be two services)
+- Responsibility (one sentence. If you need two, it is two services.)
 - What data it owns
 - What it does NOT own
 
@@ -30,13 +30,13 @@ For each service-to-service interaction:
 - Sync (HTTP/gRPC) or async (events/queues)?
 - Who initiates?
 - What data flows?
-- What happens if the call fails?
+- What happens when the call fails?
 
 ### 3. Boundaries
 
 - What can each service change without coordinating with others?
 - Where are the shared contracts (API schemas, event schemas)?
-- What would require a coordinated deployment?
+- What requires a coordinated deployment?
 
 ### 4. Save
 

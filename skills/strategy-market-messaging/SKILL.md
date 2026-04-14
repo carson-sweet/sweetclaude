@@ -12,13 +12,13 @@ Craft external messaging for: $ARGUMENTS
 
 ## Context
 
-Read `strategy/concept.md`, `strategy/pain-thesis.md`, `strategy/ideal-customer-profile.md`, `strategy/positioning-statement.md`, and `strategy/competitive-analysis.md` if they exist. Messaging should be grounded in all of these.
+Read `strategy/concept.md`, `strategy/pain-thesis.md`, `strategy/ideal-customer-profile.md`, `strategy/positioning-statement.md`, and `strategy/competitive-analysis.md` if they exist. Messaging builds on all of these.
 
 ## Process
 
 ### 1. Audience mapping
 
-Who are you talking to? Different audiences need different messages:
+Different audiences need different messages. Identify which apply:
 - **Primary users** (the ICP)
 - **Decision makers** (if different from users — buyers, managers, executives)
 - **Technical evaluators** (if the product has a technical buy-in process)
@@ -43,9 +43,9 @@ Who are you talking to? Different audiences need different messages:
 
 ### 3. Tone and voice
 
-- What's the personality? (authoritative, approachable, technical, provocative)
+- What is the personality? (authoritative, approachable, technical, provocative)
 - What words do you use? What words do you avoid?
-- What's the reading level? (ICP-appropriate)
+- What is the reading level? (match the ICP)
 
 ### 4. Save
 

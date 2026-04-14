@@ -3,17 +3,17 @@ description: "Start a new task. Asks what you want to do, classifies the work in
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Running pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # New Task
 
-Classify the work, pick the right bucket and phase, surface the right skills.
+Classify the work. Pick the right bucket and phase. Surface the right skills.
 
 ## Process
 
-1. **Ask or detect.** If the user hasn't stated the work type, propose:
-   > "This looks like {type} ({bucket}) based on {reasoning}. That means we'd start at {phase}. Sound right?"
+1. **Ask or detect.** If the user has not stated the work type, propose:
+   > "This is {type} ({bucket}) based on {reasoning}. Starting phase: {phase}. Correct?"
 
 2. **Classify into a bucket:**
 
@@ -87,24 +87,24 @@ Classify the work, pick the right bucket and phase, surface the right skills.
 4. **Surface skills.** Read `phase-skills.yaml` and surface skills from the appropriate bucket for the current phase.
 
 5. **Escalation.** At any point, if the work reveals deeper issues:
-   > "This {type} seems to point to a deeper {gap}. Want to escalate to DISCOVER and investigate?"
+   > "This {type} points to a deeper {gap}. Escalate to DISCOVER and investigate?"
 
 ## Backlog Guard
 
 When adding to the backlog:
 - **Technical items** (bugs, feature requests, tech debt) → `docs/backlog/`
 - **Non-technical items** (product ideas, strategic initiatives) → redirect to `strategy/`:
-  > "That's a strategic item, not a technical backlog item. I'll capture it in strategy/ instead."
+  > "That is a strategic item, not a technical backlog item. Capturing it in strategy/ instead."
 
 ## Cross-Bucket Detection
 
 If work shifts between buckets during a session:
 - Detect the shift from conversation context
-- Propose: "This is becoming {type} ({bucket}). Want to shift?"
+- Propose: "This is shifting to {type} ({bucket}). Switch?"
 - Preserve previous work state on reroute
 
 If strategy work reveals something that needs building:
-> "This depends on a capability we haven't built. Want to create a code task for it?"
+> "This depends on a capability that does not exist yet. Create a code task for it?"
 
 If code work reveals strategic prerequisites:
-> "This needs strategic work first. Want to switch to strategy for {type}?"
+> "This needs strategic work first. Switch to strategy for {type}?"

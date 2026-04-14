@@ -8,7 +8,7 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 # Discover Deep — Structured Discovery for Net-New Work
 
-You are conducting the Discover phase for a new product or application. This is not a freeform brainstorm — it is a structured interview that produces concrete personas, vetted features, and optional competitive intelligence.
+Conduct the Discover phase for a new product or application. This is a structured interview that produces concrete personas, vetted features, and optional competitive intelligence.
 
 **Work-type scaling:** The master skill routes here based on detected work type.
 - **Products/apps:** Run the full workflow (all three stages below).
@@ -30,9 +30,9 @@ Conduct an iterative interview to define all user personas.
 4. **Success criteria per task** — what does success look like for each task? How does the user know they accomplished it?
 
 **Interview protocol:**
-- Start with the primary user: "Let's start with the primary user of this product. What's their role or job title?"
+- Start with: "What is the primary user's role or job title?"
 - Ask about their tasks one at a time. For each task, ask what success looks like.
-- After each persona is fully defined, ask: **"Are there additional user personas we should define?"**
+- After each persona is fully defined, ask: **"Are there more user personas to define?"**
 - If yes, repeat the full persona interview for the next persona.
 - Continue until the user says all personas are captured.
 - One persona at a time. One task at a time. Do not batch.
@@ -54,7 +54,7 @@ Conduct an iterative interview to define all user personas.
 ...
 ```
 
-Ask: **"Does this look right? Any corrections or additions?"**
+Ask: **"Does this look right?"**
 
 Do not proceed to Stage 2 until the user confirms the consolidated view.
 
@@ -62,7 +62,7 @@ Do not proceed to Stage 2 until the user confirms the consolidated view.
 
 ## Stage 2: Feature Brainstorming
 
-After personas and tasks are confirmed, ask: **"Would you like me to brainstorm additional features and capabilities based on these personas?"**
+After personas and tasks are confirmed, ask: **"Brainstorm additional features based on these personas?"**
 
 If the user declines, skip to Stage 3.
 
@@ -73,15 +73,18 @@ If the user accepts:
   - Feature name
   - Which persona(s) it serves
   - Brief rationale (1-2 sentences)
-- After each feature, ask: **"Include or exclude?"**
+- After each feature, use AskUserQuestion with these options:
+  - "Include" — add this feature to scope
+  - "Exclude" — skip this feature
+  - "Discuss" — I have questions about this feature
 - Track included and excluded features separately.
-- **Maximum 10 features per batch.** After 10, say: "That's 10 features in this batch. Here's the included list so far: [list]. Would you like another batch of 10, or is this enough?"
-- Continue batches until the user signals satisfaction.
+- **Maximum 10 features per batch.** After 10, present the included list and ask: "Another batch of 10, or enough?"
+- Continue batches until the user says stop.
 
 **Brainstorming quality:**
-- Features should be grounded in the personas and tasks defined in Stage 1, not generic.
-- Propose at least 2 features that challenge or extend the user's original concept — not just obvious derivations.
-- If a feature overlaps with something already in scope, note the overlap and ask if the user wants to keep both or merge.
+- Features must be grounded in the personas and tasks from Stage 1, not generic.
+- Propose at least 2 features that challenge or extend the original concept — not just obvious derivations.
+- If a feature overlaps with something already in scope, note the overlap and ask: "Keep both or merge?"
 
 After brainstorming is complete, present the final included feature list.
 
@@ -89,7 +92,7 @@ After brainstorming is complete, present the final included feature list.
 
 ## Stage 3: Competitive Analysis
 
-After feature brainstorming (or after persona confirmation if brainstorming was skipped), ask: **"Would you like me to do a quick competitive analysis — searching for similar products, projects, or open-source alternatives?"**
+After feature brainstorming (or after persona confirmation if brainstorming was skipped), ask: **"Run a competitive analysis — similar products, projects, or open-source alternatives?"**
 
 If the user declines, skip to Wrap-Up.
 
@@ -103,11 +106,11 @@ If the user accepts:
 - Present each result with:
   - Name and URL
   - ~25-word synopsis
-- Handle "nothing found" gracefully: "I searched [sources] and didn't find direct competitors. This is either a novel space or a niche without established players. We can proceed without competitive benchmarking."
+- Handle "nothing found" gracefully: "Searched [sources] and found no direct competitors. This is either a novel space or a niche without established players."
 
-**After presenting the list, offer two paths:**
-1. **Drill down:** "Want me to go deeper on any of these? Pick one or more and I'll do a detailed analysis."
-2. **Table stakes:** "Or I can analyze all of them together and extract a 'table stakes' feature set — the common features that users in this category expect as baseline."
+**After presenting the list, offer two paths using AskUserQuestion:**
+- "Drill down" — pick specific competitors for detailed analysis
+- "Table stakes" — extract the common features users in this category expect as baseline
 
 If the user picks drill-down:
 - For each selected competitor, research and present: what it does well, what it does poorly, pricing model, target audience, key differentiators.
@@ -138,4 +141,4 @@ After all stages are complete:
 
 3. **Log decisions** in `.sweetclaude/state/decision-log.md`.
 
-4. **Do not push for phase advancement.** Present the summary and wait. The user decides when Discover is done.
+4. Present the summary and wait.

@@ -12,7 +12,7 @@ Convert user story $ARGUMENTS into a Gherkin .feature file.
 
 ## Process
 
-1. **Read the user story.** Find the story file in `.sweetclaude/` under `stories/EPIC-XXX/`. Extract all acceptance criteria.
+1. **Read the user story.** Find the story in `.sweetclaude/` under `stories/EPIC-XXX/`. Extract all acceptance criteria.
 
 2. **Generate .feature file.** For each acceptance criterion, write one or more Gherkin scenarios:
 
@@ -51,8 +51,8 @@ Feature: [Story title]
 
 ## Rules
 
-- .feature files use standard Gherkin syntax (Given/When/Then/And/But)
-- One .feature file per user story
-- Scenarios should be concrete and testable — no vague language
-- Include data examples where behavior varies by input (Scenario Outline + Examples)
-- The .feature file is the source of truth for TDD Level 3 — the test writer agent reads only this
+- Standard Gherkin syntax (Given/When/Then/And/But).
+- One .feature file per user story.
+- Scenarios are concrete and testable. No vague language.
+- Include data examples where behavior varies by input (Scenario Outline + Examples).
+- The .feature file is the source of truth for TDD Level 3. The test writer agent reads only this.

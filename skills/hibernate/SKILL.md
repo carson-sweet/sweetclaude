@@ -3,7 +3,7 @@ description: "Use when hibernating or unhibernating a project managed by SweetCl
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Running pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # SweetClaude Hibernate
@@ -56,12 +56,15 @@ SweetClaude was not initialized for this project.
 **During Step 5 (Propose Thaw Plan):** Add SweetClaude context:
 
 - If SweetClaude state was recorded:
-  > "SweetClaude was active at {phase}, {deference level}. Resume with that configuration, or reconfigure?"
 
-  If confirmed, update `.sweetclaude/state/phase.yaml` to active. If changes wanted, ask for new deference level.
+  Use AskUserQuestion with these options:
+  - "Resume" — keep {phase} phase at {deference level}
+  - "Reconfigure" — change the deference level before resuming
+
+  If "Resume," update `.sweetclaude/state/phase.yaml` to active. If "Reconfigure," ask for the new deference level.
 
 - If no SweetClaude state:
-  > "This project didn't use SweetClaude before. Want to initialize it? SweetClaude manages a 7-phase development pipeline with structured processes for discovery, design, TDD, and review."
+  > "This project was not using SweetClaude before. SweetClaude manages a 7-phase development pipeline covering discovery, design, TDD, and review. Set it up now?"
 
   If accepted, invoke `/sweetclaude:init`.
 

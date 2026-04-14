@@ -3,7 +3,7 @@ description: "Adversarial code review focused on logic errors, edge cases, regre
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Running the pre-flight check now." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Code Review
@@ -23,11 +23,11 @@ If $ARGUMENTS specifies files or a PR, review those. Otherwise, review staged ch
 5. **Performance** — N+1 queries, unbounded loops, missing pagination, unnecessary allocations, missing indexes
 6. **Naming and contracts** — does the function do what its name says? Do types match reality?
 
-## What NOT to flag
+## What NOT to Flag
 
-- Style issues (formatting, naming conventions) — the linter handles that
-- Opinions about code organization that don't affect correctness
-- Missing features that weren't in scope
+- Style issues (formatting, naming conventions). The linter handles that.
+- Opinions about code organization that do not affect correctness.
+- Missing features that were not in scope.
 
 ## Output
 
@@ -36,7 +36,7 @@ Code Review: {scope}
 
 Critical (must fix):
   - {finding} — {file}:{line}
-    Problem: {what's wrong}
+    Problem: {what is wrong}
     Fix: {specific suggestion}
 
 Warning (should fix):
@@ -57,4 +57,4 @@ Looks good:
 - Be adversarial. Assume the code has bugs and find them.
 - Every finding must have a specific fix suggestion.
 - Read-only. Do not modify code.
-- If the code is solid, say so. Don't manufacture findings.
+- If the code is solid, say so. Do not manufacture findings.

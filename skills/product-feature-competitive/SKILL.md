@@ -12,7 +12,7 @@ Compare features against competitors for: $ARGUMENTS
 
 ## Context
 
-Read `strategy/competitive-analysis.md` if it exists for the strategic landscape. This skill goes deeper on the product feature level.
+Read `strategy/competitive-analysis.md` if it exists for the strategic landscape. This skill goes deeper at the feature level.
 
 ## Process
 
@@ -35,18 +35,19 @@ Define feature categories relevant to this product. For each category, list spec
 
 ### 3. Identify patterns
 
-- **Table stakes** — features that 3+ competitors all have. You probably need these.
+- **Table stakes** — features that 3+ competitors all have. You need these.
 - **Differentiators** — features only 1-2 have. Potential opportunities.
-- **Gaps** — features nobody has. Potential innovation or a sign the market doesn't want it.
+- **Gaps** — features nobody has. Either innovation or a sign the market does not want it.
 - **Our unique** — features we have or plan that nobody else does.
 
 ### 4. Recommendations
 
-For each table-stakes feature we're missing:
-> Include or exclude? If exclude, document the rationale.
+For each table-stakes feature we lack, use AskUserQuestion with these options:
+- "Include" — add to scope
+- "Exclude" — skip (document the rationale)
 
 For each differentiator opportunity:
-> Worth pursuing? What would it take?
+> Worth pursuing? What does it take?
 
 ### 5. Save
 

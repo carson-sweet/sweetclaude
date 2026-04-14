@@ -12,10 +12,10 @@ Prepare for meeting: $ARGUMENTS
 
 ## Input
 
-Ask the user:
-1. **Who** — who are you meeting with? Check `strategy/meeting-prep/` for existing stakeholder profiles.
-2. **When** — when is the meeting?
-3. **Purpose** — what's the goal? What outcome do you want?
+Ask one at a time:
+1. **Who** — "Who are you meeting with?" Check `strategy/meeting-prep/` for existing stakeholder profiles.
+2. **When** — "When is the meeting?"
+3. **Purpose** — "What outcome do you want from this meeting?"
 
 ## Process
 
@@ -54,10 +54,10 @@ Present all deliverables. The user edits and approves before the meeting.
 
 ### 4. Post-meeting debrief
 
-After the meeting, ask:
-- What happened? What was decided?
-- Any surprises?
-- What follow-up is needed?
+After the meeting, ask one at a time:
+- "What happened? What was decided?"
+- "Any surprises?"
+- "What follow-up is needed?"
 
 Save debrief to `strategy/meeting-prep/{stakeholder}-{date}-debrief.md`.
 Update stakeholder profile with new context.
@@ -70,4 +70,4 @@ Maintained in `strategy/meeting-prep/`:
 strategy/meeting-prep/{name}.md
 ```
 
-Each contains: role, relationship context, meeting history, what they care about, communication style notes. Updated after each debrief.
+Each contains: role, relationship context, meeting history, priorities, communication style notes. Updated after each debrief.

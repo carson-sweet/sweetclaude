@@ -14,20 +14,22 @@ Define what this project is and why it exists.
 
 ### Step 1: What is this?
 
-Ask the user to describe the project in their own words. Don't constrain the format — let them talk. Then distill into:
+Ask the user: "Describe this project in your own words."
 
-1. **One-sentence description.** What does this thing do? Plain language, no jargon. If you can't say it in one sentence, it's not clear enough yet.
+Let them talk. Then distill into:
+
+1. **One-sentence description.** What does this thing do? No jargon. If it takes more than one sentence, it is not clear enough yet.
 2. **The problem it solves.** What specific situation does someone find themselves in where they need this? Not abstract pain — a concrete scenario.
-3. **Why it matters.** What's different about the world if this thing exists vs. doesn't?
+3. **Why it matters.** What changes if this thing exists vs. does not?
 
 ### Step 2: Challenge the framing
 
 Propose at least one of:
-- An alternative way to frame the problem (maybe the problem is upstream or downstream of what they described)
-- A potential gap ("you said X, but what about Y?")
-- An assumption worth questioning ("this assumes Z — is that actually true?")
+- An alternative way to frame the problem. The real problem may be upstream or downstream of what they described.
+- A gap: "You said X, but what about Y?"
+- A questionable assumption: "This assumes Z — is that true?"
 
-This is not obstruction. The best concepts survive scrutiny.
+The best concepts survive scrutiny.
 
 ### Step 3: Sharpen
 

@@ -12,10 +12,10 @@ Write a user story for: $ARGUMENTS
 
 ## SweetClaude Context
 
-- Stories follow As-a/I-want/So-that format with testable acceptance criteria
-- Each acceptance criterion should be convertible to a Gherkin Given/When/Then scenario
-- Save to `stories/EPIC-XXX/` in `.sweetclaude/`
-- Update `traceability/requirements-map.md`
+- Stories follow As-a/I-want/So-that format with testable acceptance criteria.
+- Each acceptance criterion converts to a Gherkin Given/When/Then scenario.
+- Save to `stories/EPIC-XXX/` in `.sweetclaude/`.
+- Update `traceability/requirements-map.md`.
 
 ## Execute
 

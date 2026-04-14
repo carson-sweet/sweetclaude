@@ -12,10 +12,10 @@ Research: $ARGUMENTS
 
 ## SweetClaude Context
 
-- Answer every research question with evidence and sources
-- Identify research gaps explicitly — flag unanswered questions as open items
-- Save output to `brainstorm/` or `strategy/` in `.sweetclaude/` depending on topic
-- Use RAG index if available for project-specific context
+- Answer every research question with evidence and sources.
+- Flag unanswered questions as open items.
+- Save output to `brainstorm/` or `strategy/` in `.sweetclaude/` depending on topic.
+- Use RAG index if available for project-specific context.
 
 ## Execute
 

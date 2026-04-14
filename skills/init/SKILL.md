@@ -23,7 +23,7 @@ Does {project-path}-sweetclaude/ exist as a directory?
 ```
 
 If yes:
-> "Found an existing SweetClaude working repo at `{project}-sweetclaude/`. SweetClaude now keeps state inside the project at `.sweetclaude/`. Want me to migrate your existing state? The old repo stays untouched."
+> "Found an older SweetClaude setup at `{project}-sweetclaude/`. SweetClaude now stores state inside the project at `.sweetclaude/`. Migrate your existing state? The old folder stays untouched."
 
 If user says yes, spawn a subagent:
 > ```
@@ -36,7 +36,7 @@ If user says yes, spawn a subagent:
 > ```
 > Count files migrated. Do nothing else.
 
-Report: "Migrated. Old repo untouched — archive or delete when ready." Skip to Step 10 (verify).
+Report: "Migrated. Old folder untouched. Delete it when ready." Skip to Step 10 (verify).
 
 If no legacy repo, continue with fresh init.
 
@@ -54,7 +54,7 @@ git rev-parse --is-inside-work-tree 2>/dev/null && git log --oneline -1 2>/dev/n
 
 **If yes (existing git project with history):**
 
-> "Before I set up SweetClaude, I need to save a snapshot of your project's current state. This creates a branch called `pre-sweetclaude` so you can revert everything SweetClaude does if you ever want to. This is required — I won't modify your project without it."
+> "First, I will save a snapshot of your project by creating a `pre-sweetclaude` branch. This lets you revert everything SweetClaude adds. This step is required."
 
 If the user agrees, spawn a subagent:
 > ```
@@ -65,27 +65,27 @@ If the user agrees, spawn a subagent:
 > Report: branch name created. Do nothing else.
 
 **If the user refuses the safety snapshot, STOP. Do not proceed with init.**
-> "SweetClaude requires a safety snapshot before modifying an existing project. This protects your work. When you're ready, run `/sweetclaude:init` again."
+> "The safety snapshot is required before modifying an existing project. Run `/sweetclaude:init` again when ready."
 
 **If no git repo exists:**
 
-> "This directory doesn't have git set up. SweetClaude works best with version control. Want me to initialize a git repo here?"
+> "This directory does not have git. SweetClaude works best with version control. Initialize a git repo here?"
 
 If yes:
 > - Ask: "What should the default branch be called?" (suggest `main`)
-> - Ask: "Is there anything in this directory that should NOT be tracked? (e.g., .env files, large binaries, node_modules)"
+> - Then ask: "Anything in this directory that should NOT be tracked? (Examples: .env files, large binaries, node_modules)"
 > - Spawn a subagent to: `git init`, `git checkout -b {branch}`, create `.gitignore` with user's exclusions + sensible defaults, `git add -A`, `git commit -m "Initial commit (pre-SweetClaude)"`
 > - This initial commit IS the safety snapshot.
 
-If no (user doesn't want git):
-> "SweetClaude can work without git, but there's no way to undo changes if something goes wrong. Are you sure? All SweetClaude modifications will be permanent."
+If no (user does not want git):
+> "SweetClaude can work without git. But there is no way to undo changes. All SweetClaude modifications will be permanent. Continue without git?"
 > If they confirm, proceed without snapshot. Flag in phase.yaml: `safety_snapshot: none`.
 
 ---
 
 ## Step 1: Determine Scenario (YOU ask the user)
 
-Ask: **"Do you have an existing code repo for this project?"**
+Use AskUserQuestion: **"Does this project have an existing code repo?"**
 
 | Answer | Follow-up | Scenario |
 |---|---|---|
@@ -102,20 +102,22 @@ Ask: **"Do you have an existing code repo for this project?"**
 
 ### Scenario A & B: Code repo exists
 
-Confirm the project directory path. Verify it's a git repo.
+Confirm the project directory path. Verify it is a git repo.
 
-Ask: **"Do you have existing strategic materials to onboard? (positioning docs, research, meeting notes, strategy files — anywhere on your machine, in Claude.ai exports, Google Drive downloads, etc.)"**
+Ask: **"Do you have existing strategy documents to bring in? These can be positioning docs, research, meeting notes, or strategy files from anywhere — your machine, Claude.ai exports, Google Drive downloads."**
 
 - **Yes** → Scenario A. Ask where the files are.
 - **No** → Scenario B.
 
 ### Scenario C: No code repo
 
-Ask: **"Create a new repo, or work without one?"**
+Use AskUserQuestion with these options:
+- "Create a new repo" — start with a fresh git repository
+- "Work without one" — no version control
 
 Record the answer. If new repo, the subagent in Step 3 will create it.
 
-Then ask about existing strategic materials (same as A/B).
+Then ask about existing strategy documents (same as A/B).
 
 ---
 
@@ -142,7 +144,7 @@ Spawn a subagent with these exact instructions:
 
 Skip if Scenario B or C with no files.
 
-Ask the user: **"I'll copy your files into `strategy/reconciliation/` — originals stay untouched. OK?"**
+Ask the user: **"I will copy your files into `strategy/reconciliation/`. Originals stay where they are. OK?"**
 
 On confirmation, spawn a subagent:
 
@@ -154,7 +156,7 @@ On confirmation, spawn a subagent:
 
 **Verify:** Subagent copied files and reported count. Did not categorize, rename, or modify anything.
 
-Tell the user: "Files copied. Run `/sweetclaude:strategy/reconciliation` to inventory and organize them."
+Tell the user: "Files copied. Run `/sweetclaude:strategy/reconciliation` to organize them."
 
 Do NOT run reconciliation automatically.
 
@@ -199,7 +201,7 @@ Present findings to user for confirmation.
 
 ## Step 6: Generate CLAUDE.md (SUBAGENT — Scenarios A & B)
 
-Ask the user: **"One-line description of this project?"**
+Ask: **"Describe this project in one line."**
 
 Then spawn a subagent:
 
@@ -340,7 +342,7 @@ Spawn a subagent:
 
 ## Step 9: Push to GitHub (SUBAGENT)
 
-Ask user: **"Push to GitHub as a private repo? (y/n)"**
+Ask: **"Push to GitHub as a private repo?"**
 
 If yes, spawn a subagent:
 
@@ -387,4 +389,4 @@ Strategy:   strategy/ created, {N} files onboarded | empty
 RAG:        {initialized | skipped — reason}
 ```
 
-If files were onboarded: "Run `/sweetclaude:strategy/reconciliation` to inventory and organize them."
+If files were onboarded: "Run `/sweetclaude:strategy/reconciliation` to organize them."

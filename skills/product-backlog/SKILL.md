@@ -12,9 +12,9 @@ Manage backlog: $ARGUMENTS
 
 ## Routing
 
-When adding items, classify first:
-- **Technical items** (bugs, feature requests, tech debt, test gaps) → `docs/backlog/`
-- **Strategic items** (product ideas, feature concepts, strategic initiatives, market opportunities) → `strategy/`. Tell the user: "That's a strategic item — I'll capture it in strategy/ instead of docs/backlog/."
+Classify before adding:
+- **Technical items** (bugs, feature requests, tech debt, test gaps) go to `docs/backlog/`.
+- **Strategic items** (product ideas, feature concepts, strategic initiatives, market opportunities) go to `strategy/`. Tell the user: "That is a strategic item. Capturing it in strategy/ instead of docs/backlog/."
 
 Never silently put a non-technical item in docs/backlog/.
 
@@ -34,11 +34,11 @@ docs/backlog/
 Read `BACKLOG-INDEX.md`, find the highest BL-XXX number, increment by 1.
 
 ### Step 2: Determine priority
-Ask the user if not obvious from context:
-- **P1** — Should be next after current milestone ships
-- **P2** — Important but not urgent
-- **P3** — Nice to have / exploratory
-- **SPIKE** — Research needed before sizing
+If not obvious from context, use AskUserQuestion with these options:
+- "P1" — next after current milestone ships
+- "P2" — important but not urgent
+- "P3" — nice to have / exploratory
+- "SPIKE" — research needed before sizing
 
 ### Step 3: Write the detail file
 Create `BL-XXX-short-descriptive-name.md`:
@@ -64,7 +64,7 @@ One paragraph describing what this is and why it matters.
 - Unresolved questions that need answers before this can be sized
 ```
 
-Always include substantive initial thinking — not just a title. Capture context while it's fresh. Initial thinking written during the conversation is 10x more valuable than reconstructing it later.
+Always include substantive initial thinking, not just a title. Capture context while it is fresh. Initial thinking written during the conversation is far more valuable than reconstructing it later.
 
 ### Step 4: Update the index
 Add a row to `BACKLOG-INDEX.md`, grouped by category:
@@ -78,11 +78,11 @@ Tell the user: "Added BL-XXX to the backlog: [title]. [one-sentence summary]."
 ## Reviewing the Backlog
 
 When the user asks to review:
-1. Read `BACKLOG-INDEX.md`
-2. Summarize: total items, count by priority, any stale items
-3. Identify items now unblocked (dependencies completed)
-4. Suggest re-prioritization if project context has changed
-5. Flag items that overlap or could be combined
+1. Read `BACKLOG-INDEX.md`.
+2. Summarize: total items, count by priority, stale items.
+3. Identify items now unblocked (dependencies completed).
+4. Suggest re-prioritization if project context changed.
+5. Flag items that overlap or could be combined.
 
 ## Updating a Backlog Item
 
@@ -101,7 +101,7 @@ When a backlog item is ready to be built:
 ## Rules
 
 - Every item gets a file. The index is just an index.
-- BL numbers are permanent. Never renumber. Leave gaps.
+- BL numbers are permanent. Never renumber. Gaps are fine.
 - Group by category in the index, not by date or priority alone.
-- Link dependencies — if BL-013 depends on BL-010, say so in both files.
-- Spikes are research tasks that produce a recommendation, not work items.
+- Link dependencies. If BL-013 depends on BL-010, say so in both files.
+- Spikes produce a recommendation, not deliverables.

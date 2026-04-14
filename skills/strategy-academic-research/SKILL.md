@@ -8,9 +8,9 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 # Academic Paper Development
 
-Six-phase pipeline from first principles to submission. Each phase has quality gates that must pass before advancing. User controls pacing — never push for phase advancement.
+Six-phase pipeline from first principles to submission. Each phase has quality gates that must pass before advancing. The user controls pacing.
 
-**Model preference:** Phases 0 and 3 (argumentation) benefit from the highest-performance model available. Flag this to the user at session start.
+**Model preference:** Phases 0 and 3 (argumentation) benefit from the highest-performance model available. Flag this at session start.
 
 ---
 
@@ -20,11 +20,11 @@ Six-phase pipeline from first principles to submission. Each phase has quality g
 
 ### Process
 
-1. **Core thesis.** Ask the user: "What is the central claim or argument of this paper?" Probe until it's a single, clear statement that could be true or false.
+1. **Core thesis.** Ask: "What is the central claim of this paper?" Probe until it is a single, clear statement that could be true or false.
 
-2. **Key concepts.** Identify the 3-5 concepts the paper depends on. For each: what does it mean in this context, and what would the reader need to understand before encountering it?
+2. **Key concepts.** Identify the 3-5 concepts the paper depends on. For each: what does it mean in this context, and what does the reader need to understand before encountering it?
 
-3. **Novelty.** Ask: "What doesn't exist in the literature yet that this paper provides?" Push for specificity — "a new approach to X" is not enough. What specifically is new?
+3. **Novelty.** Ask: "What does not exist in the literature yet that this paper provides?" Push for specificity. "A new approach to X" is not enough. What specifically is new?
 
 4. **Strongest objections.** Propose 2-3 objections a skeptical reviewer would raise. Discuss with the user: which are addressable, which are acknowledged limitations?
 
@@ -32,7 +32,7 @@ Six-phase pipeline from first principles to submission. Each phase has quality g
 
 ### Integration
 
-If canonical or canonical-draft documents exist in `strategy/academic/` for this topic (from reconciliation), read them as starting context. Don't start from zero if the corpus has material.
+If canonical or canonical-draft documents exist in `strategy/academic/` for this topic (from reconciliation), read them as starting context. Do not start from zero if the corpus has material.
 
 If `strategy/narrative-arc/` exists, check: does this paper serve an objective in the arc? What claims does it need to support?
 
@@ -136,7 +136,7 @@ If `strategy/narrative-arc/` exists, check: does this paper serve an objective i
 
 **Purpose:** Write the paper section by section, with quality checkpoints after each.
 
-**Model preference:** Use highest-performance model available for this phase. Argumentation quality is the bottleneck.
+**Model preference:** Use the highest-performance model available. Argumentation quality is the bottleneck.
 
 ### Writing Sequence
 
@@ -266,14 +266,14 @@ After all sections are drafted:
 
 ## Narrative Arc Integration
 
-This skill is a **consumer** of the narrative arc, not a producer.
+This skill reads the narrative arc but does not write to it.
 
 **Before Phase 0:** Check `strategy/narrative-arc/` for:
 - Does this paper serve an objective in the arc?
 - What claims does the arc need this paper to support?
 - What proof points should this paper strengthen?
 
-**After Phase 4:** Report to the user what the paper contributes to the arc. The user decides whether and how to update the arc via the narrative-arc skill.
+**After Phase 4:** Report what the paper contributes to the arc. The user decides whether and how to update the arc via the narrative-arc skill.
 
 ## Reconciliation Integration
 
