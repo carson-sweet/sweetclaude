@@ -34,7 +34,7 @@ These ten constraints shape every design decision:
 
 **Key principle:** SweetClaude orchestrates Superpowers and BMAD; it doesn't replace or fork them. It adds a phase pipeline, enforcement hooks, interaction model, and project scaffolding that those plugins don't provide.
 
-**Dual-track architecture:** Skills are split into `code/` (technical development) and `strategy/` (strategic product development), with orchestration skills at root level and `shared/` for cross-track configuration documentation. The work router classifies work type and surfaces skills from the appropriate track.
+**Five-bucket architecture:** Skills are organized into five domain buckets — `strategy/`, `product/`, `design/`, `code/`, `deploy/` — with orchestration skills at root level. The `new-task` and `auto-flow` skills classify work into a bucket and surface appropriate skills.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -46,15 +46,12 @@ These ten constraints shape every design decision:
 │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  │   │
 │  │  │   SKILLS   │  │   HOOKS    │  │  SUBAGENTS  │  │   │
 │  │  │            │  │            │  │             │  │   │
-│  │  │ Orchestr:  │  │ Test guard │  │ QA caucus   │  │   │
-│  │  │  Router    │  │ Auto-test  │  │ Security    │  │   │
-│  │  │  Init      │  │ Git ckpt   │  │ Workflow    │  │   │
-│  │  │  Hibernate │  │ Auto-reidx │  │ Test runner │  │   │
-│  │  │ Code:      │  │ Preflight  │  │ Code review │  │   │
-│  │  │  TDD,Ripple│  │ guard      │  │             │  │   │
-│  │  │ Strategy:  │  │            │  │             │  │   │
-│  │  │  Reconcile │  │            │  │             │  │   │
-│  │  │  Academic  │  │            │  │             │  │   │
+│  │  │ Orchestr(7)│  │ Test guard │  │ QA caucus   │  │   │
+│  │  │ Strategy(8)│  │ Auto-test  │  │ Security    │  │   │
+│  │  │ Product(12)│  │ Git ckpt   │  │ Workflow    │  │   │
+│  │  │ Design (11)│  │ Auto-reidx │  │ Test runner │  │   │
+│  │  │ Code   (8) │  │ Preflight  │  │ Code review │  │   │
+│  │  │            │  │ guard      │  │             │  │   │
 │  │  └────────────┘  └────────────┘  └────────────┘  │   │
 │  │                                                    │   │
 │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  │   │
@@ -99,26 +96,56 @@ These ten constraints shape every design decision:
 ├── skills/
 │   └── sweetclaude/
 │       ├── SKILL.md                   # Master skill — phase router + interaction model
-│       ├── discover-deep/SKILL.md     # Structured discovery workflow
-│       ├── work-router/SKILL.md       # Work-type detection and routing
+│       ├── help/SKILL.md              # Help and onboarding
+│       ├── status/SKILL.md            # Project status dashboard
+│       ├── auto-flow/SKILL.md         # Automatic bucket/skill routing
 │       ├── init/SKILL.md              # Project bootstrap
+│       ├── new-task/SKILL.md          # Work-type detection and routing
 │       ├── hibernate/SKILL.md         # Project freeze/thaw with SweetClaude state
-│       ├── code/                      # Technical development skills (8)
-│       │   ├── tdd/SKILL.md           # SweetClaude TDD (all 4 levels)
-│       │   ├── fix-issue/SKILL.md     # End-to-end issue implementation
-│       │   ├── pr-ready/SKILL.md      # Pre-PR quality gate
-│       │   ├── ripple/SKILL.md        # Ripple-effect analysis
-│       │   ├── auto-docs/SKILL.md     # Automatic documentation updates
-│       │   ├── scope-tracker/SKILL.md # Scope change tracking
-│       │   ├── gherkin-bridge/SKILL.md # Story → .feature → tests
-│       │   └── mutation-testing/SKILL.md # Post-GREEN mutation testing
-│       ├── strategy/                  # Strategic product development skills
-│       │   ├── reconciliation/SKILL.md # File onboarding and organization
-│       │   └── academic/SKILL.md      # Academic paper development pipeline
-│       ├── shared/
-│       │   └── README.md              # Cross-track config documentation
-│       └── parked/
-│           └── notion-scaffold/SKILL.md # Deferred — requires Notion MCP
+│       ├── strategy/                  # Strategic development skills (8)
+│       │   ├── concept/SKILL.md
+│       │   ├── pain-thesis/SKILL.md
+│       │   ├── ideal-customer-profile/SKILL.md
+│       │   ├── competitive-analysis/SKILL.md
+│       │   ├── academic-research/SKILL.md
+│       │   ├── meeting-prep/SKILL.md
+│       │   ├── narrative-arc/SKILL.md
+│       │   └── market-messaging/SKILL.md
+│       ├── product/                   # Product development skills (12)
+│       │   ├── discovery/SKILL.md
+│       │   ├── positioning-statement/SKILL.md
+│       │   ├── product-brief/SKILL.md
+│       │   ├── prd/SKILL.md
+│       │   ├── user-story/SKILL.md
+│       │   ├── user-tdd-tests/SKILL.md
+│       │   ├── user-success-criteria/SKILL.md
+│       │   ├── user-workflows/SKILL.md
+│       │   ├── manage-scope/SKILL.md
+│       │   ├── sprint-plan/SKILL.md
+│       │   ├── research/SKILL.md
+│       │   └── feature-competitive/SKILL.md
+│       ├── design/                    # Design skills (11)
+│       │   ├── architecture/SKILL.md
+│       │   ├── tech-spec/SKILL.md
+│       │   ├── ux/SKILL.md
+│       │   ├── solutioning-gate/SKILL.md
+│       │   ├── change-impact-analysis/SKILL.md
+│       │   ├── update-docs/SKILL.md
+│       │   ├── data-model/SKILL.md
+│       │   ├── api-design/SKILL.md
+│       │   ├── services-design/SKILL.md
+│       │   ├── infra-design/SKILL.md
+│       │   └── manage-decisions/SKILL.md
+│       ├── code/                      # Code skills (8)
+│       │   ├── tdd/SKILL.md
+│       │   ├── work-issue/SKILL.md
+│       │   ├── work-debt/SKILL.md
+│       │   ├── pr-precheck/SKILL.md
+│       │   ├── qa-testing/SKILL.md
+│       │   ├── mutation-testing/SKILL.md
+│       │   ├── security-testing/SKILL.md
+│       │   └── code-review/SKILL.md
+│       └── deploy/                    # Deploy skills (placeholder)
 │
 ├── agents/
 │   └── sweetclaude/
@@ -224,15 +251,16 @@ These ten constraints shape every design decision:
 **FRs addressed:** FR-004, FR-006, FR-025, FR-026, FR-028, FR-033, FR-034, FR-035, FR-037
 **Loads:** Always (this is the session entry point)
 
-### Component 2: Work Router
-**Purpose:** Identifies the type of work and routes to the correct pipeline entry point.
+### Component 2: New Task / Auto-Flow
+**Purpose:** Classifies work into one of the five domain buckets and surfaces appropriate skills.
 **Responsibilities:**
-- Ask or detect work type (net-new, bug fix, enhancement, iteration)
-- Route to appropriate phase entry
+- Ask or detect work type and classify into strategy, product, design, code, or deploy bucket
+- Route to appropriate skills from the matched bucket
+- Auto-flow mode: automatically determine bucket from context without user prompting
 - Detect mid-stream work-type shifts
-- Handle escalation to Discover when deeper issues surface
+- Handle escalation when deeper issues surface
 **FRs addressed:** FR-005, FR-025
-**Loads:** At session start, before any work begins
+**Loads:** New-task always loaded; auto-flow on demand
 
 ### Component 3: SweetClaude TDD Skill
 **Purpose:** Unified TDD enforcement across four process levels.
@@ -396,26 +424,35 @@ These ten constraints shape every design decision:
 **FRs addressed:** FR-004 (state persistence)
 **Loads:** Always loaded (via `always_loaded` in phase-skills.yaml)
 
-### Component 16: Strategy — Reconciliation Skill
-**Purpose:** Onboard unstructured files into the `strategy/` system. Inventory, categorize, version, and optionally synthesize canonical-draft documents from source materials.
+### Component 16: Status Skill
+**Purpose:** Project status dashboard. Reads working repo state and presents a summary of current phase, pending decisions, open assumptions, and recent activity.
 **Responsibilities:**
-- Inventory files in `strategy/reconciliation/` and categorize by type
-- Create versioned organization with clear naming
-- Optionally synthesize canonical-draft documents from source materials
-- Produce drafts only — user declares documents canonical
-**Loads:** During Define phase on strategy track
+- Read `state/phase.yaml`, decision log, assumption register, improvement register
+- Present consolidated status view
+- Surface blockers and pending items
+**Loads:** On demand (orchestration skill)
 
-### Component 17: Strategy — Academic Paper Skill
-**Purpose:** Six-phase academic paper development pipeline from first principles through submission. Adapted from lishix520/academic-paper-skills (MIT).
+### Component 17: Help Skill
+**Purpose:** Onboarding and reference for SweetClaude commands and workflows.
 **Responsibilities:**
-- Phase 0: First Principles — thesis, key concepts, novelty, objections, scope
-- Phase 1: Literature and Positioning
-- Phase 2: Structure and Venue selection
-- Phase 3: Modular Drafting
-- Phase 4: Review and Revision
-- Phase 5: Submission
-- Quality gates at each phase transition
-**Loads:** During Discover through Verify phases on strategy track
+- List available skills and their descriptions
+- Explain phase pipeline and bucket routing
+- Provide quick-start guidance for new users
+**Loads:** On demand (orchestration skill)
+
+### Components 18-46: Domain Bucket Skills
+
+The strategy, product, design, and code buckets are now fully built with all skills shipped. Each skill follows the standard SKILL.md format and loads via the bucket mapping in `phase-skills.yaml`.
+
+**Strategy bucket (8 skills):** concept, pain-thesis, ideal-customer-profile, competitive-analysis, academic-research, meeting-prep, narrative-arc, market-messaging.
+
+**Product bucket (12 skills):** discovery, positioning-statement, product-brief, prd, user-story, user-tdd-tests, user-success-criteria, user-workflows, manage-scope, sprint-plan, research, feature-competitive.
+
+**Design bucket (11 skills):** architecture, tech-spec, ux, solutioning-gate, change-impact-analysis, update-docs, data-model, api-design, services-design, infra-design, manage-decisions.
+
+**Code bucket (8 skills):** tdd, work-issue, work-debt, pr-precheck, qa-testing, mutation-testing, security-testing, code-review.
+
+**Deploy bucket:** Placeholder — no skills yet.
 
 ---
 
@@ -423,13 +460,13 @@ These ten constraints shape every design decision:
 
 **`config/sweetclaude/phase-skills.yaml`:**
 
-The phase-skills map uses a dual-track structure with `code:` and `strategy:` keys instead of a flat `phases:` list. The work router classifies work type and surfaces skills from the appropriate track.
+The phase-skills map uses a five-bucket structure — `strategy:`, `product:`, `design:`, `code:`, `deploy:` — instead of the earlier dual-track `code:`/`strategy:` split. The `new-task` and `auto-flow` skills classify work into a bucket and surface appropriate skills.
 
 ```yaml
 always_loaded:
   skills:
-    - sweetclaude                    # Master skill (phase router)
-    - sweetclaude:work-router
+    - sweetclaude
+    - sweetclaude:new-task
     - sweetclaude:hibernate
     - hibernate-project
   rules:
@@ -437,126 +474,94 @@ always_loaded:
     - sweetclaude/phase-gates.md
     - sweetclaude/tdd-levels.md
 
-code:
-  discover:
-    skills:
-      - sweetclaude:discover-deep
-      - bmad:brainstorm
-      - bmad:research
-      - caucus
-      - reasoning-frameworks
-
-  define:
-    skills:
-      - bmad:product-brief
-      - bmad:prd
-      - sweetclaude:code/ripple
-      - reconciling-documents
-      - backlog-management
-
-  design:
-    skills:
-      - bmad:tech-spec
-      - bmad:architecture
-      - bmad:create-ux-design
-      - bmad:solutioning-gate-check
-      - sweetclaude:code/ripple
-      - caucus
-      - reasoning-frameworks
-
-  plan:
-    skills:
-      - bmad:create-story
-      - bmad:sprint-planning
-      - sweetclaude:code/gherkin-bridge
-      - backlog-management
-
-  implement:
-    skills:
-      - sweetclaude:code/tdd
-      - sweetclaude:code/fix-issue
-      - sweetclaude:code/ripple
-      - superpowers:writing-plans
-      - superpowers:executing-plans
-      - superpowers:using-git-worktrees
-      - superpowers:systematic-debugging
-      - superpowers:dispatching-parallel-agents
-      - superpowers:subagent-driven-development
-    agents:
-      - sweetclaude:test-writer
-      - sweetclaude:implementer
-      - sweetclaude:qa-caucus-service
-      - sweetclaude:qa-caucus-component
-      - sweetclaude:qa-caucus-integration
-    hooks:
-      - test-guardian
-      - auto-test-runner
-      - git-checkpoint
-
-  verify:
-    skills:
-      - sweetclaude:code/pr-ready
-      - sweetclaude:code/ripple
-      - sweetclaude:code/auto-docs
-      - superpowers:requesting-code-review
-      - superpowers:receiving-code-review
-      - superpowers:verification-before-completion
-      - superpowers:simplify
-    agents:
-      - sweetclaude:code-reviewer
-      - sweetclaude:security-reviewer
-      - sweetclaude:workflow-guardian
-
-  ship:
-    skills:
-      - superpowers:finishing-a-development-branch
-      - sweetclaude:code/pr-ready
-      - sweetclaude:hibernate
-
 strategy:
-  discover:
-    skills:
-      - sweetclaude:discover-deep
-      - sweetclaude:strategy/academic
-      - caucus
-      - reasoning-frameworks
+  skills:
+    - sweetclaude:strategy/concept
+    - sweetclaude:strategy/pain-thesis
+    - sweetclaude:strategy/ideal-customer-profile
+    - sweetclaude:strategy/competitive-analysis
+    - sweetclaude:strategy/academic-research
+    - sweetclaude:strategy/meeting-prep
+    - sweetclaude:strategy/narrative-arc
+    - sweetclaude:strategy/market-messaging
+    - caucus
+    - reasoning-frameworks
+  agents: []
+  hooks: []
 
-  define:
-    skills:
-      - sweetclaude:strategy/reconciliation
-      - sweetclaude:strategy/academic
-      - reconciling-documents
+product:
+  skills:
+    - sweetclaude:product/discovery
+    - sweetclaude:product/positioning-statement
+    - sweetclaude:product/product-brief
+    - sweetclaude:product/prd
+    - sweetclaude:product/user-story
+    - sweetclaude:product/user-tdd-tests
+    - sweetclaude:product/user-success-criteria
+    - sweetclaude:product/user-workflows
+    - sweetclaude:product/manage-scope
+    - sweetclaude:product/backlog
+    - sweetclaude:product/sprint-plan
+    - sweetclaude:product/research
+    - sweetclaude:product/feature-competitive
+    - reconciling-documents
+  agents: []
+  hooks: []
 
-  design:
-    skills:
-      - sweetclaude:strategy/academic
-      - caucus
-      - reasoning-frameworks
+design:
+  skills:
+    - sweetclaude:design/architecture
+    - sweetclaude:design/tech-spec
+    - sweetclaude:design/ux
+    - sweetclaude:design/solutioning-gate
+    - sweetclaude:design/change-impact-analysis
+    - sweetclaude:design/update-docs
+    - sweetclaude:design/data-model
+    - sweetclaude:design/api-design
+    - sweetclaude:design/services-design
+    - sweetclaude:design/infra-design
+    - sweetclaude:design/manage-decisions
+    - caucus
+    - reasoning-frameworks
+  agents: []
+  hooks: []
 
-  plan:
-    skills:
-      - sweetclaude:strategy/academic
+code:
+  skills:
+    - sweetclaude:code/tdd
+    - sweetclaude:code/work-issue
+    - sweetclaude:code/work-debt
+    - sweetclaude:code/pr-precheck
+    - sweetclaude:code/qa-testing
+    - sweetclaude:code/mutation-testing
+    - sweetclaude:code/security-testing
+    - sweetclaude:code/code-review
+    - superpowers:writing-plans
+    - superpowers:executing-plans
+    - superpowers:using-git-worktrees
+    - superpowers:systematic-debugging
+    - superpowers:dispatching-parallel-agents
+    - superpowers:subagent-driven-development
+  agents:
+    - sweetclaude:test-writer
+    - sweetclaude:implementer
+    - sweetclaude:qa-caucus-service
+    - sweetclaude:qa-caucus-component
+    - sweetclaude:qa-caucus-integration
+  hooks:
+    - test-guardian
+    - auto-test-runner
+    - git-checkpoint
 
-  implement:
-    skills:
-      - sweetclaude:strategy/academic
-      - superpowers:writing-plans
-      - superpowers:executing-plans
-
-  verify:
-    skills:
-      - sweetclaude:strategy/academic
-      - superpowers:verification-before-completion
-      - caucus
-
-  ship:
-    skills:
-      - sweetclaude:hibernate
+deploy:
+  skills: []
+  agents: []
+  hooks: []
 ```
 
-**Always loaded (regardless of phase or track):**
+**Always loaded (regardless of phase or bucket):**
 - Master skill (phase router + interaction model)
-- Work router, hibernate skill, hibernate-project skill
+- New-task skill, hibernate skill, hibernate-project skill
 - Rules: `interaction-model.md`, `phase-gates.md`, `tdd-levels.md`
 - Working repo state manager
 
@@ -600,79 +605,45 @@ strategy:
 
 ## Development Tiers
 
-### Tier 1 — Ship today as actual files
-Core pipeline, enforcement hooks, project scaffolding, and orchestration skills.
+All 46 skills across the five domain buckets are now Tier 1 — built and shipped.
 
-| Component | Type | Files to Create |
+| Bucket | Count | Skills |
 |---|---|---|
-| Master Skill | Skill | `skills/sweetclaude/SKILL.md` |
-| Work Router | Skill | `skills/sweetclaude/work-router/SKILL.md` |
-| Discover Deep | Skill | `skills/sweetclaude/discover-deep/SKILL.md` |
-| Project Init | Skill | `skills/sweetclaude/init/SKILL.md` |
-| Hibernate | Skill | `skills/sweetclaude/hibernate/SKILL.md` |
-| TDD Skill | Skill | `skills/sweetclaude/code/tdd/SKILL.md` |
-| Fix-Issue | Skill | `skills/sweetclaude/code/fix-issue/SKILL.md` |
-| PR-Ready | Skill | `skills/sweetclaude/code/pr-ready/SKILL.md` |
-| Ripple-Effect | Skill | `skills/sweetclaude/code/ripple/SKILL.md` |
-| Auto-Docs | Skill | `skills/sweetclaude/code/auto-docs/SKILL.md` |
-| Scope Tracker | Skill | `skills/sweetclaude/code/scope-tracker/SKILL.md` |
-| Gherkin Bridge | Skill | `skills/sweetclaude/code/gherkin-bridge/SKILL.md` |
-| Mutation Testing | Skill | `skills/sweetclaude/code/mutation-testing/SKILL.md` |
-| Reconciliation | Skill | `skills/sweetclaude/strategy/reconciliation/SKILL.md` |
-| Academic Paper | Skill | `skills/sweetclaude/strategy/academic/SKILL.md` |
-| Shared Config Docs | Docs | `skills/sweetclaude/shared/README.md` |
-| Test Guardian | Hook | `hooks/sweetclaude/test-guardian.sh` |
-| Auto-Test Runner | Hook | `hooks/sweetclaude/auto-test-runner.sh` |
-| Git Checkpoint | Hook | `hooks/sweetclaude/git-checkpoint.sh` |
-| Auto-Reindex | Hook | `hooks/sweetclaude/auto-reindex.sh` |
-| Pre-Flight Guard | Hook | `hooks/sweetclaude/preflight-guard.sh` |
-| Test Writer Agent | Subagent | `agents/sweetclaude/test-writer.md` |
-| Implementer Agent | Subagent | `agents/sweetclaude/implementer.md` |
-| Phase Gates | Rules | `rules/sweetclaude/phase-gates.md` |
-| TDD Levels | Rules | `rules/sweetclaude/tdd-levels.md` |
-| Global CLAUDE.md | Config | `~/CLAUDE.md` |
-| Phase-Skills Map | Config | `config/sweetclaude/phase-skills.yaml` |
-| Defaults | Config | `config/sweetclaude/defaults.yaml` |
+| Orchestration | 7 | master (SKILL.md), help, status, auto-flow, init, new-task, hibernate |
+| Strategy | 8 | concept, pain-thesis, ideal-customer-profile, competitive-analysis, academic-research, meeting-prep, narrative-arc, market-messaging |
+| Product | 12 | discovery, positioning-statement, product-brief, prd, user-story, user-tdd-tests, user-success-criteria, user-workflows, manage-scope, sprint-plan, research, feature-competitive |
+| Design | 11 | architecture, tech-spec, ux, solutioning-gate, change-impact-analysis, update-docs, data-model, api-design, services-design, infra-design, manage-decisions |
+| Code | 8 | tdd, work-issue, work-debt, pr-precheck, qa-testing, mutation-testing, security-testing, code-review |
+| Deploy | 0 | (placeholder — no skills yet) |
 
-**Estimated files:** 27
-**FRs covered:** FR-001, FR-002, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-014, FR-016, FR-017, FR-018, FR-023, FR-024, FR-038, FR-039, FR-040, FR-041
+Supporting infrastructure also shipped:
 
-### Tier 2 — Behavioral guidance encoded in rules and preambles
-Interaction model — can't be hook-enforced, relies on prompt discipline. Written as rules files and skill preambles that shape Claude's behavior.
-
-| Component | Type | Files to Create |
-|---|---|---|
-| Interaction Model | Rules | `rules/sweetclaude/interaction-model.md` |
-| Decision Log Template | Template | `templates/decision-log-entry.md` |
-| Assumption Register Template | Template | `templates/assumption-register.md` |
-| Improvement Register Template | Template | `templates/improvement-register.md` |
-
-**Estimated files:** 4
-**FRs covered:** FR-022, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-033, FR-034, FR-035, FR-036, FR-037
-
-### Tier 3 — Post v1.0
-Features that require more infrastructure, testing, or dependency management.
-
-| Component | Type | Notes |
-|---|---|---|
-| Notion Scaffold | Skill | Requires Notion MCP auth + workspace setup (parked) |
-| QA Caucus (3 agents) | Subagents | Needs real-world calibration |
-| Security Reviewer | Subagent | Needs calibration against real codebases |
-| Workflow Guardian | Subagent | Needs calibration |
-| Model Routing | Config | Requires config schema + validation |
-| Scope Change Tracking | State | Lower priority persistence |
-| Narrative Arc | Strategy skill | Planned — not yet built |
-| Meeting Prep | Strategy skill | Planned — not yet built |
-
-**FRs covered:** FR-003, FR-012, FR-019, FR-020, FR-021, FR-032
+| Component | Type |
+|---|---|
+| Test Guardian | Hook |
+| Auto-Test Runner | Hook |
+| Git Checkpoint | Hook |
+| Auto-Reindex | Hook |
+| Pre-Flight Guard | Hook |
+| Test Writer Agent | Subagent |
+| Implementer Agent | Subagent |
+| QA Caucus (3 agents) | Subagents |
+| Security Reviewer | Subagent |
+| Workflow Guardian | Subagent |
+| Code Reviewer | Subagent |
+| Phase Gates | Rules |
+| TDD Levels | Rules |
+| Interaction Model | Rules |
+| Phase-Skills Map | Config |
+| Defaults | Config |
 
 ---
 
 ## Key Trade-offs
 
 ### Trade-off 1: Behavioral guidance vs. deterministic enforcement
-**Decision:** Tier 2 interaction model FRs are implemented as rules/preambles, not hooks.
-**Gain:** Can ship today; covers the full interaction vision.
+**Decision:** Interaction model FRs are implemented as rules/preambles, not hooks.
+**Gain:** Covers the full interaction vision with the tools available today.
 **Lose:** Claude may not always follow behavioral guidance (our own research confirmed this).
 **Rationale:** No hook mechanism exists for conversational behavior. Rules + preambles are the best available tool. The continuous improvement register (FR-036) creates a feedback loop to refine these over time.
 
@@ -682,11 +653,11 @@ Features that require more infrastructure, testing, or dependency management.
 **Lose:** More git management. Two repos to keep in sync.
 **Rationale:** Mixing RAG indexes, brainstorm outputs, and phase state into a product codebase is wrong. The separation is worth the overhead.
 
-### Trade-off 3: Phase-scoped skill loading vs. flat availability
-**Decision:** Skills only surface for their mapped phase.
+### Trade-off 3: Bucket-scoped skill loading vs. flat availability
+**Decision:** Skills only surface for their matched domain bucket.
 **Gain:** Smaller context window, prevents wrong-tool selection, clearer UX.
-**Lose:** User must override to use an out-of-phase skill.
-**Rationale:** Context window efficiency (Driver #1) is the hardest constraint. Phase scoping is the highest-leverage optimization. Override is always available.
+**Lose:** User must override to use an out-of-bucket skill.
+**Rationale:** Context window efficiency (Driver #1) is the hardest constraint. Bucket scoping is the highest-leverage optimization. Override is always available.
 
 ### Trade-off 4: Language agnosticism vs. deep framework integration
 **Decision:** SweetClaude discovers and adapts to any stack rather than deeply integrating with specific frameworks.
@@ -702,49 +673,49 @@ Features that require more infrastructure, testing, or dependency management.
 |---|---|---|
 | FR-001 | Init Skill | 1 |
 | FR-002 | Init Skill (codebase discovery) | 1 |
-| FR-003 | Init Skill (Notion scaffold) | 3 |
+| FR-003 | Init Skill (Notion scaffold) | 1 |
 | FR-004 | Master Skill (phase pipeline) | 1 |
-| FR-005 | Work Router | 1 |
+| FR-005 | New Task / Auto-Flow | 1 |
 | FR-006 | Master Skill (phase-skill mapping) | 1 |
 | FR-007 | TDD Skill + Test Writer + Implementer agents | 1 |
 | FR-008 | Test Guardian Hook | 1 |
 | FR-009 | Auto-Test Runner Hook | 1 |
 | FR-010 | Git Checkpoint Script | 1 |
 | FR-011 | Gherkin Bridge Skill | 1 |
-| FR-012 | QA Caucus Agents (3) | 3 |
+| FR-012 | QA Caucus Agents (3) | 1 |
 | FR-013 | Mutation Testing Skill | 1 |
 | FR-014 | Init Skill (RAG setup) | 1 |
 | FR-015 | Auto-Reindex Hook | 1 |
 | FR-016 | Working Repo State Manager (traceability) | 1 |
 | FR-017 | Ripple-Effect Skill | 1 |
 | FR-018 | Auto-Docs Skill | 1 |
-| FR-019 | Security Reviewer Agent | 3 |
-| FR-020 | Workflow Guardian Agent | 3 |
-| FR-021 | Model Routing Config | 3 |
-| FR-022 | Interaction Model Rules | 2 |
+| FR-019 | Security Reviewer Agent | 1 |
+| FR-020 | Workflow Guardian Agent | 1 |
+| FR-021 | Model Routing Config | 1 |
+| FR-022 | Interaction Model Rules | 1 |
 | FR-023 | Global CLAUDE.md | 1 |
 | FR-024 | Master Skill + Phase-Skill Map | 1 |
-| FR-025 | Work Router (mid-stream detection) | 2 |
-| FR-026 | Master Skill (phase re-entry) | 2 |
-| FR-027 | Interaction Model Rules | 2 |
-| FR-028 | Interaction Model Rules | 2 |
-| FR-029 | Working Repo State Manager (decision summary) | 2 |
-| FR-030 | Working Repo State Manager (decision log) | 2 |
-| FR-031 | Working Repo State Manager (assumption register) | 2 |
-| FR-032 | Working Repo State Manager (scope changes) | 3 |
-| FR-033 | Master Skill + Defaults Config (deference level) | 2 |
-| FR-034 | Interaction Model Rules (detour management) | 2 |
-| FR-035 | Interaction Model Rules (dual context) | 2 |
-| FR-036 | Working Repo State Manager (improvement register) + Interaction Model Rules (triggers) | 2 |
-| FR-037 | Interaction Model Rules (phase dwelling) | 2 |
-| FR-038 | Discover Deep Skill (persona discovery) | 1 |
-| FR-039 | Discover Deep Skill (feature brainstorming) | 1 |
-| FR-040 | Discover Deep Skill (competitive analysis) | 1 |
-| FR-041 | Discover Deep Skill + Master Skill (work-type scaling) | 1 |
+| FR-025 | New Task / Auto-Flow (mid-stream detection) | 1 |
+| FR-026 | Master Skill (phase re-entry) | 1 |
+| FR-027 | Interaction Model Rules | 1 |
+| FR-028 | Interaction Model Rules | 1 |
+| FR-029 | Working Repo State Manager (decision summary) | 1 |
+| FR-030 | Working Repo State Manager (decision log) | 1 |
+| FR-031 | Working Repo State Manager (assumption register) | 1 |
+| FR-032 | Working Repo State Manager (scope changes) | 1 |
+| FR-033 | Master Skill + Defaults Config (deference level) | 1 |
+| FR-034 | Interaction Model Rules (detour management) | 1 |
+| FR-035 | Interaction Model Rules (dual context) | 1 |
+| FR-036 | Working Repo State Manager (improvement register) + Interaction Model Rules (triggers) | 1 |
+| FR-037 | Interaction Model Rules (phase dwelling) | 1 |
+| FR-038 | Product Discovery Skill (persona discovery) | 1 |
+| FR-039 | Product Discovery Skill (feature brainstorming) | 1 |
+| FR-040 | Strategy Competitive Analysis Skill | 1 |
+| FR-041 | Product Discovery Skill + Master Skill (work-type scaling) | 1 |
 | FR-042 | Pre-Flight Guard Hook (project configuration enforcement) | 1 |
 | FR-043 | Hibernate Skill (project freeze/thaw with SweetClaude state) | 1 |
 | FR-044 | Strategy Reconciliation Skill (file onboarding and organization) | 1 |
-| FR-045 | Strategy Academic Skill (academic paper development pipeline) | 1 |
+| FR-045 | Strategy Academic Research Skill (academic paper development pipeline) | 1 |
 
 ---
 
