@@ -1,5 +1,4 @@
 ---
-name: product-prd
 description: "Produce a full PRD with functional requirements, non-functional requirements, epics, and traceability. Wraps bmad:prd with SweetClaude context."
 ---
 

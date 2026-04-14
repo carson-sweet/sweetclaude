@@ -1,5 +1,4 @@
 ---
-name: rag-index
 description: Set up and manage local RAG (semantic search) for any project using mcp-local-rag. Use this skill whenever the user says things like "set up RAG", "index this project", "enable semantic search", "update the index", "reindex", "add to RAG", "refresh RAG", or asks Claude to search project documents semantically. Also trigger when the user references wanting to search across documents by meaning rather than keyword, or mentions mcp-local-rag. This skill handles both initial setup (installing mcp-local-rag globally, creating per-project .mcp.json, and doing a full initial index) AND incremental updates (detecting new or modified files and ingesting only those). Use it even if the user just says "index everything" or "update the index" without explicitly mentioning RAG.
 ---
 

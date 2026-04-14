@@ -1,5 +1,4 @@
 ---
-name: help
 description: List all SweetClaude commands and check project configuration status. Use when the user types /sweetclaude:help or asks what SweetClaude can do.
 ---
 

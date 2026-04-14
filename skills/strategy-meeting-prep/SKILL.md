@@ -1,5 +1,4 @@
 ---
-name: strategy-meeting-prep
 description: "Prepare for a specific meeting. Pulls relevant context from strategy corpus, drafts agenda, talking points with confidence levels, key asks, anticipated questions, and leave-behinds."
 ---
 

@@ -1,5 +1,4 @@
 ---
-name: strategy-competitive-analysis
 description: "Strategic-level competitive landscape analysis. Who else operates in this space, how they're positioned, where the gaps are, and what your differentiation is. Distinct from product/feature-competitive which focuses on features."
 ---
 

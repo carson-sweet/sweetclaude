@@ -1,5 +1,4 @@
 ---
-name: product-research
 description: "Conduct market or technical research on a specific question. Returns findings with evidence and sources. Wraps bmad:research."
 ---
 

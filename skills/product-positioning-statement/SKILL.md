@@ -1,5 +1,4 @@
 ---
-name: product-positioning-statement
 description: "Define how the product is positioned — for whom, what category, what differentiates it, and why that matters. Builds on strategy/concept and strategy/ideal-customer-profile."
 ---
 

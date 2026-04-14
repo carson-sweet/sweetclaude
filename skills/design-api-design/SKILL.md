@@ -1,5 +1,4 @@
 ---
-name: design-api-design
 description: "Design API endpoints: routes, request/response shapes, authentication, pagination, error responses, and versioning strategy."
 ---
 

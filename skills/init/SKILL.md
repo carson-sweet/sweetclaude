@@ -1,5 +1,4 @@
 ---
-name: init
 description: "Set up SweetClaude for a project. Creates .sweetclaude/ state directory, strategy/ structure, discovers the toolchain, generates CLAUDE.md. Supports code repos, strategy-only projects, and migration from legacy working repos."
 ---
 

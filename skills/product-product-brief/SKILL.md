@@ -1,5 +1,4 @@
 ---
-name: product-product-brief
 description: "Walk through an 11-section product brief. One section at a time with probing follow-ups. Wraps bmad:product-brief with SweetClaude context and preflight."
 ---
 

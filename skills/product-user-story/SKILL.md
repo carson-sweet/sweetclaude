@@ -1,5 +1,4 @@
 ---
-name: product-user-story
 description: "Write user stories with acceptance criteria from features or epics. Wraps bmad:create-story with SweetClaude context."
 ---
 

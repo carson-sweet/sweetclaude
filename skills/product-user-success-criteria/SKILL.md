@@ -1,5 +1,4 @@
 ---
-name: product-user-success-criteria
 description: "Define measurable success for each persona and task. Each criterion is evaluable as true/false after the product ships. No vague 'users are happy.'"
 ---
 

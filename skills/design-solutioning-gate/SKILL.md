@@ -1,5 +1,4 @@
 ---
-name: design-solutioning-gate
 description: "Validate the proposed solution before implementation. Checks architecture decisions, identifies risks, confirms design addresses requirements. Wraps bmad:solutioning-gate-check."
 ---
 

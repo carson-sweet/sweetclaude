@@ -1,5 +1,4 @@
 ---
-name: design-ux
 description: "Design the user experience: wireframes, interaction patterns, navigation, user flows. Wraps bmad:create-ux-design."
 ---
 

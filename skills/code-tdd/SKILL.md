@@ -1,5 +1,4 @@
 ---
-name: code-tdd
 description: SweetClaude TDD — unified test-driven development with four process levels, language-agnostic, hook-enforced. Tests first, from specs, immutable during implementation. Use for ALL implementation work.
 ---
 

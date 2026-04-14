@@ -1,5 +1,4 @@
 ---
-name: product-user-workflows
 description: "Convert user stories into UX/UI flows showing the step-by-step path a user takes through the interface. Bridges product definition and UX design."
 ---
 
