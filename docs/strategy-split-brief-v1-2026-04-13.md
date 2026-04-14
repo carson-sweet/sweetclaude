@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-13
 **Version:** 1.0
-**Status:** Draft
+**Status:** Superseded by `docs/plans/skill-reorganization-plan-2026-04-13.md` (5-bucket architecture)
 **Owner:** Carson Sweet
 
 ---

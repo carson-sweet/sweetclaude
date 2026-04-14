@@ -1,5 +1,7 @@
 # Strategy Split Reconciliation Plan — 2026-04-13
 
+> **SUPERSEDED** by `docs/plans/skill-reorganization-plan-2026-04-13.md` (5-bucket architecture). This plan's Phase A (repo sync) was completed. Phases B-C were replaced by the reorganization plan.
+
 **Goal:** Bring the SweetClaude repo in sync with the installed state at `~/.claude/`, then complete the remaining strategy-track work from the design spec.
 
 **Design spec:** `docs/strategy-split-design-v1-2026-04-13.md`

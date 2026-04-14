@@ -68,21 +68,21 @@ In the project directory, create:
 ```
 <project>/
   strategy/
-    reconciliation/
-      archive/
-    positioning/
-    competitive/
-    market-messaging/
-    biz-planning/
-    academic/
+    concept/
+    pain-thesis/
+    ideal-customer-profile/
+    competitive-analysis/
+    academic-research/
     meeting-prep/
     narrative-arc/
-    decisions/
+    market-messaging/
+    reconciliation/
+      archive/
     rag-index/
 ```
 
 ```bash
-mkdir -p strategy/{reconciliation/archive,positioning,competitive,market-messaging,biz-planning,academic,meeting-prep,narrative-arc,decisions,rag-index}
+mkdir -p strategy/{concept,pain-thesis,ideal-customer-profile,competitive-analysis,academic-research,meeting-prep,narrative-arc,market-messaging,reconciliation/archive,rag-index}
 ```
 
 ---

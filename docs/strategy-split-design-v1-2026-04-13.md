@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-13
 **Version:** 1.0
-**Status:** Draft
+**Status:** Superseded by `docs/plans/skill-reorganization-plan-2026-04-13.md` (5-bucket architecture)
 **Brief:** `docs/superpowers/specs/2026-04-13-sweetclaude-strategy-split-brief.md`
 
 ---
