@@ -27,6 +27,10 @@ SweetClaude Status
 ## Step 2: Available Commands
 
 ```
+Getting Started
+  /sweetclaude:sherpa-start   Brand new project — walk through everything from idea to code
+  /sweetclaude:sherpa-adopt   Existing project — scan, assess, set up SweetClaude
+
 Orchestration
   /sweetclaude:master         Start session, pre-flight check, phase routing
   /sweetclaude:help           This help (you are here)
@@ -34,6 +38,7 @@ Orchestration
   /sweetclaude:auto-flow      Walk through pipeline step by step
   /sweetclaude:init           Set up SweetClaude for this project
   /sweetclaude:new-task       Classify work and enter the pipeline
+  /sweetclaude:fix-config     Audit and repair SweetClaude's own setup
   /sweetclaude:hibernate      Freeze or thaw a project mid-phase
 
 Strategy
