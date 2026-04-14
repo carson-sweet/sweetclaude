@@ -57,7 +57,13 @@ All 52 skills are immediately available as `/sweetclaude:skill-name` commands.
 
 These are low-risk ways to see what SweetClaude can do before committing to a workflow.
 
-**Ask Claude to explain the process.** Just type in natural language: "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?" Claude reads the master skill and gives you the full picture.
+**Ask Claude to explain the process.** Just type: "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?" Claude reads the master skill and gives you the full picture.
+
+**Ask to see everything SweetClaude can do.** Type: "Show me all the things SweetClaude can do." Claude walks through every domain — strategy, product, design, code, review — and explains each capability.
+
+**Ask what problems you can hand to SweetClaude.** Type: "What kinds of problems or use cases can I hand to SweetClaude?" This surfaces capabilities you might not expect — meeting prep, competitive analysis, academic paper writing, document organization, pain thesis development.
+
+**Ask how SweetClaude is different.** Type: "How is SweetClaude different from other Claude Code coding frameworks and skills?" Claude explains what makes it unique: the strategic and product layers that happen before code, the structured pain thesis, the five domain buckets, the end-to-end lifecycle coverage.
 
 **Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
 
