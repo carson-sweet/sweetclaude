@@ -1,5 +1,5 @@
 ---
-name: sweetclaude-start-task
+name: sweetclaude-new-task
 description: "Start a new task. Asks what you want to do, classifies the work type (code or strategy), and routes to the correct pipeline entry point and skill track. Use when beginning any new work."
 ---
 
