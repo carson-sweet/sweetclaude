@@ -64,6 +64,6 @@ SweetClaude was not initialized for this project.
 - If no SweetClaude state:
   > "This project didn't use SweetClaude before. Want to initialize it? SweetClaude manages a 7-phase development pipeline with structured processes for discovery, design, TDD, and review."
 
-  If accepted, invoke `sweetclaude:init`.
+  If accepted, invoke `/sweetclaude:init`.
 
 **During Step 6 (Update Docs):** If SweetClaude is active, update `state/phase.yaml` to reflect resumed status.

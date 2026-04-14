@@ -5,7 +5,7 @@ description: "Project bootstrap supporting three scenarios: code repo with exter
 
 # SweetClaude Project Init
 
-Initialize a new SweetClaude project: `sweetclaude init $ARGUMENTS`
+Initialize a new SweetClaude project: `/sweetclaude:init $ARGUMENTS`
 
 Supports three project scenarios. The init process adapts based on what already exists.
 
@@ -96,7 +96,7 @@ If the user has files to onboard:
    ```bash
    cp -r <source-path>/* strategy/reconciliation/
    ```
-3. Inform the user: "Files copied. Run the reconciliation skill (`sweetclaude:strategy/reconciliation`) to inventory, categorize, and optionally synthesize canonical documents from these files."
+3. Inform the user: "Files copied. Run `/sweetclaude:strategy/reconciliation` to inventory, categorize, and optionally synthesize canonical documents from these files."
 
 Do NOT run reconciliation automatically — it's a separate, user-driven process.
 
@@ -243,4 +243,4 @@ Strategy:     strategy/ created, <N> files onboarded | empty
 RAG:          <status>
 ```
 
-If files were onboarded: "Run `sweetclaude:strategy/reconciliation` to inventory and organize the onboarded files."
+If files were onboarded: "Run `/sweetclaude:strategy/reconciliation` to inventory and organize the onboarded files."
