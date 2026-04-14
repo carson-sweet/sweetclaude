@@ -1,0 +1,15 @@
+{
+  "name": "sweetclaude",
+  "description": "End-to-end development framework for solo developers",
+  "owner": {
+    "name": "Carson Sweet"
+  },
+  "plugins": [
+    {
+      "name": "sweetclaude",
+      "description": "End-to-end development framework: strategy, product, design, code — from concept to shipped code",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
+}
