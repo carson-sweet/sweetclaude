@@ -54,10 +54,23 @@ Present all deliverables. The user edits and approves before the meeting.
 
 ### 4. Post-meeting debrief
 
-After the meeting, ask one at a time:
-- "What happened? What was decided?"
-- "Any surprises?"
-- "What follow-up is needed?"
+After the meeting, ask ONE AT A TIME. Wait for each answer before the next.
+
+Ask: "What happened?"
+
+Wait for the answer. Then ask:
+
+Ask: "What was decided?"
+
+Wait for the answer. Then ask:
+
+Ask: "Any surprises?"
+
+Wait for the answer. Then ask:
+
+Ask: "What follow-up is needed?"
+
+Wait for the answer.
 
 Save debrief to `strategy/meeting-prep/{stakeholder}-{date}-debrief.md`.
 Update stakeholder profile with new context.

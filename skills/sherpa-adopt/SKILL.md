@@ -74,15 +74,34 @@ Present the survey to the user.
 
 ## Step 3: Understand the current state
 
-Ask the user these questions one at a time:
+Ask these questions ONE AT A TIME. Wait for the answer to each before asking the next.
 
-1. **"Where is the project right now — early (mostly planning), mid-build (actively coding), or mature (maintaining/iterating)?"**
+**Question 1:**
 
-2. **"What needs to happen next?"**
+Use AskUserQuestion:
+- "Early" — mostly planning, not much code yet
+- "Mid-build" — actively coding features
+- "Mature" — maintaining, iterating, or shipping
 
-3. **"What is the biggest problem or frustration with the project right now?"**
+Wait for the answer.
 
-4. **"Is anything about the codebase messy, undocumented, or worrying you?"**
+**Question 2:**
+
+Ask: "What needs to happen next?"
+
+Wait for the answer.
+
+**Question 3:**
+
+Ask: "What is the biggest problem or frustration with the project right now?"
+
+Wait for the answer.
+
+**Question 4:**
+
+Ask: "Is anything about the codebase messy, undocumented, or worrying you?"
+
+Wait for the answer.
 
 ---
 

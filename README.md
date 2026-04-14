@@ -1,6 +1,7 @@
-<p align="left">
-  <img src="sweetclaude.png" alt="SweetClaude" width="300" align="left">
+<p>
+  <img src="sweetclaude.png" alt="SweetClaude" width="300" align="right">
 </p>
+
 
 
 
@@ -169,9 +170,9 @@ Run `/sweetclaude:init` and point it at the files. It copies them into a reconci
 ### Strategy
 | Command | What it does |
 |---|---|
-| `/sweetclaude:strategy-concept` | Articulate what this is and why it exists |
-| `/sweetclaude:strategy-pain-thesis` | Structured pain analysis using 11-section framework |
-| `/sweetclaude:strategy-ideal-customer-profile` | Who has this pain and will pay |
+| `/sweetclaude:strategy-concept` | Articulate what this product / project is and why it exists |
+| `/sweetclaude:strategy-pain-thesis` | Structured user / customer pain analysis using 11-section framework |
+| `/sweetclaude:strategy-ideal-customer-profile` | Who has this pain and will invest in relieving it |
 | `/sweetclaude:strategy-competitive-analysis` | Strategic landscape and differentiation |
 | `/sweetclaude:strategy-academic-research` | Research paper development (6 phases) |
 | `/sweetclaude:strategy-meeting-prep` | Stakeholder meeting deliverables |
@@ -254,8 +255,31 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 
 ## Contributing
 
-<p align="center">
-  <img src="sweetclaude-workshop.png" alt="SweetClaude Workshop" width="600">
+Contributions welcome. SweetClaude is built by solo developers, for solo developers. If you have ideas, skills, or improvements — open an issue or PR.
+
+<p>
+  <img src="sweetclaude-workshop.png" alt="SweetClaude Workshop" width="600" align="left">
 </p>
 
-Contributions welcome. SweetClaude is built by solo developers, for solo developers. If you have ideas, skills, or improvements — open an issue or PR.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
