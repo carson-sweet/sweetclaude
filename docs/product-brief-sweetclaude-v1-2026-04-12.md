@@ -52,7 +52,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - Gherkin bridge that formally transitions product stories into TDD test specs via isolated subagents
 - Four-level TDD with hook-based enforcement (test file guardian, auto-test runner, git checkpoints)
 - RAG-powered knowledge layer (semantic search + Notion + git history, loaded on demand)
-- One-command project bootstrap (`sweetclaude init`) creating dual repos, GitHub, Notion scaffold (optional), RAG index, and auto-generated CLAUDE.md
+- One-command project bootstrap (`sweetclaude init`) creating project repo with `.sweetclaude/` state directory, GitHub, Notion scaffold (optional), RAG index, and auto-generated CLAUDE.md
 - Phase-aware skill surfacing — only relevant capabilities shown for the current phase
 - Configurable model routing — rules for which model handles which tasks, with user-defined config and default fallback (e.g., Haiku for test runs, Sonnet for code review, Opus for architecture)
 - Ripple-effect analysis — before implementing a change, automatically trace dependencies, tests, APIs, and consumers, and present impact assessment
@@ -101,7 +101,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - SweetClaude TDD skill with all four process levels and hook-based enforcement
 - Gherkin bridge skill (BMAD stories → .feature files → isolated test writer → QA caucus)
 - Phase-aware skill router with entry/exit criteria
-- `sweetclaude init` project bootstrap (dual repos, GitHub, CLAUDE.md generation)
+- `sweetclaude init` project bootstrap (repo with `.sweetclaude/`, GitHub, CLAUDE.md generation)
 - Test file guardian hook (PreToolUse blocks test edits during implementation)
 - Auto-test runner hook (PostToolUse runs tests after source edits)
 - RAG index setup per project
@@ -116,7 +116,7 @@ SweetClaude is an open-source (non-commercial license) Claude Code framework tha
 - Creative partner behavior embedded across all phases
 
 ### Out of scope (v1.0) — Future
-- **`sweetclaude adopt`** — Drop SweetClaude into an existing (likely vibe-coded) codebase. Unlike `init`, this requires a full assessment/recovery process: (1) ASSESS — full codebase scan for structure, test coverage, dependency map, pattern consistency, dead code, security surface; (2) DIAGNOSE — report on health, debt, danger zones, uncovered code; (3) PLAN — prioritized remediation plan: stabilize first, add tests to lock behavior before changing anything, document before knowledge is lost; (4) SCAFFOLD — set up working repo, CLAUDE.md, RAG index, traceability baseline from what exists; (5) ITERATE — user works through remediation using the iteration lifecycle. Key principle: treat an adopted codebase like an archaeologist treats a dig site, not a demolition crew.
+- **`sweetclaude adopt`** — Drop SweetClaude into an existing (likely vibe-coded) codebase. Unlike `init`, this requires a full assessment/recovery process: (1) ASSESS — full codebase scan for structure, test coverage, dependency map, pattern consistency, dead code, security surface; (2) DIAGNOSE — report on health, debt, danger zones, uncovered code; (3) PLAN — prioritized remediation plan: stabilize first, add tests to lock behavior before changing anything, document before knowledge is lost; (4) SCAFFOLD — set up `.sweetclaude/` state directory, CLAUDE.md, RAG index, traceability baseline from what exists; (5) ITERATE — user works through remediation using the iteration lifecycle. Key principle: treat an adopted codebase like an archaeologist treats a dig site, not a demolition crew.
 - Automatic boilerplate implementation (e.g., Google OAuth for web apps, JWT for microservices) — needs a template library mapping project types to expected components, plus skills to implement each
 - Multi-developer / team workflows
 - IDE integrations beyond Claude Code CLI

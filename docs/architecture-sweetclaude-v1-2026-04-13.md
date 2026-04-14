@@ -15,12 +15,12 @@ These ten constraints shape every design decision:
 |---|---|---|---|
 | 1 | Context window efficiency | Claude's token limit is finite; bloat degrades instruction-following | Lazy loading, phase-scoped skills, lean CLAUDE.md, on-demand RAG |
 | 2 | Conversation branch management | Human can't hold full context; detours lose state | Detour tracking, re-orientation, decision/assumption persistence |
-| 3 | Session recovery | Sessions die; state must survive | Working repo persistence, git checkpoints, phase state files |
+| 3 | Session recovery | Sessions die; state must survive | `.sweetclaude/` state persistence, git checkpoints, phase state files |
 | 4 | Language/framework agnosticism | No hardcoded stack assumptions | Codebase discovery drives all config; templates, not constants |
 | 5 | Upstream compatibility | Must not break Superpowers or BMAD | Orchestrate via delegation, never override or monkey-patch |
 | 6 | TDD enforcement hooks | Advisory TDD fails; deterministic enforcement required | Native Claude Code hooks (PreToolUse, PostToolUse, Stop) |
-| 7 | RAG + semantic knowledge | Large document corpus, per-project index | mcp-local-rag, index in working repo, query on demand |
-| 8 | Persistent project memory | Decisions, assumptions, traceability must outlive sessions | Structured markdown in working repo, committed at checkpoints |
+| 7 | RAG + semantic knowledge | Large document corpus, per-project index | mcp-local-rag, index in `.sweetclaude/`, query on demand |
+| 8 | Persistent project memory | Decisions, assumptions, traceability must outlive sessions | Structured markdown in `.sweetclaude/`, committed at checkpoints |
 | 9 | Phase dwelling over rushing | User controls pace; system never pushes advancement | No unprompted "move on?" — all skills written to dwell |
 | 10 | Ripple-effect management | Changes propagate across artifacts; nothing falls out of sync | Dependency awareness across docs, code, tests, specs |
 
@@ -55,8 +55,8 @@ These ten constraints shape every design decision:
 │  │  └────────────┘  └────────────┘  └────────────┘  │   │
 │  │                                                    │   │
 │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  │   │
-│  │  │   RULES    │  │   CONFIG   │  │  WORKING   │  │   │
-│  │  │            │  │            │  │   REPO     │  │   │
+│  │  │   RULES    │  │   CONFIG   │  │.SWEETCLAUDE│  │   │
+│  │  │            │  │            │  │  STATE DIR │  │   │
 │  │  │ Phase      │  │ CLAUDE.md  │  │ Phase state │  │   │
 │  │  │ gates      │  │ Model      │  │ Decision    │  │   │
 │  │  │ TDD        │  │ routing    │  │ log         │  │   │
@@ -197,10 +197,10 @@ These ten constraints shape every design decision:
     └── adr/                          # Architecture decision records
 ```
 
-### Per-project SweetClaude working repo
+### Per-project `.sweetclaude/` state directory
 
 ```
-<project>-sweetclaude/
+<project>/.sweetclaude/
 ├── state/
 │   ├── phase.yaml                    # Current phase, work type, deference level
 │   ├── decision-log.md               # What was decided and why, per phase
@@ -300,7 +300,7 @@ These ten constraints shape every design decision:
 **Loads:** Always active during Implement phase
 
 ### Component 6: Git Checkpoint Script
-**Purpose:** Auto-commits working repo state at phase transitions and TDD milestones.
+**Purpose:** Auto-commits `.sweetclaude/` state at phase transitions and TDD milestones.
 **Responsibilities:**
 - Commit failing tests with `test: RED - [story-id]` message before implementation
 - Commit phase state, decision log, assumption register at phase transitions
@@ -311,12 +311,12 @@ These ten constraints shape every design decision:
 ### Component 7: Project Init Skill
 **Purpose:** One-command project bootstrap.
 **Responsibilities:**
-- Create code repo and working repo directories
-- Initialize git in both, push to GitHub
+- Create code repo with `.sweetclaude/` state directory inside
+- Initialize git, push to GitHub
 - Run codebase discovery (FR-002)
 - Generate project CLAUDE.md from discovery results
 - Initialize RAG index
-- Scaffold working repo directory structure
+- Scaffold `.sweetclaude/` directory structure
 - Optionally scaffold Notion workspace
 - Set initial phase state to Discover
 **FRs addressed:** FR-001, FR-002, FR-003, FR-014
@@ -327,7 +327,7 @@ These ten constraints shape every design decision:
 **Responsibilities:**
 - Read user story with acceptance criteria
 - Generate `.feature` file with Given/When/Then scenarios
-- Store in working repo under `stories/EPIC-XXX/`
+- Store in `.sweetclaude/stories/EPIC-XXX/`
 - Update traceability map
 - Feed `.feature` to TDD Level 3 test-writer agent
 **FRs addressed:** FR-011
@@ -377,8 +377,8 @@ These ten constraints shape every design decision:
 **FRs addressed:** FR-007 (Level 2-3), FR-012, FR-019, FR-020
 **Loads:** On demand per TDD level and phase
 
-### Component 12: Working Repo State Manager
-**Purpose:** Manages all persistent state in the working repo.
+### Component 12: State Directory Manager
+**Purpose:** Manages all persistent state in the `.sweetclaude/` directory.
 **Responsibilities:**
 - Read/write `state/phase.yaml`
 - Append to `state/decision-log.md`
@@ -386,7 +386,7 @@ These ten constraints shape every design decision:
 - Manage `state/scope-changes.md`
 - Manage `state/improvement-register.md`
 - Update `traceability/requirements-map.md`
-- Git commit state at checkpoints
+- Git commit `.sweetclaude/` state at checkpoints
 **FRs addressed:** FR-016, FR-029, FR-030, FR-031, FR-032, FR-036
 **Loads:** Always (lightweight — reads YAML/MD, no heavy processing)
 
@@ -407,7 +407,7 @@ These ten constraints shape every design decision:
 **Purpose:** Global PreToolUse hook that blocks on first tool use if SweetClaude is not configured for the current project. Prevents sessions from proceeding without proper SweetClaude setup.
 **Responsibilities:**
 - PreToolUse: intercept first tool use per session per project
-- Check for working repo with `state/phase.yaml` or in-repo `state/phase.yaml`
+- Check for `.sweetclaude/state/phase.yaml`
 - Block with setup instructions if SweetClaude is not configured
 - Per-project opt-out via `.sweetclaude-skip` file in project root
 - Session dedup via `/tmp` flags keyed to project path hash — only checks once per project per session
@@ -417,7 +417,7 @@ These ten constraints shape every design decision:
 ### Component 15: Hibernate Skill
 **Purpose:** Freeze and thaw projects with full SweetClaude state preservation. Extends the `hibernate-project` skill with phase state, deference level, decision log, and improvement register handling.
 **Responsibilities:**
-- Read and capture SweetClaude working repo state (phase, deference, pending detours)
+- Read and capture SweetClaude state from `.sweetclaude/` (phase, deference, pending detours)
 - Summarize improvement register and decision log entries
 - Add SweetClaude State section to HIBERNATION.md
 - On thaw: restore phase state, re-read improvement register, re-orient user
@@ -425,7 +425,7 @@ These ten constraints shape every design decision:
 **Loads:** Always loaded (via `always_loaded` in phase-skills.yaml)
 
 ### Component 16: Status Skill
-**Purpose:** Project status dashboard. Reads working repo state and presents a summary of current phase, pending decisions, open assumptions, and recent activity.
+**Purpose:** Project status dashboard. Reads `.sweetclaude/` state and presents a summary of current phase, pending decisions, open assumptions, and recent activity.
 **Responsibilities:**
 - Read `state/phase.yaml`, decision log, assumption register, improvement register
 - Present consolidated status view
@@ -563,14 +563,14 @@ deploy:
 - Master skill (phase router + interaction model)
 - New-task skill, hibernate skill, hibernate-project skill
 - Rules: `interaction-model.md`, `phase-gates.md`, `tdd-levels.md`
-- Working repo state manager
+- State directory manager
 
 ---
 
 ## NFR Coverage
 
 ### NFR-001: Context Window Efficiency
-**Solution:** Phase-skill mapping (above) ensures only relevant skills load per phase. Master skill is lean — reads phase state, surfaces skill list, manages interaction. RAG queries on demand. Working repo state read as small YAML/MD files, not bulk-loaded.
+**Solution:** Phase-skill mapping (above) ensures only relevant skills load per phase. Master skill is lean — reads phase state, surfaces skill list, manages interaction. RAG queries on demand. `.sweetclaude/` state read as small YAML/MD files, not bulk-loaded.
 **Validation:** Measure baseline context at session start. Target: under 15KB.
 
 ### NFR-002: Language/Framework Agnosticism
@@ -578,7 +578,7 @@ deploy:
 **Validation:** Test init + TDD cycle on Python, TypeScript, Go projects.
 
 ### NFR-003: Session Recovery
-**Solution:** Working repo contains `state/phase.yaml` with current phase, work type, deference level. Decision log, assumption register committed at every phase transition. Master skill reads state on session start and resumes.
+**Solution:** `.sweetclaude/state/phase.yaml` contains current phase, work type, deference level. Decision log, assumption register committed at every phase transition. Master skill reads state on session start and resumes.
 **Validation:** Kill session mid-phase, restart, verify resume from last checkpoint.
 
 ### NFR-004: Installation Simplicity
@@ -590,8 +590,8 @@ deploy:
 **Validation:** Disable SweetClaude, verify Superpowers and BMAD still work independently.
 
 ### NFR-006: Security — No Credential Exposure
-**Solution:** Init generates `.gitignore` for both repos excluding `.env`, `*.pem`, `*.key`, credentials. Hooks never log environment variables. Working repo stores no secrets.
-**Validation:** Grep both repos for credential patterns after full lifecycle test.
+**Solution:** Init generates `.gitignore` excluding `.env`, `*.pem`, `*.key`, credentials. Hooks never log environment variables. `.sweetclaude/` stores no secrets.
+**Validation:** Grep repo for credential patterns after full lifecycle test.
 
 ### NFR-007: Performance — Hook Overhead
 **Solution:** PreToolUse hooks (test guardian) are simple file path checks — under 100ms. PostToolUse hooks (auto-test runner) launch tests asynchronously — don't block next edit.
@@ -647,11 +647,11 @@ Supporting infrastructure also shipped:
 **Lose:** Claude may not always follow behavioral guidance (our own research confirmed this).
 **Rationale:** No hook mechanism exists for conversational behavior. Rules + preambles are the best available tool. The continuous improvement register (FR-036) creates a feedback loop to refine these over time.
 
-### Trade-off 2: Two repos vs. one repo
-**Decision:** Every project gets a code repo and a SweetClaude working repo.
-**Gain:** Clean separation — embeddings, specs, state don't pollute the product codebase. Working repo can be private even if code repo is public.
-**Lose:** More git management. Two repos to keep in sync.
-**Rationale:** Mixing RAG indexes, brainstorm outputs, and phase state into a product codebase is wrong. The separation is worth the overhead.
+### Trade-off 2: Separate repo vs. in-repo `.sweetclaude/` directory
+**Decision:** SweetClaude state lives inside the project repo as `.sweetclaude/`.
+**Gain:** Single repo to manage. No sync overhead. State travels with the codebase. Simpler init, simpler git workflow.
+**Lose:** SweetClaude artifacts (specs, brainstorms, RAG index) are visible in the project repo. Cannot have a private working directory if code repo is public (use `.gitignore` for sensitive items).
+**Rationale:** The two-repo model added real friction for minimal benefit. A dotfile directory inside the project achieves clean separation without the operational overhead of maintaining two repos.
 
 ### Trade-off 3: Bucket-scoped skill loading vs. flat availability
 **Decision:** Skills only surface for their matched domain bucket.
@@ -686,7 +686,7 @@ Supporting infrastructure also shipped:
 | FR-013 | Mutation Testing Skill | 1 |
 | FR-014 | Init Skill (RAG setup) | 1 |
 | FR-015 | Auto-Reindex Hook | 1 |
-| FR-016 | Working Repo State Manager (traceability) | 1 |
+| FR-016 | State Directory Manager (traceability) | 1 |
 | FR-017 | Ripple-Effect Skill | 1 |
 | FR-018 | Auto-Docs Skill | 1 |
 | FR-019 | Security Reviewer Agent | 1 |
@@ -699,14 +699,14 @@ Supporting infrastructure also shipped:
 | FR-026 | Master Skill (phase re-entry) | 1 |
 | FR-027 | Interaction Model Rules | 1 |
 | FR-028 | Interaction Model Rules | 1 |
-| FR-029 | Working Repo State Manager (decision summary) | 1 |
-| FR-030 | Working Repo State Manager (decision log) | 1 |
-| FR-031 | Working Repo State Manager (assumption register) | 1 |
-| FR-032 | Working Repo State Manager (scope changes) | 1 |
+| FR-029 | State Directory Manager (decision summary) | 1 |
+| FR-030 | State Directory Manager (decision log) | 1 |
+| FR-031 | State Directory Manager (assumption register) | 1 |
+| FR-032 | State Directory Manager (scope changes) | 1 |
 | FR-033 | Master Skill + Defaults Config (deference level) | 1 |
 | FR-034 | Interaction Model Rules (detour management) | 1 |
 | FR-035 | Interaction Model Rules (dual context) | 1 |
-| FR-036 | Working Repo State Manager (improvement register) + Interaction Model Rules (triggers) | 1 |
+| FR-036 | State Directory Manager (improvement register) + Interaction Model Rules (triggers) | 1 |
 | FR-037 | Interaction Model Rules (phase dwelling) | 1 |
 | FR-038 | Product Discovery Skill (persona discovery) | 1 |
 | FR-039 | Product Discovery Skill (feature brainstorming) | 1 |

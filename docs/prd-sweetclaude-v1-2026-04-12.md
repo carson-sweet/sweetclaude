@@ -84,10 +84,10 @@ Full pipeline.
 
 #### FR-001: One-Command Project Init
 **Priority:** Must Have
-**Description:** `sweetclaude init <project-name>` creates a complete project environment: code repo, SweetClaude working repo, GitHub remotes for both, project-level CLAUDE.md auto-generated from codebase discovery, RAG index initialized, directory structure scaffolded.
+**Description:** `sweetclaude init <project-name>` creates a complete project environment: code repo with `.sweetclaude/` state directory inside, GitHub remote, project-level CLAUDE.md auto-generated from codebase discovery, RAG index initialized, directory structure scaffolded.
 **Acceptance Criteria:**
-- [ ] Single command creates both repos with correct directory structure
-- [ ] Both repos pushed to GitHub as private repos under user's account
+- [ ] Single command creates repo with `.sweetclaude/` directory structure
+- [ ] Repo pushed to GitHub as private repo under user's account
 - [ ] Project CLAUDE.md generated with detected language, framework, build/test commands
 - [ ] RAG index initialized
 - [ ] Total setup time under 5 minutes
@@ -116,12 +116,12 @@ Full pipeline.
 
 #### FR-004: Phase Pipeline Engine
 **Priority:** Must Have
-**Description:** Seven-phase pipeline (Discover → Define → Design → Plan → Implement → Verify → Ship) with defined entry criteria, exit criteria, and available skills per phase. Tracks current phase in the SweetClaude working repo.
+**Description:** Seven-phase pipeline (Discover → Define → Design → Plan → Implement → Verify → Ship) with defined entry criteria, exit criteria, and available skills per phase. Tracks current phase in `.sweetclaude/state/`.
 **Acceptance Criteria:**
 - [ ] Each phase has documented entry/exit criteria
-- [ ] Phase state persisted to working repo (survives session restart)
+- [ ] Phase state persisted to `.sweetclaude/` (survives session restart)
 - [ ] Cannot advance to next phase without exit criteria met (with user override)
-- [ ] Phase transitions create git checkpoints in working repo
+- [ ] Phase transitions create git checkpoints
 
 #### FR-005: Work-Type Router
 **Priority:** Must Have
@@ -204,7 +204,7 @@ Full pipeline.
 **Description:** Formal transition from BMAD user stories to Gherkin `.feature` files that serve as the contract for TDD test generation.
 **Acceptance Criteria:**
 - [ ] BMAD stories with acceptance criteria → `.feature` files with Given/When/Then
-- [ ] `.feature` files stored in working repo with traceability to source story
+- [ ] `.feature` files stored in `.sweetclaude/stories/` with traceability to source story
 - [ ] Test writer agent reads `.feature` files to generate test cases
 - [ ] Works at TDD Level 3
 
@@ -236,7 +236,7 @@ Full pipeline.
 - [ ] Index created during `sweetclaude init`
 - [ ] Supports PDF, MD, TXT, DOCX
 - [ ] Queryable via MCP tools
-- [ ] Index stored in SweetClaude working repo (not code repo)
+- [ ] Index stored in `.sweetclaude/rag-index/`
 
 #### FR-015: Auto-Reindex Hook
 **Priority:** Should Have
@@ -248,7 +248,7 @@ Full pipeline.
 
 #### FR-016: Traceability Tracker
 **Priority:** Must Have
-**Description:** Structured markdown in the working repo mapping requirements → Gherkin stories → tests → implementation files. Updated as work progresses through phases.
+**Description:** Structured markdown in `.sweetclaude/traceability/` mapping requirements → Gherkin stories → tests → implementation files. Updated as work progresses through phases.
 **Acceptance Criteria:**
 - [ ] Traceability file created per epic/feature
 - [ ] Updated when Gherkin stories are created
@@ -348,7 +348,7 @@ Full pipeline.
 - [ ] Three levels: Collaborative (stop after every sub-step), Guided (stop at phase gates and major decisions), Autonomous (stop only at phase gates)
 - [ ] Asked at session start
 - [ ] User can change level mid-stream with immediate effect
-- [ ] Level persisted to working repo for session recovery
+- [ ] Level persisted to `.sweetclaude/state/` for session recovery
 - [ ] All skills and workflows respect the current deference level
 
 #### FR-034: Context Continuity — Detour Management
@@ -378,15 +378,15 @@ Full pipeline.
 - [ ] Decision summary generated from conversation context
 - [ ] Presented to user before phase transition commit
 - [ ] User confirms or edits
-- [ ] Stored in working repo as part of the decision log
+- [ ] Stored in `.sweetclaude/state/` as part of the decision log
 
 #### FR-030: Decision Log
 **Priority:** Must Have
-**Description:** Persistent log in the working repo capturing what was decided and why at each phase, not just what was produced. Survives session restarts.
+**Description:** Persistent log in `.sweetclaude/state/` capturing what was decided and why at each phase, not just what was produced. Survives session restarts.
 **Acceptance Criteria:**
 - [ ] One entry per phase transition
 - [ ] Each entry includes: phase, date, decisions made, rationale, alternatives considered
-- [ ] Stored as structured markdown in working repo
+- [ ] Stored as structured markdown in `.sweetclaude/state/`
 - [ ] Committed with phase transition checkpoint
 
 #### FR-031: Assumption Register
@@ -397,21 +397,21 @@ Full pipeline.
 - [ ] Presented to user for review at phase transitions
 - [ ] User can confirm, reject, or modify each assumption
 - [ ] Rejected assumptions trigger rework of dependent decisions
-- [ ] Stored in working repo
+- [ ] Stored in `.sweetclaude/state/`
 
 #### FR-032: Scope Change Tracking
 **Priority:** Should Have
 **Description:** When items move between in-scope and out-of-scope (or vice versa), log the change with rationale. History is valuable when revisiting priorities.
 **Acceptance Criteria:**
 - [ ] Scope changes logged with: item, direction (in→out or out→in), rationale, date
-- [ ] Log stored in working repo
+- [ ] Log stored in `.sweetclaude/state/`
 - [ ] Queryable: "what scope changes have we made?"
 
 #### FR-036: Continuous Improvement Register
 **Priority:** Must Have
-**Description:** Per-project register that captures what's working and what's not in the human-AI collaboration itself — not project decisions, but interaction quality. Populated at concrete milestones, not left to chance. Lives in working repo, read by future sessions.
+**Description:** Per-project register that captures what's working and what's not in the human-AI collaboration itself — not project decisions, but interaction quality. Populated at concrete milestones, not left to chance. Lives in `.sweetclaude/state/`, read by future sessions.
 **Acceptance Criteria:**
-- [ ] Stored in working repo (per-project, not global)
+- [ ] Stored in `.sweetclaude/state/` (per-project, not global)
 - [ ] Captures both corrections AND confirmations (what works, not just what failed)
 - [ ] **Mandatory trigger: every phase transition.** Before advancing, ask: "Before we move on — anything about how this phase went that I should do differently going forward?"
 - [ ] **Mandatory trigger: after code review.** The Verify phase includes the largest feedback surface — always check in after review findings are addressed
@@ -477,7 +477,7 @@ Full pipeline.
 - [ ] Maximum 10 features per batch; user informed of the cap
 - [ ] User can request additional batches of 10
 - [ ] Iteration ends when user signals satisfaction
-- [ ] Included features are added to the working feature set for the product brief
+- [ ] Included features are added to the feature set for the product brief
 **Dependencies:** FR-038
 
 #### FR-040: Competitive Analysis
@@ -688,9 +688,9 @@ Full pipeline.
 **Priority:** Must Have
 **Description:** Any session can be resumed from the last completed phase. Phase state, decision log, assumption register, and working artifacts survive session death.
 **Acceptance Criteria:**
-- [ ] Phase state persisted to working repo after every transition
+- [ ] Phase state persisted to `.sweetclaude/state/` after every transition
 - [ ] Decision log committed at every checkpoint
-- [ ] New session can read working repo state and resume
+- [ ] New session can read `.sweetclaude/` state and resume
 - [ ] No work lost on unexpected session termination (within last checkpoint)
 
 ### NFR-004: Installation Simplicity
@@ -718,7 +718,7 @@ Full pipeline.
 **Acceptance Criteria:**
 - [ ] No credentials in any config file
 - [ ] Hooks do not log sensitive environment variables
-- [ ] Init does not write secrets to working repo
+- [ ] Init does not write secrets to `.sweetclaude/`
 - [ ] `.gitignore` configured to exclude `.env` and credential files
 
 ### NFR-007: Performance — Hook Overhead
