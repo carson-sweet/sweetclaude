@@ -17,7 +17,7 @@ always_loaded:
 code:
   discover:
     skills:
-      - sweetclaude:discover-deep
+      - sweetclaude:discover
       - bmad:brainstorm
       - bmad:research
       - caucus
@@ -104,7 +104,7 @@ code:
 strategy:
   discover:
     skills:
-      - sweetclaude:discover-deep
+      - sweetclaude:discover
       - sweetclaude:strategy/academic
       - caucus
       - reasoning-frameworks

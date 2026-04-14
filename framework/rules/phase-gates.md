@@ -21,7 +21,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Core features defined
 - Scope boundary established
 - Key decisions documented in decision log
-**Available skills:** bmad:brainstorm, bmad:research, caucus, reasoning-frameworks, sweetclaude:discover-deep
+**Available skills:** bmad:brainstorm, bmad:research, caucus, reasoning-frameworks, sweetclaude:discover
 
 ## Phase 2: DEFINE
 **Entry:** DISCOVER complete, OR bug fix/enhancement/iteration entering pipeline
