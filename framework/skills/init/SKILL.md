@@ -7,6 +7,8 @@ description: "Project bootstrap supporting three scenarios: code repo with exter
 
 Initialize a new SweetClaude project: `/sweetclaude:init $ARGUMENTS`
 
+**IMPORTANT: Follow these steps exactly as written. Do not skip steps. Do not "fast-track." Do not propose your own modified version of this process. Do not make assumptions about what the user needs — ask them. Every step exists for a reason. If a step doesn't apply, the step itself will tell you to skip it.**
+
 Supports three project scenarios. The init process adapts based on what already exists.
 
 ---
