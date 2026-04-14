@@ -32,9 +32,9 @@ rag:
     - yml
     - json
 
-# Working repo settings
-working_repo:
-  suffix: "-sweetclaude"
+# State directory settings
+state_dir:
+  path: ".sweetclaude"
   auto_commit_on_phase_transition: true
 
 # Interaction model

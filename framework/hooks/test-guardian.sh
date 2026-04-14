@@ -1,9 +1,6 @@
 #!/bin/bash
 # SweetClaude Test Guardian Hook
 # PreToolUse — blocks Write/Edit to test files during implementation phase.
-#
-# Reads phase state to determine if we're in implementation.
-# If so, blocks edits to test directories.
 
 FILE="$CLAUDE_FILE_PATH"
 TOOL="$CLAUDE_TOOL_NAME"
@@ -14,14 +11,24 @@ if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" ]]; then
   exit 0
 fi
 
-# Find the SweetClaude working repo for this project
-# Look for state/phase.yaml in common locations
+# Find project root and state file
 PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-WORKING_REPO="${PROJECT_DIR}-sweetclaude"
-PHASE_FILE="${WORKING_REPO}/state/phase.yaml"
+
+if [ -z "$PROJECT_DIR" ]; then
+  echo '{"ok": true}'
+  exit 0
+fi
+
+# Resolve phase file — .sweetclaude/ first, legacy fallback
+PHASE_FILE=""
+if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
+  PHASE_FILE="$PROJECT_DIR/.sweetclaude/state/phase.yaml"
+elif [ -f "${PROJECT_DIR}-sweetclaude/state/phase.yaml" ]; then
+  PHASE_FILE="${PROJECT_DIR}-sweetclaude/state/phase.yaml"
+fi
 
 # If no phase file, SweetClaude isn't active — allow
-if [ ! -f "$PHASE_FILE" ]; then
+if [ -z "$PHASE_FILE" ]; then
   echo '{"ok": true}'
   exit 0
 fi
@@ -31,7 +38,7 @@ PHASE=$(grep "^phase:" "$PHASE_FILE" 2>/dev/null | awk '{print $2}')
 TDD_PHASE=$(grep "^tdd_phase:" "$PHASE_FILE" 2>/dev/null | awk '{print $2}')
 
 # Only block during implementation phase when tdd_phase is "implementing"
-if [[ "$PHASE" != "implement" || "$TDD_PHASE" != "implementing" ]]; then
+if [[ "$PHASE" != "implement" && "$PHASE" != "IMPLEMENT" ]] || [[ "$TDD_PHASE" != "implementing" ]]; then
   echo '{"ok": true}'
   exit 0
 fi

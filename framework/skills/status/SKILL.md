@@ -4,7 +4,7 @@ description: "Orient to the current project. Shows what phase you're in, what's 
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # SweetClaude Status
@@ -15,7 +15,7 @@ Orient to the project. Answer: where are we, what's done, what's next.
 
 ### Step 1: Read project state
 
-Read `state/phase.yaml` from the working repo. Extract:
+Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Extract:
 - Current phase
 - Current work type
 - Deference level
@@ -25,7 +25,7 @@ Read `state/phase.yaml` from the working repo. Extract:
 ### Step 2: Read recent activity
 
 1. **Git log** — last 5-10 commits in the code repo. What was worked on most recently?
-2. **Working repo changes** — any uncommitted state in the working repo? Recent decision log entries?
+2. **Working repo changes** — any uncommitted state in `.sweetclaude/`? Recent decision log entries?
 3. **Improvement register** — any learnings from previous sessions?
 4. **Open artifacts** — check for:
    - In-progress specs in `specs/`

@@ -4,7 +4,7 @@ description: "Record and track design and architecture decisions with context, o
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Manage Decisions
@@ -47,13 +47,13 @@ When $ARGUMENTS describes a decision to record:
 **Consequences:** {what follows}
 ```
 
-7. **Append** to `state/decision-log.md` in the working repo. Increment DEC number from last entry.
+7. **Append** to `.sweetclaude/state/decision-log.md` in `.sweetclaude/`. Increment DEC number from last entry.
 
 ## Query decisions
 
 When $ARGUMENTS asks about a past decision:
 
-- Read `state/decision-log.md`
+- Read `.sweetclaude/state/decision-log.md`
 - Find the relevant entry
 - Present it with context
 

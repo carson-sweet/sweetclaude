@@ -4,7 +4,7 @@ description: Transition BMAD user stories into Gherkin .feature files. The .feat
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Gherkin Bridge
@@ -13,7 +13,7 @@ Convert user story $ARGUMENTS into a Gherkin .feature file.
 
 ## Process
 
-1. **Read the user story.** Find the story file in the working repo under `stories/EPIC-XXX/`. Extract all acceptance criteria.
+1. **Read the user story.** Find the story file in `.sweetclaude/` under `stories/EPIC-XXX/`. Extract all acceptance criteria.
 
 2. **Generate .feature file.** For each acceptance criterion, write one or more Gherkin scenarios:
 

@@ -4,7 +4,7 @@ description: "Walk through an 11-section product brief. One section at a time wi
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Product Brief
@@ -18,7 +18,7 @@ Before invoking BMAD, set expectations:
 - Probe vague answers with follow-ups before moving to the next section
 - The interview is a discovery conversation, not a form to fill
 - After generating the document, run the BMAD validation checklist
-- Save the output to `specs/product-brief.md` in the working repo
+- Save the output to `specs/product-brief.md` in `.sweetclaude/`
 
 ## Execute
 

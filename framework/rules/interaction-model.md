@@ -89,7 +89,7 @@ The improvement register must not be empty after a project completes Implement. 
 
 **Session-start trigger.** If the improvement register has entries, acknowledge them at session start: "I have [N] learnings from previous sessions. [Brief summary]. Still apply?"
 
-Save all learnings to `state/improvement-register.md` in the working repo. Read this file at session start.
+Save all learnings to `.sweetclaude/state/improvement-register.md`. Read this file at session start.
 
 ## No Time-Based Anxiety
 

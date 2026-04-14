@@ -4,7 +4,7 @@ description: Structured Discover phase for net-new products and apps. Persona-dr
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Discover Deep — Structured Discovery for Net-New Work
@@ -132,11 +132,11 @@ After all stages are complete:
    - Whether competitive analysis was performed
    - Key decisions made during discovery
 
-2. **Save artifacts** to the working repo:
+2. **Save artifacts** to `.sweetclaude/`:
    - `brainstorm/personas.md` — consolidated persona/task view
    - `brainstorm/feature-list.md` — included features with rationale
    - `brainstorm/competitive-analysis.md` — competitor list and analysis (if performed)
 
-3. **Log decisions** in `state/decision-log.md`.
+3. **Log decisions** in `.sweetclaude/state/decision-log.md`.
 
 4. **Do not push for phase advancement.** Present the summary and wait. The user decides when Discover is done.

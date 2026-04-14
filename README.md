@@ -23,7 +23,7 @@ SweetClaude combines the best of [Superpowers](https://github.com/obra/superpowe
 - **Ripple-effect analysis:** Before changing anything, traces what's affected across code, tests, docs, and specs
 - **Hibernate:** Freeze and thaw projects mid-phase — captures full phase state for seamless resumption
 - **RAG-powered knowledge:** Per-project semantic search over your document corpus (opt-in after file reconciliation)
-- **One-command bootstrap:** `sweetclaude init` creates code repo + working repo, GitHub remotes, CLAUDE.md from codebase discovery, and RAG index
+- **One-command bootstrap:** `/sweetclaude:init` creates `.sweetclaude/` state directory, `strategy/` structure, CLAUDE.md from codebase discovery, and RAG index
 
 ## Prerequisites
 
@@ -81,7 +81,7 @@ Then add the SweetClaude section to your `~/CLAUDE.md` (create the file if it do
 ```markdown
 ## SweetClaude
 
-- If a SweetClaude working repo exists for the current project, read `state/phase.yaml` and `state/improvement-register.md` at session start.
+- Read `.sweetclaude/state/phase.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist.
 - Follow the interaction model in `~/.claude/rules/sweetclaude/interaction-model.md`.
 - Respect the current deference level. Ask if not set.
 - Never push for phase advancement. The user decides when to move on.

@@ -1,36 +1,41 @@
 #!/bin/bash
 # SweetClaude Git Checkpoint
 # Called by skills at phase transitions and TDD milestones.
-# Usage: git-checkpoint.sh <message> [working-repo-path]
+# Commits .sweetclaude/ state changes to the project repo.
+# Usage: git-checkpoint.sh <message>
 
 MESSAGE="$1"
-WORKING_REPO="${2:-}"
 
 if [ -z "$MESSAGE" ]; then
-  echo "Usage: git-checkpoint.sh <message> [working-repo-path]" >&2
+  echo "Usage: git-checkpoint.sh <message>" >&2
   exit 1
 fi
 
-# If working repo path provided, commit there
-if [ -n "$WORKING_REPO" ] && [ -d "$WORKING_REPO" ]; then
-  cd "$WORKING_REPO"
-  git add -A
+PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Not in a git repo" >&2
+  exit 1
+fi
+
+cd "$PROJECT_DIR"
+
+# Stage .sweetclaude/ state changes specifically (not all project changes)
+if [ -d ".sweetclaude" ]; then
+  git add .sweetclaude/
+fi
+
+# Also stage strategy/ if it has changes (strategy artifacts are project-level)
+if [ -d "strategy" ]; then
+  git add strategy/
+fi
+
+# Commit if there are staged changes
+if ! git diff --cached --quiet 2>/dev/null; then
   git commit -m "$MESSAGE
 
 Co-Authored-By: SweetClaude <noreply@sweetclaude.dev>" 2>/dev/null
-  echo "Checkpoint committed to working repo: $MESSAGE" >&2
-fi
-
-# Also commit in the current project repo if there are staged changes
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-if [ -n "$PROJECT_DIR" ] && [ "$PROJECT_DIR" != "$WORKING_REPO" ]; then
-  cd "$PROJECT_DIR"
-  if ! git diff --cached --quiet 2>/dev/null; then
-    git commit -m "$MESSAGE
-
-Co-Authored-By: SweetClaude <noreply@sweetclaude.dev>" 2>/dev/null
-    echo "Checkpoint committed to code repo: $MESSAGE" >&2
-  fi
+  echo "Checkpoint committed: $MESSAGE" >&2
 fi
 
 exit 0

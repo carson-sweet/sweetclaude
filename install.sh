@@ -368,7 +368,7 @@ if [ -f "$CLAUDE_MD" ]; then
 ## SweetClaude
 
 - If the user asks to do anything involving SweetClaude workflows — phase pipeline, strategy work, file reconciliation, TDD enforcement, project init, or any `sweetclaude:` skill — invoke the `sweetclaude` master skill FIRST and run its pre-flight check before doing any work. This applies whether or not the project is already configured.
-- If a SweetClaude working repo exists for the current project, read `state/phase.yaml` and `state/improvement-register.md` at session start.
+- Read `.sweetclaude/state/phase.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist.
 - Follow the interaction model in `~/.claude/rules/sweetclaude/interaction-model.md`.
 - Respect the current deference level. Ask if not set.
 - Never push for phase advancement. The user decides when to move on.
