@@ -43,6 +43,47 @@ If no legacy repo, continue with fresh init.
 
 ---
 
+## Step 0.5: Safety Snapshot (YOU handle this — MANDATORY for existing projects)
+
+Before SweetClaude modifies anything in a project that has existing files, create a safety branch so the user can revert completely.
+
+**Check: is this a git repo with existing commits?**
+
+```bash
+git rev-parse --is-inside-work-tree 2>/dev/null && git log --oneline -1 2>/dev/null
+```
+
+**If yes (existing git project with history):**
+
+> "Before I set up SweetClaude, I need to save a snapshot of your project's current state. This creates a branch called `pre-sweetclaude` so you can revert everything SweetClaude does if you ever want to. This is required — I won't modify your project without it."
+
+If the user agrees, spawn a subagent:
+> ```
+> git stash --include-untracked -m "pre-sweetclaude: stash uncommitted changes" 2>/dev/null
+> git branch pre-sweetclaude 2>/dev/null || git branch pre-sweetclaude-{date} 
+> git stash pop 2>/dev/null
+> ```
+> Report: branch name created. Do nothing else.
+
+**If the user refuses the safety snapshot, STOP. Do not proceed with init.**
+> "SweetClaude requires a safety snapshot before modifying an existing project. This protects your work. When you're ready, run `/sweetclaude:init` again."
+
+**If no git repo exists:**
+
+> "This directory doesn't have git set up. SweetClaude works best with version control. Want me to initialize a git repo here?"
+
+If yes:
+> - Ask: "What should the default branch be called?" (suggest `main`)
+> - Ask: "Is there anything in this directory that should NOT be tracked? (e.g., .env files, large binaries, node_modules)"
+> - Spawn a subagent to: `git init`, `git checkout -b {branch}`, create `.gitignore` with user's exclusions + sensible defaults, `git add -A`, `git commit -m "Initial commit (pre-SweetClaude)"`
+> - This initial commit IS the safety snapshot.
+
+If no (user doesn't want git):
+> "SweetClaude can work without git, but there's no way to undo changes if something goes wrong. Are you sure? All SweetClaude modifications will be permanent."
+> If they confirm, proceed without snapshot. Flag in phase.yaml: `safety_snapshot: none`.
+
+---
+
 ## Step 1: Determine Scenario (YOU ask the user)
 
 Ask: **"Do you have an existing code repo for this project?"**
