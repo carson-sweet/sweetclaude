@@ -1,86 +1,111 @@
 ---
 name: sweetclaude-new-task
-description: "Start a new task. Asks what you want to do, classifies the work type (code or strategy), and routes to the correct pipeline entry point and skill track. Use when beginning any new work."
+description: "Start a new task. Asks what you want to do, classifies the work into one of five domain buckets (strategy, product, design, code, deploy), and routes to the correct pipeline entry point. Use when beginning any new work."
 ---
 
 <preflight-guard>
 STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
-# Work-Type Router
+# New Task
 
-Determine what kind of work we're doing, which track it belongs to, and enter the pipeline at the right phase.
+Classify the work, pick the right bucket and phase, surface the right skills.
 
 ## Process
 
 1. **Ask or detect.** If the user hasn't stated the work type, propose:
-   > "This looks like [type] ([track] track) based on [reasoning]. That means we'd start at [phase]. Sound right?"
+   > "This looks like {type} ({bucket}) based on {reasoning}. That means we'd start at {phase}. Sound right?"
 
-2. **Route based on type:**
+2. **Classify into a bucket:**
 
-### Code Track
+### strategy/ — why does this matter and to whom
 
-| Work Type | Entry Phase | First Action |
+| Work Type | Entry Phase | First Skill |
 |---|---|---|
-| Net-new feature | DISCOVER | Brainstorm the concept, research the space |
-| Bug fix | DEFINE | Reproduce the bug, characterize expected vs actual |
-| Feature enhancement | DEFINE | Define what exists, what needs to change, why |
-| Iteration / tech debt | DEFINE | Define what's being improved, why, what "better" means |
+| Concept articulation | DISCOVER | strategy/concept |
+| Pain analysis | DISCOVER | strategy/pain-thesis |
+| Customer profiling | DISCOVER | strategy/ideal-customer-profile |
+| Competitive landscape | DISCOVER | strategy/competitive-analysis |
+| Research paper | DISCOVER | strategy/academic-research |
+| Meeting preparation | DEFINE | strategy/meeting-prep |
+| Strategic narrative | DISCOVER | strategy/narrative-arc |
+| Market messaging | DEFINE | strategy/market-messaging |
 
-### Strategy Track
+### product/ — what to build and why
 
-| Work Type | Entry Phase | First Action |
+| Work Type | Entry Phase | First Skill |
 |---|---|---|
-| Research paper | DISCOVER | First principles — thesis, key concepts, novelty, objections |
-| Strategic positioning | DISCOVER | Landscape scan, framing options, terminology decisions |
-| Competitive analysis | DISCOVER | Landscape mapping, SWOT, gap identification |
-| Meeting prep | DEFINE | Who, when, purpose → gather context, draft deliverables |
-| Market messaging | DEFINE | Audience definition, value prop, narrative drafting |
-| Biz planning | DISCOVER | Opportunity mapping, path analysis, frameworks |
-| File reconciliation | DEFINE | Inventory existing files, categorize, plan synthesis |
+| Net-new product/feature | DISCOVER | product/discovery |
+| Product positioning | DEFINE | product/positioning-statement |
+| Product definition | DEFINE | product/product-brief |
+| Requirements | DEFINE | product/prd |
+| User stories | PLAN | product/user-story |
+| Test specs from stories | PLAN | product/user-tdd-tests |
+| Success criteria | DEFINE | product/user-success-criteria |
+| UX flows | PLAN | product/user-workflows |
+| Scope change | any | product/manage-scope |
+| Backlog management | any | product/backlog |
+| Sprint planning | PLAN | product/sprint-plan |
+| Market/technical research | DISCOVER | product/research |
+| Feature comparison | DISCOVER | product/feature-competitive |
 
-3. **Update state.** Write work type, track, and entry phase to `state/phase.yaml`:
+### design/ — how it's structured
+
+| Work Type | Entry Phase | First Skill |
+|---|---|---|
+| System architecture | DESIGN | design/architecture |
+| Technical specification | DESIGN | design/tech-spec |
+| UX/UI design | DESIGN | design/ux |
+| Solution validation | DESIGN | design/solutioning-gate |
+| Impact analysis | any | design/change-impact-analysis |
+| Doc updates | VERIFY | design/update-docs |
+| Data model / schema | DESIGN | design/data-model |
+| API design | DESIGN | design/api-design |
+| Service boundaries | DESIGN | design/services-design |
+| Infrastructure | DESIGN | design/infra-design |
+| Record a decision | any | design/manage-decisions |
+
+### code/ — writing and verifying code
+
+| Work Type | Entry Phase | First Skill |
+|---|---|---|
+| Implement with TDD | IMPLEMENT | code/tdd |
+| GitHub issue | IMPLEMENT | code/work-issue |
+| Tech debt cleanup | IMPLEMENT | code/work-debt |
+| Pre-PR check | VERIFY | code/pr-precheck |
+| Run tests | any | code/qa-testing |
+| Mutation testing | VERIFY | code/mutation-testing |
+| Security review | VERIFY | code/security-testing |
+| Code review | VERIFY | code/code-review |
+
+3. **Update state.** Write work type, bucket, and entry phase to `state/phase.yaml`:
    ```yaml
    phase: DISCOVER
    work_type: research-paper
-   track: strategy
+   bucket: strategy
    ```
 
-4. **Surface skills.** Read `phase-skills.yaml` and surface skills from the appropriate track (`code:` or `strategy:`) for the current phase.
+4. **Surface skills.** Read `phase-skills.yaml` and surface skills from the appropriate bucket for the current phase.
 
 5. **Escalation.** At any point, if the work reveals deeper issues:
-   > "This [type] seems to point to a deeper [gap]. Want to escalate to DISCOVER and investigate before continuing?"
-
-   If yes, re-route to DISCOVER scoped to the specific problem.
+   > "This {type} seems to point to a deeper {gap}. Want to escalate to DISCOVER and investigate?"
 
 ## Backlog Guard
 
-When the user wants to add something to the backlog:
+When adding to the backlog:
+- **Technical items** (bugs, feature requests, tech debt) → `docs/backlog/`
+- **Non-technical items** (product ideas, strategic initiatives) → redirect to `strategy/`:
+  > "That's a strategic item, not a technical backlog item. I'll capture it in strategy/ instead."
 
-- **Technical items** (bugs, feature requests, tech debt, test gaps) → `docs/backlog/`. Proceed normally.
-- **Non-technical items** (product ideas, strategic initiatives, market opportunities, positioning thoughts) → redirect to `strategy/`:
-  > "That's a strategic item, not a technical backlog item. I'll capture it in `strategy/{appropriate-category}/` instead of `docs/backlog/`. OK?"
+## Cross-Bucket Detection
 
-  On confirmation, write to the appropriate strategy subdirectory. If the category isn't clear, ask.
-
-**Never silently put a non-technical item in docs/backlog/.** The backlog is for work that produces or modifies code.
-
-## Mid-Stream Detection
-
-If the nature of work shifts during a session (e.g., a bug fix reveals a feature gap, or research pivots to positioning):
+If work shifts between buckets during a session:
 - Detect the shift from conversation context
-- Propose rerouting: "This is becoming [new type] ([track] track). Want to shift to [new phase]?"
+- Propose: "This is becoming {type} ({bucket}). Want to shift?"
 - Preserve previous work state on reroute
 
-## Cross-Track Detection
+If strategy work reveals something that needs building:
+> "This depends on a capability we haven't built. Want to create a code task for it?"
 
-If the user starts code work but the conversation reveals strategic prerequisites (e.g., "we should figure out our positioning before building this feature"):
-> "This needs strategic work before code work. Want to switch to the strategy track for [type], then come back to code when the strategic foundation is set?"
-
-Similarly, if strategy work reveals something that needs building:
-> "This positioning depends on a capability we haven't built. Want to create a code-track work item for it?"
-
-## Tech Debt Note
-
-Tech debt clearance is iteration work (code track). It follows:
-DEFINE → DESIGN → IMPLEMENT (lock behavior with tests first, then refactor) → VERIFY → SHIP.
+If code work reveals strategic prerequisites:
+> "This needs strategic work first. Want to switch to strategy for {type}?"
