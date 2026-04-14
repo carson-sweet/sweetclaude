@@ -69,17 +69,43 @@ If the user agrees, spawn a subagent:
 
 **If no git repo exists:**
 
-> "This directory does not have git. SweetClaude works best with version control. Initialize a git repo here?"
+Use AskUserQuestion:
+- "Initialize git" — set up version control (recommended)
+- "Continue without git" — changes cannot be undone
 
-If yes:
-> - Ask: "What should the default branch be called?" (suggest `main`)
-> - Then ask: "Anything in this directory that should NOT be tracked? (Examples: .env files, large binaries, node_modules)"
-> - Spawn a subagent to: `git init`, `git checkout -b {branch}`, create `.gitignore` with user's exclusions + sensible defaults, `git add -A`, `git commit -m "Initial commit (pre-SweetClaude)"`
-> - This initial commit IS the safety snapshot.
+**If user chose "Continue without git":**
+Tell the user: "Proceeding without git. All changes are permanent." Flag in phase.yaml: `safety_snapshot: none`. Move to Step 1.
 
-If no (user does not want git):
-> "SweetClaude can work without git. But there is no way to undo changes. All SweetClaude modifications will be permanent. Continue without git?"
-> If they confirm, proceed without snapshot. Flag in phase.yaml: `safety_snapshot: none`.
+**If user chose "Initialize git":**
+
+Use AskUserQuestion:
+- "main" — use main as the default branch
+- "master" — use master as the default branch
+
+Wait for answer. Store the branch name.
+
+Then ask a SEPARATE question:
+
+Use AskUserQuestion with free-text input:
+- "List anything that should NOT be tracked (e.g., .env, node_modules, large binaries). Leave blank for sensible defaults."
+
+Wait for answer. Store exclusions.
+
+Then spawn a subagent:
+> Run these commands exactly:
+> ```
+> git init
+> git checkout -b {branch_name}
+> ```
+> Create a .gitignore with these exclusions: {user's exclusions} plus these defaults: .DS_Store, .env, .env.*, node_modules/, dist/, build/, *.pyc, __pycache__/, .venv/, venv/, .rag-index/
+> Then:
+> ```
+> git add -A
+> git commit -m "Initial commit (pre-SweetClaude)"
+> ```
+> Report: branch name and commit hash. Do nothing else.
+
+This initial commit IS the safety snapshot.
 
 ---
 
