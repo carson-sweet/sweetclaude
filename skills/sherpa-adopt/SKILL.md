@@ -1,5 +1,4 @@
 ---
-name: sherpa-adopt
 description: "Start using SweetClaude on an existing project. Scans the codebase, understands what exists, sets up SweetClaude state, and figures out where you are in the development lifecycle. For projects with existing code, docs, or history."
 ---
 

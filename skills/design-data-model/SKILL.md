@@ -1,5 +1,4 @@
 ---
-name: design-data-model
 description: "Design the data model: entities, relationships, constraints, indexes, and migration strategy. Produces schema definitions and migration plans."
 ---
 

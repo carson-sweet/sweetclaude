@@ -1,5 +1,4 @@
 ---
-name: master
 description: SweetClaude master skill — phase router, interaction model, and session entry point. Manages the 7-phase pipeline, deference levels, conversation branch tracking, and creative partnership. Use at session start or when the user invokes SweetClaude directly.
 ---
 

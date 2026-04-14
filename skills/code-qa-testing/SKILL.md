@@ -1,5 +1,4 @@
 ---
-name: code-qa-testing
 description: "Run test suites and report results concisely. Just failures with file, line, and assertion — not full stdout dumps. Use when you need a clean pass/fail summary."
 ---
 

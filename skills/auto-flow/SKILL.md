@@ -1,5 +1,4 @@
 ---
-name: auto-flow
 description: "Walk through the pipeline step by step. Figures out where you are, picks the right skill for the next step, invokes it, and moves to the next when done. Stops at phase gates for approval. Use when you want SweetClaude to drive the process."
 ---
 

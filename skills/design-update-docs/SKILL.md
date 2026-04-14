@@ -1,5 +1,4 @@
 ---
-name: design-update-docs
 description: Automatically update documentation when implementation changes behavior. Runs during Verify phase. Detects which docs reference changed behavior, proposes updates for user approval.
 ---
 

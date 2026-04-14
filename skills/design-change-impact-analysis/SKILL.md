@@ -1,5 +1,4 @@
 ---
-name: design-change-impact-analysis
 description: Ripple-effect analysis — before implementing a change, trace what's affected across code, tests, docs, APIs, and specs. Use at the start of IMPLEMENT phase for existing codebases, or on demand when any artifact changes.
 ---
 

@@ -1,5 +1,4 @@
 ---
-name: design-infra-design
 description: "Design infrastructure: deployment targets, environments, CI/CD pipeline, monitoring, and scaling strategy."
 ---
 

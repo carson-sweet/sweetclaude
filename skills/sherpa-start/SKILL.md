@@ -1,5 +1,4 @@
 ---
-name: sherpa-start
 description: "The ultimate starting point for a brand new project. Empty folder, fresh idea. Walks you through everything from 'I have an idea' to a configured project with strategy, product definition, and a path to code. Chains init → concept → pain-thesis → ICP → discovery → auto-flow."
 ---
 

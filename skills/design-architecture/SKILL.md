@@ -1,5 +1,4 @@
 ---
-name: design-architecture
 description: "Define system architecture: components, boundaries, communication patterns, data flow, key decisions. Wraps bmad:architecture."
 ---
 

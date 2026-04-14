@@ -1,5 +1,4 @@
 ---
-name: strategy-market-messaging
 description: "Craft external messaging — how you describe the product, the problem, and the value to different audiences. Builds on positioning statement and ICP."
 ---
 

@@ -1,5 +1,4 @@
 ---
-name: product-feature-competitive
 description: "Product-level competitive analysis focused on features and capabilities. Compare your feature set against competitors, identify table-stakes features, find differentiation opportunities."
 ---
 

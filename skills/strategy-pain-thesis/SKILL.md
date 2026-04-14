@@ -1,5 +1,4 @@
 ---
-name: strategy-pain-thesis
 description: "Build a pain thesis document — a narrative diagnostic that determines whether your company is solving a necessary problem. Walks through 11 sections from industry background through validation plan. Based on The Pain Thesis: A Founder's Guide by Carson Sweet."
 ---
 

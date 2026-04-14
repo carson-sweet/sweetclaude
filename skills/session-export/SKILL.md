@@ -1,5 +1,4 @@
 ---
-name: session-export
 description: Export a Claude.ai session as a complete, portable package — including a full conversation transcript, inventory of all deliverables produced, manifest of uploaded and project files referenced, web searches conducted, key decisions made, open action items, entity index, and a continuity prompt for the next session. Use this skill whenever the user says things like "export this session", "wrap up this session", "package this conversation", "generate a session handoff", "produce a session report", "give me a transcript", "save this conversation", or "I want to download everything from this session." Also trigger when the user asks for a summary + files together, or says they're about to switch models and need context preserved. This is a high-value skill — use it proactively whenever a long or complex session is wrapping up, even if the user only asks for one piece (transcript or files) — offer the full export.
 ---
 

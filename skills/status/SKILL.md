@@ -1,5 +1,4 @@
 ---
-name: status
 description: "Orient to the current project. Shows what phase you're in, what's been done, what's pending, and what the logical next step is. Use when starting a session, returning after a break, or asking 'where are we?'"
 ---
 

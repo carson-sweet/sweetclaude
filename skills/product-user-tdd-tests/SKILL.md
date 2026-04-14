@@ -1,5 +1,4 @@
 ---
-name: product-user-tdd-tests
 description: Transition BMAD user stories into Gherkin .feature files. The .feature files become the contract for TDD test generation. Use during PLAN phase after stories are written.
 ---
 

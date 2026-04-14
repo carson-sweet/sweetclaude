@@ -1,5 +1,4 @@
 ---
-name: strategy-academic-research
 description: "Academic paper development — from first principles through submission. Six-phase pipeline: first principles, literature & positioning, structure & venue, modular drafting, review & revision, submission. Adapted from lishix520/academic-paper-skills (MIT). Use when writing research papers, position papers, or academic publications."
 ---
 
