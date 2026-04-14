@@ -53,6 +53,22 @@ claude --plugin-dir /path/to/sweetclaude
 
 All 52 skills are immediately available as `/sweetclaude:skill-name` commands.
 
+### Things to Try First
+
+These are low-risk ways to see what SweetClaude can do before committing to a workflow.
+
+**Ask Claude to explain the process.** Just type in natural language: "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?" Claude reads the master skill and gives you the full picture.
+
+**Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
+
+**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, run `/sweetclaude:init` in the project and tell it you have files to onboard. It copies them (originals untouched), then you can run the reconciliation skill to inventory, categorize, and synthesize them into an organized corpus.
+
+**Check the status of a project SweetClaude already knows about.** If you have already run init on a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
+
+**Run a competitive landscape scan.** In any project, run `/sweetclaude:strategy-competitive-analysis` and describe your space. SweetClaude researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond init.
+
+**Get a code review.** On any project with code, run `/sweetclaude:code-code-review`. It reads your recent changes and gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
+
 ### Your First Session
 
 **Starting a brand new project:**
