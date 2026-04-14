@@ -4,7 +4,7 @@ description: "Start a new task. Asks what you want to do, classifies the work in
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # New Task
@@ -78,7 +78,7 @@ Classify the work, pick the right bucket and phase, surface the right skills.
 | Security review | VERIFY | code/security-testing |
 | Code review | VERIFY | code/code-review |
 
-3. **Update state.** Write work type, bucket, and entry phase to `state/phase.yaml`:
+3. **Update state.** Write work type, bucket, and entry phase to `.sweetclaude/state/phase.yaml`:
    ```yaml
    phase: DISCOVER
    work_type: research-paper

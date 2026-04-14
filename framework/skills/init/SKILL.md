@@ -1,24 +1,45 @@
 ---
 name: sweetclaude:init
-description: "Project bootstrap supporting three scenarios: code repo with external strategy files, code repo without strategy files, and strategy-only projects (no code). Creates strategy/ directory structure, offers file onboarding via reconciliation, scaffolds working repo, sets up RAG. Use to start any new SweetClaude project."
+description: "Set up SweetClaude for a project. Creates .sweetclaude/ state directory, strategy/ structure, discovers the toolchain, generates CLAUDE.md. Supports code repos, strategy-only projects, and migration from legacy working repos."
 ---
 
 # SweetClaude Project Init
 
-Initialize a new SweetClaude project: `/sweetclaude:init $ARGUMENTS`
+Set up SweetClaude for this project: `/sweetclaude:init $ARGUMENTS`
 
 ## Execution Model
 
-This skill uses supervised step execution. YOU (the main agent) handle user interaction and decision-making. For each execution step, you spawn a subagent to do the work, then verify the subagent followed the instructions before presenting results to the user.
+YOU (the main agent) handle user interaction. For each execution step, spawn a subagent with ONLY that step's instructions. Verify each subagent's output before moving on. If a subagent deviated from instructions, discard and re-run.
 
-**Your role as supervisor:**
-1. Ask the user questions (Steps 1-2)
-2. For each execution step (3-10), spawn a subagent with ONLY that step's instructions
-3. After each subagent completes, verify: did it do exactly what the step says? Nothing more, nothing less?
-4. If the subagent deviated, discard its work and re-run with corrected instructions
-5. Present the verified result to the user before moving to the next step
+**Follow these steps exactly as written. Do not skip steps. Do not "fast-track."**
 
-**You do NOT execute steps yourself.** You collect user input, delegate execution, and verify results.
+---
+
+## Step 0: Migration Check (YOU check this)
+
+Before anything else, check if a legacy working repo exists:
+
+```
+Does {project-path}-sweetclaude/ exist as a directory?
+```
+
+If yes:
+> "Found an existing SweetClaude working repo at `{project}-sweetclaude/`. SweetClaude now keeps state inside the project at `.sweetclaude/`. Want me to migrate your existing state? The old repo stays untouched."
+
+If user says yes, spawn a subagent:
+> ```
+> mkdir -p {project-path}/.sweetclaude
+> cp -r {project-path}-sweetclaude/state {project-path}/.sweetclaude/ 2>/dev/null
+> cp -r {project-path}-sweetclaude/traceability {project-path}/.sweetclaude/ 2>/dev/null
+> cp -r {project-path}-sweetclaude/specs {project-path}/.sweetclaude/ 2>/dev/null
+> cp -r {project-path}-sweetclaude/stories {project-path}/.sweetclaude/ 2>/dev/null
+> cp -r {project-path}-sweetclaude/brainstorm {project-path}/.sweetclaude/ 2>/dev/null
+> ```
+> Count files migrated. Do nothing else.
+
+Report: "Migrated. Old repo untouched — archive or delete when ready." Skip to Step 10 (verify).
+
+If no legacy repo, continue with fresh init.
 
 ---
 
@@ -70,10 +91,10 @@ Spawn a subagent with these exact instructions:
 > ```
 > mkdir -p {project-path} && cd {project-path} && git init && git checkout -b main
 > ```
-> Verify: list the strategy/ directory tree and confirm all 10 subdirectories exist.
+> Verify: list the strategy/ directory tree and confirm all subdirectories exist.
 > Do nothing else.
 
-**Verify:** Subagent output shows all 10 subdirectories. No extra work was done.
+**Verify:** Subagent output shows all subdirectories. No extra work was done.
 
 ---
 
@@ -106,14 +127,14 @@ Skip entirely for Scenario C.
 Spawn a subagent:
 
 > Scan {project-path} for the development toolchain. Check for:
-> - Languages: file extensions, package files (package.json, pyproject.toml, go.mod, Cargo.toml, pom.xml, build.gradle)
+> - Languages: file extensions, package files (package.json, pyproject.toml, go.mod, Cargo.toml)
 > - Framework: imports, config files (next.config.js, vite.config.ts, django settings, etc.)
 > - Package manager: npm/yarn/pnpm (lockfiles), pip/poetry/uv, cargo, go modules
 > - Test runner: package.json scripts, pytest.ini, jest.config, vitest.config, go test
 > - Formatter: .prettierrc, pyproject.toml [tool.black], rustfmt.toml, .editorconfig
 > - Build commands: scripts in package.json, Makefile, pyproject.toml
 >
-> Report findings as a YAML block matching this schema:
+> Report findings as a YAML block:
 > ```yaml
 > project:
 >   name: {name}
@@ -130,9 +151,9 @@ Spawn a subagent:
 > ```
 > Do nothing else. Do not create files. Just report.
 
-**Verify:** Subagent reported YAML with discovery results. Did not create any files or modify anything.
+**Verify:** Subagent reported YAML with discovery results. Did not create any files.
 
-Present findings to user for confirmation. If empty project, ask what language/framework they'll use.
+Present findings to user for confirmation.
 
 ---
 
@@ -144,20 +165,20 @@ Then spawn a subagent:
 
 > Generate a CLAUDE.md file for {project-path} with these sections:
 > - What this is: {user's one-line description}
-> - Repo structure: list key directories including strategy/
-> - Build/test/lint/format commands: from these discovery results: {paste project.yaml}
-> - Project-specific rules: leave a placeholder section for the user to fill
+> - Repo structure: list key directories including strategy/ and .sweetclaude/
+> - Build/test/lint/format commands: from discovery results
+> - Project-specific rules: leave a placeholder for the user to fill
 > - SweetClaude section (append at end):
 >   ```
 >   ## SweetClaude
 >   - If the user asks to do anything involving SweetClaude workflows, invoke the sweetclaude master skill FIRST and run its pre-flight check before doing any work.
->   - If a SweetClaude working repo exists, read state/phase.yaml and state/improvement-register.md at session start.
+>   - Read .sweetclaude/state/phase.yaml and .sweetclaude/state/improvement-register.md at session start.
 >   - Follow the interaction model in ~/.claude/rules/sweetclaude/interaction-model.md.
 >   - Respect the current deference level. Ask if not set.
 >   - Never push for phase advancement.
 >   ```
 >
-> Target: 60-100 lines. No boilerplate. Write the file to {project-path}/CLAUDE.md.
+> Target: 60-100 lines. Write the file to {project-path}/CLAUDE.md.
 
 For Scenario C, instruct the subagent to generate a minimal CLAUDE.md noting this is a strategy-only project.
 
@@ -167,23 +188,18 @@ Present to user for review before moving on.
 
 ---
 
-## Step 7: Scaffold Working Repo (SUBAGENT)
+## Step 7: Create .sweetclaude/ State Directory (SUBAGENT)
 
 Spawn a subagent:
 
-> Create the SweetClaude working repo at {project-path}-sweetclaude. Run:
+> Create the SweetClaude state directory at {project-path}/.sweetclaude. Run:
 > ```
-> mkdir -p {project-path}-sweetclaude
-> cd {project-path}-sweetclaude
-> git init
-> git checkout -b main
-> mkdir -p state traceability specs stories brainstorm rag-index
-> touch rag-index/.gitkeep
+> mkdir -p {project-path}/.sweetclaude/{state,traceability,specs,stories,brainstorm}
 > ```
 >
 > Create these files:
 >
-> state/phase.yaml:
+> .sweetclaude/state/phase.yaml:
 > ```yaml
 > phase: DISCOVER
 > work_type: net-new
@@ -191,25 +207,59 @@ Spawn a subagent:
 > project_type: {code+strategy or strategy-only}
 > ```
 >
-> state/project.yaml: {paste discovery results from Step 5, or minimal for Scenario C}
+> .sweetclaude/state/project.yaml: {paste discovery results from Step 5, or minimal for Scenario C}
 >
-> state/decision-log.md: `# Decision Log\n\n| # | Date | Phase | Decision | Rationale |\n|---|---|---|---|---|`
+> .sweetclaude/state/decision-log.md:
+> ```
+> # Decision Log
 >
-> state/assumption-register.md: `# Assumption Register\n\n| # | Assumption | Status | Evidence |\n|---|---|---|---|`
+> | # | Date | Phase | Decision | Rationale |
+> |---|---|---|---|---|
+> ```
 >
-> state/improvement-register.md: `# Improvement Register\n\n| # | Date | Type | Learning |\n|---|---|---|---|`
+> .sweetclaude/state/assumption-register.md:
+> ```
+> # Assumption Register
 >
-> state/scope-changes.md: `# Scope Changes\n\n| Date | Item | Direction | Phase | Rationale |\n|---|---|---|---|---|`
+> | # | Assumption | Status | Evidence |
+> |---|---|---|---|
+> ```
 >
-> traceability/requirements-map.md: `# Requirements Traceability\n\n| Requirement | Story | Feature | Test | Implementation |\n|---|---|---|---|---|`
+> .sweetclaude/state/improvement-register.md:
+> ```
+> # Improvement Register
 >
-> traceability/ripple-map.md: `# Ripple Map\n\n| Change | Affected Files | Affected Tests | Affected Docs | Risk |\n|---|---|---|---|---|`
+> | # | Date | Type | Learning |
+> |---|---|---|---|
+> ```
 >
-> .gitignore: `rag-index/\n.DS_Store`
+> .sweetclaude/state/scope-changes.md:
+> ```
+> # Scope Changes
+>
+> | Date | Item | Direction | Phase | Rationale |
+> |---|---|---|---|---|
+> ```
+>
+> .sweetclaude/traceability/requirements-map.md:
+> ```
+> # Requirements Traceability
+>
+> | Requirement | Story | Feature | Test | Implementation |
+> |---|---|---|---|---|
+> ```
+>
+> .sweetclaude/traceability/ripple-map.md:
+> ```
+> # Ripple Map
+>
+> | Change | Affected Files | Affected Tests | Affected Docs | Risk |
+> |---|---|---|---|---|
+> ```
 >
 > Verify all files exist. Do nothing else.
 
-**Verify:** Working repo has correct directory structure and all state files.
+**Verify:** .sweetclaude/ has state/, traceability/, specs/, stories/, brainstorm/ and all state files.
 
 ---
 
@@ -222,7 +272,7 @@ Spawn a subagent:
 > npm list -g mcp-local-rag 2>/dev/null || echo "NOT_INSTALLED"
 > ```
 >
-> If available, create {project-path}/.mcp.json:
+> If available, create {project-path}/.mcp.json (or merge into existing):
 > ```json
 > {
 >   "mcpServers": {
@@ -250,50 +300,51 @@ Spawn a subagent:
 
 ## Step 9: Push to GitHub (SUBAGENT)
 
-Ask user: **"Push both repos to GitHub as private repos? (y/n)"**
+Ask user: **"Push to GitHub as a private repo? (y/n)"**
 
 If yes, spawn a subagent:
 
-> Push repos to GitHub:
+> Push the project repo to GitHub:
 > ```
 > cd {project-path}
-> gh repo create {username}/{project-name} --private --source=. --push 2>/dev/null || git push
+> git add -A
+> git commit -m "SweetClaude init: project scaffolding
 >
-> cd {project-path}-sweetclaude
-> gh repo create {username}/{project-name}-sweetclaude --private --source=. --push 2>/dev/null || git push
+> Co-Authored-By: SweetClaude <noreply@sweetclaude.dev>"
+> gh repo create {username}/{project-name} --private --source=. --push 2>/dev/null || git push
 > ```
 >
-> If repos already exist on GitHub, just push. Report what happened. Do nothing else.
+> If repo already exists on GitHub, just push. Report what happened. Do nothing else.
 
-**Verify:** Repos pushed or already existed. No extra work.
+**Verify:** One repo pushed. No second repo created.
 
 ---
 
 ## Step 10: Verify (YOU do this)
 
-Check everything yourself — do not delegate verification:
+Check everything yourself:
 
-- [ ] Project directory exists with strategy/ structure (10 subdirectories)
+- [ ] `.sweetclaude/` exists with state/, traceability/, specs/, stories/, brainstorm/
+- [ ] `.sweetclaude/state/phase.yaml` exists with correct values
+- [ ] `.sweetclaude/state/project.yaml` exists
+- [ ] `strategy/` exists with subdirectories
 - [ ] CLAUDE.md exists and has SweetClaude section
-- [ ] Working repo has state/, traceability/, specs/, stories/, brainstorm/, rag-index/
-- [ ] state/phase.yaml exists with correct values
-- [ ] state/project.yaml exists
 - [ ] RAG initialized or skipped with reason
-- [ ] GitHub repos exist or push skipped with reason
+- [ ] GitHub pushed or skipped with reason
+- [ ] No `{project}-sweetclaude/` directory was created (unless migration)
 
 Report:
 ```
 SweetClaude initialized for {project-name}.
 
-Project:      {project-path} → {github-url or "local only"}
-Working repo: {project-path}-sweetclaude → {github-url or "local only"}
-Type:         {code+strategy | strategy-only}
-Phase:        DISCOVER
-Language:     {detected or "strategy-only"}
-Framework:    {detected or "n/a"}
-Test runner:  {detected or "n/a"}
-Strategy:     strategy/ created, {N} files onboarded | empty
-RAG:          {initialized | skipped — reason}
+Project:    {project-path} → {github-url or "local only"}
+State:      {project-path}/.sweetclaude/
+Phase:      DISCOVER
+Language:   {detected or "strategy-only"}
+Framework:  {detected or "n/a"}
+Test runner: {detected or "n/a"}
+Strategy:   strategy/ created, {N} files onboarded | empty
+RAG:        {initialized | skipped — reason}
 ```
 
-If files were onboarded: "Run `/sweetclaude:strategy/reconciliation` to inventory and organize the onboarded files."
+If files were onboarded: "Run `/sweetclaude:strategy/reconciliation` to inventory and organize them."

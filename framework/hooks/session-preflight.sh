@@ -21,9 +21,15 @@ if [ -f "$PROJECT_DIR/.sweetclaude-skip" ]; then
   exit 0
 fi
 
-# Check if configured
-WORKING_REPO="${PROJECT_DIR}-sweetclaude"
-if [ -f "$WORKING_REPO/state/phase.yaml" ] || [ -f "$PROJECT_DIR/state/phase.yaml" ]; then
+# Check if configured — .sweetclaude/ inside project (current) or legacy -sweetclaude/ repo
+if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
+  rm -f "$FLAG"
+  exit 0
+fi
+
+# Legacy fallback: separate working repo
+LEGACY_REPO="${PROJECT_DIR}-sweetclaude"
+if [ -f "$LEGACY_REPO/state/phase.yaml" ]; then
   rm -f "$FLAG"
   exit 0
 fi

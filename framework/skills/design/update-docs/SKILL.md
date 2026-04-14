@@ -4,7 +4,7 @@ description: Automatically update documentation when implementation changes beha
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Auto-Documentation Updates
@@ -28,7 +28,7 @@ When implementation changes behavior, identify and update affected documentation
    - Propose the updated text
    - Wait for user approval before writing
 
-4. **Update traceability.** If the change affects the requirements → tests → code chain, update `traceability/requirements-map.md` in the working repo.
+4. **Update traceability.** If the change affects the requirements → tests → code chain, update `traceability/requirements-map.md` in `.sweetclaude/`.
 
 ## Rules
 

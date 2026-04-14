@@ -23,12 +23,12 @@ If any are missing:
 > "SweetClaude isn't fully installed. Missing: [list]. Run `install.sh` from the SweetClaude repo to fix this. Want me to help?"
 
 **Step 2: Check project configuration.**
-- Does a SweetClaude working repo exist (`<project>-sweetclaude/`)? Or does the project have a `strategy/` directory with `state/phase.yaml`?
-- Does `state/phase.yaml` exist in the working repo or project?
+- Does `.sweetclaude/state/phase.yaml` exist in the project directory?
 - Does the project's `CLAUDE.md` exist and contain a SweetClaude section?
+- Legacy fallback: check `<project>-sweetclaude/state/phase.yaml` if `.sweetclaude/` doesn't exist
 
 If the project isn't set up:
-> "This project isn't configured for SweetClaude yet. I can set it up with `/sweetclaude:init` — that creates the working repo, state files, and project config. Want me to do that?"
+> "This project isn't configured for SweetClaude yet. I can set it up with `/sweetclaude:init` — that creates `.sweetclaude/` with your project state and config. Want me to do that?"
 
 **Step 3: Hard stop if user declines.**
 
@@ -43,14 +43,14 @@ Do not proceed with any SweetClaude skill, phase routing, or pipeline work. The 
 
 Runs after pre-flight passes.
 
-1. **Read phase state.** Read `state/phase.yaml` to determine:
+1. **Read phase state.** Read `.sweetclaude/state/phase.yaml` to determine:
    - Current phase
    - Current work type
    - Track (code or strategy)
    - Deference level
    - Any pending detour to circle back to
 
-2. **Read improvement register.** If `state/improvement-register.md` exists, read it and adjust your behavior based on recorded learnings.
+2. **Read improvement register.** If `.sweetclaude/state/improvement-register.md` exists, read it and adjust your behavior based on recorded learnings.
 
 3. **Set deference level.** If not set in state, ask:
    > "How collaborative should I be this session? Collaborative (stop after every sub-step), Guided (stop at major decisions), or Autonomous (stop only at phase gates)?"
@@ -114,13 +114,13 @@ Present with pass/fail marks. If all pass, proceed. If any fail, present the gap
 
 If the user overrides, log it in the decision log with which criteria were waived. In Autonomous mode, auto-proceed if all pass; pause if any fail.
 
-**Step 2: Improvement check-in (all phases).** Ask: "Before we move on — anything about how this phase went that I should do differently going forward?" Save the response to `state/improvement-register.md`. Even "no, it was good" is worth recording as a confirmation. This step is not optional.
+**Step 2: Improvement check-in (all phases).** Ask: "Before we move on — anything about how this phase went that I should do differently going forward?" Save the response to `.sweetclaude/state/improvement-register.md`. Even "no, it was good" is worth recording as a confirmation. This step is not optional.
 
 **Step 3:** Generate a decision summary — what was decided, why, alternatives considered.
 
 **Step 4:** Present to user for confirmation (at all deference levels).
 
-**Step 5:** Commit to working repo: phase state, decision log, assumption register, improvement register.
+**Step 5:** Commit `.sweetclaude/` changes to the project repo: phase state, decision log, assumption register, improvement register.
 
 **Step 6:** Surface the skills available in the next phase.
 
@@ -160,14 +160,14 @@ When delegating to early-phase skills, set depth expectations:
 
 **For `bmad:research`:** Answer every research question with evidence and sources. Identify research gaps explicitly. Do not present a research report with unanswered questions unless those gaps are flagged as open items.
 
-## Working Repo Structure
+## State Directory
 
-If a SweetClaude working repo exists (`<project>-sweetclaude/`):
+SweetClaude state lives in `.sweetclaude/` inside the project repo:
 ```
-state/           → phase.yaml, decision-log.md, assumption-register.md, improvement-register.md
-traceability/    → requirements-map.md, ripple-map.md
-specs/           → product-brief.md, prd.md, architecture.md, tech-spec.md
-stories/         → EPIC-XXX/ with story files and .feature files
-brainstorm/      → session outputs
-rag-index/       → vector embeddings
+.sweetclaude/
+  state/           → phase.yaml, project.yaml, decision-log.md, assumption-register.md, improvement-register.md, scope-changes.md
+  traceability/    → requirements-map.md, ripple-map.md
+  specs/           → product-brief.md, prd.md, architecture.md, tech-spec.md
+  stories/         → EPIC-XXX/ with story files and .feature files
+  brainstorm/      → session outputs
 ```

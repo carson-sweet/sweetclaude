@@ -4,7 +4,7 @@ description: "Design the data model: entities, relationships, constraints, index
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Data Model Design
@@ -55,4 +55,4 @@ If modifying an existing schema:
 
 ### 5. Save
 
-Save to `specs/data-model.md` in the working repo. Record key decisions via `design/manage-decisions`.
+Save to `specs/data-model.md` in `.sweetclaude/`. Record key decisions via `design/manage-decisions`.

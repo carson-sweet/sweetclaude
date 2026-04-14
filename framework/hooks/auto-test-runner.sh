@@ -12,9 +12,24 @@ fi
 
 # Find project root
 PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-WORKING_REPO="${PROJECT_DIR}-sweetclaude"
-PHASE_FILE="${WORKING_REPO}/state/phase.yaml"
-PROJECT_CONFIG="${WORKING_REPO}/state/project.yaml"
+if [ -z "$PROJECT_DIR" ]; then
+  exit 0
+fi
+
+# Resolve state directory — .sweetclaude/ first, legacy fallback
+STATE_DIR=""
+if [ -d "$PROJECT_DIR/.sweetclaude/state" ]; then
+  STATE_DIR="$PROJECT_DIR/.sweetclaude/state"
+elif [ -d "${PROJECT_DIR}-sweetclaude/state" ]; then
+  STATE_DIR="${PROJECT_DIR}-sweetclaude/state"
+fi
+
+if [ -z "$STATE_DIR" ]; then
+  exit 0
+fi
+
+PHASE_FILE="${STATE_DIR}/phase.yaml"
+PROJECT_CONFIG="${STATE_DIR}/project.yaml"
 
 # If no phase file or project config, skip
 if [ ! -f "$PHASE_FILE" ] || [ ! -f "$PROJECT_CONFIG" ]; then
@@ -25,7 +40,7 @@ fi
 PHASE=$(grep "^phase:" "$PHASE_FILE" 2>/dev/null | awk '{print $2}')
 TDD_PHASE=$(grep "^tdd_phase:" "$PHASE_FILE" 2>/dev/null | awk '{print $2}')
 
-if [[ "$PHASE" != "implement" || "$TDD_PHASE" != "implementing" ]]; then
+if [[ "$PHASE" != "implement" && "$PHASE" != "IMPLEMENT" ]] || [[ "$TDD_PHASE" != "implementing" ]]; then
   exit 0
 fi
 

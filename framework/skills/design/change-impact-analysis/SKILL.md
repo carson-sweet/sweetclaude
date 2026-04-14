@@ -4,7 +4,7 @@ description: Ripple-effect analysis — before implementing a change, trace what
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Ripple-Effect Analysis
@@ -38,7 +38,7 @@ Analyze the impact of changing: $ARGUMENTS
    - Does the README reference this behavior?
    - Does the CLAUDE.md reference this?
    - Are there ADRs that depend on this decision?
-   - Does the working repo PRD/tech spec reference this?
+   - Does the `.sweetclaude/specs/` PRD/tech spec reference this?
 
 6. **Present impact summary:**
    ```

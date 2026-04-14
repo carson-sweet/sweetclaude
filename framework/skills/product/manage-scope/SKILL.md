@@ -4,7 +4,7 @@ description: Track scope changes when items move between in-scope and out-of-sco
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # Scope Change Tracker
@@ -13,7 +13,7 @@ Log a scope change for: $ARGUMENTS
 
 ## Process
 
-1. **Read current scope** from the working repo's PRD or scope document.
+1. **Read current scope** from `.sweetclaude/`'s PRD or scope document.
 
 2. **Identify the change:**
    - What item is moving?
@@ -21,7 +21,7 @@ Log a scope change for: $ARGUMENTS
    - Which phase are we in?
    - What's the rationale?
 
-3. **Append to scope log** at `state/scope-changes.md` in the working repo:
+3. **Append to scope log** at `.sweetclaude/state/scope-changes.md` in `.sweetclaude/`:
 
 ```markdown
 | {{date}} | {{item}} | {{direction}} | {{phase}} | {{rationale}} |

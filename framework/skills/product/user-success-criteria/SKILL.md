@@ -4,7 +4,7 @@ description: "Define measurable success for each persona and task. Each criterio
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does state/phase.yaml exist in the project working repo or project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>
 
 # User Success Criteria
@@ -51,4 +51,4 @@ Read personas from `product/discovery` output or `strategy/ideal-customer-profil
 
 ### Save
 
-Save to `specs/user-success-criteria.md` in the working repo. These criteria are referenced by product/product-brief (success criteria section) and product/user-tdd-tests (drive Gherkin scenarios).
+Save to `specs/user-success-criteria.md` in `.sweetclaude/`. These criteria are referenced by product/product-brief (success criteria section) and product/user-tdd-tests (drive Gherkin scenarios).
