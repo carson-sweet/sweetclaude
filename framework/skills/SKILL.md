@@ -159,7 +159,7 @@ When the user asks to do something, the work router classifies it as code or str
 
 When delegating to early-phase skills, set depth expectations:
 
-**For `sweetclaude:discover-deep`:** Invoke during Discover phase for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal Discover directly.
+**For `sweetclaude:discover`:** Invoke during Discover phase for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal Discover directly.
 
 **For `bmad:product-brief`:** Conduct the full 11-section interview. One section at a time — never batch. Probe vague answers with follow-ups before moving to the next section. The interview is a discovery conversation, not a form to fill. After generating the document, run the BMAD validation checklist and present results before the phase gate.
 

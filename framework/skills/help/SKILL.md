@@ -33,7 +33,7 @@ Orchestration
   /sweetclaude:init         Set up SweetClaude for this project
   /sweetclaude:help         This help (you are here)
   /sweetclaude:hibernate    Freeze or thaw a project mid-phase
-  /sweetclaude:discover-deep  Structured persona/feature/competitive discovery
+  /sweetclaude:discover  Structured persona/feature/competitive discovery
   /sweetclaude:work-router  Classify work type and enter pipeline
 
 Code Track

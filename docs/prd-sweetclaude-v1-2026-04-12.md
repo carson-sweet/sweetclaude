@@ -1,4 +1,4 @@
-# PRD: SweetClaude v1 — 2026-04-12
+# PRD: SweetClaude v1.1 — 2026-04-13
 
 **Author:** Carson Sweet
 **Status:** Draft
@@ -504,6 +504,75 @@ Full pipeline.
 
 ---
 
+### EPIC-010: Strategy Track
+
+#### FR-042: Strategy File Reconciliation
+**Priority:** Must Have
+**Description:** Onboard unstructured files into the `strategy/` system. Inventories files in a target directory, categorizes each by domain and document type, applies versioning conventions, and optionally synthesizes content into canonical-draft documents that follow the strategy corpus structure.
+**Acceptance Criteria:**
+- [ ] Scans target directory and produces a typed inventory (file, domain, doc-type, status)
+- [ ] Categorizes files by domain (e.g., market, product, technical, organizational) and document type (e.g., memo, analysis, presentation, raw notes)
+- [ ] Applies versioning to onboarded files consistent with strategy corpus conventions
+- [ ] Optional synthesis: generates canonical-draft documents from clusters of related files
+- [ ] Non-destructive — originals preserved, copies/symlinks placed into `strategy/`
+
+#### FR-043: Academic Paper Development
+**Priority:** Must Have
+**Description:** Six-phase pipeline for developing academic papers: first principles exploration, literature review, structure and venue selection, drafting, review and revision, and submission preparation. Adapted from lishix520/academic-paper-skills (MIT license).
+**Acceptance Criteria:**
+- [ ] Phase 1 (First Principles): guided exploration of research question, contribution, and novelty
+- [ ] Phase 2 (Literature Review): structured search, synthesis, and gap identification
+- [ ] Phase 3 (Structure & Venue): paper outline generation and venue matching
+- [ ] Phase 4 (Drafting): section-by-section drafting with citation integration
+- [ ] Phase 5 (Review & Revision): structured self-review, peer-review simulation, revision tracking
+- [ ] Phase 6 (Submission): formatting, compliance checks, cover letter generation
+- [ ] Each phase has defined entry/exit criteria
+- [ ] Attribution: adapted from lishix520/academic-paper-skills (MIT)
+
+#### FR-044: Narrative Arc Knowledge Graph
+**Priority:** Must Have
+**Description:** Typed knowledge graph connecting strategy domains — objectives, claims, proof points, and literature references. Enables traversal queries such as "what evidence supports claim X?" or "which objectives lack proof points?" Design deferred to its own cycle; interface contract locked now.
+**Acceptance Criteria:**
+- [ ] Node types defined: Objective, Claim, ProofPoint, LiteratureRef (minimum)
+- [ ] Edge types defined: supports, contradicts, cites, derives-from (minimum)
+- [ ] Interface contract published: query API, ingestion API, export format
+- [ ] Interface contract is stable — implementation may change, contract does not
+- [ ] Design and implementation deferred to dedicated cycle
+
+#### FR-045: Meeting Prep
+**Priority:** Should Have
+**Description:** Generate stakeholder-specific meeting deliverables from the strategy corpus and narrative arc knowledge graph. Given a meeting context (attendees, agenda, objectives), produces tailored briefing documents, talking points, and anticipated questions with sourced answers.
+**Acceptance Criteria:**
+- [ ] Accepts meeting context: attendees (with roles), agenda items, meeting objectives
+- [ ] Generates stakeholder-specific briefing documents (different emphasis per audience)
+- [ ] Produces talking points aligned to agenda items
+- [ ] Generates anticipated questions with sourced answers from strategy corpus
+- [ ] Sources all claims back to strategy corpus documents or knowledge graph nodes
+- [ ] Degrades gracefully when knowledge graph is not yet populated (falls back to corpus search)
+
+#### FR-046: Dual-Track Work Router
+**Priority:** Must Have
+**Description:** Extends the existing work router (FR-005) to classify incoming work as code-track or strategy-track, then surfaces the appropriate skill set for the identified track. Code-track routes through the existing phase pipeline. Strategy-track routes to strategy-specific skills.
+**Acceptance Criteria:**
+- [ ] Classifies work as code-track or strategy-track based on user intent
+- [ ] Code-track work routes through existing phase pipeline (FR-004, FR-005)
+- [ ] Strategy-track work surfaces strategy skills (FR-042 through FR-045)
+- [ ] Ambiguous work prompts user for clarification
+- [ ] User can override classification at any time
+
+#### FR-047: Pre-Flight Guard Hook
+**Priority:** Must Have
+**Description:** Deterministic `PreToolUse` hook that blocks the first tool use in a session if SweetClaude is not configured for the current project. Ensures the framework is initialized before any work begins. Per-project opt-out via `.sweetclaude-skip` marker file in the project root.
+**Acceptance Criteria:**
+- [ ] Fires on first `PreToolUse` event of a session
+- [ ] Blocks tool use if SweetClaude working repo not found or not configured
+- [ ] Returns clear error message with instructions to run `sweetclaude init` or create `.sweetclaude-skip`
+- [ ] `.sweetclaude-skip` in project root bypasses the guard for that project
+- [ ] Does not fire on subsequent tool uses after first pass/fail
+- [ ] Deterministic — no LLM reasoning, pure file-existence checks
+
+---
+
 ## Non-Functional Requirements
 
 ### NFR-001: Context Window Efficiency
@@ -593,11 +662,12 @@ Full pipeline.
 | EPIC-007 | Creative Partnership & Interaction Model | FR-022, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037 | Must Have |
 | EPIC-008 | Global Configuration | FR-023, FR-024 | Must Have |
 | EPIC-009 | Structured Discover Phase | FR-038, FR-039, FR-040, FR-041 | Must Have |
+| EPIC-010 | Strategy Track | FR-042, FR-043, FR-044, FR-045, FR-046, FR-047 | Must Have |
 
 **Totals:**
-- Functional Requirements: 41 (29 Must, 10 Should, 2 Could)
+- Functional Requirements: 47 (34 Must, 11 Should, 2 Could)
 - Non-Functional Requirements: 8 (6 Must, 2 Should)
-- Epics: 9
+- Epics: 10
 
 ---
 
@@ -605,8 +675,8 @@ Full pipeline.
 
 | Priority | FRs | NFRs | Total |
 |---|---|---|---|
-| Must Have | 29 | 6 | 35 |
-| Should Have | 10 | 2 | 12 |
+| Must Have | 34 | 6 | 40 |
+| Should Have | 11 | 2 | 13 |
 | Could Have | 2 | 0 | 2 |
 
 ---
