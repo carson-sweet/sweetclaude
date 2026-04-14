@@ -1,0 +1,19 @@
+{
+  "name": "sweetclaude",
+  "description": "End-to-end development framework: strategy, product, design, code — from concept to shipped code",
+  "version": "1.0.0",
+  "author": {
+    "name": "Carson Sweet"
+  },
+  "homepage": "https://github.com/carson-sweet/sweetclaude",
+  "repository": "https://github.com/carson-sweet/sweetclaude",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "keywords": [
+    "framework",
+    "tdd",
+    "strategy",
+    "product",
+    "design",
+    "pipeline"
+  ]
+}
