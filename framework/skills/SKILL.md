@@ -26,7 +26,7 @@ If any are missing:
 - Does the project's `CLAUDE.md` exist and contain a SweetClaude section?
 
 If the project isn't set up:
-> "This project isn't configured for SweetClaude yet. I can set it up with `sweetclaude init` — that creates the working repo, state files, and project config. Want me to do that?"
+> "This project isn't configured for SweetClaude yet. I can set it up with `/sweetclaude:init` — that creates the working repo, state files, and project config. Want me to do that?"
 
 **Step 3: Hard stop if user declines.**
 
@@ -56,7 +56,7 @@ Runs after pre-flight passes.
 4. **Re-orient if resuming.** If phase state exists, summarize where things stand:
    > "We're in the [phase] phase, working on [work type]. Last session we [summary]. Here's what's pending: [pending items]."
 
-5. **If no project exists,** offer: "Want to start a new project? I can run `sweetclaude init`."
+5. **If no project exists,** offer: "Want to start a new project? I can run `/sweetclaude:init`."
 
 ## Domain Buckets
 
