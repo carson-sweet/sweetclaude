@@ -117,3 +117,41 @@ Free-form log of decisions, scope changes, blockers encountered.
 ```
 
 7. Tell the user: "Added MS-XXX: {title}. Status: proposed. File: docs/milestones/MS-XXX-{slug}.md"
+
+### `review` — List milestones by commitment level
+
+1. Scan `docs/milestones/` for all files matching `MS-*.md` (exclude `MILESTONES-INDEX.md`).
+2. Read each file's `**Status:**` field.
+3. Group:
+   - **Now**: `active`
+   - **Next**: (see Open Items — default empty; promotion mechanism is an open design question in the spec)
+   - **Later**: `proposed`
+   - Terminal states (`achieved`, `dropped`, `superseded`): hidden unless `review --all` was invoked.
+4. For each displayed milestone, compute a progress snapshot:
+   - Count `- [x]` and `- [ ]` lines under the `## Measuring success` heading.
+   - For criteria that reference an artifact path, note whether the path is populated vs. a bare text criterion. (Artifact finalization check — see Open Items for the canonical convention.)
+5. Present in this format:
+
+```
+Milestones
+
+Now (active):
+  MS-001 Exit Stealth         3/5 criteria met
+  MS-003 MVP Shipped          4/4 criteria met — ready to complete
+
+Later (proposed):
+  MS-004 Paid Pilot Live
+  MS-005 Series A Readiness
+```
+
+6. If `--all` was passed, append terminal-state milestones after Later:
+
+```
+Achieved:
+  MS-002 Private Alpha        (2026-03-15)
+
+Dropped:
+  MS-006 Desktop App          (2026-02-01 — rationale: see Notes)
+```
+
+7. If no milestones exist, say: "No milestones yet. Run `/sweetclaude:milestones add` to create one."
