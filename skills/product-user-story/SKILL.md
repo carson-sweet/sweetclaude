@@ -19,4 +19,13 @@ Write a user story for: $ARGUMENTS
 
 ## Execute
 
-Invoke `bmad:create-story` and follow its workflow.
+1. Invoke `bmad:create-story` and follow its workflow.
+2. After the story file is written, prompt for milestone assignment:
+
+   > "Assign this story to a milestone? Current milestones:
+   > - {list active + proposed milestones from `docs/milestones/`}
+   > - none / later (skip for now)"
+
+   If the user selects a milestone, invoke `sweetclaude:milestones link <US-XXX> <MS-XXX>` — do not write the `**Milestone:**` header directly; delegate to keep the bidirectional link consistent.
+
+   If no milestones exist, skip this step and mention: "No milestones yet. Run `/sweetclaude:milestones add` to create one."
