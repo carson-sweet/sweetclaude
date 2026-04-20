@@ -140,12 +140,15 @@ For/who/that/unlike framework.
 
 ### Organize Scattered Documents
 
-If you have strategy documents, brainstorming exports, meeting notes, or research scattered across folders, Claude.ai sessions, or Google Drive downloads:
+If you have strategy documents, brainstorming exports, meeting notes, or research scattered across folders, Claude.ai sessions, or Google Drive downloads, the corpus pipeline turns them into organized, searchable canonical documents:
 
-1. Run `/sweetclaude:init` and tell it you have files to onboard
-2. Point it at the folder with your messy files
-3. It copies them into `strategy/reconciliation/` (originals untouched)
-4. Run the reconciliation process to inventory every file, categorize them, and optionally synthesize organized canonical documents
+1. Run `/sweetclaude:init` and tell it you have files to onboard — it copies them into `corpus/raw/inbox/` (originals untouched)
+2. `/sweetclaude:corpus-consolidate` — scan, deduplicate, generate a plan, copy unique files in batches
+3. `/sweetclaude:corpus-triage` — classify each file as keep, reconcile, discard, or defer
+4. `/sweetclaude:corpus-reconcile` — draft and refine canonical documents from the classified files
+5. `/sweetclaude:corpus-promote` — finalize with provenance sidecars, archive sources, index into RAG
+
+Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands. The pipeline enforces ordering — you cannot skip steps. Every canonical document traces back to its source files.
 
 This is especially useful for projects that started with lots of brainstorming in Claude.ai but never organized the output.
 
