@@ -1,7 +1,7 @@
 # Claude Code Environment Audit Report
 
 **Date**: 2026-04-08  
-**User**: carsonsweet  
+**User**: [redacted]  
 **Purpose**: Exhaustive inventory of all "extras" beyond native Claude Code capabilities, for cleanup and optimization.
 
 ---

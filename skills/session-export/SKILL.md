@@ -209,8 +209,8 @@ Named people, organizations, technologies, documents, and concepts in the sessio
 
 | Entity | Type | Description | First appears in Turn |
 |--------|------|-------------|----------------------|
-| Carson | Person | Founder of Syncog, session participant | 1 |
-| Syncog | Technology | Synthetic cognition platform... | 3 |
+| Alex | Person | Project lead, session participant | 1 |
+| Acme Corp | Organization | The company building the product | 3 |
 
 Types: Person, Organization, Technology, Document, Concept, Location
 
@@ -222,13 +222,13 @@ Shows which files reference or depend on other files. Format as:
 
 ```
 session-export-2026-04-12.md
-  └── references → syncog_research_access_agreement.docx
-  └── references → syncog-paths.jsx
+  └── references → project_requirements.docx
+  └── references → navigation-routes.jsx
 
-syncog-session-handoff.md
-  └── references → syncog_research_access_agreement.docx
-  └── references → syncog-paths.jsx
-  └── references → syncog-full-transcript.md
+session-handoff.md
+  └── references → project_requirements.docx
+  └── references → navigation-routes.jsx
+  └── references → full-transcript.md
 ```
 
 If no dependencies exist between files, note: "Files produced in this session are independent."
