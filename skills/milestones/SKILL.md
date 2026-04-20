@@ -155,3 +155,27 @@ Dropped:
 ```
 
 7. If no milestones exist, say: "No milestones yet. Run `/sweetclaude:milestones add` to create one."
+
+### `link <work-item> <MS-XXX>` — Bidirectional attach
+
+1. Validate the work-item ref: must match `^(US|BL)-\d+$`. If not, tell the user the expected format and stop.
+2. Locate the work-item file:
+   - `US-XXX` → search `stories/**/US-XXX-*.md` then `.sweetclaude/stories/**/US-XXX-*.md`.
+   - `BL-XXX` → search `docs/backlog/BL-XXX-*.md`.
+   - If not found, tell the user and stop.
+3. Validate `docs/milestones/MS-XXX-*.md` exists. If not, tell the user and stop.
+4. Read the work item. Check for an existing `**Milestone:**` header (exact match: line starting with `**Milestone:**`).
+   - If present and equals the requested MS: no-op. Say "Already linked."
+   - If present but different: ask "This work item is currently linked to {old MS}. Replace with {new MS}? (yes/no)" — require explicit yes. If no, stop.
+5. Write/update the work item's `**Milestone:**` header:
+   - If no header exists, insert `**Milestone:** MS-XXX` immediately after the H1 title line.
+   - If a header exists, replace its value.
+6. Read `docs/milestones/MS-XXX-*.md`. In the `## Contributing work items` section:
+   - If the item is not already listed, add `- {work-item-ref} — {title from work item's H1}`.
+   - If the section does not exist, create it before `## Notes`.
+7. If the work item was previously linked to a different milestone:
+   - Read that old milestone file.
+   - Remove the work item from its Contributing work items section.
+   - Append a Changelog row: "{date} — Removed {work-item-ref} (relinked to {new MS})."
+8. Append a Changelog row to the new milestone file: "{date} — Linked {work-item-ref}."
+9. Tell the user: "Linked {work-item-ref} to MS-XXX. {if relinked: 'Removed from {old MS}.'}"
