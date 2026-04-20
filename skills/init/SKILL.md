@@ -258,7 +258,7 @@ If copy, spawn a subagent:
 
 **Verify:** Subagent copied files and reported count. Did not categorize, rename, or modify anything.
 
-Tell the user: "Files copied. Run `/sweetclaude:consolidate` to organize them."
+Tell the user: "Files copied. Run `/sweetclaude:corpus-consolidate` to organize them."
 
 Update phase.yaml: set `init_step: 6`.
 
@@ -313,7 +313,7 @@ Then spawn a subagent:
 
 > Generate a CLAUDE.md file for {project-path} with these sections:
 > - What this is: {user's one-line description}
-> - Repo structure: list key directories including strategy/ and .sweetclaude/
+> - Repo structure: list key directories including strategy/, docs/, and .sweetclaude/
 > - Build/test/lint/format commands: from discovery results (or "strategy-only project" if no code)
 > - Project-specific rules: leave a placeholder for the user to fill
 > - SweetClaude section (append at end):
@@ -373,4 +373,4 @@ Language:   {detected or "strategy-only"}
 Strategy:   strategy/ created{, N files in corpus/raw/inbox/ | , empty}
 ```
 
-If files were onboarded: "Run `/sweetclaude:consolidate` to organize them."
+If files were onboarded: "Run `/sweetclaude:corpus-consolidate` to organize them."

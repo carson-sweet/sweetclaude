@@ -163,9 +163,9 @@ Flag gaps. These may need iteration before moving to Phase C.
 
 Design spec section 4 explicitly says "full design deferred to its own DESIGN cycle" — the interface contract is locked but internals are not designed. This needs its own mini-cycle:
 
-1. **DISCOVER/DESIGN:** Ground the knowledge graph design in the SynCog arc as first instance. Decide: node types, credibility scoring model, graph storage format (must be human-readable + AI-parseable), traversal logic.
+1. **DISCOVER/DESIGN:** Ground the knowledge graph design in the a real project arc as first instance. Decide: node types, credibility scoring model, graph storage format (must be human-readable + AI-parseable), traversal logic.
 2. **IMPLEMENT:** Build `framework/skills/strategy/narrative-arc/SKILL.md`
-3. **VERIFY:** Test against SynCog arc — can it answer "what supports this claim" and "what would strengthen this objective"?
+3. **VERIFY:** Test against a real project arc — can it answer "what supports this claim" and "what would strengthen this objective"?
 
 Interface contract (already locked):
 - Given document/claim → objectives served, strengthens, weakens
@@ -181,7 +181,7 @@ Design spec section 5. Depends on narrative-arc (reads confidence levels from ar
 1. **IMPLEMENT:** Build `framework/skills/strategy/meeting-prep/SKILL.md`
 2. Stakeholder profiles in `strategy/meeting-prep/{name}.md`
 3. Post-meeting debrief → arc updates via narrative-arc skill
-4. **VERIFY:** Test with a real SynCog meeting scenario
+4. **VERIFY:** Test with a real a real meeting scenario
 
 ### B4: Update phase-skills.yaml for new skills
 
@@ -246,7 +246,7 @@ Phase C (polish)       → after B is complete, lower priority
 ## Dependencies
 
 - Phase A has no external dependencies — pure repo housekeeping
-- B2 (narrative-arc) needs a concrete instance to ground the design — SynCog arc is the intended first use
+- B2 (narrative-arc) needs a concrete instance to ground the design — a real project arc is the intended first use
 - B3 (meeting-prep) depends on B2 (reads from narrative-arc)
 - C2 depends on all of Phase B (need strategy skills to exist before documenting their gates)
 

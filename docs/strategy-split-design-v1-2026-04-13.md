@@ -133,7 +133,7 @@ Onboard unstructured files into the `strategy/` system. First skill built becaus
 ### Workflow
 
 ```
-1. User has files somewhere (e.g., ~/dev/syncog-general/)
+1. User has files somewhere (e.g., ~/dev/my-project-archive/)
 2. SweetClaude offers to copy them into strategy/reconciliation/
 3. Skill creates INVENTORY — every file catalogued:
    | File | Type | Topic | Category | Date | Summary | Recommendation |
@@ -170,7 +170,7 @@ Onboard unstructured files into the `strategy/` system. First skill built becaus
 ---
 status: deprecated
 incorporated_into: strategy/academic/cultivated-persona-paper-v1.0-canonical.md
-original_source: /Users/carsonsweet/dev/syncog-general/parts and fodder/beat-3.md
+original_source: /Users/me/dev/my-project-archive/parts and fodder/section-3.md
 archived_date: 2026-04-13
 category: academic
 ---
@@ -289,7 +289,7 @@ If academic source materials exist in `strategy/academic/` from reconciliation, 
 
 ### Design Scope
 
-Full design deferred to its own DESIGN cycle. The knowledge graph concept is architecturally significant — node types, credibility scoring, graph traversal, and storage format need dedicated discovery and design grounded in the SynCog arc as the first instance.
+Full design deferred to its own DESIGN cycle. The knowledge graph concept is architecturally significant — node types, credibility scoring, graph traversal, and storage format need dedicated discovery and design grounded in a real project arc as the first instance.
 
 ### Interface Contract (locked in now)
 

@@ -228,20 +228,20 @@ rag_exclusions:
 
 archive_sources:
   - date: 2026-04-20
-    source: syncog-archive
-    original_path: /Users/carsonsweet/dev/syncog-archive
+    source: project-archive
+    original_path: /Users/me/dev/project-archive
     reconciliation_complete: true
 
 promotions:
   - timestamp: 2026-04-14T15:30:00Z
-    source: strategy/concept/syncog-concept.md
-    target: corpus/canonical/strategic/syncog-concept.md
+    source: strategy/concept/project-concept.md
+    target: corpus/canonical/strategic/project-concept.md
     action: new
     indexed: true
 
 last_consolidate:
   timestamp: 2026-04-14T12:00:00Z
-  sources: [/Users/carsonsweet/dev/syncog-general, /Users/carsonsweet/dev/syncog-archive]
+  sources: [/Users/me/dev/project-general, /Users/me/dev/project-archive]
   files_copied: 847
   files_indexed: 812
   tokens_retained: 4200000
@@ -254,11 +254,11 @@ One sidecar per processed source file. Lives in `corpus/archive/` alongside the 
 
 ```json
 {
-  "source_path": "corpus/archive/2026-04-20-syncog-general/prd-syncog-2026-04-08.md",
+  "source_path": "corpus/archive/2026-04-20-project-general/prd-project-2026-04-08.md",
   "content_hash": "sha256:...",
   "reconciled_at": "2026-04-14T15:30:00Z",
-  "reconciled_by": "carson",
-  "canonical_documents": ["corpus/canonical/product/prd-syncog.md"],
+  "reconciled_by": "user",
+  "canonical_documents": ["corpus/canonical/product/prd-project.md"],
   "action": "merged",
   "notes": "Sections 1-3 merged; section 4 (abandoned auth model) discarded."
 }
@@ -394,7 +394,7 @@ Each project is an island for now. If shared content matters later, add `~/dev/_
 2. Integrate promote skill
 3. Add corpus preflight to session-preflight hook
 4. Update init skill to create `corpus/` structure and warn about distribution
-5. Test consolidate on SynCog (98M raw tokens, ~22K files)
+5. Test consolidate on a real project with a large corpus
 6. Iterate on triage and reconcile based on what consolidate produces
 7. Add reindex utility skill
 8. Add corpus-status detail skill

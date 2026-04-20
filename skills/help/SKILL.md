@@ -78,6 +78,14 @@ Design
   /sweetclaude:design/infra-design           Infrastructure and deployment
   /sweetclaude:design/manage-decisions       Record decisions with rationale
 
+Corpus Management
+  /sweetclaude:corpus-consolidate           Scan, deduplicate, copy into corpus/raw/inbox/
+  /sweetclaude:corpus-triage                Classify inbox files — keep, reconcile, discard, defer
+  /sweetclaude:corpus-reconcile             Draft and refine canonical documents from staged files
+  /sweetclaude:corpus-promote               Finalize — provenance, archive, RAG index
+  /sweetclaude:corpus-reindex               Rebuild RAG collections from source files
+  /sweetclaude:corpus-status                Pipeline state, file counts, next step
+
 Code
   /sweetclaude:code/tdd              TDD at 4 levels (hotfix through full from Gherkin)
   /sweetclaude:code/work-issue       Implement a GitHub issue end-to-end

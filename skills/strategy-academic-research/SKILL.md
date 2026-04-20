@@ -32,7 +32,7 @@ Six-phase pipeline from first principles to submission. Each phase has quality g
 
 ### Integration
 
-If canonical or canonical-draft documents exist in `strategy/academic/` for this topic (from reconciliation), read them as starting context. Do not start from zero if the corpus has material.
+If canonical or canonical-draft documents exist in `strategy/academic-research/` for this topic (from reconciliation), read them as starting context. Do not start from zero if the corpus has material.
 
 If `strategy/narrative-arc/` exists, check: does this paper serve an objective in the arc? What claims does it need to support?
 
@@ -249,9 +249,9 @@ After all sections are drafted:
 
 4. **Submit.** Follow the venue's submission process.
 
-5. **Post-submission.** Create a tracking document in `strategy/academic/`:
+5. **Post-submission.** Create a tracking document in `strategy/academic-research/`:
    ```
-   strategy/academic/{paper-slug}-submission-tracker.md
+   strategy/academic-research/{paper-slug}-submission-tracker.md
    ```
    Contents: submission date, venue, expected review timeline, reviewer feedback (when received), revision plan.
 
@@ -277,4 +277,4 @@ This skill reads the narrative arc but does not write to it.
 
 ## Reconciliation Integration
 
-If `strategy/academic/` contains files from reconciliation (versioned source materials, canonical-drafts, or canonical docs), read them as starting context for Phase 0. Don't start from zero if the corpus has material on this topic.
+If `strategy/academic-research/` contains files from reconciliation (versioned source materials, canonical-drafts, or canonical docs), read them as starting context for Phase 0. Don't start from zero if the corpus has material on this topic.
