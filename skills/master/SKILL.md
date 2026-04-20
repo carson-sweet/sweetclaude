@@ -163,12 +163,14 @@ When delegating to early-phase skills, set depth expectations:
 
 ## State Directory
 
-SweetClaude state lives in `.sweetclaude/` inside the project repo:
+SweetClaude state lives in `.sweetclaude/` inside the project repo. Content documents (specs, briefs, architecture) go in `docs/`. Strategy documents go in `strategy/`.
 ```
 .sweetclaude/
   state/           → phase.yaml, project.yaml, decision-log.md, assumption-register.md, improvement-register.md, scope-changes.md
   traceability/    → requirements-map.md, ripple-map.md
-  specs/           → product-brief.md, prd.md, architecture.md, tech-spec.md
   stories/         → EPIC-XXX/ with story files and .feature files
   brainstorm/      → session outputs
+  backlog/         → deferred work items
+docs/              → product-brief.md, prd.md, architecture.md, tech-spec.md, data-model.md, api-design.md
+strategy/          → concept/, pain-thesis/, ideal-customer-profile/, competitive-analysis/, etc.
 ```

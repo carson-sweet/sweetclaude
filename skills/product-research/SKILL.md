@@ -14,7 +14,7 @@ Research: $ARGUMENTS
 
 - Answer every research question with evidence and sources.
 - Flag unanswered questions as open items.
-- Save output to `brainstorm/` or `strategy/` in `.sweetclaude/` depending on topic.
+- Save output to `.sweetclaude/brainstorm/` for discovery-phase research, or `strategy/` (project root) for strategic research.
 - Use RAG index if available for project-specific context.
 
 ## Execute

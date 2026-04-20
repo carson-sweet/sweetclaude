@@ -45,4 +45,4 @@ Design infrastructure for: $ARGUMENTS
 
 ### 6. Save
 
-Save to `specs/infra-design.md`. Record key decisions via `design/manage-decisions`.
+Save to `docs/infra-design.md`. Record key decisions via `design/manage-decisions`.

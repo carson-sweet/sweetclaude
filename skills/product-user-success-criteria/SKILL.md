@@ -50,4 +50,4 @@ Read personas from `product/discovery` output or `strategy/ideal-customer-profil
 
 ### Save
 
-Save to `specs/user-success-criteria.md` in `.sweetclaude/`. These criteria are referenced by product/product-brief (success criteria section) and product/user-tdd-tests (drive Gherkin scenarios).
+Save to `docs/user-success-criteria.md`. These criteria are referenced by product/product-brief (success criteria section) and product/user-tdd-tests (drive Gherkin scenarios).

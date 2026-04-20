@@ -12,9 +12,9 @@ Design the system architecture for: $ARGUMENTS
 
 ## SweetClaude Context
 
-- Build on the PRD if one exists in `specs/prd.md`
+- Build on the PRD if one exists in `docs/prd.md`
 - Record key decisions via `design/manage-decisions`
-- Save output to `specs/architecture.md` in `.sweetclaude/`
+- Save output to `docs/architecture.md`
 - Run `design/change-impact-analysis` if modifying an existing architecture
 
 ## Execute
