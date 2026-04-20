@@ -63,4 +63,4 @@ Read relevant user stories from `stories/` and personas from product/discovery o
 
 ### Save
 
-Save to `specs/workflows/` in `.sweetclaude/`. These feed into design/ux and product/user-tdd-tests.
+Save to `docs/workflows/`. These feed into design/ux and product/user-tdd-tests.

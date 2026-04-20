@@ -73,12 +73,12 @@ Check that artifacts are where SweetClaude expects them:
 | Expected Location | Check |
 |---|---|
 | `.sweetclaude/state/` | phase.yaml, project.yaml, decision-log, assumption-register, improvement-register, scope-changes |
-| `.sweetclaude/specs/` | product-brief, prd, architecture, tech-spec (if they exist anywhere in the project) |
+| `docs/` | product-brief, prd, architecture, tech-spec, data-model, api-design, workflows (if they exist anywhere in the project) |
 | `.sweetclaude/stories/` | user stories and .feature files (if they exist) |
 | `.sweetclaude/traceability/` | requirements-map, ripple-map |
 | `strategy/` | concept, pain-thesis, ICP, competitive, etc. (at project root, NOT inside .sweetclaude/) |
 
-If artifacts exist but in the wrong location (e.g., specs at `docs/` instead of `.sweetclaude/specs/`):
+If artifacts exist but in the wrong location (e.g., specs at `.sweetclaude/specs/` instead of `docs/`):
 
 Use AskUserQuestion with these options:
 - "Move it" — relocate {artifact} from {actual location} to {expected location}

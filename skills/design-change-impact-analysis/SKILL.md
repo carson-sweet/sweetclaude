@@ -37,7 +37,7 @@ Analyze the impact of changing: $ARGUMENTS
    - Does the README reference this behavior?
    - Does CLAUDE.md reference this?
    - Do any ADRs depend on this decision?
-   - Does the `.sweetclaude/specs/` PRD or tech spec reference this?
+   - Does the `docs/` PRD or tech spec reference this?
 
 6. **Present impact summary:**
    ```

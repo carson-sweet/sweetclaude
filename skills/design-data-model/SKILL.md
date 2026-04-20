@@ -12,7 +12,7 @@ Design the data model for: $ARGUMENTS
 
 ## Context
 
-Read architecture doc and tech spec from `specs/` if they exist. Read existing schema if the project has a database.
+Read architecture doc and tech spec from `docs/` if they exist. Read existing schema if the project has a database.
 
 ## Process
 
@@ -54,4 +54,4 @@ If modifying an existing schema:
 
 ### 5. Save
 
-Save to `specs/data-model.md` in `.sweetclaude/`. Record key decisions via `design/manage-decisions`.
+Save to `docs/data-model.md`. Record key decisions via `design/manage-decisions`.

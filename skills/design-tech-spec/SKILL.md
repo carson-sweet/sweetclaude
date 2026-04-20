@@ -12,8 +12,8 @@ Produce a technical specification for: $ARGUMENTS
 
 ## SweetClaude Context
 
-- Build on architecture doc if one exists in `specs/architecture.md`
-- Save output to `specs/tech-spec.md` in `.sweetclaude/`
+- Build on architecture doc if one exists in `docs/architecture.md`
+- Save output to `docs/tech-spec.md`
 - Record key decisions via `design/manage-decisions`
 
 ## Execute

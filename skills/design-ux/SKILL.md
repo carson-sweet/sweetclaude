@@ -14,7 +14,7 @@ Design the user experience for: $ARGUMENTS
 
 - Reference personas from `product/discovery` if they exist
 - Reference user workflows from `product/user-workflows` if they exist
-- Save output to `specs/ux-design.md` in `.sweetclaude/`
+- Save output to `docs/ux-design.md`
 
 ## Execute
 

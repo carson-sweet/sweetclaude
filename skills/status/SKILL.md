@@ -27,9 +27,9 @@ Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Extract:
 2. **Uncommitted state** — any uncommitted files in `.sweetclaude/`? Recent decision log entries?
 3. **Improvement register** — any learnings from previous sessions?
 4. **Open artifacts** — check for:
-   - In-progress specs in `specs/`
-   - Incomplete stories in `stories/`
-   - Brainstorm outputs in `brainstorm/`
+   - In-progress specs in `docs/`
+   - Incomplete stories in `.sweetclaude/stories/`
+   - Brainstorm outputs in `.sweetclaude/brainstorm/`
    - Strategy artifacts in `strategy/`
 
 ### Step 3: Present status

@@ -12,10 +12,10 @@ Produce a Product Requirements Document for: $ARGUMENTS
 
 ## SweetClaude Context
 
-- Build on the product brief if one exists in `specs/product-brief.md`.
+- Build on the product brief if one exists in `docs/product-brief.md`.
 - Each FR has testable acceptance criteria.
 - Each success criterion is evaluable as true/false after ship.
-- Save output to `specs/prd.md` in `.sweetclaude/`.
+- Save output to `docs/prd.md`.
 
 ## Execute
 

@@ -12,7 +12,7 @@ Design the API for: $ARGUMENTS
 
 ## Context
 
-Read architecture doc, data model, and user stories from `specs/` and `stories/`.
+Read architecture doc, data model, and user stories from `docs/` and `.sweetclaude/stories/`.
 
 ## Process
 
@@ -58,4 +58,4 @@ Response 5xx:
 
 ### 4. Save
 
-Save to `specs/api-design.md`. Record key decisions via `design/manage-decisions`.
+Save to `docs/api-design.md`. Record key decisions via `design/manage-decisions`.

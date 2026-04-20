@@ -12,7 +12,7 @@ Design service boundaries for: $ARGUMENTS
 
 ## Context
 
-Read architecture doc from `specs/`. This skill fills in the service-level detail that the architecture doc outlines at a higher level.
+Read architecture doc from `docs/`. This skill fills in the service-level detail that the architecture doc outlines at a higher level.
 
 ## Process
 
@@ -40,4 +40,4 @@ For each service-to-service interaction:
 
 ### 4. Save
 
-Save to `specs/services-design.md`. Record key decisions via `design/manage-decisions`.
+Save to `docs/services-design.md`. Record key decisions via `design/manage-decisions`.

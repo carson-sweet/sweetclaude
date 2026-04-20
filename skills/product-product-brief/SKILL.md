@@ -17,7 +17,7 @@ Before invoking BMAD:
 - Probe vague answers with follow-ups before moving on.
 - This is a discovery conversation, not a form to fill.
 - After generating the document, run the BMAD validation checklist.
-- Save output to `specs/product-brief.md` in `.sweetclaude/`.
+- Save output to `docs/product-brief.md`.
 
 ## Execute
 
