@@ -179,3 +179,46 @@ Dropped:
    - Append a Changelog row: "{date} — Removed {work-item-ref} (relinked to {new MS})."
 8. Append a Changelog row to the new milestone file: "{date} — Linked {work-item-ref}."
 9. Tell the user: "Linked {work-item-ref} to MS-XXX. {if relinked: 'Removed from {old MS}.'}"
+
+### `status <MS-XXX>` — Detail view
+
+1. Read `docs/milestones/MS-XXX-*.md`. If missing, tell user and stop.
+2. For each item in `## Measuring success`:
+   - If the item references an artifact path (pattern: backtick-wrapped path like `` `strategy/narrative-arc.md` ``), read that file. Determine "met" using the finalization convention (see Open Items — default: file exists and its first heading is not `# DRAFT`).
+   - Otherwise, use the checkbox state directly (`- [x]` met, `- [ ]` not met).
+3. For each item in `## Contributing work items`, read the work-item file and classify:
+   - **done**: work item's own status marker says completed/done/merged.
+   - **in-progress**: marker says active/in-progress.
+   - **pending**: no active marker.
+   - **unknown**: file missing or no marker — flag with `?`.
+4. Render:
+
+```
+MS-001: Exit Stealth
+Status: active  |  Owner: Carson
+Depends on: (none)
+
+Outcome:
+One paragraph...
+
+Measuring success:
+  [x] Criterion 1
+  [ ] Criterion 2
+  [x] strategy/narrative-arc.md finalized
+  [ ] strategy/market-messaging.md finalized
+
+Non-goals:
+  - Not a self-serve launch
+  - Not a pricing change
+
+Contributing work items:
+  US-012  (done)        Landing page redesign
+  US-015  (in-progress) Press kit generator
+  BL-007  (pending)     Analytics tracking
+
+Recent notes:
+  2026-04-18 — Narrative arc finalized.
+  2026-04-10 — Decided to split press kit from landing page.
+```
+
+5. "Recent notes" shows the last 3 Notes entries (by date if dated, otherwise by file order).
