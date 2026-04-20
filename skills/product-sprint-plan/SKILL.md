@@ -18,4 +18,19 @@ Plan a sprint for: $ARGUMENTS
 
 ## Execute
 
-Invoke `bmad:sprint-planning` and follow its workflow.
+1. Invoke `bmad:sprint-planning` and follow its workflow.
+2. After the sprint commitment is finalized, read each selected story's `**Milestone:**` header from its file.
+3. Aggregate and report:
+
+   ```
+   Sprint advances:
+     MS-001 Exit Stealth   2 stories
+     MS-003 MVP Shipped    1 story
+   Unassigned: 1 story
+   ```
+
+4. If more than 50% of sprint stories are unassigned to any milestone, flag it:
+
+   > "{N} of {total} stories have no milestone. This sprint may be unfocused. Consider running `/sweetclaude:milestones unassigned` to triage, or confirm the sprint is intentionally tactical."
+
+5. If no milestones exist at all, skip this step silently — no milestones is not a sprint-planning problem.
