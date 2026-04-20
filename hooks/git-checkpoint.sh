@@ -34,7 +34,7 @@ fi
 if ! git diff --cached --quiet 2>/dev/null; then
   git commit -m "$MESSAGE
 
-Co-Authored-By: SweetClaude <noreply@sweetclaude.dev>" 2>/dev/null
+Co-Authored-By: Claude <noreply@anthropic.com>" 2>/dev/null
   echo "Checkpoint committed: $MESSAGE" >&2
 fi
 
