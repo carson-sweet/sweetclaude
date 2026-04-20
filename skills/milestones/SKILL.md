@@ -86,3 +86,34 @@ Free-form log of decisions, scope changes, blockers encountered.
 | `achieved`   | All criteria met; user confirmed. Terminal state.                        |
 | `dropped`    | Abandoned with rationale in Notes. Terminal state.                       |
 | `superseded` | Replaced by a newer milestone. Links to successor in Notes. Terminal.    |
+
+## Operations
+
+### `add` — Create a new milestone
+
+1. Read `docs/milestones/MILESTONES-INDEX.md`. If it does not exist, create it with this header:
+
+```markdown
+# Milestones Index
+
+| ID | Title | Status | Owner | Short summary |
+|----|-------|--------|-------|---------------|
+```
+
+2. Find the highest existing `MS-XXX` in the index. Increment by 1. If the index is empty, start at `MS-001`.
+3. Ask the user (one question at a time, per SweetClaude interaction model):
+   - Title (short, descriptive, 2-5 words)
+   - Outcome (one paragraph — what "achieved" looks like)
+   - Measuring success criteria: ask for a list. For each criterion, offer: "Link this to a canonical artifact path? (optional, e.g. `strategy/narrative-arc.md`)"
+   - Non-goals: require at least one. If the user offers none, prompt: "What is this milestone explicitly NOT? A non-goals list with zero items is a scope red flag."
+   - Depends on: list of other MS-XXX refs (optional)
+   - Owner: default to the value of `owner` in `.sweetclaude/state/phase.yaml` if present; otherwise prompt.
+4. Default `Status:` to `proposed`. Ask the user only if they indicate otherwise.
+5. Write the file at `docs/milestones/MS-XXX-<slug>.md` using the milestone template from the previous section, filling in all fields. `<slug>` is a dash-lowercased version of the title (e.g., "Exit Stealth" → `exit-stealth`).
+6. Append a row to `MILESTONES-INDEX.md`:
+
+```
+| MS-XXX | [Title](MS-XXX-slug.md) | proposed | Owner | One-sentence outcome summary |
+```
+
+7. Tell the user: "Added MS-XXX: {title}. Status: proposed. File: docs/milestones/MS-XXX-{slug}.md"
