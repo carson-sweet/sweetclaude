@@ -27,3 +27,62 @@ Classify the invocation by the first word of `$ARGUMENTS`:
 | `unassigned` | Find work items with no milestone |
 
 If `$ARGUMENTS` is empty or doesn't match, default to `review`.
+
+## Storage
+
+```
+docs/milestones/
+  MILESTONES-INDEX.md       Master index (one row per milestone)
+  MS-001-short-name.md      One file per milestone
+  MS-002-short-name.md
+  ...
+```
+
+- IDs are `MS-XXX`. Read the index, find the highest number, increment by 1.
+- IDs are permanent. Never renumber. Gaps are fine.
+
+## Milestone file template
+
+```markdown
+# MS-XXX: Title
+
+**Status:** proposed | active | achieved | dropped | superseded
+**Owner:** [name/role]
+**Depends on:** (other MS-XXX refs, if any)
+
+## Outcome
+One paragraph describing what this milestone represents and why it matters.
+
+## Measuring success
+- [ ] Criterion 1 (each evaluable as true/false)
+- [ ] Criterion 2
+- [ ] Criterion linked to artifact: `strategy/narrative-arc.md` finalized
+
+## Non-goals
+- What this milestone is explicitly NOT
+- Second explicit exclusion
+
+## Contributing work items
+- US-012 — Landing page redesign
+- BL-007 — Analytics tracking
+
+## Notes
+Free-form log of decisions, scope changes, blockers encountered.
+
+---
+
+## Changelog
+| Version | Date       | Change summary       |
+|---------|------------|----------------------|
+| 1.0     | YYYY-MM-DD | Initial draft        |
+```
+
+## Status taxonomy
+
+| Status       | Meaning                                                                  |
+|--------------|--------------------------------------------------------------------------|
+| `proposed`   | Drafted, not yet committed. Appears in "Later".                          |
+| `active`     | Currently being driven. Appears in "Now". Can be multiple.               |
+| `achieved`   | All criteria met; user confirmed. Terminal state.                        |
+| `dropped`    | Abandoned with rationale in Notes. Terminal state.                       |
+| `superseded` | Replaced by a newer milestone. Links to successor in Notes. Terminal.    |
