@@ -222,3 +222,29 @@ Recent notes:
 ```
 
 5. "Recent notes" shows the last 3 Notes entries (by date if dated, otherwise by file order).
+
+### `blockers <MS-XXX>` — What is stopping us
+
+1. Read the milestone file. If missing, tell user and stop.
+2. Compute:
+   - **Unmet criteria:** each `- [ ]` line under Measuring success, and each artifact-reference criterion where the artifact is not finalized.
+   - **Open work items:** each item under Contributing work items that is not in `done` state (same classification as `status`).
+   - **Unmet dependencies:** each MS-XXX in Depends on whose Status is not `achieved`.
+3. Render:
+
+```
+Blockers for MS-001 Exit Stealth:
+
+Unmet criteria (2):
+  - Criterion 2
+  - strategy/market-messaging.md finalized
+
+Open work items (2):
+  US-015  (in-progress) Press kit generator
+  BL-007  (pending)     Analytics tracking
+
+Dependencies not met (1):
+  MS-000  Company name finalized  (status: proposed)
+```
+
+4. If nothing is blocking, say: "Nothing is blocking MS-XXX. All criteria met, all contributing work items done, all dependencies achieved. Run `/sweetclaude:milestones complete MS-XXX` to mark it achieved."
