@@ -31,6 +31,7 @@ Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Extract:
    - Incomplete stories in `.sweetclaude/stories/`
    - Brainstorm outputs in `.sweetclaude/brainstorm/`
    - Strategy artifacts in `strategy/`
+5. **Active milestones** — scan `docs/milestones/MS-*.md`. For each with `**Status:** active`, compute the `n/N criteria met` count from Measuring-success checkboxes.
 
 ### Step 3: Present status
 
@@ -50,6 +51,11 @@ Done:
 In progress:
   - {artifact or task currently open}
   - ...
+
+Active milestones:
+  - {MS-XXX Title        n/N criteria met}
+  - {MS-XXX Title        n/N criteria met — ready to complete if all met}
+  (omit this section if no milestones are active)
 
 Next:
   → {the logical next step based on phase, open artifacts, and exit criteria}
