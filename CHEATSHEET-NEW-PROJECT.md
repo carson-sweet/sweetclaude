@@ -112,7 +112,12 @@ These are not part of the automatic flow. They are available anytime.
 - **Narrative arc** (`/sweetclaude:strategy-narrative-arc`) — build a knowledge graph connecting your claims, evidence, and objectives
 - **Decision tracking** (`/sweetclaude:design-manage-decisions`) — record any decision with context and rationale, queryable later
 - **Positioning statement** (`/sweetclaude:product-positioning-statement`) — for/who/that/unlike framework
-- **Document reconciliation** (via `/sweetclaude:init` onboarding) — if you have messy files from brainstorming sessions, Claude.ai exports, or Google Drive, SweetClaude can inventory, categorize, and organize them into a structured corpus
+- **Corpus pipeline** — organize messy files into canonical documents with full provenance:
+  - `/sweetclaude:corpus-consolidate` — scan, deduplicate, ingest into corpus
+  - `/sweetclaude:corpus-triage` — classify files (keep, reconcile, discard, defer)
+  - `/sweetclaude:corpus-reconcile` — draft and refine canonical documents
+  - `/sweetclaude:corpus-promote` — finalize with provenance, archive, RAG index
+  - `/sweetclaude:corpus-status` — see where the pipeline stands
 - **RAG search** (`/sweetclaude:rag-index`) — set up semantic search over your project documents so you can query by meaning, not just keywords
 
 ## Tips

@@ -1,6 +1,10 @@
 <p>
-  <img src="sweetclaude.png" alt="SweetClaude" width="300" align="right">
+  <img src="sweetclaude.png" alt="SweetClaude" width="180" align="left">
 </p>
+
+
+
+
 
 
 
@@ -10,11 +14,11 @@
 
 # SweetClaude
 
-An end-to-end development framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation in between.
+An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
-SweetClaude is a Claude Code plugin with 52 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude is a Claude Code plugin with 58 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
-Built by a solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete.
+Built by a solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
 
 ## What SweetClaude Does
 
@@ -28,6 +32,10 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 **Code** — Test-driven development at four enforcement levels. At the highest level, a test-writer agent and an implementer agent work in separate contexts — the implementer never sees the spec, only the tests. Test files are physically blocked from modification during implementation. Tests run automatically after every edit.
 
+**Corpus Management** — Projects accumulate documents across folders, Claude.ai sessions, and external tools. SweetClaude's corpus pipeline takes messy files through a four-step process — consolidate (scan, deduplicate, ingest), triage (classify), reconcile (draft and refine canonical documents with the user), and promote (finalize with provenance tracking, archival, and RAG indexing). A state machine enforces ordering so nothing gets corrupted. Every canonical document traces back to its source files.
+
+**Semantic Search (RAG)** — Index your project documents for search by meaning, not just keywords. SweetClaude sets up a local RAG system using [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) — a per-project vector database that runs on your machine with no external services. Supports PDF, Word, markdown, and text files. The embedding model downloads once (~90MB) then works offline. The corpus pipeline's promote step automatically indexes canonical documents into the RAG system so your best, most current documents are always searchable.
+
 **Review and Ship** — Adversarial code review, security testing, mutation testing to verify your tests actually catch bugs, pre-PR quality gates, and documentation updates.
 
 ## Getting Started
@@ -39,6 +47,7 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 | [Claude Code](https://claude.ai/code) | `claude --version` | [Install guide](https://docs.anthropic.com/en/docs/claude-code/getting-started) |
 | Git | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
 | [GitHub CLI](https://cli.github.com/) | `gh --version` | `brew install gh` or [cli.github.com](https://cli.github.com/) |
+| Node.js (for RAG) | `node --version` | [nodejs.org](https://nodejs.org/) — optional, needed for `/sweetclaude:rag-index` |
 
 ### Install
 
@@ -52,7 +61,7 @@ Then start Claude Code with the plugin loaded:
 claude --plugin-dir /path/to/sweetclaude
 ```
 
-All 52 skills are immediately available as `/sweetclaude:skill-name` commands.
+All 58 skills are immediately available as `/sweetclaude:skill-name` commands.
 
 ### Things to Try First
 
@@ -68,13 +77,15 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 **Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
 
-**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, run `/sweetclaude:init` in the project and tell it you have files to onboard. It copies them (originals untouched), then you can run the reconciliation skill to inventory, categorize, and synthesize them into an organized corpus.
+**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, run `/sweetclaude:init` in the project and tell it you have files to onboard. It copies them into `corpus/raw/inbox/` (originals untouched). Then work through the corpus pipeline: `/sweetclaude:corpus-consolidate` to deduplicate, `/sweetclaude:corpus-triage` to classify, `/sweetclaude:corpus-reconcile` to draft canonical documents, and `/sweetclaude:corpus-promote` to finalize with provenance tracking. Run `/sweetclaude:corpus-status` anytime to see where you are.
 
 **Check the status of a project SweetClaude already knows about.** If you have already run init on a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
 
 **Run a competitive landscape scan.** In any project, run `/sweetclaude:strategy-competitive-analysis` and describe your space. SweetClaude researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond init.
 
 **Get a code review.** On any project with code, run `/sweetclaude:code-code-review`. It reads your recent changes and gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
+
+**Set up semantic search.** Run `/sweetclaude:rag-index` in any project. It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
 
 ### Your First Session
 
@@ -145,7 +156,13 @@ Run `/sweetclaude:strategy-academic-research`. Six-phase pipeline: establish you
 
 ### "I have a pile of messy strategy files from various sessions"
 
-Run `/sweetclaude:init` and point it at the files. It copies them into a reconciliation directory. Then run the reconciliation skill to inventory every file, categorize them, and optionally synthesize organized canonical documents.
+Run `/sweetclaude:init` and point it at the files. It copies them into `corpus/raw/inbox/`. Then work through the corpus pipeline:
+1. `/sweetclaude:corpus-consolidate` — scan, deduplicate, generate a plan, copy unique files in batches
+2. `/sweetclaude:corpus-triage` — classify each file as keep, reconcile, discard, or defer
+3. `/sweetclaude:corpus-reconcile` — draft and refine canonical documents from the classified files
+4. `/sweetclaude:corpus-promote` — finalize with provenance sidecars, archive sources, index into RAG
+
+Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 
 ## All Commands
 
@@ -211,6 +228,21 @@ Run `/sweetclaude:init` and point it at the files. It copies them into a reconci
 | `/sweetclaude:design-infra-design` | Infrastructure and deployment |
 | `/sweetclaude:design-manage-decisions` | Record decisions with rationale |
 
+### Corpus Management
+| Command | What it does |
+|---|---|
+| `/sweetclaude:corpus-consolidate` | Scan directories, deduplicate, copy into corpus/raw/inbox/ |
+| `/sweetclaude:corpus-triage` | Classify inbox files for reconciliation, archival, or deferral |
+| `/sweetclaude:corpus-reconcile` | Draft and refine canonical documents from staged files |
+| `/sweetclaude:corpus-promote` | Finalize approved documents — provenance, archive, RAG index |
+| `/sweetclaude:corpus-reindex` | Rebuild RAG collections from source files |
+| `/sweetclaude:corpus-status` | Show pipeline state, file counts, and next step |
+
+### Semantic Search
+| Command | What it does |
+|---|---|
+| `/sweetclaude:rag-index` | Set up local RAG and index project documents (PDF, Word, markdown, text) |
+
 ### Code
 | Command | What it does |
 |---|---|
@@ -225,7 +257,7 @@ Run `/sweetclaude:init` and point it at the files. It copies them into a reconci
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. When you load it with `--plugin-dir`, all 52 skills become available as slash commands. Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. When you load it with `--plugin-dir`, all 58 skills become available as slash commands. Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 
@@ -237,6 +269,10 @@ SweetClaude is a Claude Code plugin. When you load it with `--plugin-dir`, all 5
 - **Autonomous** — stops only at phase gates
 
 **TDD enforcement.** During implementation, hooks physically block test file modifications. Tests run automatically after every source edit. At higher TDD levels, the test writer and implementer are separate AI agents that cannot see each other's reasoning.
+
+**Corpus management.** The corpus pipeline organizes scattered documents into searchable canonical truth. A state machine enforces the four-step ordering (consolidate → triage → reconcile → promote) so files cannot be processed out of order. Every canonical document has provenance sidecars tracing it back to source files. Originals are never deleted.
+
+**Semantic search.** The RAG system uses [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) to run a per-project vector database locally. No external services, no API keys, no data leaving your machine. The embedding model downloads once and works offline. The corpus pipeline's promote step indexes canonical documents automatically, and `/sweetclaude:rag-index` handles standalone indexing for any project. Supports PDF, Word (.docx), markdown, and text files.
 
 **Language agnostic.** SweetClaude discovers your project's language, framework, test runner, and build tools automatically. It works with TypeScript, Python, Go, Rust, Java, or anything else.
 
@@ -260,7 +296,6 @@ Contributions welcome. SweetClaude is built by solo developers, for solo develop
 <p>
   <img src="sweetclaude-workshop.png" alt="SweetClaude Workshop" width="600" align="left">
 </p>
-
 
 
 
