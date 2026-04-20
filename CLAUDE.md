@@ -24,7 +24,6 @@
 ## Git workflow
 
 - Conventional commit format, no emoji.
-- Include `Co-Authored-By: Claude` attribution in commit footers.
 - Follow each project's branching strategy.
 
 ## Code quality
