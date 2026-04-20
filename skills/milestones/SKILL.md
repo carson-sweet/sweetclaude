@@ -248,3 +248,36 @@ Dependencies not met (1):
 ```
 
 4. If nothing is blocking, say: "Nothing is blocking MS-XXX. All criteria met, all contributing work items done, all dependencies achieved. Run `/sweetclaude:milestones complete MS-XXX` to mark it achieved."
+
+### `complete <MS-XXX>` — Mark achieved and chain follow-ups
+
+1. Read the milestone file. If missing, tell user and stop.
+2. If current Status is already terminal (`achieved`, `dropped`, `superseded`), tell the user and stop. Do not transition from a terminal state.
+3. Evaluate criteria (same logic as `status`):
+   - If any criterion is unmet, list them.
+   - Ask: "These criteria are not met: {list}. Proceed with explicit waiver?"
+   - If the user declines, stop without changes.
+   - If the user accepts, prompt: "Waiver rationale?" Append to `## Notes`: `{date} — Completion waiver: {rationale}. Unmet at completion: {list}.`
+4. Evaluate contributing work items:
+   - If any are not in `done` state, list them.
+   - Ask: "These contributing work items are not done: {list}. Continue?"
+   - If no, stop. If yes, proceed.
+5. Set `**Status:**` to `achieved`.
+6. Append Changelog row: `{date} — Marked achieved. {if waived: 'Waived N criteria — see Notes.'}`
+7. Update `MILESTONES-INDEX.md`: change the status column for this milestone to `achieved`.
+8. **Follow-up chain.** Ask the user:
+
+```
+Milestone achieved. Any follow-ups to capture?
+
+Categories:
+  - incomplete_scope — parts deferred from this milestone
+  - next_steps      — what users will want next
+  - tech_debt       — shortcuts taken that should be paid back
+  - test_gaps       — missing test coverage uncovered during the work
+
+List each follow-up as: "<category>: <short title>". Enter blank line when done.
+```
+
+9. For each follow-up entered, invoke `sweetclaude:product/backlog` with arguments that route to its `add` flow. Pass the category as context. Do not inline the backlog-add logic — delegate. If the user indicated a strategic item, the backlog skill's existing router will redirect to `strategy/`.
+10. Tell the user: "MS-XXX marked achieved. {N} follow-ups filed."
