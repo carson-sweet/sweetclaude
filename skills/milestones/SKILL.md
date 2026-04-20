@@ -305,3 +305,34 @@ Backlog (3):
 
 4. Tell the user: "These have no milestone. Either link them to a milestone (`/sweetclaude:milestones link <item> <MS-XXX>`) or confirm they are distractions / out of roadmap. Not doing anything is also fine — this check is advisory."
 5. Do not force action. Do not modify files. Surface only.
+
+## Integration protocol
+
+The milestones skill is the single source of truth for milestone data. Other skills should follow this protocol rather than writing their own milestone logic:
+
+- **`sweetclaude:product/user-story`**: after creating a story, prompt "Assign this story to a milestone? [list of active + proposed milestones, or 'none / later']". On user selection, invoke `sweetclaude:milestones link <US-XXX> <MS-XXX>`.
+- **`sweetclaude:product/sprint-plan`**: after stories are chosen for a sprint, read each story's `**Milestone:**` header. Report which milestones the sprint advances and count unassigned stories. If > 50% of sprint stories are unassigned, flag it as a scope concern.
+- **`sweetclaude:status`**: in the orient view, include an "Active milestones" section showing each `active` milestone with its criterion-met count.
+
+Strategy skills (`strategy/narrative-arc`, `strategy/market-messaging`, etc.) are **not modified**. Milestones reference their canonical artifacts by path as Measuring-success criteria; the milestones skill reads those files directly.
+
+The `product/backlog` skill is not modified, but is invoked indirectly by the `complete` operation's follow-up chain.
+
+## Rules / Invariants
+
+- Every milestone has its own file under `docs/milestones/`. The index is an index only.
+- `MS-XXX` IDs are permanent. Never renumber. Gaps are fine.
+- Bidirectional links must stay consistent. `link` updates both sides. Any skill that adds or removes a work item from a milestone must do the same.
+- Terminal states (`achieved`, `dropped`, `superseded`) are never edited back to non-terminal. To re-activate a deprecated goal, create a new milestone that references the old one in its Notes.
+- No derived state file. Progress is recomputed on every read by scanning files.
+- Non-goals are not optional. Every milestone must have at least one explicit exclusion under `## Non-goals`.
+- No time estimates. Status taxonomy and Now/Next/Later bucketing replace date-based roadmapping.
+
+## Open items (tracked in design spec)
+
+These are documented in `docs/milestones-skill-design-v1-2026-04-20.md` as open for a follow-up iteration:
+
+- Canonical-artifact finalization convention (front-matter field vs path vs registry).
+- Next-bucket promotion mechanism for `proposed` milestones.
+- Bulk-link operation (defer until single-item link proves tedious).
+- Whether to archive `achieved` milestones to `docs/milestones/archive/`.
