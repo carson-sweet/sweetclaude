@@ -281,3 +281,27 @@ List each follow-up as: "<category>: <short title>". Enter blank line when done.
 
 9. For each follow-up entered, invoke `sweetclaude:product/backlog` with arguments that route to its `add` flow. Pass the category as context. Do not inline the backlog-add logic — delegate. If the user indicated a strategic item, the backlog skill's existing router will redirect to `strategy/`.
 10. Tell the user: "MS-XXX marked achieved. {N} follow-ups filed."
+
+### `unassigned` — Hygiene check
+
+1. Scan work-item files:
+   - Stories: `stories/**/US-*.md` and `.sweetclaude/stories/**/US-*.md`.
+   - Backlog: `docs/backlog/BL-*.md`.
+2. For each file, check for a `**Milestone:**` header line.
+3. Group items with no header by type:
+
+```
+Unassigned work items (5):
+
+Stories (2):
+  US-008  Onboarding email flow
+  US-011  Usage dashboard
+
+Backlog (3):
+  BL-003  Migrate to Postgres
+  BL-005  Add rate limiting
+  BL-009  Vendor management page
+```
+
+4. Tell the user: "These have no milestone. Either link them to a milestone (`/sweetclaude:milestones link <item> <MS-XXX>`) or confirm they are distractions / out of roadmap. Not doing anything is also fine — this check is advisory."
+5. Do not force action. Do not modify files. Surface only.
