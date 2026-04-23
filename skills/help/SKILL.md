@@ -38,6 +38,7 @@ Orchestration
   /sweetclaude:init           Set up SweetClaude for this project
   /sweetclaude:new-task       Classify work and enter the pipeline
   /sweetclaude:fix-config     Audit and repair SweetClaude configuration
+  /sweetclaude:update-skills       Sync latest from GitHub — update all projects
   /sweetclaude:hibernate      Freeze or thaw a project
 
 Strategy
