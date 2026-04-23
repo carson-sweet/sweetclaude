@@ -4,17 +4,22 @@ You have an idea. Maybe it is well-formed, maybe it is a napkin sketch. SweetCla
 
 ## Before You Start
 
-1. Create an empty folder for your project
-2. Start Claude Code with SweetClaude loaded:
+1. Install SweetClaude (if you have not already):
    ```bash
-   claude --plugin-dir /path/to/sweetclaude
+   git clone https://github.com/carson-sweet/sweetclaude.git
+   cd sweetclaude
+   ./install.sh                      # full install
+   ./install.sh --strategy-skills-only  # or strategy/product skills only
    ```
+2. Create an empty folder for your project and open Claude Code in it
 3. Run:
    ```
    /sweetclaude:sherpa-start
    ```
 
 That is it. SweetClaude takes over from here and walks you through each step.
+
+> **Quick try without installing:** `claude --plugin-dir /path/to/sweetclaude` loads all skills for a single session.
 
 ## What Happens Next
 

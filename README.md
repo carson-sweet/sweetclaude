@@ -11,7 +11,7 @@
 
 An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
-SweetClaude is a Claude Code plugin with 60 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude is a Claude Code plugin with 61 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
 Built by an enterprise CTO/CISO turned solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
 
@@ -59,14 +59,14 @@ cd sweetclaude
 ```
 
 The installer:
-- Checks prerequisites (Claude Code, Git, Superpowers, BMAD)
+- Checks prerequisites (Claude Code, Git; Superpowers and BMAD for full install only)
 - Backs up your existing `~/.claude/` configuration
 - Scans for conflicting plugins and offers to clean them up
 - Copies skills, hooks, agents, rules, and config to `~/.claude/`
 - Wires TDD enforcement hooks into `settings.json`
 - Generates `uninstall.sh` and `restore-config.sh` for clean removal
 
-After install, all 60 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
+After install, all 61 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
 
 #### Strategy Skills Only
 
@@ -298,7 +298,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. After running the installer, all 60 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. After running the installer, all 61 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 
