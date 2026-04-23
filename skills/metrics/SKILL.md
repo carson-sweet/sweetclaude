@@ -22,6 +22,7 @@ Parse the user's input to determine the subcommand:
 1. Create `.sweetclaude/metrics/` directory if it doesn't exist.
 2. Write `.sweetclaude/metrics/config.yaml`:
    ```yaml
+   schema_version: 1
    enabled: true
    enabled_at: {ISO 8601 timestamp}
    ```
@@ -42,6 +43,7 @@ Parse the user's input to determine the subcommand:
 
 1. Update `.sweetclaude/metrics/config.yaml`:
    ```yaml
+   schema_version: 1
    enabled: false
    disabled_at: {ISO 8601 timestamp}
    ```
