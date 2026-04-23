@@ -1,5 +1,6 @@
 # SweetClaude Defaults
 # User-configurable defaults for SweetClaude behavior.
+schema_version: 1
 
 # Deference level at session start: collaborative, guided, or autonomous
 # User is asked at session start and can change mid-stream.

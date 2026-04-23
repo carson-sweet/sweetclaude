@@ -2,6 +2,7 @@
 # Five domain buckets: strategy, product, design, code, deploy.
 # The new-task and auto-flow skills classify work into a bucket
 # and surface appropriate skills.
+schema_version: 1
 
 always_loaded:
   skills:
