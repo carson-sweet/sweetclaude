@@ -365,6 +365,7 @@ Check everything:
 Report:
 ```
 SweetClaude initialized.
+═══════════════════════
 
 Project:    {project-path}
 State:      .sweetclaude/

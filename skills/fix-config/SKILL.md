@@ -123,14 +123,15 @@ Present a summary:
 
 ```
 SweetClaude Config Audit — {project}
+═════════════════════════════════════
 
-Phase state:    {correct | stale → recommended fix}
-CLAUDE.md:      {accurate | {N} issues found}
-File locations: {correct | {N} misplaced artifacts}
-Registers:      {populated | empty on active project}
-Git tracking:   {clean | {N} untracked files}
+Phase state:    {✓ correct | ⚠ stale → recommended fix}
+CLAUDE.md:      {✓ accurate | ⚠ {N} issues found}
+File locations: {✓ correct | ⚠ {N} misplaced artifacts}
+Registers:      {✓ populated | ⚠ empty on active project}
+Git tracking:   {✓ clean | ⚠ {N} untracked files}
 
-Proposed fixes: {N}
+→ Proposed fixes: {N}
 ```
 
 List each proposed fix. Wait for user to approve individually or as a batch.

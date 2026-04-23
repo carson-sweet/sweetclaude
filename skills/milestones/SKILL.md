@@ -134,10 +134,11 @@ Free-form log of decisions, scope changes, blockers encountered.
 
 ```
 Milestones
+══════════
 
 Now (active):
-  MS-001 Exit Stealth         3/5 criteria met
-  MS-003 MVP Shipped          4/4 criteria met — ready to complete
+  → MS-001 Exit Stealth         3/5 criteria met
+  ✓ MS-003 MVP Shipped          4/4 criteria met — ready to complete
 
 Later (proposed):
   MS-004 Paid Pilot Live
@@ -233,17 +234,18 @@ Recent notes:
 3. Render:
 
 ```
-Blockers for MS-001 Exit Stealth:
+Blockers for MS-001 Exit Stealth
+═════════════════════════════════
 
-Unmet criteria (2):
+✗ Unmet criteria (2):
   - Criterion 2
   - strategy/market-messaging.md finalized
 
-Open work items (2):
+⚠ Open work items (2):
   US-015  (in-progress) Press kit generator
   BL-007  (pending)     Analytics tracking
 
-Dependencies not met (1):
+⚠ Dependencies not met (1):
   MS-000  Company name finalized  (status: proposed)
 ```
 
@@ -291,13 +293,14 @@ List each follow-up as: "<category>: <short title>". Enter blank line when done.
 3. Group items with no header by type:
 
 ```
-Unassigned work items (5):
+Unassigned work items (5)
+═════════════════════════
 
-Stories (2):
+⚠ Stories (2):
   US-008  Onboarding email flow
   US-011  Usage dashboard
 
-Backlog (3):
+⚠ Backlog (3):
   BL-003  Migrate to Postgres
   BL-005  Add rate limiting
   BL-009  Vendor management page

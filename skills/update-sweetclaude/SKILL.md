@@ -24,9 +24,11 @@ Read `{installPath}/.claude-plugin/plugin.json` and extract:
 Present:
 ```
 SweetClaude v{version}
-  Installed: {installPath}
-  Commit:    {gitCommitSha (short)}
-  Source:    {repository}
+═══════════════════════
+
+Installed: {installPath}
+Commit:    {gitCommitSha (short)}
+Source:    {repository}
 ```
 
 ---
@@ -100,6 +102,7 @@ Present a summary:
 
 ```
 Update available: {installed_sha_short} → {new_sha_short}
+═══════════════════════════════════════════════════════════
 
 Commits:
   {oneline log}
@@ -173,11 +176,13 @@ Report:
 
 ```
 SweetClaude updated.
-  Version:    {old_version} → {new_version}  (or same if unchanged)
-  Commit:     {old_sha_short} → {new_sha_short}
-  Files:      {total count} synced across skills, rules, hooks, config, agents
+═══════════════════
 
-  New Claude Code sessions in any project will use the updated version.
+✓ Version:    {old_version} → {new_version}  (or same if unchanged)
+✓ Commit:     {old_sha_short} → {new_sha_short}
+✓ Files:      {total count} synced across skills, rules, hooks, config, agents
+
+→ New Claude Code sessions in any project will use the updated version.
   Current sessions keep the old version until restarted.
 ```
 

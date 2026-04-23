@@ -242,15 +242,15 @@ git commit -m "promote: update pipeline state and corpus.yaml"
 Promotion Complete
 ══════════════════
 
-Documents promoted: {count}
-  {name} → corpus/canonical/{subdir}/
-  {name} → corpus/canonical/{subdir}/
+✓ Documents promoted: {count}
+    {name} → corpus/canonical/{subdir}/
+    {name} → corpus/canonical/{subdir}/
 
-Sources archived:   {count} files in corpus/archive/{date}-reconcile/
-Sidecars written:   {count}
-RAG indexed:        {count indexed} / {count total}
+✓ Sources archived:   {count} files in corpus/archive/{date}-reconcile/
+✓ Sidecars written:   {count}
+✓ RAG indexed:        {count indexed} / {count total}
 
-Pipeline status:    idle
+→ Pipeline status:    idle
 ```
 
 If all pipeline steps are now complete (consolidate, triage, reconcile, promote):

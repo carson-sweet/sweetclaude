@@ -63,10 +63,10 @@ Last promote:     {date or "never"} — {files_promoted} promoted
 
 Check for anomalies and report:
 
-- **Pipeline stuck:** `pipeline.step != idle` — "Warning: {step} did not complete. Run `/sweetclaude:corpus-{step}` to resume."
-- **Working files older than 24 hours:** Files in `corpus/working/` that have not been modified recently — "Warning: {N} files in corpus/working/ may be from an abandoned reconciliation."
-- **Staged files without triage metadata:** Files in `corpus/raw/staged/` with no `.triage.json` — "Warning: {N} staged files have no triage metadata."
-- **Canonical files not in RAG:** If RAG is available, compare canonical file count to RAG document count — "Warning: {N} canonical files may not be indexed."
+- **Pipeline stuck:** `pipeline.step != idle` — "⚠ {step} did not complete. Run `/sweetclaude:corpus-{step}` to resume."
+- **Working files older than 24 hours:** Files in `corpus/working/` that have not been modified recently — "⚠ {N} files in corpus/working/ may be from an abandoned reconciliation."
+- **Staged files without triage metadata:** Files in `corpus/raw/staged/` with no `.triage.json` — "⚠ {N} staged files have no triage metadata."
+- **Canonical files not in RAG:** If RAG is available, compare canonical file count to RAG document count — "⚠ {N} canonical files may not be indexed."
 
 ### Step 5: Recommend next action
 
@@ -74,9 +74,9 @@ Based on the current state, suggest one action:
 
 | State | Recommendation |
 |---|---|
-| No pipeline state | "Run `/sweetclaude:corpus-consolidate` to start the pipeline." |
-| consolidate complete, inbox has files, triage not started | "Run `/sweetclaude:corpus-triage` to classify {N} inbox files." |
-| triage complete, staged has files, reconcile not started | "Run `/sweetclaude:corpus-reconcile` to process {N} staged files." |
-| reconcile complete/in-progress, working has files | "Run `/sweetclaude:corpus-promote` to finalize {N} approved documents." |
-| All steps complete, everything empty | "Pipeline complete. All files processed." |
-| Pipeline stuck | "Resolve the interrupted {step} first." |
+| No pipeline state | "→ Run `/sweetclaude:corpus-consolidate` to start the pipeline." |
+| consolidate complete, inbox has files, triage not started | "→ Run `/sweetclaude:corpus-triage` to classify {N} inbox files." |
+| triage complete, staged has files, reconcile not started | "→ Run `/sweetclaude:corpus-reconcile` to process {N} staged files." |
+| reconcile complete/in-progress, working has files | "→ Run `/sweetclaude:corpus-promote` to finalize {N} approved documents." |
+| All steps complete, everything empty | "✓ Pipeline complete. All files processed." |
+| Pipeline stuck | "⚠ Resolve the interrupted {step} first." |

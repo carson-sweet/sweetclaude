@@ -30,9 +30,9 @@ Verify that tests detect faults, not just achieve coverage.
    - For each survivor: is the test gap meaningful or trivial?
 
 5. **Recommend action:**
-   - Score > 80%: "Tests are solid. Surviving mutants are [trivial/edge cases]."
-   - Score 60-80%: "Meaningful gaps. Add tests for: [list]"
-   - Score < 60%: "Tests are not catching real faults. Add tests before merging."
+   - Score > 80%: "✓ Tests are solid. Surviving mutants are [trivial/edge cases]."
+   - Score 60-80%: "⚠ Meaningful gaps. Add tests for: [list]"
+   - Score < 60%: "✗ Tests are not catching real faults. Add tests before merging."
 
 ## Rules
 

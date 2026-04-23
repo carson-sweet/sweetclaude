@@ -33,22 +33,23 @@ If $ARGUMENTS specifies files or a PR, review those. Otherwise, review staged ch
 
 ```
 Code Review: {scope}
+═══════════════════
 
-Critical (must fix):
+✗ Critical (must fix):
   - {finding} — {file}:{line}
     Problem: {what is wrong}
     Fix: {specific suggestion}
 
-Warning (should fix):
+⚠ Warning (should fix):
   - {finding} — {file}:{line}
     Problem: {what could go wrong}
     Fix: {specific suggestion}
 
-Nit (consider):
+→ Nit (consider):
   - {finding} — {file}:{line}
     {suggestion}
 
-Looks good:
+✓ Looks good:
   - {area reviewed with no findings}
 ```
 

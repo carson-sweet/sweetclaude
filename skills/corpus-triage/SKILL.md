@@ -271,14 +271,14 @@ Present the triage summary:
 Triage Complete
 ═══════════════
 
-Staged (keep):          {count} files
-Staged (reconcile):     {count} files
-Archived (discard):     {count} files
-Deferred:               {count} files
-Remaining in inbox:     {count} files
+✓ Staged (keep):          {count} files
+✓ Staged (reconcile):     {count} files
+✓ Archived (discard):     {count} files
+  Deferred:               {count} files
+  Remaining in inbox:     {count} files
 
-Staged files are in corpus/raw/staged/ ready for reconciliation.
-Archived files are in corpus/archive/{date}-triage/ with sidecars.
+→ Staged files are in corpus/raw/staged/ ready for reconciliation.
+  Archived files are in corpus/archive/{date}-triage/ with sidecars.
 ```
 
 **Update pipeline state:**

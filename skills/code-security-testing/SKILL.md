@@ -46,17 +46,18 @@ Present findings prioritized:
 
 ```
 Security Review: {scope}
+════════════════════════
 
-Critical:
+✗ Critical:
   - {finding} — {file}:{line} — {what to fix}
 
-Warning:
+⚠ Warning:
   - {finding} — {file}:{line} — {what to fix}
 
-Info:
+→ Info:
   - {finding} — {file}:{line} — {recommendation}
 
-Clean:
+✓ Clean:
   - {area checked with no findings}
 ```
 

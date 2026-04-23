@@ -16,11 +16,13 @@ Check and report:
 
 ```
 SweetClaude Status
-  Project:     {project name from git root}
-  Configured:  {Yes/No}
-  Phase:       {current phase from phase.yaml, or "not set"}
-  Deference:   {level from phase.yaml, or "not set"}
-  State dir:   {path if exists, or "none"}
+══════════════════
+
+Project:     {project name from git root}
+Configured:  {Yes/No}
+Phase:       {current phase from phase.yaml, or "not set"}
+Deference:   {level from phase.yaml, or "not set"}
+State dir:   {path if exists, or "none"}
 ```
 
 ## Step 2: Available Commands
