@@ -6,7 +6,6 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-FRAMEWORK_DIR="$SCRIPT_DIR/framework"
 CLAUDE_DIR="$HOME/.claude"
 BACKUP_DIR="$CLAUDE_DIR/backup-pre-sweetclaude-$(date +%Y%m%d-%H%M%S)"
 
@@ -255,11 +254,11 @@ mkdir -p "$CLAUDE_DIR/agents/sweetclaude"
 mkdir -p "$CLAUDE_DIR/rules/sweetclaude"
 mkdir -p "$CLAUDE_DIR/config/sweetclaude/templates"
 
-cp -r "$FRAMEWORK_DIR/skills/"* "$CLAUDE_DIR/skills/sweetclaude/"
-cp -r "$FRAMEWORK_DIR/hooks/"* "$CLAUDE_DIR/hooks/sweetclaude/"
-cp -r "$FRAMEWORK_DIR/agents/"* "$CLAUDE_DIR/agents/sweetclaude/"
-cp -r "$FRAMEWORK_DIR/rules/"* "$CLAUDE_DIR/rules/sweetclaude/"
-cp -r "$FRAMEWORK_DIR/config/"* "$CLAUDE_DIR/config/sweetclaude/"
+cp -r "$SCRIPT_DIR/skills/"* "$CLAUDE_DIR/skills/sweetclaude/"
+cp -r "$SCRIPT_DIR/hooks/"* "$CLAUDE_DIR/hooks/sweetclaude/"
+cp -r "$SCRIPT_DIR/agents/"* "$CLAUDE_DIR/agents/sweetclaude/"
+cp -r "$SCRIPT_DIR/rules/"* "$CLAUDE_DIR/rules/sweetclaude/"
+cp -r "$SCRIPT_DIR/config/"* "$CLAUDE_DIR/config/sweetclaude/"
 
 chmod +x "$CLAUDE_DIR/hooks/sweetclaude/"*.sh
 
@@ -376,8 +375,16 @@ CLAUDEMD
     echo "  Added SweetClaude section to ~/CLAUDE.md."
   fi
 else
-  cp "$FRAMEWORK_DIR/CLAUDE.md.global" "$CLAUDE_MD"
-  echo "  Created ~/CLAUDE.md from SweetClaude template."
+  cat > "$CLAUDE_MD" << 'CLAUDEMD'
+## SweetClaude
+
+- If the user asks to do anything involving SweetClaude workflows — phase pipeline, strategy work, file reconciliation, TDD enforcement, project init, or any `sweetclaude:` skill — invoke the `sweetclaude` master skill FIRST and run its pre-flight check before doing any work. This applies whether or not the project is already configured.
+- Read `.sweetclaude/state/phase.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist.
+- Follow the interaction model in `~/.claude/rules/sweetclaude/interaction-model.md`.
+- Respect the current deference level. Ask if not set.
+- Never push for phase advancement. The user decides when to move on.
+CLAUDEMD
+  echo "  Created ~/CLAUDE.md with SweetClaude section."
 fi
 
 # --- Generate restore-config.sh ---

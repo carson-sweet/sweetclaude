@@ -54,17 +54,32 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 ```bash
 git clone https://github.com/carson-sweet/sweetclaude.git
+cd sweetclaude
+./install.sh
 ```
 
-Then start Claude Code with the plugin loaded:
+The installer:
+- Checks prerequisites (Claude Code, Git, Superpowers, BMAD)
+- Backs up your existing `~/.claude/` configuration
+- Scans for conflicting plugins and offers to clean them up
+- Copies skills, hooks, agents, rules, and config to `~/.claude/`
+- Wires TDD enforcement hooks into `settings.json`
+- Generates `uninstall.sh` and `restore-config.sh` for clean removal
+
+After install, all 60 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
+
+To update later, run `/sweetclaude:update-skills` from any project. It fetches the latest version from GitHub and syncs everywhere.
+
+### Quick Try (No Install)
+
+Want to try SweetClaude without installing? Load it as a plugin for a single session:
 
 ```bash
+git clone https://github.com/carson-sweet/sweetclaude.git
 claude --plugin-dir /path/to/sweetclaude
 ```
 
-All 60 skills are immediately available as `/sweetclaude:skill-name` commands.
-
-To update later, run `/sweetclaude:update-skills` from any project. It fetches the latest version from GitHub and syncs everywhere.
+All skills are available for that session. TDD enforcement hooks and global configuration are not active — those require the full install.
 
 ### Things to Try First
 
@@ -272,7 +287,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. When you load it with `--plugin-dir`, all 60 skills become available as slash commands. Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. After running the installer, all 60 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 
