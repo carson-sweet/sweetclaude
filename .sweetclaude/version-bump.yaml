@@ -1,0 +1,5 @@
+enabled: true
+files:
+  - package.json
+  - .claude-plugin/plugin.json
+tag: true

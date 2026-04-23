@@ -40,6 +40,15 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-test-runner.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/version-bump.sh"
+          }
+        ]
       }
     ]
   }
