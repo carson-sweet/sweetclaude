@@ -188,6 +188,31 @@ SweetClaude updated.
 
 ---
 
+## Step 7: Surface new capabilities
+
+Compare the installed hooks and config files (before sync) against the new version. Identify:
+
+1. **New hooks** — files in `$SOURCE_DIR/hooks/` that did not exist in the previously installed `~/.claude/hooks/sweetclaude/`
+2. **New skills** — skill directories in `$SOURCE_DIR/skills/` that did not exist in the previously installed `{installPath}/skills/`
+3. **New config templates** — files in `$SOURCE_DIR/config/templates/` that are new
+
+For each new capability, check whether it requires per-project opt-in (e.g., a config file in `.sweetclaude/`). Read the hook or skill to determine what config is needed.
+
+Present after the update report:
+
+```
+New in this update:
+  → {capability name}: {one-line description}
+    Enable: {what the user needs to do, e.g. "create .sweetclaude/version-bump.yaml"}
+
+  → {capability name}: {one-line description}
+    Available as: /sweetclaude:{skill-name}
+```
+
+If no new capabilities, omit this section.
+
+---
+
 ## Rules
 
 - **Always show the diff preview and wait for confirmation before syncing.**
