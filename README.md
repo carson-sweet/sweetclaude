@@ -323,7 +323,7 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE) — free for personal use, research, education, nonprofits, and government. Not for commercial use.
+[PolyForm Shield 1.0.0](LICENSE) — use SweetClaude for any purpose, including building and selling commercial products. The only restriction: you cannot sell a product that competes with SweetClaude itself.
 
 ## Contributing
 
