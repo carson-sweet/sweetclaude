@@ -9,8 +9,37 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 BACKUP_DIR="$CLAUDE_DIR/backup-pre-sweetclaude-$(date +%Y%m%d-%H%M%S)"
 
-echo "SweetClaude Installer"
-echo "====================="
+# --- Parse flags ---
+STRATEGY_ONLY=false
+for arg in "$@"; do
+  case "$arg" in
+    --strategy-skills-only) STRATEGY_ONLY=true ;;
+    --help|-h)
+      echo "Usage: ./install.sh [--strategy-skills-only]"
+      echo ""
+      echo "  --strategy-skills-only  Install strategy, product, and corpus skills only."
+      echo "                          No code/design skills, no TDD hooks, no subagents."
+      echo "                          Does not require Superpowers or BMAD."
+      echo ""
+      echo "  (no flags)              Full install — all 60 skills, TDD hooks, subagents."
+      echo "                          Requires Superpowers and BMAD."
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $arg"
+      echo "Run ./install.sh --help for usage."
+      exit 1
+      ;;
+  esac
+done
+
+if [ "$STRATEGY_ONLY" = true ]; then
+  echo "SweetClaude Installer (strategy skills only)"
+  echo "============================================="
+else
+  echo "SweetClaude Installer"
+  echo "====================="
+fi
 echo ""
 
 # --- Prerequisites ---
@@ -53,57 +82,58 @@ else
   echo "  $GH_VER"
 fi
 
-# Superpowers plugin
-SP_MIN="5.0.7"
-PLUGINS_JSON="$CLAUDE_DIR/plugins/installed_plugins.json"
-SP_VERSION=""
+# Superpowers and BMAD — required for full install, skipped for strategy-only
+if [ "$STRATEGY_ONLY" = false ]; then
+  SP_MIN="5.0.7"
+  PLUGINS_JSON="$CLAUDE_DIR/plugins/installed_plugins.json"
+  SP_VERSION=""
 
-if [ -f "$PLUGINS_JSON" ]; then
-  # Extract version from installed_plugins.json
-  SP_VERSION=$(grep -A5 '"superpowers@' "$PLUGINS_JSON" 2>/dev/null | grep '"version"' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
-fi
-
-if [ -z "$SP_VERSION" ] || [ "$SP_VERSION" = "unknown" ]; then
-  echo "  ERROR: Superpowers plugin not found."
-  echo "         Install in Claude Code: /install superpowers"
-  echo "         Minimum: $SP_MIN"
-  PREREQ_OK=false
-else
-  echo "  Superpowers: v$SP_VERSION"
-  if ! version_gte "$SP_VERSION" "$SP_MIN"; then
-    echo "  ERROR: Superpowers $SP_VERSION is below minimum ($SP_MIN)."
-    echo "         Update in Claude Code: /install superpowers"
-    PREREQ_OK=false
+  if [ -f "$PLUGINS_JSON" ]; then
+    SP_VERSION=$(grep -A5 '"superpowers@' "$PLUGINS_JSON" 2>/dev/null | grep '"version"' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
   fi
-fi
 
-# BMAD Method
-BMAD_MIN="6.0.0"
-BMAD_VERSION=""
-
-if [ -f "$CLAUDE_DIR/config/bmad/config.yaml" ]; then
-  BMAD_VERSION=$(grep '^version:' "$CLAUDE_DIR/config/bmad/config.yaml" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/')
-fi
-
-if [ -z "$BMAD_VERSION" ]; then
-  # Fallback: check if skill files exist at all
-  if [ -d "$CLAUDE_DIR/skills/bmad" ]; then
-    echo "  WARNING: BMAD skills found but version unknown. Expecting $BMAD_MIN+."
-    echo "           Check: https://github.com/bmad-code-org/BMAD-METHOD"
-    PREREQ_WARN=true
+  if [ -z "$SP_VERSION" ] || [ "$SP_VERSION" = "unknown" ]; then
+    echo "  ERROR: Superpowers plugin not found."
+    echo "         Install in Claude Code: /install superpowers"
+    echo "         Minimum: $SP_MIN"
+    PREREQ_OK=false
   else
-    echo "  ERROR: BMAD Method not found."
-    echo "         Install: https://github.com/bmad-code-org/BMAD-METHOD#installation"
-    echo "         Minimum: $BMAD_MIN"
-    PREREQ_OK=false
+    echo "  Superpowers: v$SP_VERSION"
+    if ! version_gte "$SP_VERSION" "$SP_MIN"; then
+      echo "  ERROR: Superpowers $SP_VERSION is below minimum ($SP_MIN)."
+      echo "         Update in Claude Code: /install superpowers"
+      PREREQ_OK=false
+    fi
+  fi
+
+  BMAD_MIN="6.0.0"
+  BMAD_VERSION=""
+
+  if [ -f "$CLAUDE_DIR/config/bmad/config.yaml" ]; then
+    BMAD_VERSION=$(grep '^version:' "$CLAUDE_DIR/config/bmad/config.yaml" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/')
+  fi
+
+  if [ -z "$BMAD_VERSION" ]; then
+    if [ -d "$CLAUDE_DIR/skills/bmad" ]; then
+      echo "  WARNING: BMAD skills found but version unknown. Expecting $BMAD_MIN+."
+      echo "           Check: https://github.com/bmad-code-org/BMAD-METHOD"
+      PREREQ_WARN=true
+    else
+      echo "  ERROR: BMAD Method not found."
+      echo "         Install: https://github.com/bmad-code-org/BMAD-METHOD#installation"
+      echo "         Minimum: $BMAD_MIN"
+      PREREQ_OK=false
+    fi
+  else
+    echo "  BMAD Method: v$BMAD_VERSION"
+    if ! version_gte "$BMAD_VERSION" "$BMAD_MIN"; then
+      echo "  ERROR: BMAD $BMAD_VERSION is below minimum ($BMAD_MIN)."
+      echo "         Update: https://github.com/bmad-code-org/BMAD-METHOD#installation"
+      PREREQ_OK=false
+    fi
   fi
 else
-  echo "  BMAD Method: v$BMAD_VERSION"
-  if ! version_gte "$BMAD_VERSION" "$BMAD_MIN"; then
-    echo "  ERROR: BMAD $BMAD_VERSION is below minimum ($BMAD_MIN)."
-    echo "         Update: https://github.com/bmad-code-org/BMAD-METHOD#installation"
-    PREREQ_OK=false
-  fi
+  echo "  (strategy-skills-only — Superpowers and BMAD not required)"
 fi
 
 if [ "$PREREQ_OK" = false ]; then
@@ -246,37 +276,61 @@ echo ""
 
 # --- Install ---
 
-echo "Installing SweetClaude..."
+if [ "$STRATEGY_ONLY" = true ]; then
+  echo "Installing SweetClaude (strategy skills only)..."
+else
+  echo "Installing SweetClaude..."
+fi
 
 mkdir -p "$CLAUDE_DIR/skills/sweetclaude"
-mkdir -p "$CLAUDE_DIR/hooks/sweetclaude"
-mkdir -p "$CLAUDE_DIR/agents/sweetclaude"
 mkdir -p "$CLAUDE_DIR/rules/sweetclaude"
 mkdir -p "$CLAUDE_DIR/config/sweetclaude/templates"
 
-cp -r "$SCRIPT_DIR/skills/"* "$CLAUDE_DIR/skills/sweetclaude/"
-cp -r "$SCRIPT_DIR/hooks/"* "$CLAUDE_DIR/hooks/sweetclaude/"
-cp -r "$SCRIPT_DIR/agents/"* "$CLAUDE_DIR/agents/sweetclaude/"
+if [ "$STRATEGY_ONLY" = true ]; then
+  SKILL_COUNT=0
+  for skill_dir in "$SCRIPT_DIR/skills/"*/; do
+    skill_name=$(basename "$skill_dir")
+    case "$skill_name" in
+      code-*|design-*|product-user-tdd-tests)
+        ;;
+      *)
+        cp -r "$skill_dir" "$CLAUDE_DIR/skills/sweetclaude/"
+        SKILL_COUNT=$((SKILL_COUNT + 1))
+        ;;
+    esac
+  done
+  echo "  Installed $SKILL_COUNT skills (strategy, product, corpus, orchestration)."
+  echo "  Skipped: code, design, and TDD test generation skills."
+else
+  mkdir -p "$CLAUDE_DIR/hooks/sweetclaude"
+  mkdir -p "$CLAUDE_DIR/agents/sweetclaude"
+  cp -r "$SCRIPT_DIR/skills/"* "$CLAUDE_DIR/skills/sweetclaude/"
+  cp -r "$SCRIPT_DIR/hooks/"* "$CLAUDE_DIR/hooks/sweetclaude/"
+  cp -r "$SCRIPT_DIR/agents/"* "$CLAUDE_DIR/agents/sweetclaude/"
+  chmod +x "$CLAUDE_DIR/hooks/sweetclaude/"*.sh
+fi
+
 cp -r "$SCRIPT_DIR/rules/"* "$CLAUDE_DIR/rules/sweetclaude/"
 cp -r "$SCRIPT_DIR/config/"* "$CLAUDE_DIR/config/sweetclaude/"
 
-chmod +x "$CLAUDE_DIR/hooks/sweetclaude/"*.sh
-
 echo "  Framework files installed."
 
-# --- Hook Wiring ---
+# --- Hook Wiring (full install only) ---
 
-SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+if [ "$STRATEGY_ONLY" = true ]; then
+  echo "  Hooks skipped (strategy-skills-only mode)."
+else
+  SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 
-if [ -f "$SETTINGS_FILE" ]; then
-  if grep -q "sweetclaude/test-guardian" "$SETTINGS_FILE" 2>/dev/null; then
-    echo "  Hooks already configured in settings.json."
-  else
-    echo ""
-    echo "  NOTE: SweetClaude hooks need to be added to your settings.json."
-    echo "  Add the following to your settings.json 'hooks' section:"
-    echo ""
-    cat << 'HOOKCONFIG'
+  if [ -f "$SETTINGS_FILE" ]; then
+    if grep -q "sweetclaude/test-guardian" "$SETTINGS_FILE" 2>/dev/null; then
+      echo "  Hooks already configured in settings.json."
+    else
+      echo ""
+      echo "  NOTE: SweetClaude hooks need to be added to your settings.json."
+      echo "  Add the following to your settings.json 'hooks' section:"
+      echo ""
+      cat << 'HOOKCONFIG'
   "PreToolUse": [
     {
       "matcher": "",
@@ -309,12 +363,12 @@ if [ -f "$SETTINGS_FILE" ]; then
     }
   ]
 HOOKCONFIG
-    echo ""
-    echo "  Automatic settings.json merging is not yet supported."
-    echo "  Please add hooks manually to preserve your existing settings."
-  fi
-else
-  cat > "$SETTINGS_FILE" << 'SETTINGS'
+      echo ""
+      echo "  Automatic settings.json merging is not yet supported."
+      echo "  Please add hooks manually to preserve your existing settings."
+    fi
+  else
+    cat > "$SETTINGS_FILE" << 'SETTINGS'
 {
   "hooks": {
     "PreToolUse": [
@@ -351,7 +405,8 @@ else
   }
 }
 SETTINGS
-  echo "  Created settings.json with SweetClaude hooks."
+    echo "  Created settings.json with SweetClaude hooks."
+  fi
 fi
 
 # --- CLAUDE.md ---
@@ -536,19 +591,29 @@ chmod +x "$SCRIPT_DIR/uninstall.sh"
 
 # --- Summary ---
 
-FILE_COUNT=$(find "$CLAUDE_DIR/skills/sweetclaude" "$CLAUDE_DIR/hooks/sweetclaude" "$CLAUDE_DIR/agents/sweetclaude" "$CLAUDE_DIR/rules/sweetclaude" "$CLAUDE_DIR/config/sweetclaude" -type f 2>/dev/null | wc -l | tr -d ' ')
+FIND_DIRS="$CLAUDE_DIR/skills/sweetclaude $CLAUDE_DIR/rules/sweetclaude $CLAUDE_DIR/config/sweetclaude"
+if [ "$STRATEGY_ONLY" = false ]; then
+  FIND_DIRS="$FIND_DIRS $CLAUDE_DIR/hooks/sweetclaude $CLAUDE_DIR/agents/sweetclaude"
+fi
+FILE_COUNT=$(find $FIND_DIRS -type f 2>/dev/null | wc -l | tr -d ' ')
 
 echo ""
 echo "================================================"
-echo "SweetClaude installed successfully."
+if [ "$STRATEGY_ONLY" = true ]; then
+  echo "SweetClaude (strategy skills) installed successfully."
+else
+  echo "SweetClaude installed successfully."
+fi
 echo "================================================"
 echo ""
 echo "  Files installed: $FILE_COUNT"
 echo "  Backup location: $BACKUP_DIR"
 echo ""
 echo "  Skills:  $CLAUDE_DIR/skills/sweetclaude/"
-echo "  Hooks:   $CLAUDE_DIR/hooks/sweetclaude/"
-echo "  Agents:  $CLAUDE_DIR/agents/sweetclaude/"
+if [ "$STRATEGY_ONLY" = false ]; then
+  echo "  Hooks:   $CLAUDE_DIR/hooks/sweetclaude/"
+  echo "  Agents:  $CLAUDE_DIR/agents/sweetclaude/"
+fi
 echo "  Rules:   $CLAUDE_DIR/rules/sweetclaude/"
 echo "  Config:  $CLAUDE_DIR/config/sweetclaude/"
 echo ""
@@ -567,7 +632,14 @@ if [ "$HOOK_CONFLICT" = true ]; then
   echo ""
 fi
 echo "Getting started:"
-echo '  claude "sweetclaude init my-project"'
+if [ "$STRATEGY_ONLY" = true ]; then
+  echo '  claude "sweetclaude sherpa-start"'
+  echo ""
+  echo "  Available: strategy, product, corpus, and orchestration skills."
+  echo "  To upgrade to full install later: ./install.sh"
+else
+  echo '  claude "sweetclaude init my-project"'
+fi
 echo ""
 echo "To restore pre-install config:  ./restore-config.sh"
 echo "To uninstall SweetClaude:       ./uninstall.sh"
