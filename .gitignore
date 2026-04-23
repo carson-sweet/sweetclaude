@@ -6,7 +6,8 @@ restore-config.sh
 .DS_Store
 
 # SweetClaude dogfood artifacts (internal work, not framework source)
-.sweetclaude/
+.sweetclaude/*
+!.sweetclaude/version-bump.yaml
 /strategy/
 /corpus/
 /docs/backlog/
