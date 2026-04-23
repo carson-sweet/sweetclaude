@@ -213,6 +213,63 @@ If no new capabilities, omit this section.
 
 ---
 
+## Step 8: Check for project artifact migrations
+
+After syncing the framework, check whether the **current project** (the one where the user ran this skill) has `.sweetclaude/` artifacts that need migration.
+
+### 8a: Detect what exists
+
+Check for:
+- `.sweetclaude/state/phase.yaml`
+- `.sweetclaude/state/project.yaml`
+- `.sweetclaude/state/corpus-pipeline.yaml`
+- `.sweetclaude/state/corpus.yaml`
+- `.sweetclaude/version-bump.yaml`
+- `docs/milestones/MILESTONES-INDEX.md`
+- Story files in `.sweetclaude/stories/` or `stories/`
+
+If none exist, this project is not SweetClaude-configured. Skip this step.
+
+### 8b: Compare against current schema
+
+For each artifact found, read it and compare against the schema expected by the newly installed skills. Check for:
+
+1. **Missing fields** — the new version of a skill reads a YAML field or markdown section that doesn't exist in the project's artifact. Example: `phase.yaml` missing a field that a new skill expects.
+2. **Renamed fields** — a field name changed between versions. The old name exists, the new name doesn't.
+3. **New required files** — a skill now expects a file that didn't exist in previous versions. Example: `.sweetclaude/version-bump.yaml` for the version-bump hook.
+4. **Changed structure** — a table gained a column, a YAML block gained a nesting level, a markdown template changed sections.
+
+To detect these, read the relevant skill files from the newly installed version and extract what fields/sections they read from each artifact. Then diff against what actually exists in the project.
+
+### 8c: Report and offer migration
+
+If migrations are needed:
+
+```
+⚠ Project artifacts need migration:
+
+  phase.yaml:
+    → Missing field: {field_name} (default: {value})
+    → Missing field: {field_name} (default: {value})
+
+  MILESTONES-INDEX.md:
+    → Missing column: {column_name}
+
+  New optional config:
+    → .sweetclaude/version-bump.yaml not found
+      Enable auto version bump? Create with defaults for this project.
+```
+
+For each migration, offer:
+- **Auto-fix** — add the missing field/section with a sensible default
+- **Skip** — leave as-is (skill will handle gracefully or prompt at runtime)
+
+Apply approved migrations. Do not modify artifacts without confirmation.
+
+If no migrations needed: omit this section.
+
+---
+
 ## Rules
 
 - **Always show the diff preview and wait for confirmation before syncing.**
