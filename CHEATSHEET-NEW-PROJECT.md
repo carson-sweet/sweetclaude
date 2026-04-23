@@ -99,6 +99,13 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 - `/sweetclaude:code-security-testing` — security review
 - `/sweetclaude:code-pr-precheck` — pre-PR quality gate
 
+### Milestones
+- `/sweetclaude:milestones add` — create a roadmap target with success criteria
+- `/sweetclaude:milestones review` — see all milestones grouped by Now / Next / Later
+- `/sweetclaude:milestones link US-XXX MS-XXX` — attach a story to a milestone
+- `/sweetclaude:milestones blockers MS-XXX` — what is stopping progress
+- `/sweetclaude:milestones complete MS-XXX` — mark achieved, capture follow-ups
+
 ## What SweetClaude Can Do If You Ask
 
 These are not part of the automatic flow. They are available anytime.
@@ -119,6 +126,8 @@ These are not part of the automatic flow. They are available anytime.
   - `/sweetclaude:corpus-promote` — finalize with provenance, archive, RAG index
   - `/sweetclaude:corpus-status` — see where the pipeline stands
 - **RAG search** (`/sweetclaude:rag-index`) — set up semantic search over your project documents so you can query by meaning, not just keywords
+- **Update SweetClaude** (`/sweetclaude:update-skills`) — fetch the latest version from GitHub and sync to all projects
+- **Auto version bumping** — create `.sweetclaude/version-bump.yaml` to auto-bump version files after every git commit based on conventional commit prefixes
 
 ## Tips
 
