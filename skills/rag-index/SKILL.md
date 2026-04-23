@@ -64,12 +64,12 @@ Decision rules:
 - **Manifest has `noise_scan` and `choice == "B"`:** Re-apply CANONICAL-ONLY for this run. Skip the prompt. Proceed to Step 1 with `CANONICAL_ONLY=true`. Brief one-liner to user: "Re-using prior CANONICAL-ONLY choice. Run with `--reset-gate` to re-prompt."
 - **Manifest has `noise_scan` and `choice == "C"`:** Compare current scan to recorded one:
   - **Same `noise_dirs` set AND `versioned_count` did not grow:** No new noise. Silently re-apply prior PROCEED choice with default excludes. Brief one-liner: "Re-using prior PROCEED-ANYWAY choice (no new noise since last run)."
-  - **New noise dirs appeared OR `versioned_count` grew:** Re-present the gate (Step 0d) with a prefix: "⚠️  Noise has grown since your last choice. New since [last_scan]: [diff list]. Re-confirm or change your decision."
+  - **New noise dirs appeared OR `versioned_count` grew:** Re-present the gate (Step 0d) with a prefix: "⚠  Noise has grown since your last choice. New since [last_scan]: [diff list]. Re-confirm or change your decision."
 
 **Step 0d: Present the gate.** Show the user:
 
 ```
-⚠️  Unreconciled content detected
+⚠  Unreconciled content detected
 
 Found:
 - Directories: [list from noise_dirs]

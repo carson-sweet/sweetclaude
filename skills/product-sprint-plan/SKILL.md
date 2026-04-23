@@ -24,9 +24,9 @@ Plan a sprint for: $ARGUMENTS
 
    ```
    Sprint advances:
-     MS-001 Exit Stealth   2 stories
-     MS-003 MVP Shipped    1 story
-   Unassigned: 1 story
+     → MS-001 Exit Stealth   2 stories
+     → MS-003 MVP Shipped    1 story
+   ⚠ Unassigned: 1 story
    ```
 
 4. If more than 50% of sprint stories are unassigned to any milestone, flag it:

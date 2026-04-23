@@ -28,15 +28,16 @@ Extends `hibernate-project` with SweetClaude-specific state management. Invoke `
 **During Step 4:** Add a "SweetClaude State" section to HIBERNATION.md using this template:
 
 ```
-## SweetClaude State
+SweetClaude State
+═════════════════
 
-- **Phase:** {phase name}
-- **Work type:** {net-new feature / bug fix / enhancement / iteration}
-- **Deference level:** {Collaborative / Guided / Autonomous}
-- **Pending detour:** {description or "none"}
-- **Improvement register:** {N} entries — {brief summary of key learnings}
-- **Decision log:** {N} entries spanning {date range}
-- **State dir:** {path or "not found"}
+Phase:              {phase name}
+Work type:          {net-new feature / bug fix / enhancement / iteration}
+Deference level:    {Collaborative / Guided / Autonomous}
+Pending detour:     {description or "none"}
+Improvement register: {N} entries — {brief summary of key learnings}
+Decision log:       {N} entries spanning {date range}
+State dir:          {path or "not found"}
 ```
 
 If `.sweetclaude/` does not exist:

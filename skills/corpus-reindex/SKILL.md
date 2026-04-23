@@ -102,8 +102,8 @@ After all selected collections are rebuilt:
 > Reindex Complete
 > ════════════════
 >
-> {collection}: {N} files indexed
-> {collection}: {N} files indexed
+> ✓ {collection}: {N} files indexed
+> ✓ {collection}: {N} files indexed
 > ```
 
 ---
