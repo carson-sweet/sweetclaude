@@ -9,6 +9,7 @@ always_loaded:
     - sweetclaude:new-task
     - sweetclaude:hibernate
     - sweetclaude:milestones
+    - sweetclaude:metrics
     - hibernate-project
   rules:
     - sweetclaude/interaction-model.md

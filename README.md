@@ -212,6 +212,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:fix-config` | Audit and repair SweetClaude configuration |
 | `/sweetclaude:update-skills` | Fetch latest from GitHub and sync to all projects |
 | `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
+| `/sweetclaude:metrics` | View, enable, or disable local performance metrics |
 
 ### Strategy
 | Command | What it does |
