@@ -81,6 +81,7 @@ If you are in the middle of implementation, these are your daily tools:
 | `/sweetclaude:code-pr-precheck` | Check everything before opening a PR |
 | `/sweetclaude:code-code-review` | Get an adversarial code review |
 | `/sweetclaude:code-qa-testing` | Run tests and get a clean pass/fail report |
+| `/sweetclaude:milestones` | Track roadmap targets across strategy and product work |
 
 ### Fix Configuration Issues
 
@@ -174,6 +175,14 @@ After implementation changes behavior, this scans existing docs for stale refere
 
 Record architecture or design decisions with context, options considered, and rationale. Query them later: "Why did we choose X?"
 
+### Track Roadmap Milestones
+
+```
+/sweetclaude:milestones add
+```
+
+Create outcome-driven roadmap targets like "Exit Stealth" or "MVP Shipped" with measurable success criteria. Link user stories and backlog items to milestones. Track progress, identify blockers, and mark milestones achieved with follow-up capture. Sprint planning automatically reports which milestones a sprint advances.
+
 ### Set Up Semantic Search
 
 ```
@@ -200,3 +209,5 @@ You can change this mid-session.
 - **Strategic work on existing projects is valuable.** Many projects have implicit strategy that was never documented. Making it explicit helps you prioritize, communicate with stakeholders, and make better decisions.
 - **SweetClaude does not judge your code.** When adopting a project, it treats your codebase like an archaeologist treats a dig site — understanding before changing, respecting what is already there.
 - **Run `/sweetclaude:status` at the start of each session.** It tells you where you left off and what the next step is.
+- **Keep SweetClaude updated.** Run `/sweetclaude:update-skills` periodically to get the latest skills, hooks, and fixes.
+- **Enable auto version bumping.** Create `.sweetclaude/version-bump.yaml` listing your version files. Every git commit automatically bumps the version based on conventional commit prefixes.

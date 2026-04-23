@@ -11,9 +11,9 @@
 
 An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
-SweetClaude is a Claude Code plugin with 58 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude is a Claude Code plugin with 60 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
-Built by a solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
+Built by an enterprise CTO/CISO turned solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
 
 ## What SweetClaude Does
 
@@ -27,11 +27,17 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 **Code** — Test-driven development at four enforcement levels. At the highest level, a test-writer agent and an implementer agent work in separate contexts — the implementer never sees the spec, only the tests. Test files are physically blocked from modification during implementation. Tests run automatically after every edit.
 
+**Milestones** — Roadmap targets that span strategy and product work. Milestones are outcome-driven goals like "Exit Stealth" or "Paid Pilot Live" — not releases or sprints. Create milestones with success criteria, link user stories and backlog items to them, track progress, identify blockers, and mark milestones achieved with follow-up capture. Sprint planning reports which milestones a sprint advances. Status views show active milestones with criterion counts.
+
 **Corpus Management** — Projects accumulate documents across folders, Claude.ai sessions, and external tools. SweetClaude's corpus pipeline takes messy files through a four-step process — consolidate (scan, deduplicate, ingest), triage (classify), reconcile (draft and refine canonical documents with the user), and promote (finalize with provenance tracking, archival, and RAG indexing). A state machine enforces ordering so nothing gets corrupted. Every canonical document traces back to its source files.
 
 **Semantic Search (RAG)** — Index your project documents for search by meaning, not just keywords. SweetClaude sets up a local RAG system using [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) — a per-project vector database that runs on your machine with no external services. Supports PDF, Word, markdown, and text files. The embedding model downloads once (~90MB) then works offline. The corpus pipeline's promote step automatically indexes canonical documents into the RAG system so your best, most current documents are always searchable.
 
 **Review and Ship** — Adversarial code review, security testing, mutation testing to verify your tests actually catch bugs, pre-PR quality gates, and documentation updates.
+
+**Self-Updating** — Run `/sweetclaude:update-skills` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, and checks whether your project's artifacts need migration for the new version. Private repos are handled transparently via `gh` authentication.
+
+**Auto Version Bumping** — An opt-in hook that automatically bumps your project's version after every git commit. It reads conventional commit prefixes (`feat` → minor, `fix`/`chore` → patch, `BREAKING` → major), updates configured version files, and commits the bump. Enable it by creating `.sweetclaude/version-bump.yaml` in your project.
 
 ## Getting Started
 
@@ -56,7 +62,9 @@ Then start Claude Code with the plugin loaded:
 claude --plugin-dir /path/to/sweetclaude
 ```
 
-All 58 skills are immediately available as `/sweetclaude:skill-name` commands.
+All 60 skills are immediately available as `/sweetclaude:skill-name` commands.
+
+To update later, run `/sweetclaude:update-skills` from any project. It fetches the latest version from GitHub and syncs everywhere.
 
 ### Things to Try First
 
@@ -177,6 +185,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:init` | Set up SweetClaude for a project |
 | `/sweetclaude:new-task` | Classify work and enter the pipeline |
 | `/sweetclaude:fix-config` | Audit and repair SweetClaude configuration |
+| `/sweetclaude:update-skills` | Fetch latest from GitHub and sync to all projects |
 | `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
 
 ### Strategy
@@ -223,6 +232,17 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:design-infra-design` | Infrastructure and deployment |
 | `/sweetclaude:design-manage-decisions` | Record decisions with rationale |
 
+### Milestones
+| Command | What it does |
+|---|---|
+| `/sweetclaude:milestones add` | Create a new milestone with success criteria |
+| `/sweetclaude:milestones review` | List milestones grouped by Now / Next / Later |
+| `/sweetclaude:milestones link` | Attach a work item to a milestone (bidirectional) |
+| `/sweetclaude:milestones status` | Detail view of one milestone with progress |
+| `/sweetclaude:milestones blockers` | What is stopping a milestone from completing |
+| `/sweetclaude:milestones complete` | Mark achieved with follow-up capture |
+| `/sweetclaude:milestones unassigned` | Find work items with no milestone |
+
 ### Corpus Management
 | Command | What it does |
 |---|---|
@@ -252,7 +272,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. When you load it with `--plugin-dir`, all 58 skills become available as slash commands. Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. When you load it with `--plugin-dir`, all 60 skills become available as slash commands. Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 
@@ -268,6 +288,12 @@ SweetClaude is a Claude Code plugin. When you load it with `--plugin-dir`, all 5
 **Corpus management.** The corpus pipeline organizes scattered documents into searchable canonical truth. A state machine enforces the four-step ordering (consolidate → triage → reconcile → promote) so files cannot be processed out of order. Every canonical document has provenance sidecars tracing it back to source files. Originals are never deleted.
 
 **Semantic search.** The RAG system uses [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) to run a per-project vector database locally. No external services, no API keys, no data leaving your machine. The embedding model downloads once and works offline. The corpus pipeline's promote step indexes canonical documents automatically, and `/sweetclaude:rag-index` handles standalone indexing for any project. Supports PDF, Word (.docx), markdown, and text files.
+
+**Milestones.** Roadmap targets live in `docs/milestones/` as individual files with success criteria, contributing work items, and notes. Links between milestones and stories are bidirectional — editing one updates the other. Sprint planning aggregates milestone advancement automatically. Progress is computed from files on every read, not cached in a derived state file.
+
+**Auto version bumping.** An opt-in PostToolUse hook on Bash detects successful `git commit` commands, reads the conventional commit prefix, and bumps version files automatically. Enable it by creating `.sweetclaude/version-bump.yaml` listing which files to update. The hook commits the bump with a `chore(version):` prefix to prevent loops.
+
+**Self-updating.** `/sweetclaude:update-skills` fetches the latest SweetClaude from GitHub (or a local repo), shows what changed, syncs to all installed locations, surfaces new capabilities that landed in the update, and checks whether project artifacts need migration for new schema fields.
 
 **Language agnostic.** SweetClaude discovers your project's language, framework, test runner, and build tools automatically. It works with TypeScript, Python, Go, Rust, Java, or anything else.
 

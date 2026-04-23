@@ -1,7 +1,7 @@
 # Corpus Management System
 
-**Version:** 1.0
-**Date:** 2026-04-15
+**Version:** 1.1
+**Date:** 2026-04-23
 
 ---
 
@@ -58,3 +58,16 @@ You cannot run triage before consolidate completes. You cannot reconcile before 
 - **Crash-recoverable.** The state file detects interrupted operations.
 - **Auditable.** Every canonical document traces back to source files via sidecars.
 - **Filesystem is ground truth.** The state file coordinates, but if it disappears you can rebuild from the directory structure.
+
+## Output Formatting
+
+Corpus skills use a standardized symbol vocabulary in their output:
+
+| Symbol | Meaning |
+|---|---|
+| `✓` | Completed / processed / in sync |
+| `✗` | Failed / blocked |
+| `⚠` | Warning / needs attention |
+| `→` | Next action / recommendation |
+
+Report headers use `═══` decorative lines for visual separation. Status and completion reports use these symbols consistently so you can scan results at a glance.
