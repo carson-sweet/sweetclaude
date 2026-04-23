@@ -68,6 +68,16 @@ The installer:
 
 After install, all 60 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
 
+#### Strategy Skills Only
+
+If you want the product thinking, strategy, and corpus management skills without the code and design phases:
+
+```bash
+./install.sh --strategy-skills-only
+```
+
+This installs strategy, product, corpus, and orchestration skills — no TDD hooks, no subagents, no Superpowers or BMAD prerequisites required. Just Claude Code and Git. You can upgrade to the full install later by running `./install.sh`.
+
 To update later, run `/sweetclaude:update-skills` from any project. It fetches the latest version from GitHub and syncs everywhere.
 
 ### Quick Try (No Install)
