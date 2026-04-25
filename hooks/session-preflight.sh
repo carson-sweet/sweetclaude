@@ -38,6 +38,6 @@ fi
 touch "$FLAG"
 cat << 'EOF'
 <sweetclaude-preflight>
-STOP. SweetClaude is installed but this project is not configured. You MUST run the sweetclaude pre-flight check before doing any work. Invoke the sweetclaude skill now. Every tool call will be blocked until this is resolved.
+STOP. SweetClaude is installed but this project is not configured. You MUST run the sweetclaude pre-flight check before doing any work. Invoke the sweetclaude:master skill now. Every tool call will be blocked until this is resolved.
 </sweetclaude-preflight>
 EOF
