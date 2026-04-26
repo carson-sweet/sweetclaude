@@ -38,7 +38,8 @@ Orchestration
   /sweetclaude:next-steps     Walk through pipeline step by step
   /sweetclaude:new-task       Classify work and enter the pipeline
   /sweetclaude:fix-config     Audit and repair SweetClaude configuration
-  /sweetclaude:update-skills       Sync latest from GitHub — update all projects
+  /sweetclaude:update-sweetclaude  Sync latest from GitHub — update all projects
+  /sweetclaude:usage          Toggle and view local usage tracking
   /sweetclaude:hibernate      Freeze or thaw a project
 
 Strategy

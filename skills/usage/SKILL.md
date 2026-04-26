@@ -1,8 +1,8 @@
 ---
-description: "Toggle and view local performance metrics. Track skill usage, phase gate outcomes, TDD enforcement events, and session patterns. All data is local — stored in .sweetclaude/metrics/ and committed with the project. Use: /sweetclaude:metrics, /sweetclaude:metrics on, /sweetclaude:metrics off"
+description: "Toggle and view local usage tracking. Track skill usage, phase gate outcomes, TDD enforcement events, and session patterns. All data is local — stored in .sweetclaude/metrics/ and committed with the project. Use: /sweetclaude:usage, /sweetclaude:usage on, /sweetclaude:usage off"
 ---
 
-# SweetClaude Metrics
+# SweetClaude Usage
 
 Opt-in local telemetry for understanding how SweetClaude is being used in a project. No external services, no network calls — just append-only event logs in `.sweetclaude/metrics/`.
 
@@ -12,10 +12,10 @@ Parse the user's input to determine the subcommand:
 
 | Input | Action |
 |-------|--------|
-| `metrics on` | Enable metrics collection |
-| `metrics off` | Disable metrics collection |
-| `metrics`, `metrics show`, `metrics dashboard` | Show the dashboard |
-| `metrics reset` | Archive current events and start fresh |
+| `usage on` | Enable metrics collection |
+| `usage off` | Disable metrics collection |
+| `usage`, `usage show`, `usage dashboard` | Show the dashboard |
+| `usage reset` | Archive current events and start fresh |
 
 ## Subcommand: on
 
@@ -36,7 +36,7 @@ Parse the user's input to determine the subcommand:
      - Deference level and phase transitions
 
    All data stays in .sweetclaude/metrics/ — local, committed with your project.
-   View anytime: /sweetclaude:metrics
+   View anytime: /sweetclaude:usage
    ```
 
 ## Subcommand: off
@@ -51,7 +51,7 @@ Parse the user's input to determine the subcommand:
 3. Confirm:
    ```
    Metrics disabled. Existing data preserved in .sweetclaude/metrics/.
-   Re-enable anytime: /sweetclaude:metrics on
+   Re-enable anytime: /sweetclaude:usage on
    ```
 
 ## Subcommand: reset
@@ -69,7 +69,7 @@ If metrics are not enabled or no events exist, say so and offer to enable.
 ### Dashboard format
 
 ```
-SweetClaude Metrics — {project name}
+SweetClaude Usage — {project name}
 ═════════════════════════════════════
 
 Collection: {enabled|disabled}   Events: {count}   Since: {earliest event date}
