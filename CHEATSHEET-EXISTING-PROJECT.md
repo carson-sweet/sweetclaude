@@ -121,7 +121,7 @@ Who else operates in this space, how they are positioned, where the gaps are. Th
 
 **Craft market messaging:**
 ```
-/sweetclaude:strategy-market-messaging
+/sweetclaude:product-market-messaging
 ```
 Elevator pitches, value propositions, and key messages per audience.
 
@@ -135,7 +135,7 @@ For/who/that/unlike framework.
 
 If you have strategy documents, brainstorming exports, meeting notes, or research scattered across folders, Claude.ai sessions, or Google Drive downloads, the corpus pipeline turns them into organized, searchable canonical documents:
 
-1. Run `/sweetclaude:init` and tell it you have files to onboard — it copies them into `corpus/raw/inbox/` (originals untouched)
+1. Run `/sweetclaude:sherpa` and tell it you have files to onboard — it copies them into `corpus/raw/inbox/` (originals untouched)
 2. `/sweetclaude:corpus-consolidate` — scan, deduplicate, generate a plan, copy unique files in batches
 3. `/sweetclaude:corpus-triage` — classify each file as keep, reconcile, discard, or defer
 4. `/sweetclaude:corpus-reconcile` — draft and refine canonical documents from the classified files

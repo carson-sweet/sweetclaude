@@ -94,7 +94,7 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 These are not part of the automatic flow. They are available anytime.
 
 - **Competitive analysis** (`/sweetclaude:product-competition`) — competitive analysis at three depth levels — survey, matrix, or feature-deep
-- **Market messaging** (`/sweetclaude:strategy-market-messaging`) — craft elevator pitches and value propositions per audience
+- **Market messaging** (`/sweetclaude:product-market-messaging`) — craft elevator pitches and value propositions per audience
 - **Meeting prep** (`/sweetclaude:strategy-meeting-prep`) — prepare agenda, talking points, and anticipated questions for a specific meeting
 - **Research** (`/sweetclaude:product-research`) — market or technical research with evidence and sources
 - **Academic paper** (`/sweetclaude:strategy-academic-research`) — full six-phase pipeline from thesis through submission

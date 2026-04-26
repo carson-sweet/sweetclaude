@@ -206,7 +206,7 @@ Measuring success:
   [x] Criterion 1
   [ ] Criterion 2
   [x] strategy/narrative-arc.md finalized
-  [ ] strategy/market-messaging.md finalized
+  [ ] product/market-messaging.md finalized
 
 Non-goals:
   - Not a self-serve launch
@@ -239,7 +239,7 @@ Blockers for MS-001 Exit Stealth
 
 ✗ Unmet criteria (2):
   - Criterion 2
-  - strategy/market-messaging.md finalized
+  - product/market-messaging.md finalized
 
 ⚠ Open work items (2):
   US-015  (in-progress) Press kit generator
@@ -317,7 +317,7 @@ The milestones skill is the single source of truth for milestone data. Other ski
 - **`sweetclaude:product/sprint-plan`**: after stories are chosen for a sprint, read each story's `**Milestone:**` header. Report which milestones the sprint advances and count unassigned stories. If > 50% of sprint stories are unassigned, flag it as a scope concern.
 - **`sweetclaude:status`**: in the orient view, include an "Active milestones" section showing each `active` milestone with its criterion-met count.
 
-Strategy skills (`strategy/narrative-arc`, `strategy/market-messaging`, etc.) are **not modified**. Milestones reference their canonical artifacts by path as Measuring-success criteria; the milestones skill reads those files directly.
+Strategy skills (`strategy/narrative-arc`, `product/market-messaging`, etc.) are **not modified**. Milestones reference their canonical artifacts by path as Measuring-success criteria; the milestones skill reads those files directly.
 
 The `product/backlog` skill is not modified, but is invoked indirectly by the `complete` operation's follow-up chain.
 
