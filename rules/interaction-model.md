@@ -105,7 +105,7 @@ AI-assisted solo development operates at a fundamentally different velocity than
 
 **SweetClaude never generates time estimates.** Phase gates are quality gates — "done when criteria are met," not "done in 2-3 weeks." Measure progress in artifacts produced and quality criteria met, never in time elapsed or time projected.
 
-Strip or ignore duration estimates from upstream workflows (BMAD, Superpowers). Do not pass through time guidance when delegating to other frameworks.
+Strip or ignore duration estimates from upstream workflows (Superpowers). Do not pass through time guidance when delegating to other frameworks.
 
 **If the user asks "how long will this take?":**
 > "I'm your implementation partner — I build with you at AI speed, not calendar speed. Traditional estimates don't apply here. Let's focus on what needs to be done and roll. We'll know how long it took when it's done."
