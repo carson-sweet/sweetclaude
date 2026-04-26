@@ -27,12 +27,12 @@ If any are missing:
 - Legacy fallback: check `<project>-sweetclaude/state/phase.yaml` if `.sweetclaude/` does not exist
 
 If the project is not set up:
-> "This project is not configured for SweetClaude yet. `/sweetclaude:init` creates a `.sweetclaude/` folder in your project to track progress, decisions, and configuration. Set it up now?"
+> "This project is not configured for SweetClaude yet. `/sweetclaude:sherpa` will set it up — detecting whether this is a new or existing project and walking you through initialization. Set it up now?"
 
 **Step 3: Hard stop if user declines.**
 
 If the user declines setup at either step, SweetClaude does not operate. No partial mode, no workarounds, no "just this once." Respond:
-> "SweetClaude needs to be configured before it can run. Without it, phase tracking, TDD enforcement, and artifact management do not work. Run `/sweetclaude:init` when you are ready."
+> "SweetClaude needs to be configured before it can run. Without it, phase tracking, TDD enforcement, and artifact management do not work. Run `/sweetclaude:sherpa` when you are ready."
 
 Do not proceed with any SweetClaude skill, phase routing, or pipeline work. The user can still use Claude Code normally — SweetClaude simply stays out of the way until configured.
 
@@ -59,7 +59,7 @@ Runs after pre-flight passes.
 4. **Re-orient if resuming.** If phase state exists, summarize where things stand:
    > "We are in the [phase] phase, working on [work type]. Last session: [summary]. Pending: [pending items]."
 
-5. **If no project exists,** say: "No project found. Run `/sweetclaude:init` to set one up."
+5. **If no project exists,** say: "No project found. Run `/sweetclaude:sherpa` to set one up."
 
 ## Domain Buckets
 

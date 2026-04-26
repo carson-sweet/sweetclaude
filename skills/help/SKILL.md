@@ -29,15 +29,13 @@ State dir:   {path if exists, or "none"}
 
 ```
 Getting Started
-  /sweetclaude:sherpa-start   New project — walk through everything from idea to code
-  /sweetclaude:sherpa-adopt   Existing project — scan, assess, set up SweetClaude
+  /sweetclaude:sherpa         New or existing project — detects context, walks you through setup
 
 Orchestration
   /sweetclaude:master         Start session, pre-flight check, phase routing
   /sweetclaude:help           This list (you are here)
   /sweetclaude:status         See what is done, what is pending, what is next
-  /sweetclaude:auto-flow      Walk through pipeline step by step
-  /sweetclaude:init           Set up SweetClaude for this project
+  /sweetclaude:next-steps     Walk through pipeline step by step
   /sweetclaude:new-task       Classify work and enter the pipeline
   /sweetclaude:fix-config     Audit and repair SweetClaude configuration
   /sweetclaude:update-skills       Sync latest from GitHub — update all projects
@@ -103,7 +101,7 @@ Code
 ## Step 3: Quick Start
 
 If the project is not configured:
-> "Run `/sweetclaude:init` to set up this project."
+> "Run `/sweetclaude:sherpa` to set up this project."
 
 If configured:
-> "You are in the {phase} phase. Run `/sweetclaude:status` to see the full picture, `/sweetclaude:auto-flow` to keep working, or any command above."
+> "You are in the {phase} phase. Run `/sweetclaude:status` to see the full picture, `/sweetclaude:next-steps` to keep working, or any command above."

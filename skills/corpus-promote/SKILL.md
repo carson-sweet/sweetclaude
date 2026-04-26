@@ -17,7 +17,7 @@ Finalize approved documents from `corpus/working/`. Move them to `corpus/canonic
 Does `.sweetclaude/state/phase.yaml` exist?
 
 If no:
-> "SweetClaude is not set up for this project. Run `/sweetclaude:init` first."
+> "SweetClaude is not set up for this project. Run `/sweetclaude:sherpa` first."
 
 Stop. Do not proceed.
 

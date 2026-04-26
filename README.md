@@ -117,21 +117,13 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 ### Your First Session
 
-**Starting a brand new project:**
+**Getting started (new or existing project):**
 
 ```
-/sweetclaude:sherpa-start
+/sweetclaude:sherpa
 ```
 
-This walks you through everything from "I have an idea" to a configured project. It chains together: project setup, concept articulation, pain thesis, ideal customer profile, and product discovery. At the end, it hands off to the pipeline for product definition, design, and implementation.
-
-**Adopting an existing project:**
-
-```
-/sweetclaude:sherpa-adopt
-```
-
-This scans your codebase, understands what exists (code, tests, docs, issues), asks you about the current state, and figures out where you are in the development lifecycle. It sets up SweetClaude without disrupting what you have. Before making any changes, it creates a `pre-sweetclaude` branch so you can always revert.
+Detects whether the folder is empty or already has a project. For new projects: walks through setup, product discovery, user personas, and hands off to the pipeline. For existing projects: creates a safety snapshot, scans the codebase, interviews you about current state, and positions you in the right phase.
 
 **Checking project status:**
 
@@ -144,7 +136,7 @@ Shows where you are, what has been done, what is pending, and what the next step
 **Walking through the pipeline step by step:**
 
 ```
-/sweetclaude:auto-flow
+/sweetclaude:next-steps
 ```
 
 Figures out the next thing to do based on where you are, runs the right skill, then moves to the next step. You approve or redirect at each point.
@@ -153,22 +145,21 @@ Figures out the next thing to do based on where you are, runs the right skill, t
 
 ### "I have an idea for a product but have not started building anything"
 
-Run `/sweetclaude:sherpa-start` in an empty folder. SweetClaude will:
+Run `/sweetclaude:sherpa` in an empty folder. SweetClaude will:
 1. Set up the project (git, directory structure, CLAUDE.md)
-2. Help you articulate the concept
-3. Walk you through a structured pain analysis — who has this problem, how badly, what they do today, why existing solutions fail
-4. Define your ideal customer profile
-5. Run product discovery — personas, features, competitive landscape
-6. Hand off to the product definition pipeline (brief, PRD, architecture, implementation)
+2. Ask what you want to build
+3. Run product discovery — problem framing, personas, optional competitive landscape
+4. Hand off to the product definition pipeline (brief, PRD, architecture, implementation)
 
 ### "I have a codebase and want to start using SweetClaude"
 
-Run `/sweetclaude:sherpa-adopt` in your project folder. SweetClaude will:
-1. Create a safety snapshot (branch) before touching anything
-2. Scan your code, tests, docs, and issues
-3. Ask you about the current state and biggest concerns
-4. Determine where your project sits in the development lifecycle
-5. Set up tracking and offer to address your immediate concerns first
+Run `/sweetclaude:sherpa` in your project folder. SweetClaude will:
+1. Detect that there is an existing project
+2. Create a safety snapshot (branch) before touching anything
+3. Scan your code, tests, docs, and issues
+4. Ask you about the current state and biggest concerns
+5. Determine where your project sits in the development lifecycle
+6. Set up tracking and offer to address your immediate concerns first
 
 ### "I need to build a specific feature"
 
@@ -184,7 +175,7 @@ Run `/sweetclaude:strategy-academic-research`. Six-phase pipeline: establish you
 
 ### "I have a pile of messy strategy files from various sessions"
 
-Run `/sweetclaude:init` and point it at the files. It copies them into `corpus/raw/inbox/`. Then work through the corpus pipeline:
+Run `/sweetclaude:sherpa` and tell it you have files to bring in. It copies them into `corpus/raw/inbox/`. Then work through the corpus pipeline:
 1. `/sweetclaude:corpus-consolidate` — scan, deduplicate, generate a plan, copy unique files in batches
 2. `/sweetclaude:corpus-triage` — classify each file as keep, reconcile, discard, or defer
 3. `/sweetclaude:corpus-reconcile` — draft and refine canonical documents from the classified files
@@ -197,8 +188,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 ### Getting Started
 | Command | What it does |
 |---|---|
-| `/sweetclaude:sherpa-start` | Brand new project — walk through everything from idea to code |
-| `/sweetclaude:sherpa-adopt` | Existing project — scan, assess, set up SweetClaude |
+| `/sweetclaude:sherpa` | New or existing project — detects context, walks you through setup |
 
 ### Orchestration
 | Command | What it does |
@@ -206,8 +196,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:master` | Session entry point, pre-flight check, phase routing |
 | `/sweetclaude:help` | Show project status and all available commands |
 | `/sweetclaude:status` | What is done, what is pending, what is next |
-| `/sweetclaude:auto-flow` | Walk through the pipeline step by step |
-| `/sweetclaude:init` | Set up SweetClaude for a project |
+| `/sweetclaude:next-steps` | Walk through the pipeline step by step |
 | `/sweetclaude:new-task` | Classify work and enter the pipeline |
 | `/sweetclaude:fix-config` | Audit and repair SweetClaude configuration |
 | `/sweetclaude:update-sweetclaude` | Fetch latest from GitHub and sync to all projects |

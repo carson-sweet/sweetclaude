@@ -17,7 +17,7 @@ Scan source directories, deduplicate files, and copy unique files into `corpus/r
 Does `.sweetclaude/state/phase.yaml` exist?
 
 If no:
-> "SweetClaude is not set up for this project. Run `/sweetclaude:init` first."
+> "SweetClaude is not set up for this project. Run `/sweetclaude:sherpa` first."
 
 Stop. Do not proceed.
 
