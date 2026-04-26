@@ -1,5 +1,5 @@
 ---
-description: "Define how the product is positioned — for whom, what category, what differentiates it, and why that matters. Builds on strategy/concept and strategy/ideal-customer-profile."
+description: "Define how the product is positioned — for whom, what category, what differentiates it, and why that matters. Runs after discovery, research, competition, and personas are complete."
 ---
 
 <preflight-guard>
@@ -9,6 +9,19 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 # Product Positioning Statement
 
 Define how this product is positioned in the market.
+
+## Entry
+
+Check for `.sweetclaude/` directory. If not found, tell the user to run `/sweetclaude:init` first. Stop.
+
+Check for `.sweetclaude/log.md`. If not found, create it.
+
+Read available state files and use them to pre-populate context:
+- `.sweetclaude/state/competition.yaml` — key differentiators found
+- `.sweetclaude/state/personas.yaml` — target user segment
+- `.sweetclaude/state/discovery.yaml` — pain thesis and problem framing
+
+If any are missing, note this and recommend completing those skills first. Accept if the user declines and proceed with what's available.
 
 ## Context
 
@@ -58,3 +71,25 @@ Work through this structure with the user:
 ### 5. Save
 
 Save to `strategy/positioning-statement.md`. This feeds into strategy/market-messaging and product/product-brief.
+
+## Exit
+
+Write `.sweetclaude/state/positioning.yaml`:
+
+```yaml
+target_segment: {}
+positioning_statement: {}
+differentiators: []
+category: {}
+current_file: {}
+```
+
+Append to `.sweetclaude/log.md`:
+
+```markdown
+## {ISO datetime} — product-positioning-statement (n/a)
+
+**Status:** completed | degraded
+**Produced:** {filename}
+**Key decisions:** {bullets}
+```
