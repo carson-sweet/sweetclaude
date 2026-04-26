@@ -102,12 +102,12 @@ These are not part of the automatic flow. They are available anytime.
 - **Decision tracking** (`/sweetclaude:design-manage-decisions`) — record any decision with context and rationale, queryable later
 - **Positioning statement** (`/sweetclaude:product-positioning-statement`) — for/who/that/unlike framework
 - **Corpus pipeline** — organize messy files into canonical documents with full provenance:
-  - `/sweetclaude:corpus-consolidate` — scan, deduplicate, ingest into corpus
-  - `/sweetclaude:corpus-triage` — classify files (keep, reconcile, discard, defer)
-  - `/sweetclaude:corpus-reconcile` — draft and refine canonical documents
-  - `/sweetclaude:corpus-promote` — finalize with provenance, archive, RAG index
-  - `/sweetclaude:corpus-status` — see where the pipeline stands
-- **RAG search** (`/sweetclaude:rag-index`) — set up semantic search over your project documents so you can query by meaning, not just keywords
+  - `/sweetclaude:document-corpus` — scan, deduplicate, ingest into corpus
+  - `/sweetclaude:document-corpus` — classify files (keep, reconcile, discard, defer)
+  - `/sweetclaude:document-corpus` — draft and refine canonical documents
+  - `/sweetclaude:document-corpus` — finalize with provenance, archive, RAG index
+  - `/sweetclaude:document-corpus` — see where the pipeline stands
+- **RAG search** (`/sweetclaude:document-corpus`) — set up semantic search over your project documents so you can query by meaning, not just keywords
 - **Update SweetClaude** (`/sweetclaude:update-sweetclaude`) — fetch the latest version from GitHub and sync to all projects
 - **Auto version bumping** — create `.sweetclaude/version-bump.yaml` to auto-bump version files after every git commit based on conventional commit prefixes
 

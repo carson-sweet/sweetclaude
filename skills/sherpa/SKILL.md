@@ -68,7 +68,7 @@ Set up SweetClaude state for this project:
 
 **2d. CLAUDE.md:** Generate a CLAUDE.md using the user's one-line description from Step 1-N. Include: what this is, key directories, build/test commands (placeholder), project-specific rules placeholder, SweetClaude section, and distribution warning. Present to user before writing.
 
-**2e. Existing strategy files:** Ask: "Do you have strategy documents to bring in — positioning docs, research, notes?" If yes, get the path and copy into `corpus/raw/inbox/`. Tell them to run `/sweetclaude:corpus-consolidate` to organize them.
+**2e. Existing strategy files:** Ask: "Do you have strategy documents to bring in — positioning docs, research, notes?" If yes, get the path and copy into `corpus/raw/inbox/`. Tell them to run `/sweetclaude:document-corpus` to organize them.
 
 ---
 

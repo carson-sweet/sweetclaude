@@ -48,7 +48,7 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 | [Claude Code](https://claude.ai/code) | `claude --version` | [Install guide](https://docs.anthropic.com/en/docs/claude-code/getting-started) |
 | Git | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
 | [GitHub CLI](https://cli.github.com/) | `gh --version` | `brew install gh` or [cli.github.com](https://cli.github.com/) |
-| Node.js (for RAG) | `node --version` | [nodejs.org](https://nodejs.org/) — optional, needed for `/sweetclaude:rag-index` |
+| Node.js (for RAG) | `node --version` | [nodejs.org](https://nodejs.org/) — optional, needed for `/sweetclaude:document-corpus` |
 
 ### Install
 
@@ -105,7 +105,7 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 **Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
 
-**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, run `/sweetclaude:init` in the project and tell it you have files to onboard. It copies them into `corpus/raw/inbox/` (originals untouched). Then work through the corpus pipeline: `/sweetclaude:corpus-consolidate` to deduplicate, `/sweetclaude:corpus-triage` to classify, `/sweetclaude:corpus-reconcile` to draft canonical documents, and `/sweetclaude:corpus-promote` to finalize with provenance tracking. Run `/sweetclaude:corpus-status` anytime to see where you are.
+**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, run `/sweetclaude:document-corpus`. It presents a menu: consolidate raw files, triage (classify each one), reconcile (draft canonical documents), promote (finalize with provenance, archive, and RAG index). Select **Status** at any point to see where you are. Originals are never deleted.
 
 **Check the status of a project SweetClaude already knows about.** If you have already run init on a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
 
@@ -113,7 +113,7 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 **Get a code review.** On any project with code, run `/sweetclaude:code-review`. It reads your recent changes and gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
 
-**Set up semantic search.** Run `/sweetclaude:rag-index` in any project. It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
+**Set up semantic search.** Run `/sweetclaude:document-corpus` in any project. It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
 
 ### Your First Session
 
@@ -175,13 +175,7 @@ Run `/sweetclaude:strategy-academic-research`. Six-phase pipeline: establish you
 
 ### "I have a pile of messy strategy files from various sessions"
 
-Run `/sweetclaude:sherpa` and tell it you have files to bring in. It copies them into `corpus/raw/inbox/`. Then work through the corpus pipeline:
-1. `/sweetclaude:corpus-consolidate` — scan, deduplicate, generate a plan, copy unique files in batches
-2. `/sweetclaude:corpus-triage` — classify each file as keep, reconcile, discard, or defer
-3. `/sweetclaude:corpus-reconcile` — draft and refine canonical documents from the classified files
-4. `/sweetclaude:corpus-promote` — finalize with provenance sidecars, archive sources, index into RAG
-
-Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
+Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate** to ingest your files, then work through **Triage** → **Reconcile** → **Promote**. Select **Status** at any point to see where the pipeline stands. Each step explains why skipping it produces worse results.
 
 ## All Commands
 
@@ -252,20 +246,10 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:milestones complete` | Mark achieved with follow-up capture |
 | `/sweetclaude:milestones unassigned` | Find work items with no milestone |
 
-### Corpus Management
+### Documents & Search
 | Command | What it does |
 |---|---|
-| `/sweetclaude:corpus-consolidate` | Scan directories, deduplicate, copy into corpus/raw/inbox/ |
-| `/sweetclaude:corpus-triage` | Classify inbox files for reconciliation, archival, or deferral |
-| `/sweetclaude:corpus-reconcile` | Draft and refine canonical documents from staged files |
-| `/sweetclaude:corpus-promote` | Finalize approved documents — provenance, archive, RAG index |
-| `/sweetclaude:corpus-reindex` | Rebuild RAG collections from source files |
-| `/sweetclaude:corpus-status` | Show pipeline state, file counts, and next step |
-
-### Semantic Search
-| Command | What it does |
-|---|---|
-| `/sweetclaude:rag-index` | Set up local RAG and index project documents (PDF, Word, markdown, text) |
+| `/sweetclaude:document-corpus` | Full corpus pipeline + RAG — consolidate, triage, reconcile, promote, set up semantic search, reindex |
 
 ### Code
 | Command | What it does |
@@ -296,7 +280,7 @@ SweetClaude is a Claude Code plugin. After running the installer, all 55 skills 
 
 **Corpus management.** The corpus pipeline organizes scattered documents into searchable canonical truth. A state machine enforces the four-step ordering (consolidate → triage → reconcile → promote) so files cannot be processed out of order. Every canonical document has provenance sidecars tracing it back to source files. Originals are never deleted.
 
-**Semantic search.** The RAG system uses [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) to run a per-project vector database locally. No external services, no API keys, no data leaving your machine. The embedding model downloads once and works offline. The corpus pipeline's promote step indexes canonical documents automatically, and `/sweetclaude:rag-index` handles standalone indexing for any project. Supports PDF, Word (.docx), markdown, and text files.
+**Semantic search.** The RAG system uses [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) to run a per-project vector database locally. No external services, no API keys, no data leaving your machine. The embedding model downloads once and works offline. The corpus pipeline's promote step indexes canonical documents automatically, and `/sweetclaude:document-corpus` handles standalone indexing for any project. Supports PDF, Word (.docx), markdown, and text files.
 
 **Milestones.** Roadmap targets live in `docs/milestones/` as individual files with success criteria, contributing work items, and notes. Links between milestones and stories are bidirectional — editing one updates the other. Sprint planning aggregates milestone advancement automatically. Progress is computed from files on every read, not cached in a derived state file.
 
