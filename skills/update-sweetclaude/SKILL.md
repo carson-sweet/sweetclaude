@@ -213,60 +213,78 @@ If no new capabilities, omit this section.
 
 ---
 
-## Step 8: Check for project artifact migrations
+## Step 8: Migrate existing project artifacts
 
-After syncing the framework, check whether the **current project** (the one where the user ran this skill) has `.sweetclaude/` artifacts that need migration.
+After syncing the framework, check whether the **current project** (the working directory where this skill was run) has `.sweetclaude/` artifacts that need migration.
 
-### 8a: Detect what exists
+### 8a: Detect project state
 
-Check for:
-- `.sweetclaude/state/phase.yaml`
-- `.sweetclaude/state/project.yaml`
-- `.sweetclaude/state/corpus-pipeline.yaml`
-- `.sweetclaude/state/corpus.yaml`
-- `.sweetclaude/version-bump.yaml`
-- `docs/milestones/MILESTONES-INDEX.md`
-- Story files in `.sweetclaude/stories/` or `stories/`
+Check for `.sweetclaude/` directory. If it does not exist, this project has no SweetClaude state — skip this step.
 
-If none exist, this project is not SweetClaude-configured. Skip this step.
+If `.sweetclaude/` exists, check for:
+- `.sweetclaude/state/phase.yaml` (old-format state)
+- `.sweetclaude/log.md` (new-format effort log)
+- `.sweetclaude/state/` directory
+- Any `.md` files in `docs/` that look like deliverable artifacts
 
-### 8b: Compare against current schema
+### 8b: Seed the effort log
 
-For each artifact found, read it and compare against the schema expected by the newly installed skills. Check for:
+If `.sweetclaude/log.md` does not exist but `phase.yaml` does:
 
-1. **Missing fields** — the new version of a skill reads a YAML field or markdown section that doesn't exist in the project's artifact. Example: `phase.yaml` missing a field that a new skill expects.
-2. **Renamed fields** — a field name changed between versions. The old name exists, the new name doesn't.
-3. **New required files** — a skill now expects a file that didn't exist in previous versions. Example: `.sweetclaude/version-bump.yaml` for the version-bump hook.
-4. **Changed structure** — a table gained a column, a YAML block gained a nesting level, a markdown template changed sections.
+1. Read `phase.yaml` and infer what phases were completed.
+2. Create `.sweetclaude/log.md` with a migration entry:
 
-To detect these, read the relevant skill files from the newly installed version and extract what fields/sections they read from each artifact. Then diff against what actually exists in the project.
+```markdown
+# SweetClaude Effort Log
 
-### 8c: Report and offer migration
+## {current ISO datetime} — migration (n/a)
 
-If migrations are needed:
-
-```
-⚠ Project artifacts need migration:
-
-  phase.yaml:
-    → Missing field: {field_name} (default: {value})
-    → Missing field: {field_name} (default: {value})
-
-  MILESTONES-INDEX.md:
-    → Missing column: {column_name}
-
-  New optional config:
-    → .sweetclaude/version-bump.yaml not found
-      Enable auto version bump? Create with defaults for this project.
+**Status:** completed
+**Note:** Seeded from legacy phase.yaml during framework upgrade.
+**Prior phase:** {phase value from phase.yaml}
+**Key decisions:** Migrated from pre-1.9 SweetClaude. Prior artifacts registered below.
 ```
 
-For each migration, offer:
-- **Auto-fix** — add the missing field/section with a sensible default
-- **Skip** — leave as-is (skill will handle gracefully or prompt at runtime)
+### 8c: Create state directory
 
-Apply approved migrations. Do not modify artifacts without confirmation.
+```bash
+mkdir -p .sweetclaude/state
+```
 
-If no migrations needed: omit this section.
+### 8d: Register pre-existing deliverable documents
+
+Scan `docs/` for `.md` files. For each one found, append a registration entry to `.sweetclaude/log.md`:
+
+```markdown
+## {current ISO datetime} — pre-existing artifact registration (n/a)
+
+**Status:** completed
+**Note:** Pre-existing documents found in docs/ before framework upgrade. Not modified.
+**Produced:** {comma-separated list of filenames}
+```
+
+### 8e: Offer to update deliverable front matter and file naming
+
+Identify `docs/` files that do not have the new front matter format. The new format requires these YAML fields at the top: `title`, `version`, `status`, `author`, `assisted_by`, `date`, `audience`, `nda`, `changes`, `previous_file`.
+
+For each non-conforming file, determine:
+- What the new filename would be: `{title}-{status}-v{version}-{yyyymmdd}.md`
+- What the front matter block would look like with the available information
+
+Present a preview table:
+
+```
+Files that would be updated:
+  old-filename.md → whizbang-product-brief-draft-v1.0-20260426.md
+    Front matter added: title, version, status, author, assisted_by, date
+  ...
+```
+
+Ask: "Approve all changes at once, or review file by file?"
+
+Apply approved changes. Never rename or reformat without explicit approval.
+
+If no non-conforming files exist, skip this step and note "No document migration needed."
 
 ---
 
