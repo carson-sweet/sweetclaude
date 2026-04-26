@@ -35,54 +35,32 @@ SweetClaude creates:
 
 SweetClaude asks you to describe your idea in your own words. Then it helps you sharpen it into a clear statement: what is this, what problem does it solve, why does it matter, and what is it NOT. It will challenge your framing — not to be difficult, but because the best concepts survive scrutiny.
 
-**Output:** `strategy/concept.md`
+### Step 3: Product Discovery (Deep Dive)
 
-### Step 3: Pain Thesis
+SweetClaude runs `/sweetclaude:product-discovery` to establish what is being built, for whom, and why. You choose the depth:
+- **Quick intent** — high-level framing in one pass
+- **Standard** — pain and audience with structured prompts
+- **Full pain thesis** — 11-section structured analysis, research-backed
 
-This is where SweetClaude goes deep. It walks you through 11 sections based on a structured pain analysis framework:
+At any depth, SweetClaude can analyze competitors via `/sweetclaude:product-competition` and define user personas via `/sweetclaude:product-user-personas`.
 
-- What forces in the industry created this pain
-- Who is personally accountable when this problem is not solved
-- What the pain looks like from the inside and how it escalates
-- What people do today and why those approaches fail
-- What an effective solution must do (and what would cause rejection)
-- Your strategic wedge — the narrowest slice buyers would pay for first
-- How buyers will measure success
-- Your ideal customer profile — who buys fastest, who to avoid
-- Where your current capabilities match (and where the gaps are)
-- How you will validate the thesis with real buyers
+**Output:** Discovery artifacts in `strategy/` — depth depends on level chosen
 
-At each section, SweetClaude can research industry trends, analyze competitors, or brainstorm with you. You are not doing this alone.
+### Step 4: Handoff
 
-**Output:** `strategy/pain-thesis.md` with a Red/Yellow/Green validation rubric
-
-### Step 4: Ideal Customer Profile
-
-SweetClaude sharpens the "who" from the pain thesis into a targetable profile: demographics, behaviors, purchase triggers, deal-breakers, and an explicit anti-profile (who you are NOT building for).
-
-**Output:** `strategy/ideal-customer-profile.md`
-
-### Step 5: Product Discovery
-
-Now the product takes shape. SweetClaude interviews you about user personas one at a time. For each persona: role, tasks, success criteria. After personas are confirmed, it proposes features one at a time for you to include or exclude. Optionally, it researches competitors and extracts a "table stakes" feature set.
-
-**Output:** Documented personas, feature set, and optional competitive analysis
-
-### Step 6: Handoff
-
-At this point you have a strategic foundation: concept, pain thesis, customer profile, personas, and feature set. SweetClaude tells you what is available next and lets you decide when to continue.
+At this point you have a strategic foundation: concept, discovery artifacts, personas, and feature set. SweetClaude tells you what is available next and lets you decide when to continue.
 
 ## What Comes After (When You Are Ready)
 
 SweetClaude does not push you forward. You move to the next phase when you are ready.
 
 ### Product Definition
-- `/sweetclaude:product-product-brief` — 11-section product brief, one section at a time
+- `/sweetclaude:product-brief` — strategic product brief, outline-first, scales to available input
 - `/sweetclaude:product-prd` — full PRD with functional requirements and epics
-- `/sweetclaude:product-user-success-criteria` — measurable success per persona
 - `/sweetclaude:product-manage-scope` — track what is in and out of scope
 
 ### Design
+- `/sweetclaude:design-user-flows` — convert user stories into UX/UI flows
 - `/sweetclaude:design-architecture` — system architecture
 - `/sweetclaude:design-tech-spec` — technical specification
 - `/sweetclaude:design-data-model` — schema and entity design
@@ -90,7 +68,7 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 - `/sweetclaude:design-ux` — user experience flows
 
 ### Planning
-- `/sweetclaude:product-user-story` — user stories with acceptance criteria
+- `/sweetclaude:product-user-stories` — user stories with acceptance criteria
 - `/sweetclaude:product-user-tdd-tests` — convert stories to Gherkin test specs
 - `/sweetclaude:product-sprint-plan` — plan a sprint from the backlog
 
@@ -100,7 +78,7 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 - `/sweetclaude:code-work-debt` — clean up tech debt (tests before touch)
 
 ### Review and Ship
-- `/sweetclaude:code-code-review` — adversarial code review
+- `/sweetclaude:code-review` — adversarial code review
 - `/sweetclaude:code-security-testing` — security review
 - `/sweetclaude:code-pr-precheck` — pre-PR quality gate
 
@@ -115,8 +93,7 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 
 These are not part of the automatic flow. They are available anytime.
 
-- **Competitive analysis** (`/sweetclaude:strategy-competitive-analysis`) — full landscape scan with SWOT analysis
-- **Feature-level competitive comparison** (`/sweetclaude:product-feature-competitive`) — build a feature matrix against competitors
+- **Competitive analysis** (`/sweetclaude:product-competition`) — competitive analysis at three depth levels — survey, matrix, or feature-deep
 - **Market messaging** (`/sweetclaude:strategy-market-messaging`) — craft elevator pitches and value propositions per audience
 - **Meeting prep** (`/sweetclaude:strategy-meeting-prep`) — prepare agenda, talking points, and anticipated questions for a specific meeting
 - **Research** (`/sweetclaude:product-research`) — market or technical research with evidence and sources
@@ -131,7 +108,7 @@ These are not part of the automatic flow. They are available anytime.
   - `/sweetclaude:corpus-promote` — finalize with provenance, archive, RAG index
   - `/sweetclaude:corpus-status` — see where the pipeline stands
 - **RAG search** (`/sweetclaude:rag-index`) — set up semantic search over your project documents so you can query by meaning, not just keywords
-- **Update SweetClaude** (`/sweetclaude:update-skills`) — fetch the latest version from GitHub and sync to all projects
+- **Update SweetClaude** (`/sweetclaude:update-sweetclaude`) — fetch the latest version from GitHub and sync to all projects
 - **Auto version bumping** — create `.sweetclaude/version-bump.yaml` to auto-bump version files after every git commit based on conventional commit prefixes
 
 ## Tips

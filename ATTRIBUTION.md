@@ -15,7 +15,6 @@ SweetClaude requires [Claude Code](https://docs.anthropic.com/en/docs/claude-cod
 | Dependency | License | Min Version | Role |
 |---|---|---|---|
 | [Superpowers](https://github.com/obra/superpowers) | MIT | 5.0.7 | Dev mechanics: plans, worktrees, debugging, code review, parallel agents |
-| [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | MIT | 6.0.0 | Product lifecycle: brainstorm, PRD, architecture, stories, sprint planning |
 
 **Superpowers skills used directly:**
 - `superpowers:writing-plans`
@@ -25,17 +24,6 @@ SweetClaude requires [Claude Code](https://docs.anthropic.com/en/docs/claude-cod
 - `superpowers:dispatching-parallel-agents`
 - `superpowers:subagent-driven-development`
 - `superpowers:verification-before-completion`
-
-**BMAD skills wrapped by SweetClaude:**
-- `bmad:product-brief` → `sweetclaude:product/product-brief`
-- `bmad:prd` → `sweetclaude:product/prd`
-- `bmad:create-story` → `sweetclaude:product/user-story`
-- `bmad:research` → `sweetclaude:product/research`
-- `bmad:sprint-planning` → `sweetclaude:product/sprint-plan`
-- `bmad:architecture` → `sweetclaude:design/architecture`
-- `bmad:tech-spec` → `sweetclaude:design/tech-spec`
-- `bmad:create-ux-design` → `sweetclaude:design/ux`
-- `bmad:solutioning-gate-check` → `sweetclaude:design/solutioning-gate`
 
 ### Standalone Claude Code Skills (Used, Not Wrapped)
 

@@ -11,7 +11,7 @@
 
 An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
-SweetClaude is a Claude Code plugin with 61 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude is a Claude Code plugin with 55 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
 Built by an enterprise CTO/CISO turned solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
 
@@ -19,9 +19,9 @@ Built by an enterprise CTO/CISO turned solo developer for solo developers who wa
 
 Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
-**Strategy** — Before you write a line of code, SweetClaude helps you articulate what you are building, who has the pain you are solving, what the competitive landscape looks like, and whether the pain is real enough to sustain a business. It walks you through building a pain thesis, defining your ideal customer profile, and crafting market messaging.
+**Strategy** — Academic research, stakeholder meeting preparation, narrative arc building, and market messaging. SweetClaude helps you craft external communications by audience and build a knowledge graph of strategic claims and evidence.
 
-**Product** — SweetClaude guides you through structured product discovery: persona interviews one at a time, feature brainstorming with include/exclude decisions, product briefs, PRDs with testable acceptance criteria, user stories, success metrics, and scope management.
+**Product** — A discovery-first pipeline: product-discovery (three depth levels from quick intent to full pain thesis), competitive analysis via product-competition, user persona definition with product-user-personas, positioning, product briefs, PRDs with testable acceptance criteria, user stories, and scope management.
 
 **Design** — System architecture, technical specifications, UX flows, data models, API design, service boundaries, infrastructure planning. Every design decision is recorded with context and rationale so future sessions understand why things are the way they are.
 
@@ -35,7 +35,7 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 **Review and Ship** — Adversarial code review, security testing, mutation testing to verify your tests actually catch bugs, pre-PR quality gates, and documentation updates.
 
-**Self-Updating** — Run `/sweetclaude:update-skills` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, and checks whether your project's artifacts need migration for the new version. Private repos are handled transparently via `gh` authentication.
+**Self-Updating** — Run `/sweetclaude:update-sweetclaude` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, and checks whether your project's artifacts need migration for the new version. Private repos are handled transparently via `gh` authentication.
 
 **Auto Version Bumping** — An opt-in hook that automatically bumps your project's version after every git commit. It reads conventional commit prefixes (`feat` → minor, `fix`/`chore` → patch, `BREAKING` → major), updates configured version files, and commits the bump. Enable it by creating `.sweetclaude/version-bump.yaml` in your project.
 
@@ -59,14 +59,14 @@ cd sweetclaude
 ```
 
 The installer:
-- Checks prerequisites (Claude Code, Git; Superpowers and BMAD for full install only)
+- Checks prerequisites (Claude Code, Git; Superpowers for full install)
 - Backs up your existing `~/.claude/` configuration
 - Scans for conflicting plugins and offers to clean them up
 - Copies skills, hooks, agents, rules, and config to `~/.claude/`
 - Wires TDD enforcement hooks into `settings.json`
 - Generates `uninstall.sh` and `restore-config.sh` for clean removal
 
-After install, all 61 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
+After install, all 55 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
 
 #### Strategy Skills Only
 
@@ -76,9 +76,9 @@ If you want the product thinking, strategy, and corpus management skills without
 ./install.sh --strategy-skills-only
 ```
 
-This installs strategy, product, corpus, and orchestration skills — no TDD hooks, no subagents, no Superpowers or BMAD prerequisites required. Just Claude Code and Git. You can upgrade to the full install later by running `./install.sh`.
+This installs strategy, product, corpus, and orchestration skills — no TDD hooks, no subagents, no Superpowers prerequisite required. Just Claude Code and Git. You can upgrade to the full install later by running `./install.sh`.
 
-To update later, run `/sweetclaude:update-skills` from any project. It fetches the latest version from GitHub and syncs everywhere.
+To update later, run `/sweetclaude:update-sweetclaude` from any project. It fetches the latest version from GitHub and syncs everywhere.
 
 ### Quick Try (No Install)
 
@@ -109,9 +109,9 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 **Check the status of a project SweetClaude already knows about.** If you have already run init on a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
 
-**Run a competitive landscape scan.** In any project, run `/sweetclaude:strategy-competitive-analysis` and describe your space. SweetClaude researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond init.
+**Run a competitive landscape scan.** In any project, run `/sweetclaude:product-competition` and describe your space. SweetClaude researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond init.
 
-**Get a code review.** On any project with code, run `/sweetclaude:code-code-review`. It reads your recent changes and gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
+**Get a code review.** On any project with code, run `/sweetclaude:code-review`. It reads your recent changes and gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
 
 **Set up semantic search.** Run `/sweetclaude:rag-index` in any project. It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
 
@@ -210,17 +210,13 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:init` | Set up SweetClaude for a project |
 | `/sweetclaude:new-task` | Classify work and enter the pipeline |
 | `/sweetclaude:fix-config` | Audit and repair SweetClaude configuration |
-| `/sweetclaude:update-skills` | Fetch latest from GitHub and sync to all projects |
+| `/sweetclaude:update-sweetclaude` | Fetch latest from GitHub and sync to all projects |
 | `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
 | `/sweetclaude:metrics` | View, enable, or disable local performance metrics |
 
 ### Strategy
 | Command | What it does |
 |---|---|
-| `/sweetclaude:strategy-concept` | Articulate what this product / project is and why it exists |
-| `/sweetclaude:strategy-pain-thesis` | Structured user / customer pain analysis using 11-section framework |
-| `/sweetclaude:strategy-ideal-customer-profile` | Who has this pain and will invest in relieving it |
-| `/sweetclaude:strategy-competitive-analysis` | Strategic landscape and differentiation |
 | `/sweetclaude:strategy-academic-research` | Research paper development (6 phases) |
 | `/sweetclaude:strategy-meeting-prep` | Stakeholder meeting deliverables |
 | `/sweetclaude:strategy-narrative-arc` | Knowledge graph of strategic claims and evidence |
@@ -229,23 +225,23 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 ### Product
 | Command | What it does |
 |---|---|
-| `/sweetclaude:product-discovery` | Persona interviews, feature brainstorming, competitive scan |
+| `/sweetclaude:product-discovery` | Establish what is being built, for whom, and why. Three depth levels from quick intent to full pain thesis. |
+| `/sweetclaude:product-competition` | Competitive analysis at three depth levels — survey, matrix comparison, or feature-deep analysis. |
+| `/sweetclaude:product-user-personas` | Define users — who they are, what they need to do, and what success looks like. Includes triggers and deal-breakers. |
 | `/sweetclaude:product-positioning-statement` | For/who/that/unlike positioning |
-| `/sweetclaude:product-product-brief` | 11-section product brief, one section at a time |
+| `/sweetclaude:product-brief` | Strategic product brief. Outline-first, scales to available input. |
 | `/sweetclaude:product-prd` | Full PRD with FRs, NFRs, epics |
-| `/sweetclaude:product-user-story` | User stories with acceptance criteria |
+| `/sweetclaude:product-user-stories` | User stories in Gherkin or generic format, scoped to all personas, SLC, or MVP. |
 | `/sweetclaude:product-user-tdd-tests` | Stories to Gherkin .feature files |
-| `/sweetclaude:product-user-success-criteria` | Measurable success per persona |
-| `/sweetclaude:product-user-workflows` | User stories to UX/UI flows |
 | `/sweetclaude:product-manage-scope` | Track scope changes with rationale |
 | `/sweetclaude:product-backlog` | Manage deferred work |
 | `/sweetclaude:product-sprint-plan` | Plan sprints from backlog |
-| `/sweetclaude:product-research` | Market or technical research |
-| `/sweetclaude:product-feature-competitive` | Product-level feature comparison |
+| `/sweetclaude:product-research` | Market and solution landscape research. Feeds the competitive seed list. |
 
 ### Design
 | Command | What it does |
 |---|---|
+| `/sweetclaude:design-user-flows` | Convert user stories into UX/UI flows — step-by-step paths through the interface. |
 | `/sweetclaude:design-architecture` | System architecture |
 | `/sweetclaude:design-tech-spec` | Technical specification |
 | `/sweetclaude:design-ux` | UX design and wireframes |
@@ -254,8 +250,6 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:design-update-docs` | Keep docs in sync after changes |
 | `/sweetclaude:design-data-model` | Schema, entities, migrations |
 | `/sweetclaude:design-api-design` | Endpoints, contracts, versioning |
-| `/sweetclaude:design-services-design` | Service boundaries and communication |
-| `/sweetclaude:design-infra-design` | Infrastructure and deployment |
 | `/sweetclaude:design-manage-decisions` | Record decisions with rationale |
 
 ### Milestones
@@ -294,11 +288,11 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:code-qa-testing` | Run tests, report failures concisely |
 | `/sweetclaude:code-mutation-testing` | Verify tests catch real faults |
 | `/sweetclaude:code-security-testing` | Security review of code changes |
-| `/sweetclaude:code-code-review` | Adversarial code review |
+| `/sweetclaude:code-review` | Adversarial code review |
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. After running the installer, all 61 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. After running the installer, all 55 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 
@@ -319,7 +313,7 @@ SweetClaude is a Claude Code plugin. After running the installer, all 61 skills 
 
 **Auto version bumping.** An opt-in PostToolUse hook on Bash detects successful `git commit` commands, reads the conventional commit prefix, and bumps version files automatically. Enable it by creating `.sweetclaude/version-bump.yaml` listing which files to update. The hook commits the bump with a `chore(version):` prefix to prevent loops.
 
-**Self-updating.** `/sweetclaude:update-skills` fetches the latest SweetClaude from GitHub (or a local repo), shows what changed, syncs to all installed locations, surfaces new capabilities that landed in the update, and checks whether project artifacts need migration for new schema fields.
+**Self-updating.** `/sweetclaude:update-sweetclaude` fetches the latest SweetClaude from GitHub (or a local repo), shows what changed, syncs to all installed locations, surfaces new capabilities that landed in the update, and checks whether project artifacts need migration for new schema fields.
 
 **Language agnostic.** SweetClaude discovers your project's language, framework, test runner, and build tools automatically. It works with TypeScript, Python, Go, Rust, Java, or anything else.
 
@@ -330,7 +324,6 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 | Dependency | License | Role |
 |---|---|---|
 | [Superpowers](https://github.com/obra/superpowers) | MIT | Dev mechanics (plans, worktrees, debugging, code review) |
-| [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | MIT | Product lifecycle (brainstorm, PRD, architecture, stories) |
 
 ## License
 

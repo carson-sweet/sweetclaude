@@ -83,7 +83,7 @@ If you are in the middle of implementation, these are your daily tools:
 | `/sweetclaude:code-tdd` | Write a feature with test-driven development |
 | `/sweetclaude:code-work-debt` | Clean up tech debt (tests before touch, always) |
 | `/sweetclaude:code-pr-precheck` | Check everything before opening a PR |
-| `/sweetclaude:code-code-review` | Get an adversarial code review |
+| `/sweetclaude:code-review` | Get an adversarial code review |
 | `/sweetclaude:code-qa-testing` | Run tests and get a clean pass/fail report |
 | `/sweetclaude:milestones` | Track roadmap targets across strategy and product work |
 
@@ -103,33 +103,21 @@ Your project may already have code, but you might not have documented the strate
 
 **Articulate what you are building:**
 ```
-/sweetclaude:strategy-concept
+/sweetclaude:product-discovery
 ```
-Produces a clear concept statement: what is this, what problem does it solve, why does it matter.
+Establish what is being built, for whom, and why. Three depth levels from quick intent to full pain thesis. Even mid-project, making this explicit helps you prioritize features, write better marketing copy, and have sharper investor conversations.
 
-**Analyze the pain you are solving:**
+**Define your users:**
 ```
-/sweetclaude:strategy-pain-thesis
+/sweetclaude:product-user-personas
 ```
-Walks through 11 sections of structured pain analysis. Even if you have been building for months, making the pain explicit helps you prioritize features, write better marketing copy, and have sharper investor conversations.
-
-**Define your ideal customer:**
-```
-/sweetclaude:strategy-ideal-customer-profile
-```
-Who specifically has this pain? Demographics, behaviors, triggers, deal-breakers.
+Who specifically has this pain? Define users — who they are, what they need to do, and what success looks like. Includes triggers and deal-breakers.
 
 **Analyze the competitive landscape:**
 ```
-/sweetclaude:strategy-competitive-analysis
+/sweetclaude:product-competition
 ```
-Who else operates in this space, how they are positioned, where the gaps are.
-
-**Compare features against competitors:**
-```
-/sweetclaude:product-feature-competitive
-```
-Build a feature matrix. Identify table-stakes features and differentiation opportunities.
+Who else operates in this space, how they are positioned, where the gaps are. Three depth levels — survey, matrix comparison, or feature-deep analysis.
 
 **Craft market messaging:**
 ```
@@ -213,5 +201,5 @@ You can change this mid-session.
 - **Strategic work on existing projects is valuable.** Many projects have implicit strategy that was never documented. Making it explicit helps you prioritize, communicate with stakeholders, and make better decisions.
 - **SweetClaude does not judge your code.** When adopting a project, it treats your codebase like an archaeologist treats a dig site — understanding before changing, respecting what is already there.
 - **Run `/sweetclaude:status` at the start of each session.** It tells you where you left off and what the next step is.
-- **Keep SweetClaude updated.** Run `/sweetclaude:update-skills` periodically to get the latest skills, hooks, and fixes.
+- **Keep SweetClaude updated.** Run `/sweetclaude:update-sweetclaude` periodically to get the latest skills, hooks, and fixes.
 - **Enable auto version bumping.** Create `.sweetclaude/version-bump.yaml` listing your version files. Every git commit automatically bumps the version based on conventional commit prefixes.
