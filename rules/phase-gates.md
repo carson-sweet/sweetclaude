@@ -30,7 +30,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Concrete problem example: problem statement includes at least one specific scenario, user story, or real-world example
 - Explicit out-of-scope: scope section has 3+ items in the out-of-scope list — if fewer, either the scope is too narrow to need a brief or the boundaries haven't been thought through
 - Measurable success: each success criterion can be evaluated as true or false after the project ships — "users are happy" fails; "user completes primary workflow in under 3 steps" passes
-- BMAD validation checklist: the 9-item checklist has been run with all items passing or explicitly waived by the user with documented rationale
+- Deliverable review: product brief outline was presented and adjusted before writing; audience and NDA were confirmed; "Additional Development" section is present
 - PRD with FRs, NFRs, and epics (for larger work requiring a PRD)
 - Improvement check-in: "Before we move on — anything about how this phase went that I should do differently?"
 **Exit criteria (other work types):**
