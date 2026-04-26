@@ -140,7 +140,7 @@ Recorded when any SweetClaude skill is invoked.
 ---
 timestamp: 2026-04-23T14:30:00Z
 event: skill_invoked
-skill: strategy-pain-thesis
+skill: sweetclaude:product-discovery
 phase: discover
 ```
 
