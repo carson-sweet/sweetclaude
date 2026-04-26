@@ -273,10 +273,10 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:code-tdd` | TDD at 4 levels (hotfix through full Gherkin) |
 | `/sweetclaude:code-work-issue` | Implement a GitHub issue end-to-end |
 | `/sweetclaude:code-work-debt` | Tech debt cleanup (lock behavior first) |
-| `/sweetclaude:code-pr-precheck` | Pre-PR quality gate |
-| `/sweetclaude:code-qa-testing` | Run tests, report failures concisely |
-| `/sweetclaude:code-mutation-testing` | Verify tests catch real faults |
-| `/sweetclaude:code-security-testing` | Security review of code changes |
+| `/sweetclaude:code-testing` | Pre-PR quality gate |
+| `/sweetclaude:code-testing` | Run tests, report failures concisely |
+| `/sweetclaude:code-testing` | Verify tests catch real faults |
+| `/sweetclaude:code-testing` | Security review of code changes |
 | `/sweetclaude:code-review` | Adversarial code review |
 
 ## How It Works

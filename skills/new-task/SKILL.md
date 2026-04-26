@@ -71,10 +71,10 @@ Classify the work. Pick the right bucket and phase. Surface the right skills.
 | Implement with TDD | IMPLEMENT | code/tdd |
 | GitHub issue | IMPLEMENT | code/work-issue |
 | Tech debt cleanup | IMPLEMENT | code/work-debt |
-| Pre-PR check | VERIFY | code/pr-precheck |
-| Run tests | any | code/qa-testing |
-| Mutation testing | VERIFY | code/mutation-testing |
-| Security review | VERIFY | code/security-testing |
+| Pre-PR check | VERIFY | code/testing |
+| Run tests | any | code/testing |
+| Mutation testing | VERIFY | code/testing |
+| Security review | VERIFY | code/testing |
 | Code review | VERIFY | code/code-review |
 
 3. **Update state.** Write work type, bucket, and entry phase to `.sweetclaude/state/phase.yaml`:

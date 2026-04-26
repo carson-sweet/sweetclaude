@@ -31,7 +31,7 @@ Implement GitHub issue $ARGUMENTS using the SweetClaude pipeline.
 
 6. **Auto-docs.** Run `sweetclaude:design/update-docs` to check if documentation needs updating.
 
-7. **PR.** Invoke `sweetclaude:code/pr-precheck` for the pre-PR checklist. Create branch, commit, and open PR using `gh pr create`. Fill the PR template completely.
+7. **PR.** Invoke `sweetclaude:code/testing` for the pre-PR checklist. Create branch, commit, and open PR using `gh pr create`. Fill the PR template completely.
 
 ## Rules
 

@@ -68,10 +68,7 @@ code:
     - sweetclaude:code/tdd
     - sweetclaude:code/work-issue
     - sweetclaude:code/work-debt
-    - sweetclaude:code/pr-precheck
-    - sweetclaude:code/qa-testing
-    - sweetclaude:code/mutation-testing
-    - sweetclaude:code/security-testing
+    - sweetclaude:code/testing
     - sweetclaude:code/review
     - superpowers:writing-plans
     - superpowers:executing-plans
