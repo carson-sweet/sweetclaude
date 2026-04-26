@@ -19,10 +19,6 @@ always_loaded:
 
 strategy:
   skills:
-    - sweetclaude:strategy/concept
-    - sweetclaude:strategy/pain-thesis
-    - sweetclaude:strategy/ideal-customer-profile
-    - sweetclaude:strategy/competitive-analysis
     - sweetclaude:strategy/academic-research
     - sweetclaude:strategy/meeting-prep
     - sweetclaude:strategy/narrative-arc
@@ -35,24 +31,24 @@ strategy:
 product:
   skills:
     - sweetclaude:product/discovery
+    - sweetclaude:product/research
+    - sweetclaude:product/competition
+    - sweetclaude:product/user-personas
     - sweetclaude:product/positioning-statement
-    - sweetclaude:product/product-brief
+    - sweetclaude:product/brief
     - sweetclaude:product/prd
-    - sweetclaude:product/user-story
+    - sweetclaude:product/user-stories
     - sweetclaude:product/user-tdd-tests
-    - sweetclaude:product/user-success-criteria
-    - sweetclaude:product/user-workflows
     - sweetclaude:product/manage-scope
     - sweetclaude:product/backlog
     - sweetclaude:product/sprint-plan
-    - sweetclaude:product/research
-    - sweetclaude:product/feature-competitive
     - reconciling-documents
   agents: []
   hooks: []
 
 design:
   skills:
+    - sweetclaude:design/user-flows
     - sweetclaude:design/architecture
     - sweetclaude:design/tech-spec
     - sweetclaude:design/ux
@@ -61,8 +57,6 @@ design:
     - sweetclaude:design/update-docs
     - sweetclaude:design/data-model
     - sweetclaude:design/api-design
-    - sweetclaude:design/services-design
-    - sweetclaude:design/infra-design
     - sweetclaude:design/manage-decisions
     - caucus
     - reasoning-frameworks
@@ -78,7 +72,7 @@ code:
     - sweetclaude:code/qa-testing
     - sweetclaude:code/mutation-testing
     - sweetclaude:code/security-testing
-    - sweetclaude:code/code-review
+    - sweetclaude:code/review
     - superpowers:writing-plans
     - superpowers:executing-plans
     - superpowers:using-git-worktrees
