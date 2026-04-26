@@ -1,66 +1,88 @@
 ---
-description: "Convert user stories into UX/UI flows showing the step-by-step path a user takes through the interface. Bridges product definition and UX design."
+name: sweetclaude:design-user-flows
+description: Convert user stories into UX/UI flows — step-by-step paths through the interface. Bridges product definition and UX design.
 ---
 
-<preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
-</preflight-guard>
+# Design User Flows
 
-# User Workflows
+Convert user stories into interface flows — the step-by-step paths a user takes through the UI to complete each story. This bridges product definition and UX design.
 
-Convert user stories into step-by-step UI flows for: $ARGUMENTS
+## Entry
 
-## Context
+Check for `.sweetclaude/` directory. If not found, tell the user to run `/sweetclaude:init` first. Stop.
 
-Read relevant user stories from `stories/` and personas from product/discovery output.
+Check for `.sweetclaude/log.md`. If not found, create it.
+
+Read `.sweetclaude/state/stories.yaml` — required for story list. If missing:
+> "User flows require user stories. I recommend running `product-user-stories` first. Want to do that now, or continue without it?"
+
+Read `.sweetclaude/state/personas.yaml` if available (for user context).
 
 ## Process
 
-### For each user story:
+For each user story (or selected subset if the user wants to focus):
 
-1. **Identify the trigger.** What event or action starts this workflow? (button click, page load, notification, time-based)
+1. Identify the entry point — where in the interface does the user begin this flow?
 
-2. **Map the happy path.** Step by step, what does the user see and do?
-   ```
-   Step 1: User sees {screen/component}
-   Step 2: User {action — clicks, types, selects}
-   Step 3: System {response — shows, navigates, saves}
-   Step 4: User sees {confirmation/result}
-   ```
+2. Map the steps — each step is one user action and the system response:
+   - Step N: [User action] → [System response / state change]
 
-3. **Map error paths.** For each step where something can go wrong:
-   - What is the error condition?
-   - What does the user see?
-   - How do they recover?
+3. Identify decision points — where does the flow branch? (e.g., validation errors, optional steps, conditional paths)
 
-4. **Map edge cases.** Empty states, first-time use, maximum data, permissions boundaries.
+4. Define the success state — what does the interface show when the story is successfully completed?
 
-5. **Identify decision points.** Where does the user choose between paths? Document each fork.
+5. Define key error states — what does the interface show when something goes wrong?
 
-### Produce the document
+Present each flow as a numbered step sequence. Offer to add a simple ASCII flow diagram if helpful.
+
+**Example flow:**
 
 ```
-## User Workflow: {Story title}
+Story US-ADM-001: Create a new contact
 
-**Trigger:** {what initiates this}
-**Persona:** {who does this}
+Entry point: Contacts list page
 
-### Happy path
-1. {step} → {what user sees}
-2. {step} → {what user sees}
-...
+Flow:
+  1. User clicks "New Contact" button → Modal or page opens with empty contact form
+  2. User fills in Name (required), Email (optional), Phone (optional) → Fields validate inline
+  3. User clicks "Save" → System validates all required fields
+     → If Name missing: inline error "Name is required", form stays open
+     → If valid: contact saved, modal closes, new contact appears at top of list
+  4. User sees success toast: "Contact created"
 
-### Error paths
-- At step {N}, if {condition}: {what happens}
-
-### Edge cases
-- Empty state: {what user sees}
-- First use: {any onboarding needed}
-
-### Decision points
-- At step {N}: {choice A} or {choice B}
+Success state: Contact list visible with new entry at top, toast notification displayed
+Error state: Form stays open, required field highlighted with error message
 ```
 
-### Save
+Ask after each flow: "Does this capture it correctly? Anything to adjust?"
 
-Save to `docs/workflows/`. These feed into design/ux and product/user-tdd-tests.
+## Scope Selection
+
+If there are many stories, offer to scope: "Do you want flows for all stories, just the SLC/MVP scope, or specific ones?"
+
+## Exit
+
+Write `.sweetclaude/state/ux-flows.yaml`:
+
+```yaml
+flows:
+  - story_id: {}
+    entry_point: {}
+    steps: []
+    success_state: {}
+    error_states: []
+current_file: {}
+```
+
+Append to `.sweetclaude/log.md`:
+
+```markdown
+## {ISO datetime} — design-user-flows (n/a)
+
+**Status:** completed | degraded
+**Produced:** {filename}
+**Flows defined:** {count}
+**Open questions:** {bullets}
+```
+
+Write deliverable to `docs/{project-name}-user-flows-draft-v1.0-{yyyymmdd}.md` with standard front matter.
