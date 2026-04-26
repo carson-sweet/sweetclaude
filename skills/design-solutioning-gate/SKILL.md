@@ -1,5 +1,5 @@
 ---
-description: "Validate the proposed solution before implementation. Checks architecture decisions, identifies risks, confirms design addresses requirements. Wraps bmad:solutioning-gate-check."
+description: "Validate the proposed solution before implementation. Checks architecture decisions, identifies risks, confirms design addresses requirements."
 ---
 
 <preflight-guard>
@@ -19,4 +19,7 @@ Validate the proposed solution for: $ARGUMENTS
 
 ## Execute
 
-Invoke `bmad:solutioning-gate-check` and follow its workflow.
+1. **Review architecture and tech spec** against PRD requirements
+2. **Identify risks and gaps** in the design before implementation starts
+3. **Challenge assumptions** about feasibility, scalability, and compliance
+4. **Document gate results** in the decision log with pass/fail and rationale
