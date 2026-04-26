@@ -107,7 +107,7 @@ DEFINE Exit Check:
 - [ ] Concrete problem: problem statement includes a specific scenario or example
 - [ ] Out-of-scope items: scope section has 3+ explicit out-of-scope items
 - [ ] Measurable success: each success criterion is evaluable as true/false post-ship
-- [ ] Validation checklist: BMAD 9-item checklist run, all items passing or waived
+- [ ] Deliverable review: brief outline was presented and adjusted before writing; audience and NDA confirmed; "Additional Development" section present
 ```
 
 Present with pass/fail marks. If all pass, proceed. If any fail, present the gaps:
