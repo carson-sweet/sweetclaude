@@ -1,5 +1,5 @@
 ---
-description: "Plan a sprint by selecting stories from the backlog, estimating scope, and producing a sprint commitment. Wraps bmad:sprint-planning."
+description: "Plan a sprint by selecting stories from the backlog, estimating scope, and producing a sprint commitment."
 ---
 
 <preflight-guard>
@@ -18,7 +18,7 @@ Plan a sprint for: $ARGUMENTS
 
 ## Execute
 
-1. Invoke `bmad:sprint-planning` and follow its workflow.
+1. Select candidate stories from backlog based on complexity and scope.
 2. After the sprint commitment is finalized, read each selected story's `**Milestone:**` header from its file.
 3. Aggregate and report:
 
