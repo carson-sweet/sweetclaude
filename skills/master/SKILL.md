@@ -155,11 +155,11 @@ When delegating to early-phase skills, set depth expectations:
 
 **For `sweetclaude:product/discovery`:** Invoke for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal discovery directly.
 
-**For `bmad:product-brief`:** Conduct the full 11-section interview. One section at a time — never batch. Probe vague answers with follow-ups before moving to the next section. The interview is a discovery conversation, not a form to fill. After generating the document, run the BMAD validation checklist and present results before the phase gate.
+**For `sweetclaude:product-brief`:** Present the outline first and get adjustment before writing. Ask about audience and NDA material. Sections scale to available input. Always end with "Additional Development" noting what wasn't covered. Follow the document production system (front matter, versioned naming, paragraph numbering in drafts).
 
-**For `bmad:brainstorm`:** Run all selected techniques to completion. Do not abbreviate a technique because you "have enough." The brainstorm output should contain quantified results (idea count, category count, insight count).
+**For `sweetclaude:product-research`:** Explain what the skill does and ask if the user wants it before running. Suggest depth based on project type. Document in the effort log if skipped. Output includes an initial competitive seed list that feeds `product-competition`.
 
-**For `bmad:research`:** Answer every research question with evidence and sources. Identify research gaps explicitly. Do not present a research report with unanswered questions unless those gaps are flagged as open items.
+**For `sweetclaude:product-discovery`:** Use depth levels — L1 for intent and boundaries, L2 for problem and success definition, L3 for full pain thesis. Challenge the framing at L2+. Never re-ask what was established at a prior level.
 
 ## State Directory
 
