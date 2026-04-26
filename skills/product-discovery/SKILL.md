@@ -1,144 +1,145 @@
 ---
-description: Structured Discover phase for net-new products and apps. Persona-driven discovery, iterative feature brainstorming, optional competitive analysis. Scales to work type.
+name: sweetclaude:product-discovery
+description: Establish what is being built, for whom, and why — at the depth appropriate for the project type. Three depth levels from quick intent to full pain thesis.
 ---
 
-<preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Let me run the pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
-</preflight-guard>
+# Product Discovery
 
-# Discover Deep — Structured Discovery for Net-New Work
+Establish what is being built, for whom, and why. This skill conducts a structured interview at the depth you choose — from a quick orientation to a full pain thesis.
 
-Conduct the Discover phase for a new product or application. This is a structured interview that produces concrete personas, vetted features, and optional competitive intelligence.
+## Entry
 
-**Work-type scaling:** The master skill routes here based on detected work type.
-- **Products/apps:** Run the full workflow (all three stages below).
-- **CLIs/libraries:** Run Stage 1 with primary user only, Stage 2 only if user requests, skip Stage 3 unless user requests.
-- **Utilities/scripts:** Skip this skill — the master skill handles minimal Discover directly.
+Check for `.sweetclaude/` directory. If not found:
+> "This project isn't configured for SweetClaude yet. Run `/sweetclaude:init` to set it up, then try again."
+Stop.
 
-The user can always request the full workflow regardless of detected work type.
+Check for `.sweetclaude/log.md`. If not found, create it with the header `# SweetClaude Effort Log`.
 
----
+## Depth Levels
 
-## Stage 1: Persona Discovery
+Before starting, ask:
+> "How deep do you want to go with discovery?
+> - **L1 — Intent and boundaries:** Quick orientation — what you're building, for whom, and what's explicitly out of scope. Takes 2–3 questions.
+> - **L2 — Problem and success:** Adds a concrete problem definition, audience refinement, success criteria, and a challenge of your framing. Good for significant internal tools.
+> - **L3 — Full pain thesis:** Adds pain measurement, market context, accountability analysis, escalation chains, and a validation rubric. Appropriate for commercial products.
+> Which level, or should I suggest based on what you tell me about the project?"
 
-Conduct an iterative interview to define all user personas.
+If the user asks for a suggestion: ask what they're building and their intent (L1 question), then recommend a level based on their answer. Commercial → recommend L3. Internal tool → recommend L2. Utility or hobby → recommend L1.
 
-**For each persona, capture:**
-1. **Name/label** — a short identifier (e.g., "Field Sales Rep", "DevOps Engineer", "Casual Browser")
-2. **Job title or role** — what they do professionally or contextually
-3. **Tasks** — what specific tasks do they need to complete using this product?
-4. **Success criteria per task** — what does success look like for each task? How does the user know they accomplished it?
+## L1 — Intent and Boundaries
 
-**Interview protocol:**
-- Start with: "What is the primary user's role or job title?"
-- Ask about their tasks one at a time. For each task, ask what success looks like.
-- After each persona is fully defined, ask: **"Are there more user personas to define?"**
-- If yes, repeat the full persona interview for the next persona.
-- Continue until the user says all personas are captured.
-- One persona at a time. One task at a time. Do not batch.
+Ask one question at a time. Do not combine questions.
 
-**After all personas are defined, present a consolidated view:**
+1. "Describe what you're building in your own words."
+
+2. If the target user is not apparent from their answer: "Who is this for?"
+
+3. "What is this — commercial product, internal tool, simple utility, hobby project, or something else?"
+
+4. "What is this explicitly NOT? Give me at least one thing that's out of scope."
+
+After these questions, produce:
 
 ```
-## User Personas & Tasks
-
-### Persona 1: [Name] — [Job Title]
-- Task: [task description]
-  Success: [what success looks like]
-- Task: [task description]
-  Success: [what success looks like]
-
-### Persona 2: [Name] — [Job Title]
-- Task: [task description]
-  Success: [what success looks like]
-...
+**What:** {one-sentence description}
+**For:** {target user}
+**Intent:** {commercial | internal | utility | hobby | other}
+**Not in scope:** {at least one item}
 ```
 
-Ask: **"Does this look right?"**
+Present this and ask if it's accurate. Adjust until confirmed.
 
-Do not proceed to Stage 2 until the user confirms the consolidated view.
+If the user chose L1, go to [Exit]. Otherwise continue to L2.
 
----
+## L2 — Problem and Success
 
-## Stage 2: Feature Brainstorming
+Do not re-ask anything captured in L1.
 
-After personas and tasks are confirmed, ask: **"Brainstorm additional features based on these personas?"**
+5. "What specific problem does this solve? Give me a concrete scenario — a specific person in a specific situation, not an abstract pain."
 
-If the user declines, skip to Stage 3.
+6. "For the person in that scenario: what does success look like? What are they able to do or stop doing?"
 
-If the user accepts:
+7. **Challenge the framing.** Propose at least one of:
+   - An alternative framing of the problem ("Another way to see this: [reframe]. Is the real problem upstream/downstream of what you described?")
+   - A gap ("You said X, but what about Y — have you thought through that?")
+   - A questionable assumption ("This assumes Z is true — is it?")
+   Do not accept the first framing without scrutiny.
 
-**Brainstorming protocol:**
-- Propose features **one at a time**, each with:
-  - Feature name
-  - Which persona(s) it serves
-  - Brief rationale (1-2 sentences)
-- After each feature, use AskUserQuestion with these options:
-  - "Include" — add this feature to scope
-  - "Exclude" — skip this feature
-  - "Discuss" — I have questions about this feature
-- Track included and excluded features separately.
-- **Maximum 10 features per batch.** After 10, present the included list and ask: "Another batch of 10, or enough?"
-- Continue batches until the user says stop.
+After discussion, produce an updated concept statement incorporating L2 additions. Present and confirm.
 
-**Brainstorming quality:**
-- Features must be grounded in the personas and tasks from Stage 1, not generic.
-- Propose at least 2 features that challenge or extend the original concept — not just obvious derivations.
-- If a feature overlaps with something already in scope, note the overlap and ask: "Keep both or merge?"
+If the user chose L2, go to [Exit]. Otherwise continue to L3.
 
-After brainstorming is complete, present the final included feature list.
+## L3 — Full Pain Thesis
 
----
+Do not re-ask anything captured in L1 or L2. Ask one question at a time.
 
-## Stage 3: Competitive Analysis
+8. "What do people use today to deal with this problem?" (existing approaches/alternatives)
 
-After feature brainstorming (or after persona confirmation if brainstorming was skipped), ask: **"Run a competitive analysis — similar products, projects, or open-source alternatives?"**
+9. "Why does that fail — what specifically breaks or falls short?"
 
-If the user declines, skip to Wrap-Up.
+10. "Is this problem a must-have to solve (like medicine — budget already exists for this category) or a nice-to-have (like vitamins — discretionary spending)?"
 
-If the user accepts:
+11. "Who gets fired, fined, or blamed when this problem isn't solved?" (accountability owner)
 
-**Research protocol:**
-- Search the web, GitHub, Product Hunt, and relevant directories for:
-  - Competing products or services in the same category
-  - Open-source projects solving a similar problem
-  - Related tools or technologies
-- Present each result with:
-  - Name and URL
-  - ~25-word synopsis
-- Handle "nothing found" gracefully: "Searched [sources] and found no direct competitors. This is either a novel space or a niche without established players."
+12. "Why can't they fix it themselves?" (control gap)
 
-**After presenting the list, offer two paths using AskUserQuestion:**
-- "Drill down" — pick specific competitors for detailed analysis
-- "Table stakes" — extract the common features users in this category expect as baseline
+13. "Walk me through what happens when this problem hits — from the first sign to the worst case." (escalation chain)
 
-If the user picks drill-down:
-- For each selected competitor, research and present: what it does well, what it does poorly, pricing model, target audience, key differentiators.
-- After each analysis, ask if the user wants to continue with more competitors or move on.
+14. "Can this problem be measured in time lost or money spent? If so, roughly how much per instance?"
 
-If the user picks table stakes:
-- Analyze the competitive landscape and present a list of features that appear across multiple competitors.
-- For each table-stakes feature, note which competitors have it and recommend include/exclude for the user's product.
-- The user approves or rejects each table-stakes feature.
+15. "Is there any market research, analyst coverage, or industry data on this problem — market size, problem descriptions, or published statistics you're aware of?"
 
----
+16. Produce a **Validation Rubric** assessing the current state of evidence:
 
-## Wrap-Up
+| Pain element | Status | Evidence |
+|---|---|---|
+| Pain exists | 🔴 Assumption / 🟡 Qualitative / 🟢 Quantified | {what you have} |
+| Pain is owned | 🔴 / 🟡 / 🟢 | {what you have} |
+| Budget exists | 🔴 / 🟡 / 🟢 | {what you have} |
+| Existing solutions fail | 🔴 / 🟡 / 🟢 | {what you have} |
 
-After all stages are complete:
+🔴 = intuition or assumption only. 🟡 = qualitative evidence (conversations, observed behavior). 🟢 = quantified (specific costs, specific buyer quotes, data).
 
-1. **Summarize what was produced:**
-   - Number of personas defined
-   - Number of tasks across all personas
-   - Number of features included (original + brainstormed + table stakes)
-   - Whether competitive analysis was performed
-   - Key decisions made during discovery
+Present the rubric and explain: "The goal before committing to a wedge is to move every critical element from Red to Yellow, and the top three from Yellow to Green."
 
-2. **Save artifacts** to `.sweetclaude/`:
-   - `brainstorm/personas.md` — consolidated persona/task view
-   - `brainstorm/feature-list.md` — included features with rationale
-   - `brainstorm/competitive-analysis.md` — competitor list and analysis (if performed)
+17. "What is the narrowest, most painful slice of this problem that a buyer or user would want solved on its own — before seeing anything else?" (wedge)
 
-3. **Log decisions** in `.sweetclaude/state/decision-log.md`.
+Apply the **checkbook test**: "If you described only this capability in a meeting, would they write a check or sign up?" Discuss until the wedge is clear.
 
-4. Present the summary and wait.
+Produce the complete pain thesis. Present and confirm.
+
+## Frustration and Skip Handling
+
+If the user seems frustrated at any point, offer:
+> "We can proceed with what we have so far, or come back to this section. Which would you prefer?"
+
+Accept immediately. Log what was skipped.
+
+## Exit
+
+Write `.sweetclaude/state/discovery.yaml`:
+
+```yaml
+project_type: commercial | internal | utility | hobby | other
+intent: {one-line}
+problem_summary: {one-line, or "" if L1 only}
+target_user_summary: {one-line}
+depth_run: L1 | L2 | L3
+not_scope:
+  - {item}
+pain_thesis_present: true | false
+validation_rubric_run: true | false
+```
+
+Append to `.sweetclaude/log.md`:
+
+```markdown
+## {ISO datetime} — product-discovery ({depth})
+
+**Status:** completed
+**Depth:** {L1 | L2 | L3}
+**Produced:** none (state only)
+**Skipped/shortcuts:** {what was skipped, or none}
+**Key decisions:** {bullets}
+**Open questions:** {bullets}
+```
