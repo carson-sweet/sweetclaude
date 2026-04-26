@@ -68,6 +68,6 @@ Recent activity:
 
 Based on the status, propose one concrete next action:
 
-> "Next step: {action}. Run `/sweetclaude:{skill}` to do that, or `/sweetclaude:auto-flow` to walk through the pipeline."
+> "Next step: {action}. Run `/sweetclaude:{skill}` to do that, or `/sweetclaude:next-steps` to walk through the pipeline."
 
 Do not start doing the work. Orient and suggest. The user decides what to do.

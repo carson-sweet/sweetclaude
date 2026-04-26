@@ -14,7 +14,7 @@ You have an idea. Maybe it is well-formed, maybe it is a napkin sketch. SweetCla
 2. Create an empty folder for your project and open Claude Code in it
 3. Run:
    ```
-   /sweetclaude:sherpa-start
+   /sweetclaude:sherpa
    ```
 
 That is it. SweetClaude takes over from here and walks you through each step.

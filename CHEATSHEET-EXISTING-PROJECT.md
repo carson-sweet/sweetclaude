@@ -16,7 +16,7 @@ SweetClaude is not just a coding tool. Even on an existing project, the strategi
 2. Open Claude Code in your project folder
 3. Run:
    ```
-   /sweetclaude:sherpa-adopt
+   /sweetclaude:sherpa
    ```
 
 > **Quick try without installing:** `claude --plugin-dir /path/to/sweetclaude` loads all skills for a single session.

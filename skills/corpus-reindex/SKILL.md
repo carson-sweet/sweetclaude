@@ -17,7 +17,7 @@ Rebuild RAG collections from source files. Use when embeddings are corrupted, lo
 Does `.sweetclaude/state/phase.yaml` exist?
 
 If no:
-> "SweetClaude is not set up for this project. Run `/sweetclaude:init` first."
+> "SweetClaude is not set up for this project. Run `/sweetclaude:sherpa` first."
 
 Stop. Do not proceed.
 
