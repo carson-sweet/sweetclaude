@@ -70,7 +70,7 @@ Work through this structure with the user:
 
 ### 5. Save
 
-Save to `strategy/positioning-statement.md`. This feeds into strategy/market-messaging and product/product-brief.
+Save to `strategy/positioning-statement.md`. This feeds into product/market-messaging and product/product-brief.
 
 ## Exit
 

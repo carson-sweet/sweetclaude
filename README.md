@@ -209,7 +209,7 @@ Run `/sweetclaude:corpus-status` at any point to see where the pipeline stands.
 | `/sweetclaude:strategy-academic-research` | Research paper development (6 phases) |
 | `/sweetclaude:strategy-meeting-prep` | Stakeholder meeting deliverables |
 | `/sweetclaude:strategy-narrative-arc` | Knowledge graph of strategic claims and evidence |
-| `/sweetclaude:strategy-market-messaging` | External communications by audience |
+| `/sweetclaude:product-market-messaging` | External communications by audience |
 
 ### Product
 | Command | What it does |

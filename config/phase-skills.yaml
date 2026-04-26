@@ -22,7 +22,6 @@ strategy:
     - sweetclaude:strategy/academic-research
     - sweetclaude:strategy/meeting-prep
     - sweetclaude:strategy/narrative-arc
-    - sweetclaude:strategy/market-messaging
     - caucus
     - reasoning-frameworks
   agents: []
@@ -30,6 +29,7 @@ strategy:
 
 product:
   skills:
+    - sweetclaude:product/market-messaging
     - sweetclaude:product/discovery
     - sweetclaude:product/research
     - sweetclaude:product/competition

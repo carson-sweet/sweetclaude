@@ -28,7 +28,7 @@ Classify the work. Pick the right bucket and phase. Surface the right skills.
 | Research paper | DISCOVER | strategy/academic-research |
 | Meeting preparation | DEFINE | strategy/meeting-prep |
 | Strategic narrative | DISCOVER | strategy/narrative-arc |
-| Market messaging | DEFINE | strategy/market-messaging |
+| Market messaging | DEFINE | product/market-messaging |
 
 ### product/ — what to build and why
 

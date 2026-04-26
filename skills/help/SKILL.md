@@ -49,7 +49,7 @@ Strategy
   /sweetclaude:strategy/academic-research    Research paper development pipeline
   /sweetclaude:strategy/meeting-prep         Stakeholder meeting deliverables
   /sweetclaude:strategy/narrative-arc        Knowledge graph of strategic claims
-  /sweetclaude:strategy/market-messaging     External communications
+  /sweetclaude:product/market-messaging     External communications
 
 Product
   /sweetclaude:product/discovery             Persona interviews, feature brainstorming
