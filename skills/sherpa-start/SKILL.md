@@ -1,5 +1,5 @@
 ---
-description: "The ultimate starting point for a brand new project. Empty folder, fresh idea. Walks you through everything from 'I have an idea' to a configured project with strategy, product definition, and a path to code. Chains init → concept → pain-thesis → ICP → discovery → auto-flow."
+description: "The ultimate starting point for a brand new project. Empty folder, fresh idea. Walks you through everything from 'I have an idea' to a configured project with strategy, product definition, and a path to code. Chains init → product-discovery → product-user-personas → auto-flow."
 ---
 
 # SweetClaude Sherpa — New Project
@@ -49,55 +49,48 @@ Wait for init to complete before proceeding.
 
 ---
 
-## Step 3: Articulate the concept
+## Step 3: Product discovery
 
-Run `/sweetclaude:strategy/concept` using the user's idea from Step 1 as the starting input.
+Run `/sweetclaude:product-discovery` using the user's idea from Step 1 as the starting input.
 
-This produces `strategy/concept.md` — a clear statement of what the project is, the problem it solves, why it matters, key assumptions, and what it is NOT.
+Offer the three depth levels before starting:
+- **L1 — Intent and boundaries:** Quick orientation — what you're building, for whom, and what's out of scope. Good for utilities and hobby projects.
+- **L2 — Problem and success:** Adds concrete problem definition, audience refinement, success framing, and a challenge of the framing. Good for internal tools and significant projects.
+- **L3 — Full pain thesis:** Adds pain measurement, market context, accountability analysis, escalation chains, and a validation rubric. Appropriate for commercial products.
 
-Wait for the user to be satisfied with the concept before proceeding.
+Let the user choose depth or ask for a recommendation. L3 is the most thorough and produces the richest foundation for everything that follows.
 
----
-
-## Step 4: Build the pain thesis
-
-Run `/sweetclaude:strategy/pain-thesis`.
-
-This walks through 11 sections: industry background, pain ownership, pain detail, existing failures, solution requirements, strategic wedge, buyer success criteria, ICP, solution mapping, validation plan.
-
-This is the longest step. The user may spread it across multiple sessions. `.sweetclaude/state/` tracks progress between sessions.
-
-Wait for completion before proceeding.
+Discovery writes `.sweetclaude/state/discovery.yaml`. Wait for the user to be satisfied before proceeding.
 
 ---
 
-## Step 5: Define the ideal customer
+## Step 4: Define users and personas
 
-Run `/sweetclaude:strategy/ideal-customer-profile`.
+Run `/sweetclaude:product-user-personas`.
 
-This turns the "who" from the pain thesis into a targetable profile: demographics, behaviors, triggers, deal-breakers, anti-profile.
+This defines who uses the product: role, context, trigger (what makes them go looking for a solution), deal-breakers, and the tasks they need to accomplish — with observable success criteria for each task.
+
+At the end, offer an anti-profile: who is explicitly NOT a target user.
 
 Wait for completion.
 
 ---
 
-## Step 6: Product discovery
+## Step 5: Competitive landscape (optional)
 
-Run `/sweetclaude:product/discovery`.
+Offer:
+> "Want to map the competitive landscape before moving to product definition? I can run a survey (L1), comparison matrix (L2), or feature-deep analysis (L3) via `/sweetclaude:product-competition`."
 
-This walks through persona interviews (one at a time), feature brainstorming (one at a time, include/exclude), and optional competitive analysis.
-
-Wait for completion.
+If the user wants it, run `product-competition`. If not, proceed.
 
 ---
 
-## Step 7: Hand off to auto-flow
+## Step 6: Hand off to auto-flow
 
 At this point the project has:
-- A concept statement
-- A pain thesis
-- An ideal customer profile
-- Personas and feature set from discovery
+- Discovery artifacts (intent, problem framing, and optionally full pain thesis)
+- User personas with tasks and success criteria
+- Optionally: competitive landscape
 
 Tell the user:
 
@@ -109,4 +102,4 @@ Do not auto-invoke auto-flow. The user decides when to continue.
 
 ## Session continuity
 
-If a session ends mid-process, `.sweetclaude/state/phase.yaml` tracks progress. The next session can resume with `/sweetclaude:status` to see what is done and what is next.
+If a session ends mid-process, `.sweetclaude/state/` tracks progress (discovery.yaml, personas.yaml, etc.). The next session can resume with `/sweetclaude:status` to see what is done and what is next.
