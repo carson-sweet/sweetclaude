@@ -1,5 +1,5 @@
 ---
-name: sweetclaude:update-skills
+name: sweetclaude:update-sweetclaude
 description: Update SweetClaude to the latest version from GitHub (or a local repo). Syncs skills, rules, hooks, config, and agents across all projects.
 ---
 
