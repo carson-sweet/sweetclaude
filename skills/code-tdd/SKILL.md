@@ -91,7 +91,7 @@ Use AskUserQuestion with these options:
 
 9. **REFACTOR.**
 
-10. **Optional: Mutation testing.** Run `sweetclaude:code/mutation-testing` to verify test quality.
+10. **Optional: Mutation testing.** Run `sweetclaude:code/testing` to verify test quality.
 
 ## Rules — Non-Negotiable
 

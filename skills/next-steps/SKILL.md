@@ -63,10 +63,10 @@ Picks skills based on what's missing for the current phase gate:
 
 **VERIFY — what's needed → what to run:**
 - Code not reviewed → `code/review`
-- Security not reviewed → `code/security-testing`
-- Tests not validated → `code/mutation-testing`
+- Security not reviewed → `code/testing`
+- Tests not validated → `code/testing`
 - Docs not updated → `design/update-docs`
-- PR not ready → `code/pr-precheck`
+- PR not ready → `code/testing`
 
 **SHIP — deferred.**
 

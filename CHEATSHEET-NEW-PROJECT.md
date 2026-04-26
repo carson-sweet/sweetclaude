@@ -79,8 +79,8 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 
 ### Review and Ship
 - `/sweetclaude:code-review` — adversarial code review
-- `/sweetclaude:code-security-testing` — security review
-- `/sweetclaude:code-pr-precheck` — pre-PR quality gate
+- `/sweetclaude:code-testing` — security review
+- `/sweetclaude:code-testing` — pre-PR quality gate
 
 ### Milestones
 - `/sweetclaude:milestones add` — create a roadmap target with success criteria

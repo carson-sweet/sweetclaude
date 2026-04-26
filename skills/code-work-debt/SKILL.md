@@ -24,9 +24,9 @@ Address tech debt for: $ARGUMENTS
 
 4. **Refactor.** Change the code. Run tests after each change. If any test fails, you changed behavior. Revert and try again.
 
-5. **Verify.** All behavior-locking tests still pass. No new failures anywhere. Run `code/qa-testing` on affected packages.
+5. **Verify.** All behavior-locking tests still pass. No new failures anywhere. Run `code/testing` on affected packages.
 
-6. **PR.** Run `code/pr-precheck`. The PR description must explain: what debt was addressed, why now, and confirm no behavior changes (or document intentional ones).
+6. **PR.** Run `code/testing`. The PR description must explain: what debt was addressed, why now, and confirm no behavior changes (or document intentional ones).
 
 ## Rules
 

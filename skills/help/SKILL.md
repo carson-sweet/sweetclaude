@@ -92,10 +92,7 @@ Code
   /sweetclaude:code/tdd              TDD at 4 levels (hotfix through full from Gherkin)
   /sweetclaude:code/work-issue       Implement a GitHub issue end-to-end
   /sweetclaude:code/work-debt        Tech debt cleanup (lock behavior first)
-  /sweetclaude:code/pr-precheck      Pre-PR quality gate
-  /sweetclaude:code/qa-testing       Run tests, report failures concisely
-  /sweetclaude:code/mutation-testing  Verify tests catch real faults
-  /sweetclaude:code/security-testing Security review of code changes
+  /sweetclaude:code/testing          Run tests, mutation, security review, and/or PR pre-check
   /sweetclaude:code/code-review      Adversarial code review
 ```
 
