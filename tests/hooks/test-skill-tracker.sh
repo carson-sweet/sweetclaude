@@ -8,20 +8,21 @@ pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 # Setup: create a real temp git repo
-TMPDIR=$(mktemp -d)
-git init "$TMPDIR" -q
-mkdir -p "$TMPDIR/.sweetclaude/state"
-ORIGINAL_DIR=$(pwd)
-cd "$TMPDIR"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+HOOK="$REPO_ROOT/hooks/skill-tracker.sh"
 
-cleanup() { cd "$ORIGINAL_DIR"; rm -rf "$TMPDIR"; }
+TEST_TMPDIR=$(mktemp -d)
+git init "$TEST_TMPDIR" -q
+mkdir -p "$TEST_TMPDIR/.sweetclaude/state"
+cd "$TEST_TMPDIR"
+
+cleanup() { cd "$REPO_ROOT"; rm -rf "$TEST_TMPDIR"; }
 trap cleanup EXIT
-
-HOOK="$ORIGINAL_DIR/hooks/skill-tracker.sh"
 
 # Test 1: guardian not enabled → exits cleanly, no file written
 rm -f .sweetclaude/state/session-guardian.json
-OUTPUT=$(echo '{"skill":"sweetclaude:brainstorming"}' | bash "$HOOK" 2>&1)
+OUTPUT=$(echo '{"skill":"sweetclaude:brainstorming"}' | CLAUDE_TOOL_NAME="Skill" bash "$HOOK" 2>&1)
 [ ! -f .sweetclaude/state/session-guardian.json ] && pass "guardian off: no file written" || fail "guardian off: should not write file"
 
 # Test 2: guardian enabled, valid skill → appended to skills_invoked
