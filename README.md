@@ -11,7 +11,7 @@
 
 An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
-SweetClaude is a Claude Code plugin with 55 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude is a Claude Code plugin with 45 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
 Built by an enterprise CTO/CISO turned solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
 
@@ -66,7 +66,7 @@ The installer:
 - Wires TDD enforcement hooks into `settings.json`
 - Generates `uninstall.sh` and `restore-config.sh` for clean removal
 
-After install, all 55 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
+After install, all 45 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
 
 #### Strategy Skills Only
 
@@ -195,15 +195,8 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
 | `/sweetclaude:update-sweetclaude` | Fetch latest from GitHub and sync to all projects |
 | `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
-| `/sweetclaude:metrics` | View, enable, or disable local performance metrics |
-
-### Strategy
-| Command | What it does |
-|---|---|
-| `/sweetclaude:documents-academic-research` | Research paper development (6 phases) |
-| `/sweetclaude:misc-meeting-prep` | Stakeholder meeting deliverables |
-| `/sweetclaude:documents-narrative-arc` | Knowledge graph of strategic claims and evidence |
-| `/sweetclaude:product-market-messaging` | External communications by audience |
+| `/sweetclaude:usage` | View, enable, or disable local usage tracking |
+| `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
 
 ### Product
 | Command | What it does |
@@ -220,6 +213,14 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:product-backlog` | Manage deferred work |
 | `/sweetclaude:product-sprint-plan` | Plan sprints from backlog |
 | `/sweetclaude:product-research` | Market and solution landscape research. Feeds the competitive seed list. |
+| `/sweetclaude:product-market-messaging` | External communications by audience |
+| `/sweetclaude:product-milestones add` | Create a new milestone with success criteria |
+| `/sweetclaude:product-milestones review` | List milestones grouped by Now / Next / Later |
+| `/sweetclaude:product-milestones link` | Attach a work item to a milestone (bidirectional) |
+| `/sweetclaude:product-milestones status` | Detail view of one milestone with progress |
+| `/sweetclaude:product-milestones blockers` | What is stopping a milestone from completing |
+| `/sweetclaude:product-milestones complete` | Mark achieved with follow-up capture |
+| `/sweetclaude:product-milestones unassigned` | Find work items with no milestone |
 
 ### Design
 | Command | What it does |
@@ -235,37 +236,31 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:design-api-design` | Endpoints, contracts, versioning |
 | `/sweetclaude:design-manage-decisions` | Record decisions with rationale |
 
-### Milestones
-| Command | What it does |
-|---|---|
-| `/sweetclaude:product-milestones add` | Create a new milestone with success criteria |
-| `/sweetclaude:product-milestones review` | List milestones grouped by Now / Next / Later |
-| `/sweetclaude:product-milestones link` | Attach a work item to a milestone (bidirectional) |
-| `/sweetclaude:product-milestones status` | Detail view of one milestone with progress |
-| `/sweetclaude:product-milestones blockers` | What is stopping a milestone from completing |
-| `/sweetclaude:product-milestones complete` | Mark achieved with follow-up capture |
-| `/sweetclaude:product-milestones unassigned` | Find work items with no milestone |
-
-### Documents & Search
+### Documents
 | Command | What it does |
 |---|---|
 | `/sweetclaude:document-corpus` | Full corpus pipeline + RAG — consolidate, triage, reconcile, promote, set up semantic search, reindex |
+| `/sweetclaude:documents-update-docs` | Keep docs in sync after implementation changes |
+| `/sweetclaude:documents-academic-research` | Research paper development — 6-phase pipeline from thesis through submission |
+| `/sweetclaude:documents-narrative-arc` | Knowledge graph of strategic claims and evidence |
+
+### Misc
+| Command | What it does |
+|---|---|
+| `/sweetclaude:misc-meeting-prep` | Stakeholder meeting deliverables — agenda, talking points, anticipated questions |
 
 ### Code
 | Command | What it does |
 |---|---|
-| `/sweetclaude:code-tdd` | TDD at 4 levels (hotfix through full Gherkin) |
+| `/sweetclaude:code-feature` | Build a new feature end-to-end (Gherkin → TDD Level 3 → PR) |
 | `/sweetclaude:code-issue` | Implement a GitHub issue end-to-end |
 | `/sweetclaude:code-debt` | Tech debt cleanup (lock behavior first) |
-| `/sweetclaude:code-testing` | Pre-PR quality gate |
-| `/sweetclaude:code-testing` | Run tests, report failures concisely |
-| `/sweetclaude:code-testing` | Verify tests catch real faults |
-| `/sweetclaude:code-testing` | Security review of code changes |
-| `/sweetclaude:code-review` | Adversarial code review |
+| `/sweetclaude:code-testing` | Run tests, mutation, security review, and/or PR pre-check |
+| `/sweetclaude:code-review` | Code, security, and compliance review |
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. After running the installer, all 55 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. After running the installer, all 45 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 

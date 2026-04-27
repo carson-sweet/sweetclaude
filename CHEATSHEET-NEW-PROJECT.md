@@ -73,14 +73,13 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 - `/sweetclaude:product-sprint-plan` — plan a sprint from the backlog
 
 ### Implementation
-- `/sweetclaude:code-tdd` — test-driven development at four enforcement levels
+- `/sweetclaude:code-feature` — build a new feature end-to-end (Gherkin → TDD Level 3 → PR)
 - `/sweetclaude:code-issue` — implement a GitHub issue end to end
 - `/sweetclaude:code-debt` — clean up tech debt (tests before touch)
 
 ### Review and Ship
-- `/sweetclaude:code-review` — adversarial code review
-- `/sweetclaude:code-testing` — security review
-- `/sweetclaude:code-testing` — pre-PR quality gate
+- `/sweetclaude:code-review` — code, security, and compliance review (menu at start)
+- `/sweetclaude:code-testing` — run tests, mutation, security review, and/or PR pre-check
 
 ### Milestones
 - `/sweetclaude:product-milestones add` — create a roadmap target with success criteria
@@ -101,13 +100,7 @@ These are not part of the automatic flow. They are available anytime.
 - **Narrative arc** (`/sweetclaude:documents-narrative-arc`) — build a knowledge graph connecting your claims, evidence, and objectives
 - **Decision tracking** (`/sweetclaude:design-manage-decisions`) — record any decision with context and rationale, queryable later
 - **Positioning statement** (`/sweetclaude:product-positioning-statement`) — for/who/that/unlike framework
-- **Corpus pipeline** — organize messy files into canonical documents with full provenance:
-  - `/sweetclaude:document-corpus` — scan, deduplicate, ingest into corpus
-  - `/sweetclaude:document-corpus` — classify files (keep, reconcile, discard, defer)
-  - `/sweetclaude:document-corpus` — draft and refine canonical documents
-  - `/sweetclaude:document-corpus` — finalize with provenance, archive, RAG index
-  - `/sweetclaude:document-corpus` — see where the pipeline stands
-- **RAG search** (`/sweetclaude:document-corpus`) — set up semantic search over your project documents so you can query by meaning, not just keywords
+- **Corpus pipeline and RAG search** (`/sweetclaude:document-corpus`) — organize messy files into canonical documents with full provenance (consolidate → triage → reconcile → promote), then index for semantic search. Presents a menu; pick the step you need or check status first.
 - **Update SweetClaude** (`/sweetclaude:update-sweetclaude`) — fetch the latest version from GitHub and sync to all projects
 - **Auto version bumping** — create `.sweetclaude/version-bump.yaml` to auto-bump version files after every git commit based on conventional commit prefixes
 
