@@ -14,6 +14,12 @@ Guardian is session-scoped. It does not persist across sessions or commits.
 
 ## Steps
 
+**0. Ensure state directory exists:**
+Run:
+```bash
+mkdir -p .sweetclaude/state
+```
+
 **1. Create the guardian flag:**
 Run:
 ```bash
@@ -21,26 +27,32 @@ touch .sweetclaude/state/guardian-enabled
 ```
 
 **2. Prevent the flag from being committed:**
-Run:
+Add `.sweetclaude/state/guardian-enabled` to the project root `.gitignore`:
 ```bash
-grep -qxF "state/guardian-enabled" .sweetclaude/.gitignore 2>/dev/null || echo "state/guardian-enabled" >> .sweetclaude/.gitignore
+grep -qxF ".sweetclaude/state/guardian-enabled" .gitignore 2>/dev/null || echo ".sweetclaude/state/guardian-enabled" >> .gitignore
 ```
 
 
 **3. Initialize session state:**
-Write `.sweetclaude/state/session-guardian.json` (replace `[ISO_TIMESTAMP]` with current UTC time, e.g. `2026-04-27T14:32:00Z`):
-```json
+Run this command to write the session state file:
+```bash
+cat > .sweetclaude/state/session-guardian.json << EOF
 {
   "enabled": true,
-  "session_start": "[ISO_TIMESTAMP]",
+  "session_start": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "skills_invoked": [],
   "test_files_written": [],
   "artifacts_created": [],
   "tdd_status": "pending"
 }
+EOF
 ```
 
+`tdd_status` starts as `"pending"` (TDD not yet started). It transitions to `"writing_tests"` → `"red"` → `"implementing"` → `"green"` as work progresses in the IMPLEMENT phase.
+
 **4. Create obligation task chain** based on current phase from `.sweetclaude/state/phase.yaml`:
+
+If `.sweetclaude/state/phase.yaml` does not exist or is unreadable, use the Unknown branch below.
 
 *IMPLEMENT phase:*
 - Task 1: Invoke `sweetclaude:code-feature` or `sweetclaude:code-issue`
@@ -63,6 +75,16 @@ Write `.sweetclaude/state/session-guardian.json` (replace `[ISO_TIMESTAMP]` with
 - Task 1: Invoke `sweetclaude:product-discovery`
 - Task 2: Define at least one persona — blocked by Task 1
 - Task 3: Define scope boundary — blocked by Task 2
+
+*PLAN phase:*
+- Task 1: Invoke `sweetclaude:product-user-stories`
+- Task 2: Write acceptance criteria for all stories — blocked by Task 1
+- Task 3: Generate Gherkin `.feature` files (TDD Level 3) or confirm Level 1/2 — blocked by Task 2
+
+*VERIFY phase:*
+- Task 1: Invoke `sweetclaude:code-review`
+- Task 2: Resolve all Critical findings — blocked by Task 1
+- Task 3: PR template filled and docs updated — blocked by Task 2
 
 *Unknown or no phase:* Create a single task: "Determine current phase and invoke the appropriate skill."
 
