@@ -171,7 +171,7 @@ Run `/sweetclaude:code-work-issue` with the issue number. It reads the issue, an
 
 ### "I need to write a research paper"
 
-Run `/sweetclaude:misc-academic-research`. Six-phase pipeline: establish your thesis and what is novel, review 35+ papers, pick a venue, draft section by section with quality scoring, simulate peer review, format and submit.
+Run `/sweetclaude:documents-academic-research`. Six-phase pipeline: establish your thesis and what is novel, review 35+ papers, pick a venue, draft section by section with quality scoring, simulate peer review, format and submit.
 
 ### "I have a pile of messy strategy files from various sessions"
 
@@ -200,9 +200,9 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 ### Strategy
 | Command | What it does |
 |---|---|
-| `/sweetclaude:misc-academic-research` | Research paper development (6 phases) |
+| `/sweetclaude:documents-academic-research` | Research paper development (6 phases) |
 | `/sweetclaude:misc-meeting-prep` | Stakeholder meeting deliverables |
-| `/sweetclaude:misc-narrative-arc` | Knowledge graph of strategic claims and evidence |
+| `/sweetclaude:documents-narrative-arc` | Knowledge graph of strategic claims and evidence |
 | `/sweetclaude:product-market-messaging` | External communications by audience |
 
 ### Product
@@ -238,13 +238,13 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 ### Milestones
 | Command | What it does |
 |---|---|
-| `/sweetclaude:misc-milestones add` | Create a new milestone with success criteria |
-| `/sweetclaude:misc-milestones review` | List milestones grouped by Now / Next / Later |
-| `/sweetclaude:misc-milestones link` | Attach a work item to a milestone (bidirectional) |
-| `/sweetclaude:misc-milestones status` | Detail view of one milestone with progress |
-| `/sweetclaude:misc-milestones blockers` | What is stopping a milestone from completing |
-| `/sweetclaude:misc-milestones complete` | Mark achieved with follow-up capture |
-| `/sweetclaude:misc-milestones unassigned` | Find work items with no milestone |
+| `/sweetclaude:product-milestones add` | Create a new milestone with success criteria |
+| `/sweetclaude:product-milestones review` | List milestones grouped by Now / Next / Later |
+| `/sweetclaude:product-milestones link` | Attach a work item to a milestone (bidirectional) |
+| `/sweetclaude:product-milestones status` | Detail view of one milestone with progress |
+| `/sweetclaude:product-milestones blockers` | What is stopping a milestone from completing |
+| `/sweetclaude:product-milestones complete` | Mark achieved with follow-up capture |
+| `/sweetclaude:product-milestones unassigned` | Find work items with no milestone |
 
 ### Documents & Search
 | Command | What it does |
