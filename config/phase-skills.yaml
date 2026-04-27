@@ -9,7 +9,7 @@ always_loaded:
     - sweetclaude
     - sweetclaude:find-skill
     - sweetclaude:hibernate
-    - sweetclaude:misc-milestones
+    - sweetclaude:product-milestones
     - sweetclaude:usage
     - hibernate-project
   rules:

@@ -26,11 +26,11 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
 | Work Type | Entry Phase | Skill to invoke |
 |---|---|---|
-| Concept articulation | DISCOVER | `sweetclaude:misc-narrative-arc` |
+| Concept articulation | DISCOVER | `sweetclaude:documents-narrative-arc` |
 | Pain analysis | DISCOVER | `sweetclaude:product-discovery` |
 | Customer profiling | DISCOVER | `sweetclaude:product-user-personas` |
 | Competitive landscape | DISCOVER | `sweetclaude:product-competition` |
-| Research paper | DISCOVER | `sweetclaude:misc-academic-research` |
+| Research paper | DISCOVER | `sweetclaude:documents-academic-research` |
 | Meeting preparation | DEFINE | `sweetclaude:misc-meeting-prep` |
 | Market messaging | DEFINE | `sweetclaude:product-market-messaging` |
 

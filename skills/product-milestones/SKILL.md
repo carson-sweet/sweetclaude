@@ -155,7 +155,7 @@ Dropped:
   MS-006 Desktop App          (2026-02-01 — rationale: see Notes)
 ```
 
-7. If no milestones exist, say: "No milestones yet. Run `/sweetclaude:misc-milestones add` to create one."
+7. If no milestones exist, say: "No milestones yet. Run `/sweetclaude:product-milestones add` to create one."
 
 ### `link <work-item> <MS-XXX>` — Bidirectional attach
 
@@ -249,7 +249,7 @@ Blockers for MS-001 Exit Stealth
   MS-000  Company name finalized  (status: proposed)
 ```
 
-4. If nothing is blocking, say: "Nothing is blocking MS-XXX. All criteria met, all contributing work items done, all dependencies achieved. Run `/sweetclaude:misc-milestones complete MS-XXX` to mark it achieved."
+4. If nothing is blocking, say: "Nothing is blocking MS-XXX. All criteria met, all contributing work items done, all dependencies achieved. Run `/sweetclaude:product-milestones complete MS-XXX` to mark it achieved."
 
 ### `complete <MS-XXX>` — Mark achieved and chain follow-ups
 
@@ -306,14 +306,14 @@ Unassigned work items (5)
   BL-009  Vendor management page
 ```
 
-4. Tell the user: "These have no milestone. Either link them to a milestone (`/sweetclaude:misc-milestones link <item> <MS-XXX>`) or confirm they are distractions / out of roadmap. Not doing anything is also fine — this check is advisory."
+4. Tell the user: "These have no milestone. Either link them to a milestone (`/sweetclaude:product-milestones link <item> <MS-XXX>`) or confirm they are distractions / out of roadmap. Not doing anything is also fine — this check is advisory."
 5. Do not force action. Do not modify files. Surface only.
 
 ## Integration protocol
 
 The milestones skill is the single source of truth for milestone data. Other skills should follow this protocol rather than writing their own milestone logic:
 
-- **`sweetclaude:product/user-story`**: after creating a story, prompt "Assign this story to a milestone? [list of active + proposed milestones, or 'none / later']". On user selection, invoke `sweetclaude:misc-milestones link <US-XXX> <MS-XXX>`.
+- **`sweetclaude:product/user-story`**: after creating a story, prompt "Assign this story to a milestone? [list of active + proposed milestones, or 'none / later']". On user selection, invoke `sweetclaude:product-milestones link <US-XXX> <MS-XXX>`.
 - **`sweetclaude:product/sprint-plan`**: after stories are chosen for a sprint, read each story's `**Milestone:**` header. Report which milestones the sprint advances and count unassigned stories. If > 50% of sprint stories are unassigned, flag it as a scope concern.
 - **`sweetclaude:status`**: in the orient view, include an "Active milestones" section showing each `active` milestone with its criterion-met count.
 
