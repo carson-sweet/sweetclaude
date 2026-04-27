@@ -63,7 +63,7 @@ Runs after pre-flight passes.
 
 ## Domain Buckets
 
-SweetClaude organizes skills into five domain buckets. The `new-task` skill classifies work into the right bucket.
+SweetClaude organizes skills into five domain buckets. The `find-skill` skill classifies work into the right bucket.
 
 ```
 strategy/  — Why does this matter and to whom? Concept, pain, ICP, competitive, research, messaging.
@@ -73,7 +73,7 @@ code/      — Writing and verifying code. TDD, issues, debt, testing, review.
 deploy/    — Shipping it. (Deferred — not yet scoped.)
 ```
 
-**Work-type routing (via `/sweetclaude:new-task`):**
+**Work-type routing (via `/sweetclaude:find-skill`):**
 
 *strategy/* — concept articulation, pain analysis, customer profiling, strategic competitive analysis, research papers, meeting prep, market messaging
 *product/* — new features, product briefs, PRDs, user stories, scope changes, backlog, sprint planning, product-level competitive analysis
@@ -147,7 +147,7 @@ Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills 
 - **`code:`** — TDD, implementation, testing, code review
 - **`deploy:`** — shipping (deferred)
 
-When the user asks to do something, the `new-task` skill classifies it into the right bucket and surfaces relevant skills. Skills from other buckets are available on request.
+When the user asks to do something, the `find-skill` skill classifies it into the right bucket and surfaces relevant skills. Skills from other buckets are available on request.
 
 ## Delegation Depth
 

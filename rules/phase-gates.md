@@ -93,5 +93,5 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 These skills are available in ALL phases via `always_loaded` in phase-skills.yaml:
 
 - **sweetclaude** — Master router, session entry point
-- **sweetclaude:new-task** — Classify work and enter pipeline
+- **sweetclaude:find-skill** — Classify work and enter pipeline
 - **sweetclaude:hibernate** — Freeze or thaw a project at any point
