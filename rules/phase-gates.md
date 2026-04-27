@@ -67,7 +67,7 @@ Entry and exit criteria for each phase. A phase cannot advance until exit criter
 - Change-impact analysis completed (for changes to existing code)
 - Code committed
 - Improvement check-in
-**Available skills:** sweetclaude:code-tdd, sweetclaude:code-issue, sweetclaude:code-debt, design/change-impact-analysis, superpowers:writing-plans, superpowers:executing-plans, superpowers:using-git-worktrees, superpowers:systematic-debugging, superpowers:dispatching-parallel-agents
+**Available skills:** sweetclaude:code-feature, sweetclaude:code-issue, sweetclaude:code-debt, sweetclaude:design-change-impact-analysis, superpowers:writing-plans, superpowers:executing-plans, superpowers:using-git-worktrees, superpowers:systematic-debugging, superpowers:dispatching-parallel-agents
 **Hooks active:** test-guardian, auto-test-runner, git-checkpoint
 
 ## Phase 6: VERIFY
