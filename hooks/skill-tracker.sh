@@ -31,16 +31,18 @@ fi
 
 # Parse skill name from stdin JSON
 INPUT=$(cat)
-SKILL_NAME=$(echo "$INPUT" | jq -r '.skill // "unknown"' 2>/dev/null)
+SKILL_NAME=$(echo "$INPUT" | jq -r '.skill' 2>/dev/null)
 
 if [ -z "$SKILL_NAME" ] || [ "$SKILL_NAME" = "null" ]; then
   exit 0
 fi
 
 # Append skill name to skills_invoked array
-UPDATED=$(jq --arg skill "$SKILL_NAME" '.skills_invoked += [$skill]' "$SESSION_FILE" 2>/dev/null)
-if [ -n "$UPDATED" ]; then
-  echo "$UPDATED" > "$SESSION_FILE"
+TMPFILE=$(mktemp)
+if jq --arg skill "$SKILL_NAME" '.skills_invoked += [$skill]' "$SESSION_FILE" > "$TMPFILE" 2>/dev/null; then
+  mv "$TMPFILE" "$SESSION_FILE"
+else
+  rm -f "$TMPFILE"
 fi
 
 exit 0
