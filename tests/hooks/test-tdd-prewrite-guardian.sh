@@ -66,6 +66,15 @@ echo "$OUT" | grep -q '"ok".*true' && pass "config file → allow" || fail "conf
 OUT=$(run_hook "$TEST_TMPDIR/docs/readme.md" "Write")
 echo "$OUT" | grep -q '"ok".*true' && pass "markdown file → allow" || fail "markdown file → allow" "$OUT"
 
+# Test 9: Makefile in source dir → allow (extensionless build file)
+echo '{"test_files_written":[]}' > "$TEST_TMPDIR/.sweetclaude/state/session-guardian.json"
+OUT=$(run_hook "$TEST_TMPDIR/src/Makefile" "Write")
+echo "$OUT" | grep -q '"ok".*true' && pass "Makefile → allow" || fail "Makefile → allow" "$OUT"
+
+# Test 10: path with TestimonialService.java (not a test file) → block
+OUT=$(run_hook "$TEST_TMPDIR/src/TestimonialService.java" "Write")
+echo "$OUT" | grep -q '"ok".*false' && pass "TestimonialService.java → block" || fail "TestimonialService.java → block" "$OUT"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
