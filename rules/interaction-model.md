@@ -110,10 +110,10 @@ Watch for signals that Claude is ignoring SweetClaude protocols. When detected, 
 - Claude realizes mid-task it skipped a required step
 
 **When triggered**, offer once — do not auto-enable:
-> "It looks like I've been skipping protocol steps. Want me to enable the Protocol Guardian? It enforces skill invocations, TDD discipline, and artifact saves for the rest of this session. Run `/sweetclaude:guardian-on` to enable it."
+> "It looks like I've been skipping protocol steps. Want me to enable the Protocol Guardian? It enforces skill invocations, TDD discipline, and artifact saves for the rest of this session. Say yes and I'll enable it."
 
 **Rules:**
-- Offer once per trigger event, not repeatedly
+- Offer at most once per session — if declined, do not re-offer regardless of subsequent triggers
 - Do not enable the guardian without explicit user consent
 - If the user declines, note it and continue without re-offering for that session
 - If the user accepts, invoke `sweetclaude:guardian-on`
