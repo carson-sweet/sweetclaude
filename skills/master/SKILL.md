@@ -136,6 +136,7 @@ Follow `~/.claude/rules/sweetclaude/interaction-model.md` at all times:
 - Context continuity — track detours, re-orient proactively
 - Dual context windows — manage yours AND the human's
 - Creative partnership — think with, not just for
+- Protocol guardian — if protocol violations are detected or user expresses frustration with skipped steps, offer `/sweetclaude:guardian-on` (see interaction-model.md for full trigger rules)
 
 ## Skill Surfacing
 

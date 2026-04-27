@@ -29,6 +29,24 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/test-guardian.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/tdd-prewrite-guardian.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/artifact-guardian.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -47,6 +65,15 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/version-bump.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-tracker.sh"
           }
         ]
       }
