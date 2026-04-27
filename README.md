@@ -167,7 +167,7 @@ Run `/sweetclaude:find-skill` and describe what you need. SweetClaude classifies
 
 ### "I have a GitHub issue to implement"
 
-Run `/sweetclaude:code-work-issue` with the issue number. It reads the issue, analyzes impact, proposes a plan, implements with TDD, verifies, updates docs, and opens a PR.
+Run `/sweetclaude:code-issue` with the issue number. It reads the issue, analyzes impact, proposes a plan, implements with TDD, verifies, updates docs, and opens a PR.
 
 ### "I need to write a research paper"
 
@@ -255,8 +255,8 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | Command | What it does |
 |---|---|
 | `/sweetclaude:code-tdd` | TDD at 4 levels (hotfix through full Gherkin) |
-| `/sweetclaude:code-work-issue` | Implement a GitHub issue end-to-end |
-| `/sweetclaude:code-work-debt` | Tech debt cleanup (lock behavior first) |
+| `/sweetclaude:code-issue` | Implement a GitHub issue end-to-end |
+| `/sweetclaude:code-debt` | Tech debt cleanup (lock behavior first) |
 | `/sweetclaude:code-testing` | Pre-PR quality gate |
 | `/sweetclaude:code-testing` | Run tests, report failures concisely |
 | `/sweetclaude:code-testing` | Verify tests catch real faults |

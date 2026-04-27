@@ -84,11 +84,11 @@ Documents
   /sweetclaude:document-corpus     Corpus pipeline + RAG — consolidate, triage, reconcile, promote, search
 
 Code
-  /sweetclaude:code/tdd              TDD at 4 levels (hotfix through full from Gherkin)
-  /sweetclaude:code/work-issue       Implement a GitHub issue end-to-end
-  /sweetclaude:code/work-debt        Tech debt cleanup (lock behavior first)
-  /sweetclaude:code/testing          Run tests, mutation, security review, and/or PR pre-check
-  /sweetclaude:code/code-review      Adversarial code review
+  /sweetclaude:code-feature          Build a new feature (Gherkin → TDD Level 3 → PR)
+  /sweetclaude:code-issue            Implement a GitHub issue end-to-end
+  /sweetclaude:code-debt             Tech debt cleanup (lock behavior first)
+  /sweetclaude:code-testing          Run tests, mutation, security review, and/or PR pre-check
+  /sweetclaude:code-review           Code, security, and compliance review
 ```
 
 ## Step 3: Quick Start

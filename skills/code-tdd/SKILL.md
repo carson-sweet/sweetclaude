@@ -1,5 +1,5 @@
 ---
-description: SweetClaude TDD — unified test-driven development with four process levels, language-agnostic, hook-enforced. Tests first, from specs, immutable during implementation. Use for ALL implementation work.
+description: "Internal TDD process skill — invoked by code-feature, code-issue, and code-debt. Not a direct user entry point. Defines the four TDD levels (hotfix, light, standard, full) and the rules that govern all implementation work."
 ---
 
 <preflight-guard>
@@ -91,7 +91,7 @@ Use AskUserQuestion with these options:
 
 9. **REFACTOR.**
 
-10. **Optional: Mutation testing.** Run `sweetclaude:code/testing` to verify test quality.
+10. **Optional: Mutation testing.** Run `sweetclaude:code-testing` to verify test quality.
 
 ## Rules — Non-Negotiable
 
