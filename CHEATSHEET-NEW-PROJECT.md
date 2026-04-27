@@ -83,11 +83,11 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 - `/sweetclaude:code-testing` — pre-PR quality gate
 
 ### Milestones
-- `/sweetclaude:milestones add` — create a roadmap target with success criteria
-- `/sweetclaude:milestones review` — see all milestones grouped by Now / Next / Later
-- `/sweetclaude:milestones link US-XXX MS-XXX` — attach a story to a milestone
-- `/sweetclaude:milestones blockers MS-XXX` — what is stopping progress
-- `/sweetclaude:milestones complete MS-XXX` — mark achieved, capture follow-ups
+- `/sweetclaude:misc-milestones add` — create a roadmap target with success criteria
+- `/sweetclaude:misc-milestones review` — see all milestones grouped by Now / Next / Later
+- `/sweetclaude:misc-milestones link US-XXX MS-XXX` — attach a story to a milestone
+- `/sweetclaude:misc-milestones blockers MS-XXX` — what is stopping progress
+- `/sweetclaude:misc-milestones complete MS-XXX` — mark achieved, capture follow-ups
 
 ## What SweetClaude Can Do If You Ask
 
@@ -95,10 +95,10 @@ These are not part of the automatic flow. They are available anytime.
 
 - **Competitive analysis** (`/sweetclaude:product-competition`) — competitive analysis at three depth levels — survey, matrix, or feature-deep
 - **Market messaging** (`/sweetclaude:product-market-messaging`) — craft elevator pitches and value propositions per audience
-- **Meeting prep** (`/sweetclaude:strategy-meeting-prep`) — prepare agenda, talking points, and anticipated questions for a specific meeting
+- **Meeting prep** (`/sweetclaude:misc-meeting-prep`) — prepare agenda, talking points, and anticipated questions for a specific meeting
 - **Research** (`/sweetclaude:product-research`) — market or technical research with evidence and sources
-- **Academic paper** (`/sweetclaude:strategy-academic-research`) — full six-phase pipeline from thesis through submission
-- **Narrative arc** (`/sweetclaude:strategy-narrative-arc`) — build a knowledge graph connecting your claims, evidence, and objectives
+- **Academic paper** (`/sweetclaude:misc-academic-research`) — full six-phase pipeline from thesis through submission
+- **Narrative arc** (`/sweetclaude:misc-narrative-arc`) — build a knowledge graph connecting your claims, evidence, and objectives
 - **Decision tracking** (`/sweetclaude:design-manage-decisions`) — record any decision with context and rationale, queryable later
 - **Positioning statement** (`/sweetclaude:product-positioning-statement`) — for/who/that/unlike framework
 - **Corpus pipeline** — organize messy files into canonical documents with full provenance:

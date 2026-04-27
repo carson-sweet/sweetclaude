@@ -31,6 +31,6 @@ Plan a sprint for: $ARGUMENTS
 
 4. If more than 50% of sprint stories are unassigned to any milestone, flag it:
 
-   > "{N} of {total} stories have no milestone. This sprint may be unfocused. Consider running `/sweetclaude:milestones unassigned` to triage, or confirm the sprint is intentionally tactical."
+   > "{N} of {total} stories have no milestone. This sprint may be unfocused. Consider running `/sweetclaude:misc-milestones unassigned` to triage, or confirm the sprint is intentionally tactical."
 
 5. If no milestones exist at all, skip this step silently — no milestones is not a sprint-planning problem.

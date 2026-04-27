@@ -84,7 +84,7 @@ If you are in the middle of implementation, these are your daily tools:
 | `/sweetclaude:code-work-debt` | Clean up tech debt (tests before touch, always) |
 | `/sweetclaude:code-testing` | Run tests, mutation, security review, and/or PR pre-check |
 | `/sweetclaude:code-review` | Get an adversarial code review |
-| `/sweetclaude:milestones` | Track roadmap targets across strategy and product work |
+| `/sweetclaude:misc-milestones` | Track roadmap targets across strategy and product work |
 
 ### Fix Configuration Issues
 
@@ -145,7 +145,7 @@ This is especially useful for projects that started with lots of brainstorming i
 ### Prepare for Meetings
 
 ```
-/sweetclaude:strategy-meeting-prep
+/sweetclaude:misc-meeting-prep
 ```
 
 Tell it who you are meeting, when, and what the purpose is. It pulls context from your strategy documents, drafts an agenda, talking points with confidence levels, anticipated questions with prepared responses, and leave-behinds. After the meeting, it captures your debrief.
@@ -153,7 +153,7 @@ Tell it who you are meeting, when, and what the purpose is. It pulls context fro
 ### Write or Improve Documentation
 
 ```
-/sweetclaude:design-update-docs
+/sweetclaude:documents-update-docs
 ```
 
 After implementation changes behavior, this scans existing docs for stale references and proposes updates.
@@ -167,7 +167,7 @@ Record architecture or design decisions with context, options considered, and ra
 ### Track Roadmap Milestones
 
 ```
-/sweetclaude:milestones add
+/sweetclaude:misc-milestones add
 ```
 
 Create outcome-driven roadmap targets like "Exit Stealth" or "MVP Shipped" with measurable success criteria. Link user stories and backlog items to milestones. Track progress, identify blockers, and mark milestones achieved with follow-up capture. Sprint planning automatically reports which milestones a sprint advances.

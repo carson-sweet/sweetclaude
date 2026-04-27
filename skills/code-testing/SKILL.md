@@ -169,7 +169,7 @@ Final quality gate before opening a PR.
 5. **PR template filled.** What, Why, Scope, How to verify, Rollout plan, Security checklist.
 6. **Commit messages descriptive.** Conventional commit format. No "fix stuff" or "wip".
 7. **Branch rebased on latest main** if needed.
-8. **Docs updated.** Run `sweetclaude:design-update-docs`. Flag and update any stale docs.
+8. **Docs updated.** Run `sweetclaude:documents-update-docs`. Flag and update any stale docs.
 9. **Traceability updated.** `traceability/requirements-map.md` reflects the implementation.
 
 If any item fails, report what is missing. Do not open the PR until all items pass.

@@ -171,7 +171,7 @@ Run `/sweetclaude:code-work-issue` with the issue number. It reads the issue, an
 
 ### "I need to write a research paper"
 
-Run `/sweetclaude:strategy-academic-research`. Six-phase pipeline: establish your thesis and what is novel, review 35+ papers, pick a venue, draft section by section with quality scoring, simulate peer review, format and submit.
+Run `/sweetclaude:misc-academic-research`. Six-phase pipeline: establish your thesis and what is novel, review 35+ papers, pick a venue, draft section by section with quality scoring, simulate peer review, format and submit.
 
 ### "I have a pile of messy strategy files from various sessions"
 
@@ -200,9 +200,9 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 ### Strategy
 | Command | What it does |
 |---|---|
-| `/sweetclaude:strategy-academic-research` | Research paper development (6 phases) |
-| `/sweetclaude:strategy-meeting-prep` | Stakeholder meeting deliverables |
-| `/sweetclaude:strategy-narrative-arc` | Knowledge graph of strategic claims and evidence |
+| `/sweetclaude:misc-academic-research` | Research paper development (6 phases) |
+| `/sweetclaude:misc-meeting-prep` | Stakeholder meeting deliverables |
+| `/sweetclaude:misc-narrative-arc` | Knowledge graph of strategic claims and evidence |
 | `/sweetclaude:product-market-messaging` | External communications by audience |
 
 ### Product
@@ -230,7 +230,7 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:design-ux` | UX design and wireframes |
 | `/sweetclaude:design-solutioning-gate` | Validate design before implementation |
 | `/sweetclaude:design-change-impact-analysis` | Trace blast radius before changes |
-| `/sweetclaude:design-update-docs` | Keep docs in sync after changes |
+| `/sweetclaude:documents-update-docs` | Keep docs in sync after changes |
 | `/sweetclaude:design-data-model` | Schema, entities, migrations |
 | `/sweetclaude:design-api-design` | Endpoints, contracts, versioning |
 | `/sweetclaude:design-manage-decisions` | Record decisions with rationale |
@@ -238,13 +238,13 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 ### Milestones
 | Command | What it does |
 |---|---|
-| `/sweetclaude:milestones add` | Create a new milestone with success criteria |
-| `/sweetclaude:milestones review` | List milestones grouped by Now / Next / Later |
-| `/sweetclaude:milestones link` | Attach a work item to a milestone (bidirectional) |
-| `/sweetclaude:milestones status` | Detail view of one milestone with progress |
-| `/sweetclaude:milestones blockers` | What is stopping a milestone from completing |
-| `/sweetclaude:milestones complete` | Mark achieved with follow-up capture |
-| `/sweetclaude:milestones unassigned` | Find work items with no milestone |
+| `/sweetclaude:misc-milestones add` | Create a new milestone with success criteria |
+| `/sweetclaude:misc-milestones review` | List milestones grouped by Now / Next / Later |
+| `/sweetclaude:misc-milestones link` | Attach a work item to a milestone (bidirectional) |
+| `/sweetclaude:misc-milestones status` | Detail view of one milestone with progress |
+| `/sweetclaude:misc-milestones blockers` | What is stopping a milestone from completing |
+| `/sweetclaude:misc-milestones complete` | Mark achieved with follow-up capture |
+| `/sweetclaude:misc-milestones unassigned` | Find work items with no milestone |
 
 ### Documents & Search
 | Command | What it does |
