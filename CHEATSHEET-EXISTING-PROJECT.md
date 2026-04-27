@@ -79,9 +79,9 @@ If you are in the middle of implementation, these are your daily tools:
 
 | Command | When to use it |
 |---|---|
-| `/sweetclaude:code-work-issue` | Implement a GitHub issue end to end |
+| `/sweetclaude:code-issue` | Implement a GitHub issue end to end |
 | `/sweetclaude:code-tdd` | Write a feature with test-driven development |
-| `/sweetclaude:code-work-debt` | Clean up tech debt (tests before touch, always) |
+| `/sweetclaude:code-debt` | Clean up tech debt (tests before touch, always) |
 | `/sweetclaude:code-testing` | Run tests, mutation, security review, and/or PR pre-check |
 | `/sweetclaude:code-review` | Get an adversarial code review |
 | `/sweetclaude:product-milestones` | Track roadmap targets across strategy and product work |

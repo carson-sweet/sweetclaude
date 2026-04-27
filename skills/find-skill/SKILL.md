@@ -69,12 +69,12 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
 | Work Type | Entry Phase | Skill to invoke |
 |---|---|---|
-| New feature | IMPLEMENT | `sweetclaude:code-tdd` |
-| Feature enhancement | IMPLEMENT | `sweetclaude:code-work-issue` |
-| Bug fix | IMPLEMENT | `sweetclaude:code-work-issue` |
-| Chore / tech debt | IMPLEMENT | `sweetclaude:code-work-debt` |
+| New feature | IMPLEMENT | `sweetclaude:code-feature` |
+| Feature enhancement | IMPLEMENT | `sweetclaude:code-issue` |
+| Bug fix | IMPLEMENT | `sweetclaude:code-issue` |
+| Chore / tech debt | IMPLEMENT | `sweetclaude:code-debt` |
 | Testing | any | `sweetclaude:code-testing` |
-| Code review | VERIFY | `sweetclaude:code-review` |
+| Code / security / compliance review | VERIFY | `sweetclaude:code-review` |
 
 3. **Update state.** Write work type, bucket, and entry phase to `.sweetclaude/state/phase.yaml`:
    ```yaml

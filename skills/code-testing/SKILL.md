@@ -59,7 +59,7 @@ Run tests for: $ARGUMENTS (package name, service name, or "all")
 4. Do not dump full stdout/stderr. Summarize failures only. The user can ask for verbose output.
 
 **Rules:**
-- This check reports. It does not fix. For fixes, use `code-tdd` or `code-work-issue`.
+- This check reports. It does not fix. For fixes, use `code-tdd` or `code-issue`.
 - If the test command is not configured, say so and ask the user to add it to CLAUDE.md.
 
 ---

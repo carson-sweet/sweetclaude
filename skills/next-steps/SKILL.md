@@ -57,16 +57,16 @@ Picks skills based on what's missing for the current phase gate:
 
 **IMPLEMENT — what's needed → what to run:**
 - Change impact not assessed → `design/change-impact-analysis`
-- Tests not written → `code/tdd`
-- Issue to implement → `code/work-issue`
-- Tech debt to address → `code/work-debt`
+- New feature to build → `sweetclaude:code-feature`
+- Issue to implement → `sweetclaude:code-issue`
+- Tech debt to address → `sweetclaude:code-debt`
 
 **VERIFY — what's needed → what to run:**
-- Code not reviewed → `code/review`
-- Security not reviewed → `code/testing`
-- Tests not validated → `code/testing`
+- Code not reviewed → `sweetclaude:code-review`
+- Security not reviewed → `sweetclaude:code-testing`
+- Tests not validated → `sweetclaude:code-testing`
 - Docs not updated → `design/update-docs`
-- PR not ready → `code/testing`
+- PR not ready → `sweetclaude:code-testing`
 
 **SHIP — deferred.**
 

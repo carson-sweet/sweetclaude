@@ -74,8 +74,8 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 
 ### Implementation
 - `/sweetclaude:code-tdd` — test-driven development at four enforcement levels
-- `/sweetclaude:code-work-issue` — implement a GitHub issue end to end
-- `/sweetclaude:code-work-debt` — clean up tech debt (tests before touch)
+- `/sweetclaude:code-issue` — implement a GitHub issue end to end
+- `/sweetclaude:code-debt` — clean up tech debt (tests before touch)
 
 ### Review and Ship
 - `/sweetclaude:code-review` — adversarial code review

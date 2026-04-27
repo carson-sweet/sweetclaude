@@ -65,11 +65,11 @@ design:
 
 code:
   skills:
-    - sweetclaude:code/tdd
-    - sweetclaude:code/work-issue
-    - sweetclaude:code/work-debt
-    - sweetclaude:code/testing
-    - sweetclaude:code/review
+    - sweetclaude:code-tdd
+    - sweetclaude:code-issue
+    - sweetclaude:code-debt
+    - sweetclaude:code-testing
+    - sweetclaude:code-review
     - superpowers:writing-plans
     - superpowers:executing-plans
     - superpowers:using-git-worktrees

@@ -14,7 +14,7 @@ Address tech debt for: $ARGUMENTS
 
 1. **Define the debt.** What is the problem? Why now? What risk or cost does fixing it reduce?
 
-2. **Scope the change.** Which files and modules are affected? What is explicitly NOT changing? Run `design/change-impact-analysis` to map the blast radius.
+2. **Scope the change.** Which files and modules are affected? What is explicitly NOT changing? Run `sweetclaude:design-change-impact-analysis` to map the blast radius.
 
 3. **Lock current behavior.** Before touching any code, write tests that capture what exists:
    - What does this code do today? Test that.
@@ -22,11 +22,11 @@ Address tech debt for: $ARGUMENTS
    - Use TDD Level 1 (Light): single-context, behavior-locking tests.
    - All tests must pass BEFORE any refactoring begins.
 
-4. **Refactor.** Change the code. Run tests after each change. If any test fails, you changed behavior. Revert and try again.
+4. **Refactor.** Change the code. Run tests after each change. If any test fails, you changed behavior — revert and try again.
 
-5. **Verify.** All behavior-locking tests still pass. No new failures anywhere. Run `code/testing` on affected packages.
+5. **Verify.** All behavior-locking tests still pass. No new failures anywhere. Run `sweetclaude:code-testing` on affected packages.
 
-6. **PR.** Run `code/testing`. The PR description must explain: what debt was addressed, why now, and confirm no behavior changes (or document intentional ones).
+6. **PR.** Run `sweetclaude:code-testing`. The PR description must explain: what debt was addressed, why now, and confirm no behavior changes (or document intentional ones).
 
 ## Rules
 
