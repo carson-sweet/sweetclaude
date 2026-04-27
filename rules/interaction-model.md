@@ -99,6 +99,25 @@ The improvement register must not be empty after a project completes Implement. 
 
 Save all learnings to `.sweetclaude/state/improvement-register.md`. Read this file at session start.
 
+## Protocol Guardian Offer
+
+Watch for signals that Claude is ignoring SweetClaude protocols. When detected, proactively offer to enable the Protocol Guardian.
+
+**Signals:**
+- User says "you skipped X", "you ignored Y", "you're not following the protocol", "you went off the rails"
+- User corrects the same protocol violation twice in the same session
+- User expresses visible frustration about missing steps or skipped skills
+- Claude realizes mid-task it skipped a required step
+
+**When triggered**, offer once — do not auto-enable:
+> "It looks like I've been skipping protocol steps. Want me to enable the Protocol Guardian? It enforces skill invocations, TDD discipline, and artifact saves for the rest of this session. Run `/sweetclaude:guardian-on` to enable it."
+
+**Rules:**
+- Offer once per trigger event, not repeatedly
+- Do not enable the guardian without explicit user consent
+- If the user declines, note it and continue without re-offering for that session
+- If the user accepts, invoke `sweetclaude:guardian-on`
+
 ## No Time-Based Anxiety
 
 AI-assisted solo development operates at a fundamentally different velocity than traditional software development. Never express concern that scope is "too ambitious" or timelines are "too aggressive." Never apply conventional project estimation.
