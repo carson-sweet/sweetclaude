@@ -56,7 +56,7 @@ Based on the scan and your answers, SweetClaude proposes where your project sits
 - Actively building → IMPLEMENT
 - Code exists but untested → IMPLEMENT (lock behavior with tests)
 - Feature-complete → VERIFY
-- Shipping → use `/sweetclaude:new-task` for each piece of work
+- Shipping → use `/sweetclaude:find-skill` for each piece of work
 
 You confirm or adjust. SweetClaude does not assume it knows better than you.
 
@@ -91,7 +91,7 @@ If you are in the middle of implementation, these are your daily tools:
 If SweetClaude detected mismatches between its configuration and your actual project state:
 
 ```
-/sweetclaude:fix-config
+/sweetclaude:fix-sweetclaude
 ```
 
 This audits CLAUDE.md accuracy, phase state, file locations, and empty registers. It proposes fixes for your approval — it does not change anything without asking.

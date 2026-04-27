@@ -163,7 +163,7 @@ Run `/sweetclaude:sherpa` in your project folder. SweetClaude will:
 
 ### "I need to build a specific feature"
 
-Run `/sweetclaude:new-task` and describe what you need. SweetClaude classifies the work (strategy, product, design, or code) and routes you to the right starting point with the right tools.
+Run `/sweetclaude:find-skill` and describe what you need. SweetClaude classifies the work (strategy, product, design, or code) and routes you to the right starting point with the right tools.
 
 ### "I have a GitHub issue to implement"
 
@@ -191,8 +191,8 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:help` | Show project status and all available commands |
 | `/sweetclaude:status` | What is done, what is pending, what is next |
 | `/sweetclaude:next-steps` | Walk through the pipeline step by step |
-| `/sweetclaude:new-task` | Classify work and enter the pipeline |
-| `/sweetclaude:fix-config` | Audit and repair SweetClaude configuration |
+| `/sweetclaude:find-skill` | Classify work and enter the pipeline |
+| `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
 | `/sweetclaude:update-sweetclaude` | Fetch latest from GitHub and sync to all projects |
 | `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
 | `/sweetclaude:metrics` | View, enable, or disable local performance metrics |

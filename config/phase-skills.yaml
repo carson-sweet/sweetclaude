@@ -1,13 +1,13 @@
 # SweetClaude Phase-Skill Mapping
 # Five domain buckets: strategy, product, design, code, deploy.
-# The new-task and next-steps skills classify work into a bucket
+# The find-skill and next-steps skills classify work into a bucket
 # and surface appropriate skills.
 schema_version: 1
 
 always_loaded:
   skills:
     - sweetclaude
-    - sweetclaude:new-task
+    - sweetclaude:find-skill
     - sweetclaude:hibernate
     - sweetclaude:milestones
     - sweetclaude:usage

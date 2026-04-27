@@ -181,7 +181,7 @@ Based on the scan and answers, propose which phase this project is in:
 | Actively building | IMPLEMENT |
 | Code exists but untested | IMPLEMENT (lock behavior with tests first) |
 | Feature-complete, needs polish | VERIFY |
-| Shipping/maintaining | SHIP or new-task cycle |
+| Shipping/maintaining | SHIP or find-skill cycle |
 
 Present:
 > "This project is in the {phase} phase. {Reasoning}. Does that match?"
