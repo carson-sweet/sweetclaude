@@ -14,7 +14,7 @@ INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.command // ""' 2>/dev/null)
 
 # Only check git commit commands
-if ! echo "$COMMAND" | grep -qE '^git commit'; then
+if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit'; then
   exit 0
 fi
 
@@ -48,7 +48,7 @@ warn() {
 case "$PHASE" in
   implement)
     if [ -f "$SESSION_FILE" ]; then
-      TEST_COUNT=$(jq '.test_files_written | length' "$SESSION_FILE" 2>/dev/null)
+      TEST_COUNT=$(jq '(.test_files_written // []) | length' "$SESSION_FILE" 2>/dev/null)
       TDD_STATUS=$(jq -r '.tdd_status // "unknown"' "$SESSION_FILE" 2>/dev/null)
 
       if [ -z "$TEST_COUNT" ] || [ "$TEST_COUNT" -eq 0 ]; then
@@ -63,7 +63,7 @@ case "$PHASE" in
     ;;
   design)
     if [ -f "$SESSION_FILE" ]; then
-      ARTIFACT_COUNT=$(jq '.artifacts_created | length' "$SESSION_FILE" 2>/dev/null)
+      ARTIFACT_COUNT=$(jq '(.artifacts_created // []) | length' "$SESSION_FILE" 2>/dev/null)
       if [ -z "$ARTIFACT_COUNT" ] || [ "$ARTIFACT_COUNT" -eq 0 ]; then
         warn "Committing in DESIGN phase with no design artifacts recorded. Save architecture or tech spec to docs/ first."
       fi
@@ -73,10 +73,12 @@ case "$PHASE" in
     ;;
   define)
     if [ -f "$SESSION_FILE" ]; then
-      ARTIFACT_COUNT=$(jq '.artifacts_created | length' "$SESSION_FILE" 2>/dev/null)
+      ARTIFACT_COUNT=$(jq '(.artifacts_created // []) | length' "$SESSION_FILE" 2>/dev/null)
       if [ -z "$ARTIFACT_COUNT" ] || [ "$ARTIFACT_COUNT" -eq 0 ]; then
         warn "Committing in DEFINE phase with no artifacts recorded. Save product brief or PRD to docs/ first."
       fi
+    else
+      warn "No session-guardian.json found. Cannot verify artifacts for this commit."
     fi
     ;;
 esac

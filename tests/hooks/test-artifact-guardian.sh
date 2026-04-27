@@ -57,6 +57,19 @@ echo '{"test_files_written":[],"artifacts_created":[],"tdd_status":"pending"}' \
 OUT=$(run_hook "git commit -m 'wip'" 2>&1)
 echo "$OUT" | grep -qi "warning\|WARNING" && pass "design, no artifacts → warning" || fail "design, no artifacts → expected warning" "$OUT"
 
+# Test 6: define phase, no artifacts → warning
+echo "phase: define" > "$TEST_TMPDIR/.sweetclaude/state/phase.yaml"
+echo '{"test_files_written":[],"artifacts_created":[],"tdd_status":"pending"}' \
+  > "$TEST_TMPDIR/.sweetclaude/state/session-guardian.json"
+OUT=$(run_hook "git commit -m 'wip'" 2>&1)
+echo "$OUT" | grep -qi "warning\|WARNING" && pass "define, no artifacts → warning" || fail "define, no artifacts → expected warning" "$OUT"
+
+# Test 7: design phase, session file missing → warning
+echo "phase: design" > "$TEST_TMPDIR/.sweetclaude/state/phase.yaml"
+rm -f "$TEST_TMPDIR/.sweetclaude/state/session-guardian.json"
+OUT=$(run_hook "git commit -m 'wip'" 2>&1)
+echo "$OUT" | grep -qi "warning\|WARNING" && pass "design, no session file → warning" || fail "design, no session file → expected warning" "$OUT"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
