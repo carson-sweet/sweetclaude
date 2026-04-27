@@ -26,7 +26,6 @@ Run:
 grep -qxF "state/guardian-enabled" .sweetclaude/.gitignore 2>/dev/null || echo "state/guardian-enabled" >> .sweetclaude/.gitignore
 ```
 
-If `.sweetclaude/.gitignore` does not exist, create it first with that single line.
 
 **3. Initialize session state:**
 Write `.sweetclaude/state/session-guardian.json` (replace `[ISO_TIMESTAMP]` with current UTC time, e.g. `2026-04-27T14:32:00Z`):
@@ -79,7 +78,7 @@ PROTOCOL REQUIREMENTS (guardian active):
 ```
 
 **6. Session responsibilities while guardian is active:**
-You must keep `session-guardian.json` updated:
+You must keep `session-guardian.json` updated during the session. Fields `enabled` and `session_start` are set at initialization and do not change. The fields you must actively maintain are:
 - Add to `skills_invoked` each time you invoke a skill (the `skill-tracker.sh` hook does this automatically, but you should also update it if the hook misses any)
 - Add to `artifacts_created` when you save a design doc, product brief, architecture doc, etc.
 - Update `tdd_status` as TDD progresses: `writing_tests` → `red` → `implementing` → `green`
