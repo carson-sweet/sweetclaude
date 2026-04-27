@@ -26,12 +26,12 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
 | Work Type | Entry Phase | Skill to invoke |
 |---|---|---|
-| Concept articulation | DISCOVER | `sweetclaude:strategy-narrative-arc` |
+| Concept articulation | DISCOVER | `sweetclaude:misc-narrative-arc` |
 | Pain analysis | DISCOVER | `sweetclaude:product-discovery` |
 | Customer profiling | DISCOVER | `sweetclaude:product-user-personas` |
 | Competitive landscape | DISCOVER | `sweetclaude:product-competition` |
-| Research paper | DISCOVER | `sweetclaude:strategy-academic-research` |
-| Meeting preparation | DEFINE | `sweetclaude:strategy-meeting-prep` |
+| Research paper | DISCOVER | `sweetclaude:misc-academic-research` |
+| Meeting preparation | DEFINE | `sweetclaude:misc-meeting-prep` |
 | Market messaging | DEFINE | `sweetclaude:product-market-messaging` |
 
 ### product/ — what to build and why
@@ -60,7 +60,7 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 | UX/UI design | DESIGN | `sweetclaude:design-ux` |
 | Solution validation | DESIGN | `sweetclaude:design-solutioning-gate` |
 | Impact analysis | any | `sweetclaude:design-change-impact-analysis` |
-| Doc updates | VERIFY | `sweetclaude:design-update-docs` |
+| Doc updates | VERIFY | `sweetclaude:documents-update-docs` |
 | Data model / schema | DESIGN | `sweetclaude:design-data-model` |
 | API design | DESIGN | `sweetclaude:design-api-design` |
 | Record a decision | any | `sweetclaude:design-manage-decisions` |
