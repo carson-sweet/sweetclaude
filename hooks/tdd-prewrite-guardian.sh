@@ -45,9 +45,9 @@ fi
 
 # Determine if target file is a test file — if so, allow
 TEST_PATTERNS=(
-  "test/" "tests/" "__tests__/" "spec/" "specs/"
+  "/test/" "/tests/" "/__tests__/" "/spec/" "/specs/"
   ".test." ".spec." "_test." "_spec."
-  "test_" "/test" "Test"
+  "test_"
 )
 for pattern in "${TEST_PATTERNS[@]}"; do
   if [[ "$FILE" == *"$pattern"* ]]; then
@@ -57,10 +57,25 @@ for pattern in "${TEST_PATTERNS[@]}"; do
 done
 
 # Determine if target file is a non-code file — allow configs, docs, yaml, json, md, sh, etc.
+BASENAME="${FILE##*/}"
+if [[ "$BASENAME" == *.* ]]; then
+  EXT="${BASENAME##*.}"
+else
+  EXT=""
+fi
+
 NON_CODE_EXTENSIONS=("md" "json" "yaml" "yml" "toml" "ini" "cfg" "conf" "env" "sh" "bash" "txt" "lock" "log" "gitignore" "editorconfig" "prettierrc" "eslintrc" "babelrc")
-EXT="${FILE##*.}"
 for ext in "${NON_CODE_EXTENSIONS[@]}"; do
   if [[ "$EXT" == "$ext" ]]; then
+    echo '{"ok": true}'
+    exit 0
+  fi
+done
+
+# Extensionless files that are build/config files — allow
+NON_CODE_BASENAMES=("Makefile" "Dockerfile" "Rakefile" "Gemfile" "Procfile" "Vagrantfile" "Brewfile" "Justfile" "CMakeLists.txt")
+for name in "${NON_CODE_BASENAMES[@]}"; do
+  if [[ "$BASENAME" == "$name" ]]; then
     echo '{"ok": true}'
     exit 0
   fi
@@ -78,7 +93,7 @@ done
 # Check for test evidence: session-guardian.json has test_files_written entries
 SESSION_FILE="$STATE_DIR/session-guardian.json"
 if [ -f "$SESSION_FILE" ]; then
-  TEST_COUNT=$(/opt/homebrew/bin/jq '.test_files_written | length' "$SESSION_FILE" 2>/dev/null)
+  TEST_COUNT=$(jq '.test_files_written | length' "$SESSION_FILE" 2>/dev/null)
   if [ -n "$TEST_COUNT" ] && [ "$TEST_COUNT" -gt 0 ]; then
     echo '{"ok": true}'
     exit 0
@@ -86,7 +101,9 @@ if [ -f "$SESSION_FILE" ]; then
 fi
 
 # Check for test evidence: git status shows new/modified test files this session
-if git -C "$PROJECT_DIR" status --short 2>/dev/null | grep -E "(test|spec)\." | grep -qE "^[AM]"; then
+if git -C "$PROJECT_DIR" status --short 2>/dev/null | \
+   awk '{print $NF}' | \
+   grep -qE "(test|spec)\.(js|ts|py|rb|go|java|rs|cpp|c|cs|swift|kt|php|sh)$"; then
   echo '{"ok": true}'
   exit 0
 fi
