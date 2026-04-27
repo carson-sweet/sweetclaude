@@ -1,5 +1,5 @@
 ---
-description: Ripple-effect analysis — before implementing a change, trace what is affected across code, tests, docs, APIs, and specs. Use at the start of IMPLEMENT phase for existing codebases, or on demand when any artifact changes.
+description: Ripple-effect analysis for changes to EXISTING code or specs — trace what is affected across code, tests, docs, APIs, and specs. ONLY invoke when the user explicitly asks for impact analysis, or when a change targets existing artifacts. NEVER invoke when designing new features from scratch.
 ---
 
 <preflight-guard>
@@ -75,7 +75,7 @@ Analyze the impact of changing: $ARGUMENTS
 
 ## Rules
 
-- Run automatically at the start of IMPLEMENT phase for existing codebases.
+- Only invoke on explicit user request or when the user has confirmed scope of a change to existing artifacts.
 - Available on demand at any phase for any artifact type.
 - Be thorough but concise. List affected items. Do not dump entire files.
 - Flag items as "definitely affected" vs "possibly affected" when uncertain.
