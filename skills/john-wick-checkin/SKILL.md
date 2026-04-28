@@ -21,9 +21,23 @@ Parse from `$ARGUMENTS` (space-separated key=value pairs):
 
 ## Process
 
+**Phase sequence (for output header):**
+- `DEFINE` → `DESIGN`
+- `DESIGN` → `PLAN`
+- `PLAN` → `IMPLEMENT`
+- `IMPLEMENT` → `VERIFY`
+
 **Step 1: Read artifacts**
 
 Read every file listed in `discovery_artifacts` and `phase_artifacts`. These are your only context. Do not search the codebase or read other files.
+
+If any listed file cannot be read (missing path, access error), halt immediately and return:
+```
+Result: error
+Finding: {path} — file not found or unreadable
+Action: report to orchestrator
+```
+Do not proceed with partial artifact context.
 
 **Step 2: Answer the question**
 
@@ -50,8 +64,14 @@ Result: {none | minor | significant}
 If `minor` or `significant`, add:
 ```
 Finding: {artifact name} — {section or requirement} — {specific inconsistency in one sentence}
-Action: {return to gate X | log and continue}
+Action: {return to [gate name per phase mapping] | log and continue}
 ```
+
+Gate reference for "return to gate":
+- `DEFINE` → return to D4 (PRD review)
+- `DESIGN` → return to DG3 (design approval)
+- `PLAN` → return to PG4 (story approval)
+- `IMPLEMENT` → return to IM1 (pre-implementation gate)
 
 If `post_lock=true` and result is `significant`, add:
 ```
@@ -64,5 +84,6 @@ gate. The check-in cannot recommend changes to locked test files.
 - One finding maximum. If multiple issues exist, report the most significant one.
 - Do not produce recommendation lists, alternative approaches, or suggestions beyond the single finding.
 - `post_lock: true` changes the action for significant findings: always escalate to IM2, never self-correct.
+- `post_lock: true` with result `minor`: action remains `log and continue`. IM2 escalation applies to `significant` only.
 - Significant findings before IP5 → return to nearest interactive gate.
 - Significant findings after IP5 → IM2 escalation only.
