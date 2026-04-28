@@ -41,7 +41,7 @@ Run on first invocation (no `john-wick.yaml`). Validate all of the following. On
 | 2 | Personas artifact | `.sweetclaude/` or `docs/` contains a file with "persona" in the name | "Complete product discovery first: `/sweetclaude:product-discovery`" |
 | 3 | Task analysis with success + failure criteria | A task analysis artifact exists with "success" and "failure" in its content | "Task analysis incomplete. Rerun `/sweetclaude:product-discovery`." |
 | 4 | Constraints analysis | A constraints artifact exists in `.sweetclaude/` or `docs/` | "Constraints analysis missing." |
-| 5 | Explicit acknowledgment | Present the warning below and require the user to type "I understand" exactly | "John Wick mode requires explicit acknowledgment." |
+| 5 | Dangerously-skip-permissions acknowledged | Present the warning below and require the user to type "I understand" exactly | "John Wick mode requires explicit acknowledgment." |
 | 6 | GitHub mode (conditional) | If user selects GitHub mode at B1: `gh auth status` must exit 0 | "GitHub CLI not authenticated. John Wick can help you fix this now." |
 | 7 | No active run in error state | If `john-wick.yaml` exists: `status` must be `complete` or `paused` | "Previous run is in error state. Inspect `.sweetclaude/state/john-wick.yaml` before restarting." |
 | 8 | Compliance context | `.sweetclaude/state/compliance-context.yaml` exists | Note: not a hard block — collect at B4 if absent. Log: "Compliance context missing — will collect at B4." |
@@ -169,8 +169,3 @@ A clean stop is always better than a corrupted step.
 
 ---
 
-## Autonomous Execution Safety
-
-John Wick runs Claude Code with `--dangerously` flags disabled by default. File writes, shell commands, and git operations are executed directly — no sandbox bypass is assumed. If the project requires elevated permissions (e.g., docker, system-level commands), the user must configure that separately before invoking John Wick.
-
----
