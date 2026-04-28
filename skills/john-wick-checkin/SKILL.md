@@ -64,7 +64,7 @@ Result: {none | minor | significant}
 If `minor` or `significant`, add:
 ```
 Finding: {artifact name} — {section or requirement} — {specific inconsistency in one sentence}
-Action: {return to [gate name per phase mapping] | log and continue}
+Action: {return to [gate name per phase mapping] | escalate to IM2 | log and continue}
 ```
 
 Gate reference for "return to gate":
@@ -72,6 +72,8 @@ Gate reference for "return to gate":
 - `DESIGN` → return to DG3 (design approval)
 - `PLAN` → return to PG4 (story approval)
 - `IMPLEMENT` → return to IM1 (pre-implementation gate)
+
+Note: Use `escalate to IM2` when `post_lock=true` and result is `significant`. Use `return to [gate]` for significant findings before IP5. Use `log and continue` for `minor` findings in all cases.
 
 If `post_lock=true` and result is `significant`, add:
 ```
