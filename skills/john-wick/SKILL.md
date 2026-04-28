@@ -233,6 +233,8 @@ If it does not exist: invoke the compliance context interview from `sweetclaude:
 
 ### D1 — Generate PRD (Autonomous)
 
+**Resume guard:** If `current_step` is `D1-scope-gate` on resume, skip PRD generation entirely. The PRD already exists. Present the scope override prompt directly: 'The PRD has more than 8 epics. Type "override scope limit" to continue, or provide guidance on how to decompose the PRD.' Accept the override and write `current_step: D2`, then continue.
+
 Invoke `sweetclaude:product-prd` with `--autonomous` flag. The skill reads discovery artifacts and compliance context, generates a complete PRD draft without user interaction, and flags thin sections inline.
 
 The PRD is written to `docs/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md`.
@@ -247,7 +249,7 @@ If the PRD contains any ⚠ flagged sections, write their section names to `john
 If more than 8 epics: halt and require explicit user override:
 > "⚠ Hard limit: {N} epics exceeds the maximum for autonomous execution (8). Decompose the PRD into smaller services, or type 'override scope limit' to proceed at your own risk."
 
-Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: D1-scope`, `interactive_gate_pending.description: PRD scope exceeds hard limit — awaiting override or decomposition`. Do not advance `current_step` until the override is accepted.
+Write `current_step: D1-scope-gate` to `john-wick.yaml`. Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: D1-scope`, `interactive_gate_pending.description: PRD scope exceeds hard limit — awaiting override or decomposition`. Do not advance `current_step` until the override is accepted.
 
 If the scope check passes (≤ 8 epics, or override accepted): Update `current_step: D2`.
 
@@ -284,7 +286,7 @@ Pending user decision (contested):
 - [flagged section from D1] — [what information was missing]
 ```
 
-Write this change summary to `.sweetclaude/caucus/prd-review-[YYYYMMDD]-changes.md`. Record the path in `caucus_outputs`. This persists the summary across context loss so D4 does not need to regenerate it.
+Write this change summary to `.sweetclaude/caucus/prd-review-[YYYYMMDD]-changes.md`. Record in `caucus_outputs`: `{step: D3, path: .sweetclaude/caucus/prd-review-[YYYYMMDD]-changes.md}`. This persists the summary across context loss so D4 does not need to regenerate it.
 
 Update `current_step: D4`.
 
