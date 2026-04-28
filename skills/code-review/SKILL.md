@@ -109,10 +109,13 @@ Security Review: {scope}
 
 ## Compliance Review
 
-Begin by asking:
-> "What compliance frameworks apply to this project? (e.g. GDPR, HIPAA, SOC 2, PCI-DSS, CCPA, open source licenses — or 'general')"
+**Check for compliance context first:**
 
-Then review accordingly.
+Look for `.sweetclaude/state/compliance-context.yaml`. If it exists, read `derived_frameworks` from it and use those frameworks directly — do not ask the user:
+> "Using compliance context from discovery: [{frameworks listed}]. Running compliance review against these frameworks."
+
+If the file does not exist, ask:
+> "What compliance frameworks apply to this project? (e.g. GDPR, HIPAA, SOC 2, PCI-DSS, CCPA, open source licenses — or 'general')"
 
 **Focus areas:**
 1. **License compliance** — do new dependencies have compatible licenses? Is attribution required?
