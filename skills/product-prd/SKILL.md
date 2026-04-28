@@ -30,7 +30,7 @@ If `$ARGUMENTS` contains `--autonomous` or `--from-artifacts`, skip all user int
 Load the following files if they exist:
 - `.sweetclaude/state/discovery.yaml` — project intent, scope, problem, not_scope
 - `.sweetclaude/state/compliance-context.yaml` — data categories, derived frameworks
-  # derived_frameworks is a list of strings, e.g. ["gdpr", "pci_dss"]. Valid values: gdpr, hipaa, pci_dss, coppa, gdpr_floor
+  # derived_frameworks is a list of strings. Valid values ONLY: gdpr, hipaa, pci_dss, coppa, gdpr_floor. Reject any other value and flag for user review.
 - `.sweetclaude/state/personas.yaml` — target users
 - `.sweetclaude/state/brief.yaml` — product brief content
 - Any `.md` docs in `docs/` matching: personas, task-analysis, constraints, discovery
@@ -48,6 +48,8 @@ Sections (in order):
    - `pci_dss` → NFR: Cardholder data must never be stored in plaintext
    - `coppa` → NFR: No personal data collected from users under 13 without verifiable parental consent
    - `gdpr_floor` → NFR: Data minimization; collect only what is necessary for the stated purpose
+   
+   If `compliance-context.yaml` is absent or `derived_frameworks` is empty: generate zero compliance NFRs and proceed to Step 3 to flag the gap. Do not invent or assume frameworks.
 6. Epics and User Story Summary — derive from personas and task analysis
 7. Out of Scope — use `not_scope` from `discovery.yaml`
 8. Assumptions and Constraints — use constraints artifacts
@@ -89,7 +91,7 @@ generated: autonomous
 Output:
 ```
 Autonomous PRD generation complete.
-File: docs/prd-[feature]-v1-[date].md
+File: docs/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md
 
 Flagged sections for D4 review gate:
 - [Section name]: [gap description]
@@ -97,7 +99,7 @@ Flagged sections for D4 review gate:
 
 If no sections flagged: "All sections populated from discovery artifacts."
 
-Flagged sections must be resolved at the D4 review gate before this PRD advances to the PLAN phase.
+Flagged sections must be resolved at the D4 interactive review gate (the user-facing PRD approval step) before this PRD advances to the PLAN phase. Present each flag to the user and collect the missing information.
 
 **Stop here.** Do not proceed to Pre-Write Flow.
 
