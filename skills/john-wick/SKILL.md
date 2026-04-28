@@ -769,3 +769,120 @@ After each test run, classify the result as **significant** (escalate) or **not 
 When uncertain between escalate and continue: **escalate**. A false positive (unnecessary interruption) is better than a false negative (silent bad state).
 
 ---
+
+## Phase 6: Verify
+
+### V1 — Full test run + report (Autonomous)
+
+Update `current_phase: VERIFY` in `john-wick.yaml`.
+
+Run the complete test suite on the feature branch. Generate a final MD test report and append to the aggregate report. If any tests fail: run the severity classifier. If significant failures: escalate to IM2 before continuing (IM2 may fire outside the IM1 loop in this context — treat it identically). If not significant: log and continue.
+
+Update `current_step: V2`.
+
+### V2 — Code, security, and compliance review (Autonomous)
+
+Invoke `sweetclaude:code-review` with all three review types: code, security, and compliance.
+
+The compliance review reads `.sweetclaude/state/compliance-context.yaml` automatically (Plan 1 updated this skill). No manual framework specification needed.
+
+Write review output to `.sweetclaude/reports/code-review-[YYYYMMDD].md`.
+Record in `created_artifacts`: `{step: V2, type: report, path: ..., version: 1}`.
+
+If any Critical findings in code or security review: set `status: waiting_for_user`, `interactive_gate_pending.step: V2`, `interactive_gate_pending.description: Critical review findings require decision`. Commit: `chore(john-wick): artifacts at V2 — awaiting gate`. Present findings. Wait for user decision before continuing. On response: clear `interactive_gate_pending`, set `status: active`.
+
+Update `current_step: V3`.
+
+### V3 — Update user-facing documentation (Autonomous)
+
+Invoke `sweetclaude:documents-update-docs` for all user-facing documentation affected by the feature. If the skill does not exist: log "sweetclaude:documents-update-docs not found — skipping V3" and continue.
+
+Update `current_step: V4`.
+
+### V4 — Update design documents (Autonomous)
+
+Update all design documents (architecture, tech spec, contract analysis) to reflect the final implementation. These are now post-implementation records, not pre-implementation plans. Increment their versions in `created_artifacts`. Commit:
+```
+docs: update design documents to reflect final {feature_name} implementation
+```
+
+Update `current_step: V5`.
+
+### V5 — Cut PR (Interactive)
+
+Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: V5`, `interactive_gate_pending.description: Final PR review`.
+
+Commit any remaining artifacts: `chore(john-wick): artifacts at V5 — awaiting gate`.
+
+Create the final pull request:
+
+```bash
+gh pr create \
+  --title "{feature_name}: {one-line description from PRD executive summary}" \
+  --base main \
+  --head {feature_branch} \
+  --body "..."
+```
+
+PR description must reference (in order):
+1. Approved PRD: `{prd_path}` (version {N})
+2. User stories: `{stories_path}`
+3. Gherkin specs: `.sweetclaude/features/`
+4. Test report (aggregate): `.sweetclaude/reports/test-report-{feature_name}.md`
+5. Code review findings: `.sweetclaude/reports/code-review-[YYYYMMDD].md`
+6. Compliance frameworks applied: {list from compliance-context.yaml derived_frameworks}
+7. Any IM2 escalations that occurred and how they were resolved (list from checkin_outputs where escalated=true)
+
+Present the PR URL to the user:
+```
+JOHN WICK — Pipeline Complete
+══════════════════════════════
+PR: {url}
+
+Pipeline summary:
+- Phases completed: Bootstrap → Define → Plan → Design → Implement Prep → Implement → Verify
+- Issues resolved: {N complete} / {N total}
+- Issues skipped: {N skipped}
+- Tests: {pass}/{total}
+- Check-ins run: {N} (significant findings: {N})
+- IM2 escalations: {N}
+- Review findings: {N critical} critical, {N warning} warning
+
+Compliance frameworks applied: {list from compliance-context.yaml}
+```
+
+On user acknowledgment: clear `interactive_gate_pending`. Update `john-wick.yaml status: complete`. Record PR URL in `created_artifacts`: `{step: V5, type: pr, path: {url}, version: 1}`.
+
+---
+
+## Error Handling
+
+If any step produces an unrecoverable error (skill invocation fails, git command fails, required file missing after prerequisites):
+
+1. Set `john-wick.yaml status: error`.
+2. Record the error in `context_checkpoint.notes`.
+3. Commit current state: `chore(john-wick): error state at [step] — [brief description]`
+4. Present to user:
+   > "John Wick encountered an error at [step]: [description]. State saved. Inspect `.sweetclaude/state/john-wick.yaml` and fix the issue, then run `/sweetclaude:john-wick` to resume."
+5. Stop. Do not auto-retry.
+
+---
+
+## Cross-Cutting Rules
+
+**No time estimates.** John Wick never estimates how long a phase or step will take. Progress is measured in completed steps and passing tests, not elapsed time.
+
+**Skill invocations are transparent.** When invoking an existing skill (product-prd, design-architecture, etc.), John Wick uses the `Skill` tool exactly as a user would. It does not bypass preflight guards, skip sections, or pass undocumented flags (except `--autonomous` which is an explicit extension added in Plan 1).
+
+**State before steps.** `john-wick.yaml current_step` is updated to the next step before that step begins. A resume after any interruption will re-enter the correct step without duplication.
+
+**Multi-service warning.** John Wick is designed for one service at a time. If the service contract analysis (DS3) identifies that a dependency's spec is absent or marked in-progress (another John Wick run), flag explicitly:
+> "⚠ Dependency in-flight: [{service}] appears to be under active development. Contract analysis for this dependency may be stale by the time implementation begins. Consider sequencing: finish the upstream service's John Wick pipeline through DS7 before continuing."
+
+**Test immutability after IP5 is absolute.** No step, no subagent, and no check-in may modify locked test files. If any step would require a test change (e.g., a V4 documentation update that touches test fixtures), halt and present to user.
+
+**d1_flags field.** The `d1_flags` list in `john-wick.yaml` records thin-section flag names from D1. These are surfaced by D3 and D4 during PRD review. After D4 completes (all sections approved), D4 clears `d1_flags` to empty list.
+
+---
+
+---
