@@ -253,7 +253,7 @@ If more than 8 epics: halt and require explicit user override:
 
 Write `current_step: D1-scope-gate` to `john-wick.yaml`. Update `john-wick.yaml`: set `status: paused`. Leave `interactive_gate_pending` null (do not set it). Do not advance `current_step` until the override is accepted.
 
-If the scope check passes (≤ 8 epics, or override accepted): Update `current_step: D2`.
+If the scope check passes (≤ 8 epics): Update `current_step: D2`. (Override-accepted transition is handled exclusively by the D1 resume guard above — it writes `current_step: D2` there and does not return here.)
 
 ### D2 — PRD caucus (Autonomous)
 
