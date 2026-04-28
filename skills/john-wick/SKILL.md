@@ -707,7 +707,7 @@ Your decision:
 ```
 
 On user decision:
-- **Fix and continue**: record `status: waiting_for_user` in `john-wick.yaml`. On response: apply the user's described fix, re-run tests, re-enter the issue loop.
+- **Fix and continue**: record `status: waiting_for_user` in `john-wick.yaml`. On response: clear `interactive_gate_pending` (set both fields to null). Set `status: active`. Apply the user's described fix, re-run tests, re-enter the issue loop.
 - **Skip**: update issue status to `skipped` in `john-wick.yaml`. Set `status: active`. Continue loop.
 - **Abort**: set `john-wick.yaml status: paused`. Stop.
 
