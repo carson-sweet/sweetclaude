@@ -89,6 +89,7 @@ discovery_artifacts:
   task_analysis: string | null
   constraints: string | null
 compliance_context: string | null
+d1_flags: []
 
 created_artifacts:
   - step: string
@@ -177,6 +178,8 @@ A clean stop is always better than a corrupted step.
 
 ### B1 — Tracking mode (Interactive)
 
+Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: B1`, `interactive_gate_pending.description: Choose tracking mode and phase check-in preference`.
+
 Ask:
 > "Should John Wick track issues in GitHub or locally?
 > - **GitHub** — creates real GitHub issues, requires `gh` auth
@@ -195,6 +198,8 @@ Record `phase_checkins: true/false`.
 Update `current_step: B2`.
 
 ### B2 — Feature branch name (Interactive)
+
+Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: B2`, `interactive_gate_pending.description: Choose feature branch name`.
 
 Ask:
 > "What should the feature branch be named? (e.g. `payment-retry-logic`, `user-profile-v2`)"
@@ -218,9 +223,9 @@ Update `john-wick.yaml`: record discovery artifact paths in `discovery_artifacts
 
 ### B4 — Compliance context (Interactive, conditional)
 
-If `.sweetclaude/state/compliance-context.yaml` already exists: skip. Log "Compliance context already present — skipping B4." Update `current_step: D1`.
+If `.sweetclaude/state/compliance-context.yaml` already exists: skip. Log "Compliance context already present — skipping B4." Update `current_phase: DEFINE`, `current_step: D1`.
 
-If it does not exist: invoke the compliance context interview from `sweetclaude:product-discovery` (the three-question section: data categories, user geography, user type). That section writes `.sweetclaude/state/compliance-context.yaml`. After it completes, record the path in `john-wick.yaml compliance_context`. Update `current_step: D1`.
+If it does not exist: invoke the compliance context interview from `sweetclaude:product-discovery` (the three-question section: data categories, user geography, user type). That section writes `.sweetclaude/state/compliance-context.yaml`. After it completes, record the path in `john-wick.yaml compliance_context`. Update `current_phase: DEFINE`, `current_step: D1`.
 
 ---
 
@@ -234,13 +239,17 @@ The PRD is written to `docs/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md`.
 
 Record in `created_artifacts`: `{step: D1, type: prd, path: ..., version: 1}`.
 
+If the PRD contains any ⚠ flagged sections, write their section names to `john-wick.yaml` as a top-level `d1_flags` list (e.g., `d1_flags: [Problem Statement, Goals and Success Metrics]`). D3 and D4 will read this list to present flags to the user.
+
 **Scope check:** After the PRD is generated, count the epics. If more than 6 epics: surface a warning:
 > "⚠ Scope warning: This PRD has {N} epics. John Wick recommends decomposing into smaller services before continuing. Large scope compounds errors in an autonomous pipeline."
 
 If more than 8 epics: halt and require explicit user override:
 > "⚠ Hard limit: {N} epics exceeds the maximum for autonomous execution (8). Decompose the PRD into smaller services, or type 'override scope limit' to proceed at your own risk."
 
-Update `current_step: D2`.
+Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: D1-scope`, `interactive_gate_pending.description: PRD scope exceeds hard limit — awaiting override or decomposition`. Do not advance `current_step` until the override is accepted.
+
+If the scope check passes (≤ 8 epics, or override accepted): Update `current_step: D2`.
 
 ### D2 — PRD caucus (Autonomous)
 
@@ -275,6 +284,8 @@ Pending user decision (contested):
 - [flagged section from D1] — [what information was missing]
 ```
 
+Write this change summary to `.sweetclaude/caucus/prd-review-[YYYYMMDD]-changes.md`. Record the path in `caucus_outputs`. This persists the summary across context loss so D4 does not need to regenerate it.
+
 Update `current_step: D4`.
 
 ### D4 — PRD approval (Interactive)
@@ -305,8 +316,9 @@ If `phase_checkins: true`: invoke `sweetclaude:john-wick-checkin` with:
 
 Record output in `checkin_outputs`.
 
-If result is `significant`: return to D4 gate with the finding. Present to user:
+If result is `significant`: write `current_step: D4` in `john-wick.yaml` before presenting to user:
 > "CK1 found a gap: [finding]. Returning to PRD review."
+Do not write `current_step: P1` until after the D4 re-review is confirmed and complete.
 
 If result is `none` or `minor`: log and continue. Update `current_step: P1`.
 
