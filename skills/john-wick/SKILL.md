@@ -43,8 +43,10 @@ Run on first invocation (no `john-wick.yaml`) OR when `status: error` from a pre
 | 4 | Constraints analysis | A constraints artifact exists in `.sweetclaude/` or `docs/` | "Constraints analysis missing." |
 | 5 | Dangerously-skip-permissions acknowledged | Present the warning below and require the user to type "I understand" exactly | "John Wick mode requires explicit acknowledgment." |
 | 6 | GitHub mode (conditional) | If user selects GitHub mode at B1: `gh auth status` must exit 0 | "GitHub CLI not authenticated. John Wick can help you fix this now." |
-| 7 | No active run in error state | If `john-wick.yaml` exists: `status` must be `complete` or `paused` | "Previous run is in error state. Inspect `.sweetclaude/state/john-wick.yaml` before restarting." |
+| 7 | No active run in error state | If `john-wick.yaml` exists AND this is not an error-recovery invocation: `status` must be `complete` or `paused` | "Previous run is in error state. Inspect `.sweetclaude/state/john-wick.yaml` before restarting." |
 | 8 | Compliance context | `.sweetclaude/state/compliance-context.yaml` exists | Note: not a hard block — collect at B4 if absent. Log: "Compliance context missing — will collect at B4." |
+
+**Note on check #7:** When the Prerequisites Gate is invoked from the `status: error` path (error recovery), check #7 is automatically satisfied — the error state IS the active error being recovered. The gate proceeds to re-validate checks 1-5 and allow recovery.
 
 **Acknowledgment warning (prerequisite 5):**
 
@@ -167,7 +169,7 @@ Before each autonomous step, estimate remaining context budget. If within approx
 
 A clean stop is always better than a corrupted step.
 
-**Mid-step checkpoints:** For long autonomous steps (document generation, caucus runs, cascade updates), also check context budget at natural sub-step boundaries (e.g., after each artifact is generated, after each caucus turn). If context limit is reached mid-step: revert any uncommitted file changes, save a checkpoint at the start of the current step (so it replays cleanly on resume), commit, emit the resume message, and stop.
+**Mid-step checkpoints:** For long autonomous steps (document generation, caucus runs, cascade updates), also check context budget at natural sub-step boundaries (e.g., after each artifact is generated, after each caucus turn). If context limit is reached mid-step: revert any uncommitted file changes, save a checkpoint at the start of the current step (so it replays cleanly on resume), commit, emit the resume message, and stop. If partial artifacts were already committed mid-step, note them in `context_checkpoint.notes` before stopping. On resume, check `context_checkpoint.notes` for any pre-existing partial artifacts and skip regenerating them to avoid duplication.
 
 ---
 
