@@ -34,22 +34,35 @@ if [ -z "$PHASE_FILE" ]; then
 fi
 
 # Check john-wick mode locked files
-if command -v python3 &>/dev/null; then
-  JW_STATE="$PROJECT_DIR/.sweetclaude/state/john-wick.yaml"
-  if [ -f "$JW_STATE" ]; then
-    IS_JW_LOCKED=$(python3 - <<PYEOF 2>/dev/null || echo "false"
+JW_STATE="$PROJECT_DIR/.sweetclaude/state/john-wick.yaml"
+if [ -f "$JW_STATE" ]; then
+  IS_JW_LOCKED=false
+  if command -v python3 &>/dev/null; then
+    IS_JW_LOCKED=$(JW_STATE="$JW_STATE" TARGET_FILE="$FILE" PROJECT_DIR="$PROJECT_DIR" python3 - <<'PYEOF' 2>/dev/null || echo "error"
 import yaml, os
-with open('$JW_STATE') as f:
+jw_state = os.environ['JW_STATE']
+target_file = os.environ.get('TARGET_FILE', '')
+project_dir = os.environ.get('PROJECT_DIR', '')
+with open(jw_state) as f:
     state = yaml.safe_load(f) or {}
 locked = state.get('locked_test_files') or []
-target = os.path.realpath(os.path.abspath('$FILE')) if '$FILE' else ''
-print('true' if target in [os.path.realpath(os.path.abspath(p)) for p in locked] else 'false')
+target = os.path.realpath(os.path.abspath(target_file)) if target_file else ''
+resolved_locked = [os.path.realpath(os.path.join(project_dir, p) if not os.path.isabs(p) else p) for p in locked]
+print('true' if target in resolved_locked else 'false')
 PYEOF
 )
-    if [ "$IS_JW_LOCKED" = "true" ]; then
-      echo '{"ok": false, "reason": "This file is locked by John Wick mode (locked at pipeline step IP5). Test files are immutable for the remainder of the pipeline. To unlock: inspect .sweetclaude/state/john-wick.yaml locked_test_files and get explicit user approval."}'
-      exit 0
+  fi
+  # If python3/yaml failed, fall back to grep-based check
+  if [ "$IS_JW_LOCKED" = "error" ] || [ -z "$IS_JW_LOCKED" ]; then
+    # Normalize FILE to repo-relative path for grep comparison
+    REL_FILE="${FILE#$PROJECT_DIR/}"
+    if grep -qF -- "  - $REL_FILE" "$JW_STATE" 2>/dev/null || grep -qF -- "- $REL_FILE" "$JW_STATE" 2>/dev/null; then
+      IS_JW_LOCKED=true
     fi
+  fi
+  if [ "$IS_JW_LOCKED" = "true" ]; then
+    echo '{"ok": false, "reason": "This file is locked by John Wick mode (locked at pipeline step IP5). Test files are immutable for the remainder of the pipeline. To unlock: inspect .sweetclaude/state/john-wick.yaml locked_test_files and get explicit user approval."}'
+    exit 0
   fi
 fi
 
