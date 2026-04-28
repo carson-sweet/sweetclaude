@@ -173,3 +173,141 @@ A clean stop is always better than a corrupted step.
 
 ---
 
+## Phase 0: Bootstrap
+
+### B1 — Tracking mode (Interactive)
+
+Ask:
+> "Should John Wick track issues in GitHub or locally?
+> - **GitHub** — creates real GitHub issues, requires `gh` auth
+> - **Local** — creates a local issue list in `.sweetclaude/state/issue-list.md`"
+
+If GitHub selected: run `gh auth status`. If it exits non-zero, offer:
+> "GitHub CLI is not authenticated. Want me to walk you through `gh auth login` now?"
+Help the user authenticate before continuing. Do not advance until `gh auth status` succeeds.
+
+Record `github_mode: true/false` in `john-wick.yaml`.
+
+Ask: "Should phase check-ins be enabled? Recommended if the PRD will have more than 4 epics or if you expect more than 2 external service dependencies. Check-ins add lightweight drift detection at each phase transition."
+
+Record `phase_checkins: true/false`.
+
+Update `current_step: B2`.
+
+### B2 — Feature branch name (Interactive)
+
+Ask:
+> "What should the feature branch be named? (e.g. `payment-retry-logic`, `user-profile-v2`)"
+
+Validate: lowercase, hyphens only, no spaces. If invalid format, ask again.
+
+Record `feature_name` and `feature_branch` in `john-wick.yaml`. Update `current_step: B3`.
+
+### B3 — Initialize branch (Autonomous)
+
+```bash
+git checkout -b {feature_branch}
+```
+
+Copy all discovery artifacts found during prerequisites into `docs/` on the branch. Commit:
+```
+chore: initialize john-wick pipeline for {feature_name}
+```
+
+Update `john-wick.yaml`: record discovery artifact paths in `discovery_artifacts`. Update `current_step: B4`.
+
+### B4 — Compliance context (Interactive, conditional)
+
+If `.sweetclaude/state/compliance-context.yaml` already exists: skip. Log "Compliance context already present — skipping B4." Update `current_step: D1`.
+
+If it does not exist: invoke the compliance context interview from `sweetclaude:product-discovery` (the three-question section: data categories, user geography, user type). That section writes `.sweetclaude/state/compliance-context.yaml`. After it completes, record the path in `john-wick.yaml compliance_context`. Update `current_step: D1`.
+
+---
+
+## Phase 1: Define
+
+### D1 — Generate PRD (Autonomous)
+
+Invoke `sweetclaude:product-prd` with `--autonomous` flag. The skill reads discovery artifacts and compliance context, generates a complete PRD draft without user interaction, and flags thin sections inline.
+
+The PRD is written to `docs/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md`.
+
+Record in `created_artifacts`: `{step: D1, type: prd, path: ..., version: 1}`.
+
+**Scope check:** After the PRD is generated, count the epics. If more than 6 epics: surface a warning:
+> "⚠ Scope warning: This PRD has {N} epics. John Wick recommends decomposing into smaller services before continuing. Large scope compounds errors in an autonomous pipeline."
+
+If more than 8 epics: halt and require explicit user override:
+> "⚠ Hard limit: {N} epics exceeds the maximum for autonomous execution (8). Decompose the PRD into smaller services, or type 'override scope limit' to proceed at your own risk."
+
+Update `current_step: D2`.
+
+### D2 — PRD caucus (Autonomous)
+
+Run a 3-turn product design review caucus on the PRD. Pass these four personas inline to the caucus skill — do not rely on a preset file:
+
+**Personas for product-design-review:**
+- **PM — "the pragmatist"**: 10 years B2B SaaS, former engineer. Scope creep detector; believes features die from complexity, not ambition. Challenges every "nice to have."
+- **UX researcher**: Mixed methods, 8 years. Advocates for the user who isn't in the room; skeptical of assumption-based personas. Probes for real user evidence.
+- **Domain expert**: Deep subject matter knowledge in the service's domain. Flags technical accuracy issues; biased toward correctness over shipping speed.
+- **Devil's advocate — "the skeptic"**: Strategy/venture background. Questions whether the problem is real; argues for doing less. Challenges scope, not execution.
+
+Invoke the caucus skill with: PRD path, personas above, 3 turns, question: "Does this PRD define a product that solves the stated problem for the stated user, with scope that is achievable and justified?"
+
+Write caucus output to `.sweetclaude/caucus/prd-review-[YYYYMMDD].md`.
+Record in `caucus_outputs`: `{step: D2, path: ...}`.
+Update `current_step: D3`.
+
+### D3 — Apply uncontested findings (Autonomous)
+
+Read the D2 caucus output. Classify each finding:
+
+- **Uncontested**: all four personas agree, or three agree and one is silent
+- **Contested**: personas disagree, or the finding requires a product decision the orchestrator cannot make
+
+Apply uncontested findings directly to the PRD — targeted edits, not a rewrite. Prepare a structured change summary:
+```
+Applied (uncontested):
+- [finding] → [change made]
+
+Pending user decision (contested):
+- [finding] — [what the personas disagreed on]
+- [flagged section from D1] — [what information was missing]
+```
+
+Update `current_step: D4`.
+
+### D4 — PRD approval (Interactive)
+
+Present the PRD section by section. For each section:
+1. Show the section content
+2. Show any contested caucus findings for that section
+3. Show any D1 flags (⚠ markers) for that section
+4. Wait for: approval ("ok", "looks good", or similar), or edits
+
+Do not advance to the next section until the current section is confirmed. After all sections are approved, apply any user edits and commit:
+```
+docs: approved PRD for {feature_name} at D4
+```
+
+Update `created_artifacts` version to final. Update `current_step: CK1`.
+
+### CK1 — Define phase check-in (Conditional)
+
+If `phase_checkins: false`: skip. Update `current_step: P1`.
+
+If `phase_checkins: true`: invoke `sweetclaude:john-wick-checkin` with:
+- `phase=DEFINE`
+- `question=Does the approved PRD have sufficient coverage to generate user stories? Are any epics or acceptance criteria underspecified to the point where story writing would require guessing?`
+- `discovery_artifacts={paths from discovery_artifacts in john-wick.yaml}`
+- `phase_artifacts={PRD path}`
+- `post_lock=false`
+
+Record output in `checkin_outputs`.
+
+If result is `significant`: return to D4 gate with the finding. Present to user:
+> "CK1 found a gap: [finding]. Returning to PRD review."
+
+If result is `none` or `minor`: log and continue. Update `current_step: P1`.
+
+---
