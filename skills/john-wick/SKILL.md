@@ -27,7 +27,7 @@ On invocation, read `.sweetclaude/state/john-wick.yaml`.
 
 **If `status: error`:** Show the recorded error, including the last entry in `sessions[].steps_completed` and the value of `current_step` so the user knows where things broke. Then run the Prerequisites Gate (which will re-check prerequisites and enforce check #7). Do not continue until the gate passes.
 
-**State write discipline:** After every step completes, update `john-wick.yaml` — set `current_step` to the next step — before beginning that next step. State always reflects what comes next, never what just finished. This ensures a resume after interruption skips nothing and repeats nothing.
+**State write discipline:** After every step completes, update `john-wick.yaml`: (1) append the just-completed step name to `sessions[-1].steps_completed`, (2) set `current_step` to the next step — before beginning that next step. State always reflects what comes next, never what just finished. This ensures a resume after interruption skips nothing and repeats nothing.
 
 ---
 
@@ -219,7 +219,7 @@ Copy all discovery artifacts found during prerequisites into `docs/` on the bran
 chore: initialize john-wick pipeline for {feature_name}
 ```
 
-Update `john-wick.yaml`: record discovery artifact paths in `discovery_artifacts`. Update `current_step: B4`.
+Update `john-wick.yaml`: record discovery artifact paths in `discovery_artifacts`. Open a new session entry in `sessions`: `{started: {ISO timestamp}, ended: null, steps_completed: []}`. Update `current_step: B4`.
 
 ### B4 — Compliance context (Interactive, conditional)
 
@@ -857,7 +857,7 @@ Pipeline summary:
 Compliance frameworks applied: {list from compliance-context.yaml}
 ```
 
-On user acknowledgment: clear `interactive_gate_pending` (set both `step` and `description` to null). Update `john-wick.yaml status: complete`. Record PR URL in `created_artifacts`: `{step: V5, type: pr, path: {url}, version: 1}`.
+On user acknowledgment: clear `interactive_gate_pending` (set both `step` and `description` to null). Close the current session: set `sessions[-1].ended` to the current ISO timestamp. Update `john-wick.yaml status: complete`. Record PR URL in `created_artifacts`: `{step: V5, type: pr, path: {url}, version: 1}`.
 
 ---
 
@@ -888,7 +888,5 @@ If any step produces an unrecoverable error — including but not limited to: sk
 **Test immutability after IP5 is absolute.** No step, no subagent, and no check-in may modify locked test files. If any step would require a test change (e.g., a V4 documentation update that touches test fixtures), halt and present to user.
 
 **d1_flags field.** The `d1_flags` list in `john-wick.yaml` records thin-section flag names from D1. These are surfaced by D3 and D4 during PRD review. After D4 completes (all sections approved), D4 clears `d1_flags` to empty list.
-
----
 
 ---
