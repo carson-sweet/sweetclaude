@@ -21,11 +21,11 @@ On invocation, read `.sweetclaude/state/john-wick.yaml`.
 
 **If `status: waiting_for_user`:** Present the pending interactive gate from `interactive_gate_pending`. Collect user input. Update `status: active`. Continue from `current_step`.
 
-**If `status: paused` or `status: active`:** Emit one line: "Last completed: {last step in sessions[].steps_completed}. Resuming from {current_step}." Continue from `current_step`.
+**If `status: paused` or `status: active`:** Emit one line: "Last completed: {last step in sessions[].steps_completed}. Resuming from {current_step}." Continue from `current_step`. Before continuing: check `interactive_gate_pending.step`. If it is non-null, treat this resume as `waiting_for_user` — re-present the gate before proceeding.
 
 **If `status: complete`:** Tell the user the pipeline is done. Point to the PR URL stored in `created_artifacts` where type=pr.
 
-**If `status: error`:** Show the recorded error. Do not auto-resume. Tell the user: "Inspect `.sweetclaude/state/john-wick.yaml` and clear the error state before restarting."
+**If `status: error`:** Show the recorded error, including the last entry in `sessions[].steps_completed` and the value of `current_step` so the user knows where things broke. Then run the Prerequisites Gate (which will re-check prerequisites and enforce check #7). Do not continue until the gate passes.
 
 **State write discipline:** After every step completes, update `john-wick.yaml` — set `current_step` to the next step — before beginning that next step. State always reflects what comes next, never what just finished. This ensures a resume after interruption skips nothing and repeats nothing.
 
@@ -33,7 +33,7 @@ On invocation, read `.sweetclaude/state/john-wick.yaml`.
 
 ## Prerequisites Gate
 
-Run on first invocation (no `john-wick.yaml`). Validate all of the following. On any failure, halt with the specified error message and do not create `john-wick.yaml`.
+Run on first invocation (no `john-wick.yaml`) OR when `status: error` from a previous run. Validate all of the following. On any failure, halt with the specified error message and do not create `john-wick.yaml`.
 
 | # | Check | How | Error if missing |
 |---|---|---|---|
@@ -152,7 +152,7 @@ Approve, edit, or respond. John Wick will continue once confirmed.
 ```
 
 5. Wait. Do not continue until the user responds.
-6. On response: record the decision, update artifacts, set `status: active`, continue.
+6. On response: record the decision, update artifacts. Clear `interactive_gate_pending` — set both `step` and `description` to null — before setting `status: active`. Continue.
 
 ---
 
@@ -166,6 +166,8 @@ Before each autonomous step, estimate remaining context budget. If within approx
 4. Stop. Do not attempt to begin the next step.
 
 A clean stop is always better than a corrupted step.
+
+**Mid-step checkpoints:** For long autonomous steps (document generation, caucus runs, cascade updates), also check context budget at natural sub-step boundaries (e.g., after each artifact is generated, after each caucus turn). If context limit is reached mid-step: revert any uncommitted file changes, save a checkpoint at the start of the current step (so it replays cleanly on resume), commit, emit the resume message, and stop.
 
 ---
 
