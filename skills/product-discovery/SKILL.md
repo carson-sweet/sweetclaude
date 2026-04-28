@@ -115,6 +115,59 @@ If the user seems frustrated at any point, offer:
 
 Accept immediately. Log what was skipped.
 
+## Compliance Context
+
+Ask these three questions before writing state. One at a time.
+
+**A. Data categories:**
+> "What data will this service handle? Select all that apply:
+> - **PII** — names, emails, addresses, government IDs
+> - **Financial** — payment methods, transaction records, account balances
+> - **Health / medical** — diagnoses, prescriptions, health records
+> - **Behavioral / tracking** — usage logs, location data, clickstreams
+> - **None of the above**"
+
+**B. User geography:**
+> "Where are your users? Select all that apply:
+> - **United States**
+> - **European Union or UK**
+> - **Global or unknown**
+> - **Other** (specify)"
+
+**C. User type:**
+> "Who are your users? Select all that apply:
+> - **Consumers (B2C)**
+> - **Enterprise / business users (B2B)**
+> - **Minors or potentially mixed-age audience**
+> - **Healthcare providers or patients**
+> - **Financial services users**"
+
+Derive applicable frameworks from answers:
+
+| Condition | Framework |
+|---|---|
+| EU or UK geography AND PII data | `gdpr` (required) |
+| US geography AND health data | `hipaa` (required) |
+| Financial data present | `pci_dss` (required) |
+| Minors in user type | `coppa` (required) |
+| No specific framework triggered | `gdpr_floor` |
+
+Write `.sweetclaude/state/compliance-context.yaml`:
+
+```yaml
+schema_version: 1
+collected_at: {ISO datetime}
+data_categories:
+  - {pii | financial | health | behavioral | none}
+user_geography:
+  - {us | eu_uk | global | other}
+user_type:
+  - {b2c | b2b | minors | healthcare | financial}
+derived_frameworks:
+  - {gdpr | hipaa | pci_dss | coppa | gdpr_floor}
+notes: null
+```
+
 ## Exit
 
 Write `.sweetclaude/state/discovery.yaml`:
