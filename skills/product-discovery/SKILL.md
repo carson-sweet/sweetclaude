@@ -117,7 +117,7 @@ Accept immediately. Log what was skipped.
 
 ## Compliance Context
 
-Ask these three questions before writing state. One at a time.
+After the user confirms the concept statement at their chosen depth level, and before writing state files, ask these three questions. One at a time.
 
 **A. Data categories:**
 > "What data will this service handle? Select all that apply:
@@ -146,21 +146,27 @@ Derive applicable frameworks from answers:
 
 | Condition | Framework |
 |---|---|
-| EU or UK geography AND PII data | `gdpr` (required) |
+| EU or UK geography AND any non-none data category | `gdpr` (required) |
 | US geography AND health data | `hipaa` (required) |
 | Financial data present | `pci_dss` (required) |
 | Minors in user type | `coppa` (required) |
-| No specific framework triggered | `gdpr_floor` |
+
+**Fallback:** If none of the above rows apply, use `gdpr_floor`. Never include `gdpr_floor` alongside `gdpr`, `hipaa`, `pci_dss`, or `coppa` — it is only used when no specific framework was triggered.
+
+> If the user selects only "None of the above" for data categories, set `data_categories: []` and still apply `gdpr_floor` — baseline data handling obligations exist regardless of tracked data types.
+
+**Note on "Global or unknown" geography:** A global product with PII or health data likely has EU users. Apply `gdpr_floor` and add a note in the `notes` field: "GDPR may apply if EU users are present — confirm before launch."
 
 Write `.sweetclaude/state/compliance-context.yaml`:
 
 ```yaml
 schema_version: 1
-collected_at: {ISO datetime}
+collected_at: {YYYY-MM-DDTHH:MM:SSZ}
 data_categories:
   - {pii | financial | health | behavioral | none}
 user_geography:
   - {us | eu_uk | global | other}
+geography_notes: null    # free text for "Other" geography specification
 user_type:
   - {b2c | b2b | minors | healthcare | financial}
 derived_frameworks:
