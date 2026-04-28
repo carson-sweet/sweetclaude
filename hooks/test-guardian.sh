@@ -58,7 +58,7 @@ PYEOF
     REAL_PROJECT_DIR=$(realpath "$PROJECT_DIR" 2>/dev/null || echo "$PROJECT_DIR")
     REAL_FILE=$(realpath "$FILE" 2>/dev/null || echo "$FILE")
     REL_FILE="${REAL_FILE#$REAL_PROJECT_DIR/}"
-    if grep -qF -- "$REL_FILE" "$JW_STATE" 2>/dev/null; then
+    if [ "$REL_FILE" != "$REAL_FILE" ] && grep -qF -- "$REL_FILE" "$JW_STATE" 2>/dev/null; then
       IS_JW_LOCKED=true
     fi
   fi
