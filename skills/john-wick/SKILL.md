@@ -233,7 +233,7 @@ If it does not exist: invoke the compliance context interview from `sweetclaude:
 
 ### D1 — Generate PRD (Autonomous)
 
-**Resume guard:** If `current_step` is `D1-scope-gate` on resume, skip PRD generation entirely. The PRD already exists. Present the scope override prompt directly: 'The PRD has more than 8 epics. Type "override scope limit" to continue, or provide guidance on how to decompose the PRD.' Accept the override and write `current_step: D2`, then continue.
+**Resume guard:** If `current_step` is `D1-scope-gate` on resume, skip PRD generation entirely. The PRD already exists. Present the scope override prompt directly: 'The PRD has more than 8 epics. Type "override scope limit" to continue, or provide guidance on how to decompose the PRD.' Clear `interactive_gate_pending` (set both fields to null). Set `status: active`. Write `current_step: D2`, then continue.
 
 Invoke `sweetclaude:product-prd` with `--autonomous` flag. The skill reads discovery artifacts and compliance context, generates a complete PRD draft without user interaction, and flags thin sections inline.
 
@@ -246,10 +246,12 @@ If the PRD contains any ⚠ flagged sections, write their section names to `john
 **Scope check:** After the PRD is generated, count the epics. If more than 6 epics: surface a warning:
 > "⚠ Scope warning: This PRD has {N} epics. John Wick recommends decomposing into smaller services before continuing. Large scope compounds errors in an autonomous pipeline."
 
+After surfacing the warning, continue. Write `current_step: D2`.
+
 If more than 8 epics: halt and require explicit user override:
 > "⚠ Hard limit: {N} epics exceeds the maximum for autonomous execution (8). Decompose the PRD into smaller services, or type 'override scope limit' to proceed at your own risk."
 
-Write `current_step: D1-scope-gate` to `john-wick.yaml`. Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: D1-scope`, `interactive_gate_pending.description: PRD scope exceeds hard limit — awaiting override or decomposition`. Do not advance `current_step` until the override is accepted.
+Write `current_step: D1-scope-gate` to `john-wick.yaml`. Update `john-wick.yaml`: set `status: paused`. Leave `interactive_gate_pending` null (do not set it). Do not advance `current_step` until the override is accepted.
 
 If the scope check passes (≤ 8 epics, or override accepted): Update `current_step: D2`.
 
