@@ -548,3 +548,213 @@ Set `escalated: true` in the CK3 checkin_outputs entry. Do not advance to IP1.
 If result is `none` or `minor`: log and continue. Update `current_step: IP1`.
 
 ---
+
+## Phase 4: Implement Prep
+
+### IP1 — Spawn test writer (Autonomous)
+
+Update `current_phase: IMPLEMENT_PREP` in `john-wick.yaml`.
+
+Spawn a test writer subagent (TDD Level 3). The subagent receives: all `.feature` files from `.sweetclaude/features/`, the project's existing codebase for pattern context. The subagent has no implementation knowledge — it writes tests from Gherkin only.
+
+The subagent writes test files and commits them. Record all test file paths in `created_artifacts` with `type: tests`. Update `current_step: IP2`.
+
+### IP2 — QA caucus on test coverage (Autonomous)
+
+Spawn three QA caucus subagents in parallel:
+- `sweetclaude:qa-caucus-service`
+- `sweetclaude:qa-caucus-component`
+- `sweetclaude:qa-caucus-integration`
+
+Input for each: test files, Gherkin specs, stories, PRD.
+
+Consolidate gaps from all three outputs. Test files are pre-lock at this point — apply uncontested gap coverage additions to test files. Update `current_step: IP3`.
+
+### IP3 — RED validation (Autonomous)
+
+Run the full test suite. All tests must fail (RED). If any tests pass unexpectedly:
+1. Investigate: is the test trivially true? Is there existing code satisfying it?
+2. Correct the test or the test setup until all tests fail for the right reasons.
+3. Do not advance until every test is RED.
+
+Update `current_step: IP4`.
+
+### IP4 — Post-RED QA pass (Autonomous)
+
+Run a single-turn focused QA review: "Did anything slip through the RED validation? Are there any test cases that are trivially satisfiable or that don't actually test the stated behavior?"
+
+Apply any final adjustments to test files. Commit:
+```
+test: RED — {feature_name} failing tests committed
+```
+
+Update `current_step: IP5`.
+
+### IP5 — Test lock (Autonomous)
+
+Collect all test file paths from `created_artifacts` where `type: tests`. Write them to `locked_test_files` in `john-wick.yaml`.
+
+The `test-guardian` hook now enforces these locks across all subsequent file writes — any attempt to modify a locked test file will be blocked.
+
+Emit: "Test files locked. From this point, test modifications require explicit user unlock and return to IP1."
+
+Commit: `chore(john-wick): IP5 test lock — {N} files locked`
+
+Update `current_step: IP6`.
+
+### IP6 — Create issues (Conditional)
+
+**If `github_mode: true`:**
+
+For each story in the stories document, create a GitHub issue:
+```bash
+gh issue create \
+  --title "{story title}" \
+  --body "{acceptance criteria in markdown}" \
+  --label "john-wick" \
+  --label "{feature_name}"
+```
+
+On failure (rate limit, auth error): wait 5 seconds and retry once. If retry fails, log the error and continue — do not halt the pipeline for issue creation failures.
+
+Record each issue number in `john-wick.yaml issue_list`. Update `current_step: IM1`.
+
+**If `github_mode: false`:**
+
+Write `.sweetclaude/state/issue-list.md`:
+```markdown
+# Issue List — {feature_name}
+
+| # | Title | Status |
+|---|---|---|
+| 1 | {story title} | pending |
+| 2 | {story title} | pending |
+```
+
+Record in `john-wick.yaml issue_list` with sequential numbers. Update `current_step: IM1`.
+
+---
+
+## Phase 5: Implement
+
+### IM1 — Issue iteration loop (Autonomous)
+
+Update `current_phase: IMPLEMENT` in `john-wick.yaml`.
+
+Execute the following loop until all issues are complete or an IM2 escalation fires:
+
+```
+For each issue in issue_list where status = pending:
+
+  1. Update issue status to in_progress in john-wick.yaml.
+
+  2. Create branch:
+     git checkout -b {issue-number}-{slugified-title}
+
+  3. Invoke sweetclaude:code-issue with issue context:
+     - Issue title and acceptance criteria
+     - Architecture doc and tech spec
+     - Locked test files (read-only — test-guardian enforces this)
+     - Compliance context
+
+  4. Run the full test suite. Generate a test report (see Test Report Format below).
+     Append to aggregate report at .sweetclaude/reports/test-report-{feature_name}.md.
+
+  5. Evaluate failure severity (see Severity Classifier below).
+     - If significant: pause loop, update issue status to escalated,
+       set john-wick.yaml status=waiting_for_user, advance to IM2 gate.
+     - If not significant: attempt bug fixes (up to 3 iterations).
+       Re-run tests after each fix. Re-evaluate severity.
+       If still failing after 3 iterations: escalate to IM2.
+
+  6. If phase_checkins=true: invoke sweetclaude:john-wick-checkin with:
+     - phase=IMPLEMENT
+     - question=Is this implementation drifting from the approved design? Does the code match the architecture and tech spec?
+     - discovery_artifacts={paths from john-wick.yaml}
+     - phase_artifacts={architecture path, tech spec path, current issue branch diff}
+     - post_lock=true
+     If significant: escalate to IM2 (cannot modify locked tests).
+
+  7. If all tests green: merge branch to feature branch.
+     git checkout {feature_branch} && git merge {issue-branch} --no-ff
+     Commit message: "feat({feature_name}): close issue #{number} — {title}"
+     Update issue status to complete in john-wick.yaml.
+
+  8. Advance to next issue.
+```
+
+When all issues are complete: update `current_phase: VERIFY`, `current_step: V1`.
+
+### IM2 — Escalation gate (Interactive, conditional)
+
+Fires when the severity classifier returns significant, or when a post-IP5 check-in finds significant drift.
+
+Present:
+```
+JOHN WICK — Implementation Escalation
+══════════════════════════════════════
+Issue: #{number} — {title}
+
+Problem:
+{finding or severity classifier output}
+
+Options:
+1. Fix and continue — describe what you want changed; John Wick will apply it and resume
+2. Skip this issue — mark as skipped, continue to next issue
+3. Abort — stop the pipeline here; state is saved
+
+Your decision:
+```
+
+On user decision:
+- **Fix and continue**: record `status: waiting_for_user` in `john-wick.yaml`. On response: apply the user's described fix, re-run tests, re-enter the issue loop.
+- **Skip**: update issue status to `skipped` in `john-wick.yaml`. Set `status: active`. Continue loop.
+- **Abort**: set `john-wick.yaml status: paused`. Stop.
+
+---
+
+## Test Report Format
+
+After each test run (IP3, IP4, and each IM1 iteration), generate:
+
+```markdown
+# Test Report — {feature_name} — {timestamp}
+
+## Summary
+- Total: N | Pass: N | Fail: N | Skip: N
+- Coverage: N% (if available)
+- Run time: N seconds
+
+## Failures
+### {test name}
+- File: {path:line}
+- Expected: {value}
+- Actual: {value}
+- Stack: {first relevant frame}
+
+## Passed
+{collapsed list of passing test names}
+```
+
+Write to `.sweetclaude/reports/test-report-{issue-or-phase}-{timestamp}.md`. Append to aggregate report.
+
+---
+
+## Severity Classifier
+
+After each test run, classify the result as **significant** (escalate) or **not significant** (continue):
+
+**Escalate to IM2 if:**
+- More than 30% of tests are failing after a bug fix attempt
+- Any test with "happy path", "core flow", "main flow", or "critical" in its name is failing
+- Compile errors or import errors prevent the suite from running at all
+- A security review finding has severity High or Critical
+
+**Continue if:**
+- Isolated edge case failures with a clear, identified root cause
+- Failures in features explicitly marked as optional or enhancement-only
+- Test infrastructure issues (missing fixture, wrong env var) with a known workaround
+
+When uncertain between escalate and continue: **escalate**. A false positive (unnecessary interruption) is better than a false negative (silent bad state).
+
+---
