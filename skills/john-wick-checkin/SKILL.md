@@ -22,9 +22,9 @@ Parse from `$ARGUMENTS` (space-separated key=value pairs):
 ## Process
 
 **Phase sequence (for output header):**
-- `DEFINE` → `DESIGN`
-- `DESIGN` → `PLAN`
-- `PLAN` → `IMPLEMENT`
+- `DEFINE` → `PLAN`
+- `PLAN` → `DESIGN`
+- `DESIGN` → `IMPLEMENT`
 - `IMPLEMENT` → `VERIFY`
 
 **Step 1: Read artifacts**
@@ -69,8 +69,8 @@ Action: {return to [gate name per phase mapping] | escalate to IM2 | log and con
 
 Gate reference for "return to gate":
 - `DEFINE` → return to D4 (PRD review)
-- `DESIGN` → return to DG3 (design approval)
-- `PLAN` → return to PG4 (story approval)
+- `DESIGN` → return to DS6 (design change approval)
+- `PLAN` → return to P4 (Gherkin generation)
 - `IMPLEMENT` → return to IM1 (pre-implementation gate)
 
 Note: Use `escalate to IM2` when `post_lock=true` and result is `significant`. Use `return to [gate]` for significant findings before IP5. Use `log and continue` for `minor` findings in all cases.
