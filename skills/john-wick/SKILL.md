@@ -305,7 +305,7 @@ Do not advance to the next section until the current section is confirmed. After
 docs: approved PRD for {feature_name} at D4
 ```
 
-Update `created_artifacts` version to final. Update `current_step: CK1`.
+Update `created_artifacts` version to final. Clear `d1_flags` in `john-wick.yaml` (set to empty list). Update `current_step: CK1`.
 
 ### CK1 — Define phase check-in (Conditional)
 
@@ -776,7 +776,7 @@ When uncertain between escalate and continue: **escalate**. A false positive (un
 
 Update `current_phase: VERIFY` in `john-wick.yaml`.
 
-Run the complete test suite on the feature branch. Generate a final MD test report and append to the aggregate report. If any tests fail: run the severity classifier. If significant failures: escalate to IM2 before continuing (IM2 may fire outside the IM1 loop in this context — treat it identically). If not significant: log and continue.
+Run the complete test suite on the feature branch. Generate a final MD test report and append to the aggregate report. If any tests fail: run the severity classifier. If significant failures: invoke IM2. **V1-specific IM2 behavior:** Fix-and-continue from V1 re-enters at V1 (re-run the full test suite) — do NOT re-enter the IM1 loop. After 2 consecutive Fix-and-continue cycles from V1, IM2 presents only Skip (proceed to V2 with known test failures documented) and Abort options. If not significant: log and continue.
 
 Update `current_step: V2`.
 
@@ -801,7 +801,7 @@ Update `current_step: V4`.
 
 ### V4 — Update design documents (Autonomous)
 
-Update all design documents (architecture, tech spec, contract analysis) to reflect the final implementation. These are now post-implementation records, not pre-implementation plans. Increment their versions in `created_artifacts`. Commit:
+Update all design documents (architecture, tech spec, contract analysis) to reflect the final implementation. These are now post-implementation records, not pre-implementation plans. Increment versions in `created_artifacts` only for entries whose content was actually modified. Commit:
 ```
 docs: update design documents to reflect final {feature_name} implementation
 ```
@@ -814,6 +814,10 @@ Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pendi
 
 Commit any remaining artifacts: `chore(john-wick): artifacts at V5 — awaiting gate`.
 
+Before creating the PR:
+1. Verify the current git branch matches `feature_branch` in `john-wick.yaml`: run `git rev-parse --abbrev-ref HEAD`. If they do not match: halt with "Branch mismatch: current branch is {current}, expected {feature_branch}. Checkout the correct branch before continuing."
+2. Check if a PR already exists for this branch: `gh pr view --head {feature_branch} 2>/dev/null`. If one exists, use its URL instead of creating a new one — skip the `gh pr create` step.
+
 Create the final pull request:
 
 ```bash
@@ -823,6 +827,8 @@ gh pr create \
   --head {feature_branch} \
   --body "..."
 ```
+
+If `gh pr create` fails: set `status: error`, record in `context_checkpoint.notes`, and follow the Error Handling protocol. Do not proceed.
 
 PR description must reference (in order):
 1. Approved PRD: `{prd_path}` (version {N})
@@ -851,13 +857,13 @@ Pipeline summary:
 Compliance frameworks applied: {list from compliance-context.yaml}
 ```
 
-On user acknowledgment: clear `interactive_gate_pending`. Update `john-wick.yaml status: complete`. Record PR URL in `created_artifacts`: `{step: V5, type: pr, path: {url}, version: 1}`.
+On user acknowledgment: clear `interactive_gate_pending` (set both `step` and `description` to null). Update `john-wick.yaml status: complete`. Record PR URL in `created_artifacts`: `{step: V5, type: pr, path: {url}, version: 1}`.
 
 ---
 
 ## Error Handling
 
-If any step produces an unrecoverable error (skill invocation fails, git command fails, required file missing after prerequisites):
+If any step produces an unrecoverable error — including but not limited to: skill invocation fails, git command fails, required file missing, YAML parse error in `compliance-context.yaml` or other state files, caucus subagent returns empty or malformed output, `gh issue close` fails silently, or test runner crashes before producing output:
 
 1. Set `john-wick.yaml status: error`.
 2. Record the error in `context_checkpoint.notes`.
