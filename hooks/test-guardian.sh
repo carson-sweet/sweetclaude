@@ -36,7 +36,7 @@ fi
 # Check john-wick mode locked files
 JW_STATE="$PROJECT_DIR/.sweetclaude/state/john-wick.yaml"
 if [ -f "$JW_STATE" ]; then
-  IS_JW_LOCKED=false
+  IS_JW_LOCKED=""
   if command -v python3 &>/dev/null; then
     IS_JW_LOCKED=$(JW_STATE="$JW_STATE" TARGET_FILE="$FILE" PROJECT_DIR="$PROJECT_DIR" python3 - <<'PYEOF' 2>/dev/null || echo "error"
 import yaml, os
@@ -58,7 +58,7 @@ PYEOF
     REAL_PROJECT_DIR=$(realpath "$PROJECT_DIR" 2>/dev/null || echo "$PROJECT_DIR")
     REAL_FILE=$(realpath "$FILE" 2>/dev/null || echo "$FILE")
     REL_FILE="${REAL_FILE#$REAL_PROJECT_DIR/}"
-    if grep -qF -- "  - $REL_FILE" "$JW_STATE" 2>/dev/null || grep -qF -- "- $REL_FILE" "$JW_STATE" 2>/dev/null; then
+    if grep -qF -- "$REL_FILE" "$JW_STATE" 2>/dev/null; then
       IS_JW_LOCKED=true
     fi
   fi
