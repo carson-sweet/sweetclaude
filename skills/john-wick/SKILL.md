@@ -414,6 +414,8 @@ Update `current_step: DS3`.
 
 ### DS3 — Service contract analysis (Autonomous)
 
+**Resume guard:** If `current_step` is `DS3-scope-gate` on resume, skip contract analysis entirely. Present the scope override prompt directly: 'The contract analysis found more than 6 external service dependencies. Type "override scope limit" to continue, or provide guidance on how to reduce external dependencies.' Clear `interactive_gate_pending` (set both fields to null). Set `status: active`. Write `current_step: DS4`, then continue.
+
 Run the embedded service contract analysis. Read: architecture document, tech spec, compliance context. Scan `docs/` and any available READMEs for specs of services this service depends on.
 
 Produce `docs/contract-analysis-[feature-name]-v1-[YYYYMMDD].md` with five sections:
@@ -482,6 +484,8 @@ Update `current_step: DS6`.
 ### DS6 — Design change approval (Interactive)
 
 Update `john-wick.yaml`: set `status: waiting_for_user`, `interactive_gate_pending.step: DS6`, `interactive_gate_pending.description: Design change approval — review contested findings`.
+
+Commit any new artifacts produced since DS4: `chore(john-wick): artifacts at DS6 — awaiting gate`.
 
 Present the change summary from DS5. For each contested item:
 1. Show the finding
