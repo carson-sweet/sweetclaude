@@ -55,7 +55,9 @@ PYEOF
   # If python3/yaml failed, fall back to grep-based check
   if [ "$IS_JW_LOCKED" = "error" ] || [ -z "$IS_JW_LOCKED" ]; then
     # Normalize FILE to repo-relative path for grep comparison
-    REL_FILE="${FILE#$PROJECT_DIR/}"
+    REAL_PROJECT_DIR=$(realpath "$PROJECT_DIR" 2>/dev/null || echo "$PROJECT_DIR")
+    REAL_FILE=$(realpath "$FILE" 2>/dev/null || echo "$FILE")
+    REL_FILE="${REAL_FILE#$REAL_PROJECT_DIR/}"
     if grep -qF -- "  - $REL_FILE" "$JW_STATE" 2>/dev/null || grep -qF -- "- $REL_FILE" "$JW_STATE" 2>/dev/null; then
       IS_JW_LOCKED=true
     fi
