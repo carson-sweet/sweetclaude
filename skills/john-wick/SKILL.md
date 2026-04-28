@@ -555,7 +555,7 @@ If result is `none` or `minor`: log and continue. Update `current_step: IP1`.
 
 Update `current_phase: IMPLEMENT_PREP` in `john-wick.yaml`.
 
-Spawn a test writer subagent (TDD Level 3). The subagent receives: all `.feature` files from `.sweetclaude/features/`, the project's existing codebase for pattern context. The subagent has no implementation knowledge — it writes tests from Gherkin only.
+Spawn a test writer subagent (TDD Level 3). The subagent receives: all `.feature` files from `.sweetclaude/features/`, and existing test file patterns from the project for structural context. Do NOT pass the architecture document, tech spec, contract analysis, or source implementation files — the subagent has no implementation knowledge and writes tests from Gherkin only.
 
 The subagent writes test files and commits them. Record all test file paths in `created_artifacts` with `type: tests`. Update `current_step: IP2`.
 
@@ -568,7 +568,7 @@ Spawn three QA caucus subagents in parallel:
 
 Input for each: test files, Gherkin specs, stories, PRD.
 
-Consolidate gaps from all three outputs. Test files are pre-lock at this point — apply uncontested gap coverage additions to test files. Update `current_step: IP3`.
+Consolidate gaps using the same uncontested/contested rule as D3: a gap is uncontested if all three caucus outputs flag it, or two flag it and one is silent. Write the consolidated gap list to `.sweetclaude/caucus/qa-coverage-[YYYYMMDD].md`. Record in `caucus_outputs`: `{step: IP2, path: ...}`. Test files are pre-lock at this point — apply uncontested gap coverage additions to test files. Update `current_step: IP3`.
 
 ### IP3 — RED validation (Autonomous)
 
@@ -576,6 +576,10 @@ Run the full test suite. All tests must fail (RED). If any tests pass unexpected
 1. Investigate: is the test trivially true? Is there existing code satisfying it?
 2. Correct the test or the test setup until all tests fail for the right reasons.
 3. Do not advance until every test is RED.
+
+After 3 correction attempts, if any tests still pass unexpectedly: halt and present:
+> "IP3: {N} tests cannot be made to fail after 3 correction attempts. Options: (1) Unlock tests and rewrite — return to IP1, (2) Skip these tests and proceed to IP4, (3) Abort."
+Wait for user decision. On return to IP1: set `current_step: IP1`. On skip: record skipped tests in `context_checkpoint.notes`, proceed to IP4. On abort: `status: paused`. Stop.
 
 Update `current_step: IP4`.
 
@@ -598,9 +602,9 @@ The `test-guardian` hook now enforces these locks across all subsequent file wri
 
 Emit: "Test files locked. From this point, test modifications require explicit user unlock and return to IP1."
 
-Commit: `chore(john-wick): IP5 test lock — {N} files locked`
-
 Update `current_step: IP6`.
+
+Commit: `chore(john-wick): IP5 test lock — {N} files locked`
 
 ### IP6 — Create issues (Conditional)
 
@@ -648,8 +652,11 @@ For each issue in issue_list where status = pending:
 
   1. Update issue status to in_progress in john-wick.yaml.
 
-  2. Create branch:
-     git checkout -b {issue-number}-{slugified-title}
+  2. Create or checkout branch:
+     If the branch {issue-number}-{slugified-title} does not exist:
+       git checkout -b {issue-number}-{slugified-title}
+     If it already exists (re-entering after IM2 Fix-and-continue or Abort+Resume):
+       git checkout {issue-number}-{slugified-title}
 
   3. Invoke sweetclaude:code-issue with issue context:
      - Issue title and acceptance criteria
@@ -667,7 +674,8 @@ For each issue in issue_list where status = pending:
        Re-run tests after each fix. Re-evaluate severity.
        If still failing after 3 iterations: escalate to IM2.
 
-  6. If phase_checkins=true: invoke sweetclaude:john-wick-checkin with:
+  6. Once tests are green (after step 5 completes — not after each individual fix attempt):
+     If phase_checkins=true: invoke sweetclaude:john-wick-checkin with:
      - phase=IMPLEMENT
      - question=Is this implementation drifting from the approved design? Does the code match the architecture and tech spec?
      - discovery_artifacts={paths from john-wick.yaml}
@@ -678,6 +686,7 @@ For each issue in issue_list where status = pending:
   7. If all tests green: merge branch to feature branch.
      git checkout {feature_branch} && git merge {issue-branch} --no-ff
      Commit message: "feat({feature_name}): close issue #{number} — {title}"
+     If github_mode=true: run `gh issue close {number}` to close the GitHub issue.
      Update issue status to complete in john-wick.yaml.
 
   8. Advance to next issue.
@@ -707,7 +716,7 @@ Your decision:
 ```
 
 On user decision:
-- **Fix and continue**: record `status: waiting_for_user` in `john-wick.yaml`. On response: clear `interactive_gate_pending` (set both fields to null). Set `status: active`. Apply the user's described fix, re-run tests, re-enter the issue loop.
+- **Fix and continue**: record `status: waiting_for_user` in `john-wick.yaml`. On response: clear `interactive_gate_pending` (set both fields to null). Set `status: active`. Apply the user's described fix. Re-enter the issue loop at step 4 (test run) — the branch already exists and code changes have been applied.
 - **Skip**: update issue status to `skipped` in `john-wick.yaml`. Set `status: active`. Continue loop.
 - **Abort**: set `john-wick.yaml status: paused`. Stop.
 
@@ -736,13 +745,15 @@ After each test run (IP3, IP4, and each IM1 iteration), generate:
 {collapsed list of passing test names}
 ```
 
-Write to `.sweetclaude/reports/test-report-{issue-or-phase}-{timestamp}.md`. Append to aggregate report.
+Write to `.sweetclaude/reports/test-report-{issue-or-phase}-{timestamp}.md`. Append to aggregate report at `.sweetclaude/reports/test-report-{feature_name}.md`.
 
 ---
 
 ## Severity Classifier
 
 After each test run, classify the result as **significant** (escalate) or **not significant** (continue):
+
+**On first evaluation (initial implementation, before any bug fix attempt):** Apply criteria 2-4 only. The 30% threshold does not apply until at least one fix attempt has been made.
 
 **Escalate to IM2 if:**
 - More than 30% of tests are failing after a bug fix attempt
