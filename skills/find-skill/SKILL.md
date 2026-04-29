@@ -123,7 +123,24 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
    > "Got it — moving fast. Tell me: {triage question specific to work type, e.g. 'what exactly is broken?' for bug/hotfix, or 'which version is affected?' for security patch}."
    Skip all prerequisite checks. One triage question max before starting.
 
-6. **Update state.** Determine the `id` by reading `phase.yaml` for the last `active_work_item.id` and incrementing (WI-001 if none). Write `active_work_item` to `.sweetclaude/state/phase.yaml`:
+6. **Plan 3 guard.** Before writing state, check whether the matched skill is marked `*(Plan 3)*` in the routing table above.
+
+   **If Plan 3:** Do NOT write state. Say:
+   > "`sweetclaude:{skill}` is planned but not yet available. I can fall back to `{fallback}` (closest available skill in this bucket), or note this work type in the backlog and defer. Which would you prefer?"
+
+   Use these fallbacks by bucket:
+   - **strategy/** Plan 3 → `sweetclaude:product-discovery`
+   - **product/** Plan 3 → `sweetclaude:product-sprint-plan`
+   - **design/** Plan 3 → `sweetclaude:design-ux`
+   - **code/** Plan 3 hotfix/security-patch → `sweetclaude:code-issue`; external-integration → `sweetclaude:code-feature`
+   - **operations/** Plan 3 → `sweetclaude:code-issue`
+
+   If the user chooses **defer**: add the work type to `docs/backlog/` and stop. Do not write state.
+   If the user chooses **fallback**: substitute the fallback skill and proceed to step 7 with the fallback skill as the matched skill.
+
+   **If not Plan 3:** Proceed to step 7.
+
+7. **Update state and invoke.** Write `active_work_item` to `.sweetclaude/state/phase.yaml`:
 
    ```yaml
    active_work_item:
@@ -148,19 +165,7 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
      entry_category: mid-project-reactive
    ```
 
-7. **Invoke.** Check whether the matched skill is marked `*(Plan 3)*` in the routing table above.
-
-   **If the matched skill is Plan 3:** Do NOT invoke it. Instead say:
-   > "`sweetclaude:{skill}` is planned but not yet available. I can fall back to `{fallback}` (closest available skill in this bucket), or note this work type in the backlog and defer. Which would you prefer?"
-
-   Use these fallbacks by bucket:
-   - **strategy/** Plan 3 → `sweetclaude:product-discovery`
-   - **product/** Plan 3 → `sweetclaude:product-sprint-plan`
-   - **design/** Plan 3 → `sweetclaude:design-ux`
-   - **code/** Plan 3 → `sweetclaude:code-issue`
-   - **operations/** Plan 3 → `sweetclaude:code-issue`
-
-   **If the matched skill is available (no Plan 3 marker):** Use the Skill tool to start the matched skill. Pass any relevant context from the user's description as the skill's starting input so the user does not have to repeat themselves.
+   Then use the Skill tool to start the matched skill. Pass any relevant context from the user's description as the skill's starting input so the user does not have to repeat themselves.
 
 8. **Escalation.** At any point, if the work reveals deeper issues:
    > "This {type} points to a deeper {gap}. Escalate to DISCOVER and investigate?"
