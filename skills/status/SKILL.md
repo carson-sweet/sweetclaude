@@ -15,7 +15,7 @@ Show where the project stands: what is done, what is open, what comes next.
 ### Step 1: Read project state
 
 Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Check `schema_version` first:
-- If `schema_version` is absent or `1`, warn the user: "Your `phase.yaml` is on schema v1. Active work item tracking requires schema v2. Run `/sweetclaude:master` to upgrade." Then display only what is available (version_stage, deference_level) and skip the work item sections.
+- If `schema_version` is absent or `1`, warn the user: "Your `phase.yaml` is on schema v1. Active work item tracking requires schema v2. Run `/sweetclaude:master` to upgrade." Display only `version_stage` and `deference_level` from the file, then stop — do not proceed to Steps 3 or 4.
 
 Extract:
 - `version_stage` — lifecycle stage (PROTOTYPE / ALPHA / BETA / GA / SCALED / MAINTAINED). Default: PROTOTYPE if not set.
@@ -53,7 +53,7 @@ SweetClaude Status — {project name}
 
 Version stage:  {version_stage}
 Work item:      {active_work_item.title} [{active_work_item.type}]
-Phase:          {active_work_item.phase}  (step step_N of step_M)
+Phase:          {active_work_item.phase}  (step {step_N} of {step_M})
 Workflow:       {all phases joined by →, current in *asterisks*}
 Deference:      {deference_level}
 
@@ -98,6 +98,7 @@ If no active work item (idle template was used): suggest running `/sweetclaude:f
 If an active work item exists, propose one concrete next action. Tailor it using `active_work_item.entry_category`:
 - **cold-start** or **mid-project-planned**: suggest the next phase skill or artifact to produce
 - **mid-project-reactive**: lead with urgency — surface the resolution skill or escalation path first
+- **absent or unrecognized**: default to cold-start behavior
 
 > "Next step: {action}. Run `/sweetclaude:{skill}` to do that, or `/sweetclaude:next-steps` to walk through the pipeline."
 
