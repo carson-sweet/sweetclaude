@@ -19,10 +19,10 @@ for arg in "$@"; do
       echo ""
       echo "  --strategy-skills-only  Install strategy, product, and corpus skills only."
       echo "                          No code/design skills, no TDD hooks, no subagents."
-      echo "                          Does not require Superpowers or BMAD."
+      echo "                          Does not require Superpowers."
       echo ""
-      echo "  (no flags)              Full install — all 60 skills, TDD hooks, subagents."
-      echo "                          Requires Superpowers and BMAD."
+      echo "  (no flags)              Full install — all 49 skills, TDD hooks, subagents."
+      echo "                          Requires Superpowers."
       exit 0
       ;;
     *)
@@ -82,7 +82,7 @@ else
   echo "  $GH_VER"
 fi
 
-# Superpowers and BMAD — required for full install, skipped for strategy-only
+# Superpowers — required for full install, skipped for strategy-only
 if [ "$STRATEGY_ONLY" = false ]; then
   SP_MIN="5.0.7"
   PLUGINS_JSON="$CLAUDE_DIR/plugins/installed_plugins.json"
@@ -105,35 +105,8 @@ if [ "$STRATEGY_ONLY" = false ]; then
       PREREQ_OK=false
     fi
   fi
-
-  BMAD_MIN="6.0.0"
-  BMAD_VERSION=""
-
-  if [ -f "$CLAUDE_DIR/config/bmad/config.yaml" ]; then
-    BMAD_VERSION=$(grep '^version:' "$CLAUDE_DIR/config/bmad/config.yaml" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/')
-  fi
-
-  if [ -z "$BMAD_VERSION" ]; then
-    if [ -d "$CLAUDE_DIR/skills/bmad" ]; then
-      echo "  WARNING: BMAD skills found but version unknown. Expecting $BMAD_MIN+."
-      echo "           Check: https://github.com/bmad-code-org/BMAD-METHOD"
-      PREREQ_WARN=true
-    else
-      echo "  ERROR: BMAD Method not found."
-      echo "         Install: https://github.com/bmad-code-org/BMAD-METHOD#installation"
-      echo "         Minimum: $BMAD_MIN"
-      PREREQ_OK=false
-    fi
-  else
-    echo "  BMAD Method: v$BMAD_VERSION"
-    if ! version_gte "$BMAD_VERSION" "$BMAD_MIN"; then
-      echo "  ERROR: BMAD $BMAD_VERSION is below minimum ($BMAD_MIN)."
-      echo "         Update: https://github.com/bmad-code-org/BMAD-METHOD#installation"
-      PREREQ_OK=false
-    fi
-  fi
 else
-  echo "  (strategy-skills-only — Superpowers and BMAD not required)"
+  echo "  (strategy-skills-only — Superpowers not required)"
 fi
 
 if [ "$PREREQ_OK" = false ]; then

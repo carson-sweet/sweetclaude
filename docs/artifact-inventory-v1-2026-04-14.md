@@ -15,6 +15,8 @@ Every document the SweetClaude pipeline produces across the 7-phase lifecycle. *
 | **`.sweetclaude/state/assumption-register.md`** | Markdown | Active, confirmed, and rejected assumptions with evidence |
 | **`.sweetclaude/state/improvement-register.md`** | Markdown | Process feedback — what's working, what to change, check-in log |
 | **`CLAUDE.md`** (generated/updated by init) | Markdown | Project rules, build commands, repo structure, SweetClaude config |
+| `.sweetclaude/state/john-wick.yaml` | YAML | John Wick mode pipeline state: current phase, step, gate status, session tracking, locked test files. Created on first John Wick run. |
+| `.sweetclaude/state/compliance-context.yaml` | YAML | Compliance requirements derived from product discovery (regulatory, security, accessibility). Created during John Wick Bootstrap phase (step B4). |
 
 ---
 

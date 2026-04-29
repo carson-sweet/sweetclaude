@@ -2,6 +2,7 @@
 
 **Author:** Carson Sweet
 **Status:** Draft
+**Revised:** 2026-04-29 — reflects native skills redesign (flat naming), Protocol Guardian, John Wick mode, and BMAD removal
 **PRD:** `docs/prd-sweetclaude-v1-2026-04-12.md`
 **Product Brief:** `docs/product-brief-sweetclaude-v1-2026-04-12.md`
 
@@ -17,7 +18,7 @@ These ten constraints shape every design decision:
 | 2 | Conversation branch management | Human can't hold full context; detours lose state | Detour tracking, re-orientation, decision/assumption persistence |
 | 3 | Session recovery | Sessions die; state must survive | `.sweetclaude/` state persistence, git checkpoints, phase state files |
 | 4 | Language/framework agnosticism | No hardcoded stack assumptions | Codebase discovery drives all config; templates, not constants |
-| 5 | Upstream compatibility | Must not break Superpowers or BMAD | Orchestrate via delegation, never override or monkey-patch |
+| 5 | Upstream compatibility | Must not break Superpowers | Orchestrate via delegation, never override or monkey-patch |
 | 6 | TDD enforcement hooks | Advisory TDD fails; deterministic enforcement required | Native Claude Code hooks (PreToolUse, PostToolUse, Stop) |
 | 7 | RAG + semantic knowledge | Large document corpus, per-project index | mcp-local-rag, index in `.sweetclaude/`, query on demand |
 | 8 | Persistent project memory | Decisions, assumptions, traceability must outlive sessions | Structured markdown in `.sweetclaude/`, committed at checkpoints |
@@ -32,9 +33,9 @@ These ten constraints shape every design decision:
 
 **Rationale:** SweetClaude is not an application with a server, database, or API. It's a framework of files that Claude Code loads and executes. The architecture is about file organization, loading strategy, and interaction patterns — not services and infrastructure.
 
-**Key principle:** SweetClaude orchestrates Superpowers and BMAD; it doesn't replace or fork them. It adds a phase pipeline, enforcement hooks, interaction model, and project scaffolding that those plugins don't provide.
+**Key principle:** SweetClaude orchestrates Superpowers; it doesn't replace or fork it. It adds a phase pipeline, enforcement hooks, interaction model, and project scaffolding that Superpowers doesn't provide. BMAD was an original upstream dependency but all skills have been rewritten as native SweetClaude skills with no BMAD dependency.
 
-**Five-bucket architecture:** Skills are organized into five domain buckets — `strategy/`, `product/`, `design/`, `code/`, `deploy/` — with orchestration skills at root level. The `new-task` and `auto-flow` skills classify work into a bucket and surface appropriate skills.
+**Flat-prefix skill naming:** Skills use a flat file structure with domain-prefix names (`product-brief`, `design-architecture`, `code-review`, etc.) rather than nested subdirectories. The `find-skill` orchestration skill classifies work and routes to the right starting point. Domain grouping is conveyed by naming convention, not directory hierarchy.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -46,12 +47,12 @@ These ten constraints shape every design decision:
 │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  │   │
 │  │  │   SKILLS   │  │   HOOKS    │  │  SUBAGENTS  │  │   │
 │  │  │            │  │            │  │             │  │   │
-│  │  │ Orchestr(7)│  │ Test guard │  │ QA caucus   │  │   │
-│  │  │ Strategy(8)│  │ Auto-test  │  │ Security    │  │   │
-│  │  │ Product(12)│  │ Git ckpt   │  │ Workflow    │  │   │
-│  │  │ Design (11)│  │ Auto-reidx │  │ Test runner │  │   │
-│  │  │ Code   (8) │  │ Preflight  │  │ Code review │  │   │
-│  │  │            │  │ guard      │  │             │  │   │
+│  │  │ Orchestr(13│  │ Test guard │  │ QA caucus   │  │   │
+│  │  │ Product(14)│  │ Auto-test  │  │ Security    │  │   │
+│  │  │ Design (9) │  │ Git ckpt   │  │ Workflow    │  │   │
+│  │  │ Code   (6) │  │ Artifact G │  │ Test runner │  │   │
+│  │  │ Document(4)│  │ TDD-prewrt │  │ Code review │  │   │
+│  │  │ Misc   (3) │  │ Skill-trkr │  │ John Wick   │  │   │
 │  │  └────────────┘  └────────────┘  └────────────┘  │   │
 │  │                                                    │   │
 │  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  │   │
@@ -66,15 +67,10 @@ These ten constraints shape every design decision:
 │  │  └────────────┘  └────────────┘  └────────────┘  │   │
 │  └──────────────────────────────────────────────────┘   │
 │                                                          │
-│  ┌─────────────────┐  ┌─────────────────┐               │
-│  │  SUPERPOWERS     │  │     BMAD         │               │
-│  │  (upstream)      │  │  (upstream)      │               │
-│  │                  │  │                  │               │
-│  │  Plans, worktrees│  │  Brainstorm, PRD │               │
-│  │  Debugging       │  │  Architecture    │               │
-│  │  Code review     │  │  Stories, Sprint │               │
-│  │  Parallel agents │  │  Research        │               │
-│  └─────────────────┘  └─────────────────┘               │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │  SUPERPOWERS (upstream)                           │    │
+│  │  Plans, worktrees, debugging, parallel agents     │    │
+│  └─────────────────────────────────────────────────┘    │
 │                                                          │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │              MCP SERVERS                          │    │
@@ -89,63 +85,63 @@ These ten constraints shape every design decision:
 
 ### Global installation (`~/.claude/`)
 
+Skills use a flat naming convention — all files live directly under `skills/sweetclaude/` with domain-prefix names. No nested subdirectories.
+
 ```
 ~/.claude/
 ├── CLAUDE.md                          # Lean global rules (60-80 lines)
 ├── settings.json                      # Global hooks, permissions
 ├── skills/
 │   └── sweetclaude/
-│       ├── SKILL.md                   # Master skill — phase router + interaction model
+│       ├── master/SKILL.md            # Session entry point, phase routing, pre-flight
 │       ├── help/SKILL.md              # Help and onboarding
 │       ├── status/SKILL.md            # Project status dashboard
-│       ├── auto-flow/SKILL.md         # Automatic bucket/skill routing
-│       ├── init/SKILL.md              # Project bootstrap
-│       ├── new-task/SKILL.md          # Work-type detection and routing
+│       ├── find-skill/SKILL.md        # Work-type detection and routing
+│       ├── sherpa/SKILL.md            # New/existing project onboarding
+│       ├── next-steps/SKILL.md        # Walk through pipeline step by step
 │       ├── hibernate/SKILL.md         # Project freeze/thaw with SweetClaude state
-│       ├── strategy/                  # Strategic development skills (8)
-│       │   ├── concept/SKILL.md
-│       │   ├── pain-thesis/SKILL.md
-│       │   ├── ideal-customer-profile/SKILL.md
-│       │   ├── competitive-analysis/SKILL.md
-│       │   ├── academic-research/SKILL.md
-│       │   ├── meeting-prep/SKILL.md
-│       │   ├── narrative-arc/SKILL.md
-│       │   └── market-messaging/SKILL.md
-│       ├── product/                   # Product development skills (12)
-│       │   ├── discovery/SKILL.md
-│       │   ├── positioning-statement/SKILL.md
-│       │   ├── product-brief/SKILL.md
-│       │   ├── prd/SKILL.md
-│       │   ├── user-story/SKILL.md
-│       │   ├── user-tdd-tests/SKILL.md
-│       │   ├── user-success-criteria/SKILL.md
-│       │   ├── user-workflows/SKILL.md
-│       │   ├── manage-scope/SKILL.md
-│       │   ├── sprint-plan/SKILL.md
-│       │   ├── research/SKILL.md
-│       │   └── feature-competitive/SKILL.md
-│       ├── design/                    # Design skills (11)
-│       │   ├── architecture/SKILL.md
-│       │   ├── tech-spec/SKILL.md
-│       │   ├── ux/SKILL.md
-│       │   ├── solutioning-gate/SKILL.md
-│       │   ├── change-impact-analysis/SKILL.md
-│       │   ├── update-docs/SKILL.md
-│       │   ├── data-model/SKILL.md
-│       │   ├── api-design/SKILL.md
-│       │   ├── services-design/SKILL.md
-│       │   ├── infra-design/SKILL.md
-│       │   └── manage-decisions/SKILL.md
-│       ├── code/                      # Code skills (8)
-│       │   ├── tdd/SKILL.md
-│       │   ├── work-issue/SKILL.md
-│       │   ├── work-debt/SKILL.md
-│       │   ├── pr-precheck/SKILL.md
-│       │   ├── qa-testing/SKILL.md
-│       │   ├── mutation-testing/SKILL.md
-│       │   ├── security-testing/SKILL.md
-│       │   └── code-review/SKILL.md
-│       └── deploy/                    # Deploy skills (placeholder)
+│       ├── guardian-on/SKILL.md       # Enable Protocol Guardian
+│       ├── guardian-off/SKILL.md      # Disable Protocol Guardian
+│       ├── fix-sweetclaude/SKILL.md   # Audit and repair configuration
+│       ├── update-sweetclaude/SKILL.md # Self-update from GitHub
+│       ├── usage/SKILL.md             # Usage tracking
+│       ├── session-export/SKILL.md    # Export Claude.ai sessions
+│       ├── product-discovery/SKILL.md
+│       ├── product-competition/SKILL.md
+│       ├── product-user-personas/SKILL.md
+│       ├── product-positioning-statement/SKILL.md
+│       ├── product-brief/SKILL.md
+│       ├── product-prd/SKILL.md
+│       ├── product-user-stories/SKILL.md
+│       ├── product-user-tdd-tests/SKILL.md
+│       ├── product-manage-scope/SKILL.md
+│       ├── product-backlog/SKILL.md
+│       ├── product-sprint-plan/SKILL.md
+│       ├── product-research/SKILL.md
+│       ├── product-market-messaging/SKILL.md
+│       ├── product-milestones/SKILL.md
+│       ├── design-user-flows/SKILL.md
+│       ├── design-architecture/SKILL.md
+│       ├── design-tech-spec/SKILL.md
+│       ├── design-ux/SKILL.md
+│       ├── design-solutioning-gate/SKILL.md
+│       ├── design-change-impact-analysis/SKILL.md
+│       ├── design-data-model/SKILL.md
+│       ├── design-api-design/SKILL.md
+│       ├── design-manage-decisions/SKILL.md
+│       ├── code-feature/SKILL.md
+│       ├── code-issue/SKILL.md
+│       ├── code-debt/SKILL.md
+│       ├── code-testing/SKILL.md
+│       ├── code-review/SKILL.md
+│       ├── code-tdd/SKILL.md
+│       ├── document-corpus/SKILL.md
+│       ├── documents-update-docs/SKILL.md
+│       ├── documents-academic-research/SKILL.md
+│       ├── documents-narrative-arc/SKILL.md
+│       ├── misc-meeting-prep/SKILL.md
+│       ├── john-wick/SKILL.md         # Autonomous multi-session SDLC pipeline
+│       └── john-wick-checkin/SKILL.md # Phase check-in subagent for John Wick
 │
 ├── agents/
 │   └── sweetclaude/
@@ -166,11 +162,12 @@ These ten constraints shape every design decision:
 │
 ├── hooks/
 │   └── sweetclaude/
-│       ├── test-guardian.sh          # PreToolUse — blocks test file edits during impl
+│       ├── test-guardian.sh          # PreToolUse — blocks test file edits during impl; also enforces john-wick.yaml locked_test_files
 │       ├── auto-test-runner.sh       # PostToolUse — runs tests after source edits
 │       ├── git-checkpoint.sh         # Auto-commits at phase transitions
-│       ├── auto-reindex.sh           # Triggers RAG re-indexing on file changes
-│       └── preflight-guard.sh        # PreToolUse — blocks if SweetClaude not configured
+│       ├── artifact-guardian.sh      # PostToolUse — warns on commits with missing artifacts
+│       ├── tdd-prewrite-guardian.sh  # PreToolUse — enforces test-first discipline
+│       └── skill-tracker.sh          # Records skill invocations for session audit
 │
 └── config/
     └── sweetclaude/
@@ -206,7 +203,9 @@ These ten constraints shape every design decision:
 │   ├── decision-log.md               # What was decided and why, per phase
 │   ├── assumption-register.md        # Active assumptions, confirmed/rejected
 │   ├── scope-changes.md              # Scope change history with rationale
-│   └── improvement-register.md       # Collaboration quality feedback
+│   ├── improvement-register.md       # Collaboration quality feedback
+│   ├── john-wick.yaml                # John Wick pipeline state (created on first JW run)
+│   └── compliance-context.yaml       # Compliance requirements from discovery (JW mode)
 │
 ├── traceability/
 │   ├── requirements-map.md           # Requirements → stories → tests → code
@@ -251,16 +250,15 @@ These ten constraints shape every design decision:
 **FRs addressed:** FR-004, FR-006, FR-025, FR-026, FR-028, FR-033, FR-034, FR-035, FR-037
 **Loads:** Always (this is the session entry point)
 
-### Component 2: New Task / Auto-Flow
-**Purpose:** Classifies work into one of the five domain buckets and surfaces appropriate skills.
+### Component 2: Find-Skill / Routing
+**Purpose:** Classifies work by type and routes to the right starting skill.
 **Responsibilities:**
-- Ask or detect work type and classify into strategy, product, design, code, or deploy bucket
-- Route to appropriate skills from the matched bucket
-- Auto-flow mode: automatically determine bucket from context without user prompting
+- Ask or detect work type and classify into product, design, code, or documents
+- Route to appropriate skills for the matched domain
 - Detect mid-stream work-type shifts
 - Handle escalation when deeper issues surface
 **FRs addressed:** FR-005, FR-025
-**Loads:** New-task always loaded; auto-flow on demand
+**Loads:** On demand via `/sweetclaude:find-skill`
 
 ### Component 3: SweetClaude TDD Skill
 **Purpose:** Unified TDD enforcement across four process levels.
@@ -323,7 +321,7 @@ These ten constraints shape every design decision:
 **Loads:** On demand (`sweetclaude init`)
 
 ### Component 8: Gherkin Bridge Skill
-**Purpose:** Transitions BMAD user stories to Gherkin .feature files.
+**Purpose:** Transitions user stories to Gherkin .feature files.
 **Responsibilities:**
 - Read user story with acceptance criteria
 - Generate `.feature` file with Given/When/Then scenarios
@@ -440,19 +438,46 @@ These ten constraints shape every design decision:
 - Provide quick-start guidance for new users
 **Loads:** On demand (orchestration skill)
 
-### Components 18-46: Domain Bucket Skills
+### Component 18: Protocol Guardian
+**Purpose:** Optional enforcement layer that catches protocol drift mid-session. Can be enabled or disabled by the user; SweetClaude proactively offers it when repeated protocol violations are detected.
+**Responsibilities:**
+- When active: monitor skill invocations and block on violations rather than issuing warnings
+- Enforce TDD discipline: block implementation without preceding test-write
+- Enforce artifact saves: warn when commits occur without expected phase artifacts
+- Track skill invocations per session via `skill-tracker` hook
+- `guardian-on` enables enforcement; `guardian-off` disables it
+**Implementation:** `guardian-on/SKILL.md`, `guardian-off/SKILL.md` + `tdd-prewrite-guardian.sh`, `artifact-guardian.sh`, `skill-tracker.sh` hooks
+**Loads:** On demand via `/sweetclaude:guardian-on`
 
-The strategy, product, design, and code buckets are now fully built with all skills shipped. Each skill follows the standard SKILL.md format and loads via the bucket mapping in `phase-skills.yaml`.
+### Component 19: John Wick Mode
+**Purpose:** Fully autonomous, resumable, multi-session SDLC pipeline. Given completed discovery artifacts, runs the product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement.
+**Responsibilities:**
+- Validate hard prerequisites before starting (personas, constraints, compliance context, GitHub auth)
+- Execute six phases autonomously: Bootstrap → Define → Plan → Design → Implement → Verify
+- Persist state to `.sweetclaude/state/john-wick.yaml` — survives session boundaries
+- Pause at pre-defined interactive gates (PRD approval, design approval, significant test failure triage)
+- Run phase check-ins via `john-wick-checkin` subagent to detect drift before advancing
+- Enforce scope guardrails: warn at >6 epics or >4 external dependencies; hard-stop at >8 epics or >6 dependencies
+- Extend test-guardian hook to enforce `locked_test_files` from `john-wick.yaml`
+- Support both GitHub mode (PRs via `gh`) and local tracking mode
+**Implementation:** `john-wick/SKILL.md`, `john-wick-checkin/SKILL.md`, `john-wick.yaml` state, test-guardian extension
+**Loads:** On demand via `/sweetclaude:john-wick`
 
-**Strategy bucket (8 skills):** concept, pain-thesis, ideal-customer-profile, competitive-analysis, academic-research, meeting-prep, narrative-arc, market-messaging.
+### Components 20-49: Domain Skills
 
-**Product bucket (12 skills):** discovery, positioning-statement, product-brief, prd, user-story, user-tdd-tests, user-success-criteria, user-workflows, manage-scope, sprint-plan, research, feature-competitive.
+All 49 skills are fully built and shipped. Each skill follows the standard SKILL.md format with a flat prefix naming convention. Domain grouping is by prefix, not directory hierarchy.
 
-**Design bucket (11 skills):** architecture, tech-spec, ux, solutioning-gate, change-impact-analysis, update-docs, data-model, api-design, services-design, infra-design, manage-decisions.
+**Orchestration (13 skills):** master, help, status, find-skill, sherpa, next-steps, hibernate, guardian-on, guardian-off, fix-sweetclaude, update-sweetclaude, usage, session-export.
 
-**Code bucket (8 skills):** tdd, work-issue, work-debt, pr-precheck, qa-testing, mutation-testing, security-testing, code-review.
+**Product (14 skills):** product-discovery, product-competition, product-user-personas, product-positioning-statement, product-brief, product-prd, product-user-stories, product-user-tdd-tests, product-manage-scope, product-backlog, product-sprint-plan, product-research, product-market-messaging, product-milestones.
 
-**Deploy bucket:** Placeholder — no skills yet.
+**Design (9 skills):** design-user-flows, design-architecture, design-tech-spec, design-ux, design-solutioning-gate, design-change-impact-analysis, design-data-model, design-api-design, design-manage-decisions.
+
+**Code (6 skills):** code-feature, code-issue, code-debt, code-testing, code-review, code-tdd.
+
+**Documents (4 skills):** document-corpus, documents-update-docs, documents-academic-research, documents-narrative-arc.
+
+**Misc (3 skills):** misc-meeting-prep, john-wick, john-wick-checkin.
 
 ---
 
@@ -460,67 +485,50 @@ The strategy, product, design, and code buckets are now fully built with all ski
 
 **`config/sweetclaude/phase-skills.yaml`:**
 
-The phase-skills map uses a five-bucket structure — `strategy:`, `product:`, `design:`, `code:`, `deploy:` — instead of the earlier dual-track `code:`/`strategy:` split. The `new-task` and `auto-flow` skills classify work into a bucket and surface appropriate skills.
+The phase-skills map groups skills by domain — `product:`, `design:`, `code:` — with orchestration skills always loaded. The `find-skill` skill classifies work and routes to the right starting point.
 
 ```yaml
 always_loaded:
   skills:
-    - sweetclaude
-    - sweetclaude:new-task
+    - sweetclaude:master
+    - sweetclaude:find-skill
     - sweetclaude:hibernate
-    - hibernate-project
   rules:
     - sweetclaude/interaction-model.md
     - sweetclaude/phase-gates.md
     - sweetclaude/tdd-levels.md
 
-strategy:
-  skills:
-    - sweetclaude:strategy/concept
-    - sweetclaude:strategy/pain-thesis
-    - sweetclaude:strategy/ideal-customer-profile
-    - sweetclaude:strategy/competitive-analysis
-    - sweetclaude:strategy/academic-research
-    - sweetclaude:strategy/meeting-prep
-    - sweetclaude:strategy/narrative-arc
-    - sweetclaude:strategy/market-messaging
-    - caucus
-    - reasoning-frameworks
-  agents: []
-  hooks: []
-
 product:
   skills:
-    - sweetclaude:product/discovery
-    - sweetclaude:product/positioning-statement
-    - sweetclaude:product/product-brief
-    - sweetclaude:product/prd
-    - sweetclaude:product/user-story
-    - sweetclaude:product/user-tdd-tests
-    - sweetclaude:product/user-success-criteria
-    - sweetclaude:product/user-workflows
-    - sweetclaude:product/manage-scope
-    - sweetclaude:product/backlog
-    - sweetclaude:product/sprint-plan
-    - sweetclaude:product/research
-    - sweetclaude:product/feature-competitive
+    - sweetclaude:product-discovery
+    - sweetclaude:product-competition
+    - sweetclaude:product-user-personas
+    - sweetclaude:product-positioning-statement
+    - sweetclaude:product-brief
+    - sweetclaude:product-prd
+    - sweetclaude:product-user-stories
+    - sweetclaude:product-user-tdd-tests
+    - sweetclaude:product-manage-scope
+    - sweetclaude:product-backlog
+    - sweetclaude:product-sprint-plan
+    - sweetclaude:product-research
+    - sweetclaude:product-market-messaging
+    - sweetclaude:product-milestones
     - reconciling-documents
   agents: []
   hooks: []
 
 design:
   skills:
-    - sweetclaude:design/architecture
-    - sweetclaude:design/tech-spec
-    - sweetclaude:design/ux
-    - sweetclaude:design/solutioning-gate
-    - sweetclaude:design/change-impact-analysis
-    - sweetclaude:design/update-docs
-    - sweetclaude:design/data-model
-    - sweetclaude:design/api-design
-    - sweetclaude:design/services-design
-    - sweetclaude:design/infra-design
-    - sweetclaude:design/manage-decisions
+    - sweetclaude:design-user-flows
+    - sweetclaude:design-architecture
+    - sweetclaude:design-tech-spec
+    - sweetclaude:design-ux
+    - sweetclaude:design-solutioning-gate
+    - sweetclaude:design-change-impact-analysis
+    - sweetclaude:design-data-model
+    - sweetclaude:design-api-design
+    - sweetclaude:design-manage-decisions
     - caucus
     - reasoning-frameworks
   agents: []
@@ -528,14 +536,12 @@ design:
 
 code:
   skills:
-    - sweetclaude:code/tdd
-    - sweetclaude:code/work-issue
-    - sweetclaude:code/work-debt
-    - sweetclaude:code/pr-precheck
-    - sweetclaude:code/qa-testing
-    - sweetclaude:code/mutation-testing
-    - sweetclaude:code/security-testing
-    - sweetclaude:code/code-review
+    - sweetclaude:code-feature
+    - sweetclaude:code-issue
+    - sweetclaude:code-debt
+    - sweetclaude:code-testing
+    - sweetclaude:code-review
+    - sweetclaude:code-tdd
     - superpowers:writing-plans
     - superpowers:executing-plans
     - superpowers:using-git-worktrees
@@ -552,16 +558,14 @@ code:
     - test-guardian
     - auto-test-runner
     - git-checkpoint
-
-deploy:
-  skills: []
-  agents: []
-  hooks: []
+    - artifact-guardian
+    - tdd-prewrite-guardian
+    - skill-tracker
 ```
 
-**Always loaded (regardless of phase or bucket):**
+**Always loaded (regardless of phase):**
 - Master skill (phase router + interaction model)
-- New-task skill, hibernate skill, hibernate-project skill
+- Find-skill, hibernate skill
 - Rules: `interaction-model.md`, `phase-gates.md`, `tdd-levels.md`
 - State directory manager
 
@@ -582,12 +586,12 @@ deploy:
 **Validation:** Kill session mid-phase, restart, verify resume from last checkpoint.
 
 ### NFR-004: Installation Simplicity
-**Solution:** Single install mechanism — copy/clone SweetClaude files into `~/.claude/`. No compilation. Prerequisites: Claude Code CLI, git, GitHub CLI (`gh`), Superpowers plugin (5.0.7+), BMAD Method (6.0.0+). The installer validates all prerequisites and versions before proceeding.
+**Solution:** Single install mechanism — copy/clone SweetClaude files into `~/.claude/`. No compilation. Prerequisites: Claude Code CLI, git, GitHub CLI (`gh`), Superpowers plugin. The installer validates all prerequisites before proceeding. BMAD is no longer required — all SweetClaude skills are native.
 **Validation:** Fresh machine install in under 5 minutes following docs.
 
 ### NFR-005: Upstream Compatibility
-**Solution:** SweetClaude never modifies Superpowers or BMAD files. Phase-skill mapping delegates to upstream skills by name. If upstream skill not found, warn and continue. Hooks are additive (SweetClaude hooks in separate namespace, no conflicts).
-**Validation:** Disable SweetClaude, verify Superpowers and BMAD still work independently.
+**Solution:** SweetClaude never modifies Superpowers files. Phase-skill mapping delegates to upstream skills by name. If upstream skill not found, warn and continue. Hooks are additive (SweetClaude hooks in separate namespace, no conflicts).
+**Validation:** Disable SweetClaude, verify Superpowers still works independently.
 
 ### NFR-006: Security — No Credential Exposure
 **Solution:** Init generates `.gitignore` excluding `.env`, `*.pem`, `*.key`, credentials. Hooks never log environment variables. `.sweetclaude/` stores no secrets.
@@ -605,32 +609,34 @@ deploy:
 
 ## Development Tiers
 
-All 46 skills across the five domain buckets are now Tier 1 — built and shipped.
+All 49 skills are Tier 1 — built and shipped.
 
-| Bucket | Count | Skills |
+| Domain | Count | Skills |
 |---|---|---|
-| Orchestration | 7 | master (SKILL.md), help, status, auto-flow, init, new-task, hibernate |
-| Strategy | 8 | concept, pain-thesis, ideal-customer-profile, competitive-analysis, academic-research, meeting-prep, narrative-arc, market-messaging |
-| Product | 12 | discovery, positioning-statement, product-brief, prd, user-story, user-tdd-tests, user-success-criteria, user-workflows, manage-scope, sprint-plan, research, feature-competitive |
-| Design | 11 | architecture, tech-spec, ux, solutioning-gate, change-impact-analysis, update-docs, data-model, api-design, services-design, infra-design, manage-decisions |
-| Code | 8 | tdd, work-issue, work-debt, pr-precheck, qa-testing, mutation-testing, security-testing, code-review |
-| Deploy | 0 | (placeholder — no skills yet) |
+| Orchestration | 13 | master, help, status, find-skill, sherpa, next-steps, hibernate, guardian-on, guardian-off, fix-sweetclaude, update-sweetclaude, usage, session-export |
+| Product | 14 | product-discovery, product-competition, product-user-personas, product-positioning-statement, product-brief, product-prd, product-user-stories, product-user-tdd-tests, product-manage-scope, product-backlog, product-sprint-plan, product-research, product-market-messaging, product-milestones |
+| Design | 9 | design-user-flows, design-architecture, design-tech-spec, design-ux, design-solutioning-gate, design-change-impact-analysis, design-data-model, design-api-design, design-manage-decisions |
+| Code | 6 | code-feature, code-issue, code-debt, code-testing, code-review, code-tdd |
+| Documents | 4 | document-corpus, documents-update-docs, documents-academic-research, documents-narrative-arc |
+| Misc | 3 | misc-meeting-prep, john-wick, john-wick-checkin |
 
 Supporting infrastructure also shipped:
 
 | Component | Type |
 |---|---|
-| Test Guardian | Hook |
+| Test Guardian (+ john-wick.yaml locked_test_files extension) | Hook |
 | Auto-Test Runner | Hook |
 | Git Checkpoint | Hook |
-| Auto-Reindex | Hook |
-| Pre-Flight Guard | Hook |
+| Artifact Guardian | Hook |
+| TDD Prewrite Guardian | Hook |
+| Skill Tracker | Hook |
 | Test Writer Agent | Subagent |
 | Implementer Agent | Subagent |
 | QA Caucus (3 agents) | Subagents |
 | Security Reviewer | Subagent |
 | Workflow Guardian | Subagent |
 | Code Reviewer | Subagent |
+| John Wick Check-in | Subagent (also a skill) |
 | Phase Gates | Rules |
 | TDD Levels | Rules |
 | Interaction Model | Rules |
@@ -728,4 +734,4 @@ Supporting infrastructure also shipped:
 
 ---
 
-*Generated by BMAD Method v6 — System Architect*
+*Originally generated 2026-04-13. Revised 2026-04-29 to reflect native skills redesign, Protocol Guardian, and John Wick mode.*
