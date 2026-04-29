@@ -1,5 +1,5 @@
 # SweetClaude Phase-Skill Mapping
-# Five domain buckets: strategy, product, design, code, deploy.
+# Six domain buckets: strategy, product, design, code, operations, deploy.
 # The find-skill and next-steps skills classify work into a bucket
 # and surface appropriate skills.
 schema_version: 1
@@ -21,7 +21,6 @@ strategy:
   skills:
     - sweetclaude:strategy/academic-research
     - sweetclaude:strategy/meeting-prep
-    - sweetclaude:strategy/narrative-arc
     - caucus
     - reasoning-frameworks
   agents: []
@@ -42,6 +41,11 @@ product:
     - sweetclaude:product/manage-scope
     - sweetclaude:product/backlog
     - sweetclaude:product/sprint-plan
+    - sweetclaude:concept-framing
+    - sweetclaude:course-correction
+    - sweetclaude:signal-aggregation
+    - sweetclaude:release-planning
+    - sweetclaude:security-planning
     - reconciling-documents
   agents: []
   hooks: []
@@ -76,6 +80,18 @@ code:
     - superpowers:systematic-debugging
     - superpowers:dispatching-parallel-agents
     - superpowers:subagent-driven-development
+    - sweetclaude:hotfix
+    - sweetclaude:security-patch
+    - sweetclaude:performance-optimization
+    - sweetclaude:external-integration
+    - sweetclaude:technology-migration
+    - sweetclaude:api-deprecation
+    - sweetclaude:data-migration
+    - sweetclaude:dependency-upgrade
+    - sweetclaude:infrastructure-change
+    - sweetclaude:feature-flag-management
+    - sweetclaude:rollback-revert
+    - sweetclaude:onboarding-flow-design
   agents:
     - sweetclaude:test-writer
     - sweetclaude:implementer
@@ -86,6 +102,17 @@ code:
     - test-guardian
     - auto-test-runner
     - git-checkpoint
+
+operations:
+  skills:
+    - sweetclaude:something-broke
+    - sweetclaude:postmortem
+    - sweetclaude:break-glass-notes
+    - sweetclaude:sla-error-budget-review
+    - sweetclaude:monitoring-alerting
+    - sweetclaude:onboarding-playbook
+  agents: []
+  hooks: []
 
 deploy:
   skills: []
