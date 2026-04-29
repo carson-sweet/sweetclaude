@@ -27,10 +27,11 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
    Wait for confirmation before proceeding.
 
-4. **Classify into a work type.** Use the tables below. Only surface work types appropriate for the current `version_stage`:
-   - **PROTOTYPE**: discovery and definition work only (net-new-feature, security-planning)
-   - **ALPHA**: add design, planning, core implementation (net-new-feature, bug-fix, external-integration, enhancement)
-   - **BETA+**: full catalog
+4. **Classify into a work type.** Use the tables below. Only surface work types appropriate for the current `version_stage` (see `config/workflow-templates.yaml → progressive_disclosure.{version_stage}.visible_buckets` for the authoritative list):
+   - **PROTOTYPE**: strategy + product buckets only (net-new-feature, security-planning)
+   - **ALPHA**: strategy + product + design + code (net-new-feature, bug-fix, external-integration, enhancement)
+   - **BETA / GA / SCALED**: full catalog
+   - **MAINTAINED**: code + operations buckets only (bug-fix, security-patch, dependency-upgrade, compliance-requirement)
 
 ### strategy/ — why it matters and to whom
 
@@ -141,7 +142,7 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
    **If not Plan 3:** Proceed to step 7.
 
-7. **Update state and invoke.** Determine the next `id`: read `last_work_item_id` from phase.yaml (this persists across work item completions). If present (e.g., `WI-003`), parse the number and increment by 1. If absent, fall back to `active_work_item.id`. If neither exists, start at `WI-001`. Format as `WI-{NNN}` with three zero-padded digits. Write the new id to both `active_work_item.id` and `last_work_item_id`.
+7. **Update state and invoke.** Determine the next `id`: read `last_work_item_id` from phase.yaml (this persists across work item completions). If present (e.g., `WI-003`), parse the number and increment by 1. If absent, start at `WI-001`. Format as `WI-{NNN}` with three zero-padded digits. Write the new id to both `active_work_item.id` and `last_work_item_id`.
 
    Write `active_work_item` to `.sweetclaude/state/phase.yaml`:
 
