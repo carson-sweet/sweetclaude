@@ -64,7 +64,7 @@ Runs after pre-flight passes.
 
 ## Domain Buckets
 
-SweetClaude organizes skills into five domain buckets. The `find-skill` skill classifies work into the right bucket.
+SweetClaude organizes skills into six domain buckets. The `find-skill` skill classifies work into the right bucket.
 
 ```
 strategy/    — Why does this matter and to whom? Concept, pain, ICP, competitive, research, messaging.
