@@ -15,10 +15,13 @@ Show where the project stands: what is done, what is open, what comes next.
 ### Step 1: Read project state
 
 Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Extract:
-- Current phase
-- Current work type
-- Deference level
-- Active bucket (strategy/product/design/code)
+- `version_stage` — lifecycle stage (PROTOTYPE / ALPHA / BETA / GA / SCALED / MAINTAINED). Default: PROTOTYPE if not set.
+- `active_work_item.type` — work type (e.g. bug-fix, net-new-feature). May be `~` if no active work item.
+- `active_work_item.phase` — current phase within this work item's workflow
+- `active_work_item.workflow` — ordered list of phases for this work item (e.g. [DIAGNOSE, IMPLEMENT, VERIFY, SHIP])
+- `active_work_item.title` — short description of the work
+- `active_work_item.entry_category` — how work was initiated
+- `deference_level`
 - Any pending detour
 
 ### Step 2: Read recent activity
@@ -35,16 +38,20 @@ Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Extract:
 
 ### Step 3: Present status
 
+If `active_work_item` fields are set (type, phase, workflow are not `~`), use this template:
+
 ```
 SweetClaude Status — {project name}
 ═══════════════════════════════════
 
-Phase:       {phase} ({bucket})
-Work type:   {type}
-Deference:   {level}
+Version stage:  {version_stage}
+Work item:      {active_work_item.title} [{active_work_item.type}]
+Phase:          {active_work_item.phase}  (step N of M in workflow)
+Workflow:       {phase1} → {phase2} → ... → {phaseN}
+                (current: {active_work_item.phase highlighted with *asterisks*})
+Deference:      {deference_level}
 
 Done:
-  - {completed artifact or milestone}
   - {completed artifact or milestone}
   - ...
 
@@ -59,6 +66,20 @@ Active milestones:
 
 Next:
   → {the logical next step based on phase, open artifacts, and exit criteria}
+
+Recent activity:
+  {last 3-5 commits, one line each}
+```
+
+If `active_work_item` is absent or all fields are `~`, use this template instead:
+
+```
+SweetClaude Status — {project name}
+═══════════════════════════════════
+
+Version stage:  {version_stage}
+Work item:      (none — run /sweetclaude:find-skill to start one)
+Deference:      {deference_level}
 
 Recent activity:
   {last 3-5 commits, one line each}
