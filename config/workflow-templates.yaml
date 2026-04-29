@@ -207,16 +207,16 @@ entry_categories:
 
 progressive_disclosure:
   PROTOTYPE:
-    visible_domains: [discovery, definition]
+    visible_buckets: [strategy, product]
   ALPHA:
-    visible_domains: [discovery, definition, design, planning, core-implementation]
+    visible_buckets: [strategy, product, design, code]
     core_implementation_work_types: [net-new-feature, bug-fix, external-integration]
   BETA:
-    visible_domains: [discovery, definition, design, planning, implementation, verification, documentation, release-planning]
+    visible_buckets: [strategy, product, design, code, operations]
   GA:
-    visible_domains: [all]
+    visible_buckets: [all]
   SCALED:
-    visible_domains: [all]
+    visible_buckets: [all]
     surface_prominently: [operations]
   MAINTAINED:
     available_work_types: [bug-fix, security-patch, dependency-upgrade, compliance-requirement]

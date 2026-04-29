@@ -84,7 +84,7 @@ deploy/      — Shipping it. (Deferred — not yet scoped.)
 *product/* — new features, product briefs, PRDs, user stories, scope changes, backlog, sprint planning, product-level competitive analysis
 *design/* — architecture, tech specs, UX, data models, API design, services, infrastructure, impact analysis
 *code/* — bug fixes, feature implementation, tech debt, TDD, testing, code review, PR preparation
-*operations/* — something broke, postmortem, break-glass notes, SLA/error budget review, security planning, monitoring setup, onboarding playbook
+*operations/* — something broke, postmortem, break-glass notes, SLA/error budget review, monitoring setup, onboarding playbook
 
 Any work can shift buckets as understanding deepens. This is normal.
 
