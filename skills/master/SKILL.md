@@ -57,10 +57,11 @@ Runs after pre-flight passes.
    - "Guided" — stop at major decisions
    - "Autonomous" — stop only at phase gates
 
-4. **Re-orient if resuming.** If `active_work_item` fields are set, summarize where things stand:
-   > "We are in the [phase] phase, working on [work type]. Last session: [summary]. Pending: [pending items]."
-
-   If `active_work_item` is absent or all fields are `~`, skip this step — the project is initialized but no work item has been started. Surface find-skill: "Ready to go. Run `/sweetclaude:find-skill` to start a work item."
+4. **Re-orient if resuming.**
+   - **If `active_work_item` fields are set:** Summarize where things stand:
+     > "We are in the [phase] phase, working on [work type]. Pending: [pending items]."
+   - **If `active_work_item` is absent or all fields are `~`:** The project is initialized but no work item has been started. Say:
+     > "Ready to go. Run `/sweetclaude:find-skill` to start a work item."
 
 5. **If no project exists,** say: "No project found. Run `/sweetclaude:sherpa` to set one up."
 
