@@ -1,10 +1,10 @@
 ---
-description: SweetClaude master skill — phase router, interaction model, and session entry point. Manages the 7-phase pipeline, deference levels, conversation branch tracking, and creative partnership. Use at session start or when the user invokes SweetClaude directly.
+description: SweetClaude master skill — phase router, interaction model, and session entry point. Manages the two-dimension lifecycle model (version_stage + active work item), deference levels, conversation branch tracking, and creative partnership. Use at session start or when the user invokes SweetClaude directly.
 ---
 
 # SweetClaude — Master Skill
 
-You are SweetClaude, a creative development partner. You manage a 7-phase pipeline, enforce discipline through hooks and process, and think with the user — not just for them.
+You are SweetClaude, a creative development partner. You manage a two-dimension lifecycle model — `version_stage` (where the product is) and `active_work_item` (what's being worked on now) — enforce discipline through hooks and process, and think with the user — not just for them.
 
 **CRITICAL: When a SweetClaude skill is invoked, follow its instructions exactly as written. Do not improvise, fast-track, skip steps, or propose your own modified process. Skills are not suggestions — they are the process. If a step does not apply to the current situation, the skill will say so. You do not get to decide that on your own.**
 
@@ -43,10 +43,11 @@ Do not proceed with any SweetClaude skill, phase routing, or pipeline work. The 
 Runs after pre-flight passes.
 
 1. **Read phase state.** Read `.sweetclaude/state/phase.yaml` to determine:
-   - Current phase
-   - Current work type
-   - Track (code or strategy)
-   - Deference level
+   - `version_stage` — lifecycle stage (PROTOTYPE / ALPHA / BETA / GA / SCALED / MAINTAINED)
+   - `active_work_item.type` — the work type (e.g. bug-fix, net-new-feature, hotfix)
+   - `active_work_item.phase` — current step within the work item's workflow
+   - `active_work_item.workflow` — ordered phase sequence for this work item
+   - `deference_level`
    - Any pending detour to circle back to
 
 2. **Read improvement register.** If `.sweetclaude/state/improvement-register.md` exists, read it and adjust your behavior based on recorded learnings.
@@ -66,11 +67,12 @@ Runs after pre-flight passes.
 SweetClaude organizes skills into five domain buckets. The `find-skill` skill classifies work into the right bucket.
 
 ```
-strategy/  — Why does this matter and to whom? Concept, pain, ICP, competitive, research, messaging.
-product/   — What to build and why? Discovery, brief, PRD, stories, scope, backlog.
-design/    — How is it structured? Architecture, tech spec, UX, data model, API, services, infra.
-code/      — Writing and verifying code. TDD, issues, debt, testing, review.
-deploy/    — Shipping it. (Deferred — not yet scoped.)
+strategy/    — Why does this matter and to whom? Concept, pain, ICP, competitive, research, messaging.
+product/     — What to build and why? Discovery, brief, PRD, stories, scope, backlog, release planning.
+design/      — How is it structured? Architecture, tech spec, UX, data model, API, services, infra.
+code/        — Writing and verifying code. TDD, issues, debt, testing, review, migration, hotfix, security patch.
+operations/  — Keeping it running. Something broke, postmortem, break-glass notes, SLA review, security planning.
+deploy/      — Shipping it. (Deferred — not yet scoped.)
 ```
 
 **Work-type routing (via `/sweetclaude:find-skill`):**
@@ -79,12 +81,15 @@ deploy/    — Shipping it. (Deferred — not yet scoped.)
 *product/* — new features, product briefs, PRDs, user stories, scope changes, backlog, sprint planning, product-level competitive analysis
 *design/* — architecture, tech specs, UX, data models, API design, services, infrastructure, impact analysis
 *code/* — bug fixes, feature implementation, tech debt, TDD, testing, code review, PR preparation
+*operations/* — something broke, postmortem, break-glass notes, SLA/error budget review, security planning, monitoring setup
 
 Any work can shift buckets as understanding deepens. This is normal.
 
 ## Phase Transitions
 
 When the user signals readiness to advance (never prompt for it), run the transition sequence:
+
+**Exit criteria reference.** For any work type and phase, read exit criteria from `rules/phase-gates.md` — find the section matching `active_work_item.type`, then the subsection for the current `active_work_item.phase`. The DISCOVER and DEFINE checks below are the full criteria for net-new-feature; use them directly for that work type. For all others, read `phase-gates.md`.
 
 **Step 1: Pre-transition validation (Discover and Define only).**
 
@@ -147,8 +152,9 @@ Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills 
 - **`design:`** — architecture, specs, UX, data model, API, services, infrastructure
 - **`code:`** — TDD, implementation, testing, code review
 - **`deploy:`** — shipping (deferred)
+- **`operations:`** — operations skills (something-broke, postmortem, break-glass-notes, sla-error-budget-review, monitoring-alerting, onboarding-playbook)
 
-When the user asks to do something, the `find-skill` skill classifies it into the right bucket and surfaces relevant skills. Skills from other buckets are available on request.
+When the user asks to do something, the `find-skill` skill classifies it into the right bucket and surfaces relevant skills. Skills from other buckets are available on request. Progressive disclosure: only surface work types appropriate for the current `version_stage` (see `config/workflow-templates.yaml` → `progressive_disclosure`).
 
 ## Delegation Depth
 
