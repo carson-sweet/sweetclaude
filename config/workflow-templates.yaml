@@ -210,7 +210,7 @@ progressive_disclosure:
     visible_domains: [discovery, definition]
   ALPHA:
     visible_domains: [discovery, definition, design, planning, core-implementation]
-    core_implementation: [net-new-feature, bug-fix, external-integration]
+    core_implementation_work_types: [net-new-feature, bug-fix, external-integration]
   BETA:
     visible_domains: [discovery, definition, design, planning, implementation, verification, documentation, release-planning]
   GA:
@@ -219,5 +219,5 @@ progressive_disclosure:
     visible_domains: [all]
     surface_prominently: [operations]
   MAINTAINED:
-    visible_domains: [bug-fix, security-patch, dependency-upgrade, compliance-requirement, break-glass-notes, documentation]
+    available_work_types: [bug-fix, security-patch, dependency-upgrade, compliance-requirement]
     de_emphasize: [feature-work]
