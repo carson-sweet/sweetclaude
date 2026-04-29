@@ -148,7 +148,19 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
      entry_category: mid-project-reactive
    ```
 
-7. **Invoke.** Use the Skill tool to start the matched skill. Pass any relevant context from the user's description as the skill's starting input so the user does not have to repeat themselves.
+7. **Invoke.** Check whether the matched skill is marked `*(Plan 3)*` in the routing table above.
+
+   **If the matched skill is Plan 3:** Do NOT invoke it. Instead say:
+   > "`sweetclaude:{skill}` is planned but not yet available. I can fall back to `{fallback}` (closest available skill in this bucket), or note this work type in the backlog and defer. Which would you prefer?"
+
+   Use these fallbacks by bucket:
+   - **strategy/** Plan 3 → `sweetclaude:product-discovery`
+   - **product/** Plan 3 → `sweetclaude:product-sprint-plan`
+   - **design/** Plan 3 → `sweetclaude:design-ux`
+   - **code/** Plan 3 → `sweetclaude:code-issue`
+   - **operations/** Plan 3 → `sweetclaude:code-issue`
+
+   **If the matched skill is available (no Plan 3 marker):** Use the Skill tool to start the matched skill. Pass any relevant context from the user's description as the skill's starting input so the user does not have to repeat themselves.
 
 8. **Escalation.** At any point, if the work reveals deeper issues:
    > "This {type} points to a deeper {gap}. Escalate to DISCOVER and investigate?"
