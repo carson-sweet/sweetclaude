@@ -35,9 +35,9 @@ work_types:
 
   course-correction:
     shape: full-pipeline
-    phases: [DISCOVER, DEFINE, TRIAGE]
+    phases: [DISCOVER, DEFINE, TRIAGE, SHIP]
     entry_categories: [mid-project-planned, mid-project-reactive]
-    notes: "Ends at TRIAGE instead of SHIP. TRIAGE spawns new work items. Can be triggered deliberately (accumulated signals) or reactively (post-incident)."
+    notes: "TRIAGE reviews in-flight work (keep/drop/repurpose). SHIP commits the revised direction. Can be triggered deliberately (accumulated signals) or reactively (post-incident)."
 
   security-planning:
     shape: full-pipeline
