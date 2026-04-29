@@ -57,8 +57,10 @@ Runs after pre-flight passes.
    - "Guided" — stop at major decisions
    - "Autonomous" — stop only at phase gates
 
-4. **Re-orient if resuming.** If phase state exists, summarize where things stand:
+4. **Re-orient if resuming.** If `active_work_item` fields are set, summarize where things stand:
    > "We are in the [phase] phase, working on [work type]. Last session: [summary]. Pending: [pending items]."
+
+   If `active_work_item` is absent or all fields are `~`, skip this step — the project is initialized but no work item has been started. Surface find-skill: "Ready to go. Run `/sweetclaude:find-skill` to start a work item."
 
 5. **If no project exists,** say: "No project found. Run `/sweetclaude:sherpa` to set one up."
 
@@ -81,7 +83,7 @@ deploy/      — Shipping it. (Deferred — not yet scoped.)
 *product/* — new features, product briefs, PRDs, user stories, scope changes, backlog, sprint planning, product-level competitive analysis
 *design/* — architecture, tech specs, UX, data models, API design, services, infrastructure, impact analysis
 *code/* — bug fixes, feature implementation, tech debt, TDD, testing, code review, PR preparation
-*operations/* — something broke, postmortem, break-glass notes, SLA/error budget review, security planning, monitoring setup
+*operations/* — something broke, postmortem, break-glass notes, SLA/error budget review, security planning, monitoring setup, onboarding playbook
 
 Any work can shift buckets as understanding deepens. This is normal.
 
@@ -89,7 +91,7 @@ Any work can shift buckets as understanding deepens. This is normal.
 
 When the user signals readiness to advance (never prompt for it), run the transition sequence:
 
-**Exit criteria reference.** For any work type and phase, read exit criteria from `rules/phase-gates.md` — find the section matching `active_work_item.type`, then the subsection for the current `active_work_item.phase`. The DISCOVER and DEFINE checks below are the full criteria for net-new-feature; use them directly for that work type. For all others, read `phase-gates.md`.
+**Exit criteria reference.** For any work type and phase, read the authoritative exit criteria from `~/.claude/rules/sweetclaude/phase-gates.md` — find the section matching `active_work_item.type`, then the subsection for the current `active_work_item.phase`. The DISCOVER and DEFINE checks below are reference checklists for net-new-feature; always verify against `phase-gates.md` for the complete and authoritative criteria.
 
 **Step 1: Pre-transition validation (Discover and Define only).**
 
@@ -145,7 +147,7 @@ Follow `~/.claude/rules/sweetclaude/interaction-model.md` at all times:
 
 ## Skill Surfacing
 
-Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available. The config has five domain buckets:
+Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available. The config has six domain buckets:
 
 - **`strategy:`** — strategic positioning, competitive analysis, research, messaging
 - **`product:`** — discovery, product definition, stories, scope, backlog
