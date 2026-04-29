@@ -12,48 +12,59 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
 ## Process
 
-1. **Ask or detect.** If the user has not stated the work type, ask:
+1. **Read version stage.** Read `.sweetclaude/state/phase.yaml`. Extract `version_stage` (default: PROTOTYPE if not set). This controls which work types are surfaced.
+
+2. **Determine entry category** from context before asking anything:
+   - `cold-start` — project has no prior `active_work_item` OR user is explicitly starting something new from scratch
+   - `mid-project-reactive` — user describes something broken, failing, urgent, or in-progress emergency ("it's down", "something broke", "production issue", "need to hotfix")
+   - `mid-project-planned` — all other cases: continuing work, planning next steps, choosing from backlog
+
+3. **Ask or detect.** If the user has not stated the work type, ask:
    > "What do you want to work on?"
 
    If the user has described something, classify it and propose:
-   > "This looks like {type} ({bucket}) — I'll start `sweetclaude:{skill}`. Correct?"
+   > "This looks like {work-type} — I'll set up the {workflow-shape} pipeline and start `sweetclaude:{skill}`. Correct?"
 
-   Wait for confirmation before invoking.
+   Wait for confirmation before proceeding.
 
-2. **Classify into a bucket:**
+4. **Classify into a work type.** Use the tables below. Only surface work types appropriate for the current `version_stage`:
+   - **PROTOTYPE**: discovery and definition work only (net-new-feature, security-planning)
+   - **ALPHA**: add design, planning, core implementation (net-new-feature, bug-fix, external-integration, enhancement)
+   - **BETA+**: full catalog
 
-### strategy/ — why does this matter and to whom
+### strategy/ — why it matters and to whom
 
-| Work Type | Entry Phase | Skill to invoke |
+| Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Concept articulation | DISCOVER | `sweetclaude:documents-narrative-arc` |
-| Pain analysis | DISCOVER | `sweetclaude:product-discovery` |
-| Customer profiling | DISCOVER | `sweetclaude:product-user-personas` |
-| Competitive landscape | DISCOVER | `sweetclaude:product-competition` |
-| Research paper | DISCOVER | `sweetclaude:documents-academic-research` |
+| Concept articulation | DISCOVER, DEFINE, SHIP | `sweetclaude:documents-narrative-arc` |
+| Pain analysis | DISCOVER, DEFINE, SHIP | `sweetclaude:product-discovery` |
+| Customer profiling | DISCOVER, DEFINE, SHIP | `sweetclaude:product-user-personas` |
+| Competitive landscape | DISCOVER, DEFINE, SHIP | `sweetclaude:product-competition` |
+| Research / deep research | DISCOVER, DEFINE, SHIP | `sweetclaude:documents-academic-research` |
 | Meeting preparation | DEFINE | `sweetclaude:misc-meeting-prep` |
 | Market messaging | DEFINE | `sweetclaude:product-market-messaging` |
+| Security planning | DISCOVER, DEFINE, SHIP | `sweetclaude:security-planning` *(Plan 3)* |
+| Course correction | DISCOVER, DEFINE, TRIAGE, SHIP | `sweetclaude:course-correction` *(Plan 3)* |
 
 ### product/ — what to build and why
 
-| Work Type | Entry Phase | Skill to invoke |
+| Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Net-new product/feature | DISCOVER | `sweetclaude:product-discovery` |
-| Product positioning | DEFINE | `sweetclaude:product-positioning-statement` |
+| Net-new feature | DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:product-discovery` |
+| Enhancement / iteration | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:product-prd` |
 | Product brief | DEFINE | `sweetclaude:product-brief` |
 | Requirements / PRD | DEFINE | `sweetclaude:product-prd` |
 | User stories | PLAN | `sweetclaude:product-user-stories` |
 | Test specs from stories | PLAN | `sweetclaude:product-user-tdd-tests` |
-| UX flows | PLAN | `sweetclaude:design-user-flows` |
 | Scope change | any | `sweetclaude:product-manage-scope` |
 | Backlog management | any | `sweetclaude:product-backlog` |
-| Sprint planning | PLAN | `sweetclaude:product-sprint-plan` |
-| Market/technical research | DISCOVER | `sweetclaude:product-research` |
-| Feature comparison | DISCOVER | `sweetclaude:product-competition` |
+| Sprint / release planning | DEFINE, PLAN, SHIP | `sweetclaude:product-sprint-plan` |
+| Market / technical research | DISCOVER | `sweetclaude:product-research` |
+| Release planning | DEFINE, PLAN, SHIP | `sweetclaude:release-planning` *(Plan 3)* |
 
 ### design/ — how it's structured
 
-| Work Type | Entry Phase | Skill to invoke |
+| Work Type | Template Phases | Skill to invoke |
 |---|---|---|
 | System architecture | DESIGN | `sweetclaude:design-architecture` |
 | Technical specification | DESIGN | `sweetclaude:design-tech-spec` |
@@ -64,28 +75,82 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 | Data model / schema | DESIGN | `sweetclaude:design-data-model` |
 | API design | DESIGN | `sweetclaude:design-api-design` |
 | Record a decision | any | `sweetclaude:design-manage-decisions` |
+| Onboarding flow design | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:onboarding-flow-design` *(Plan 3)* |
 
 ### code/ — writing and verifying code
 
-| Work Type | Entry Phase | Skill to invoke |
+| Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| New feature | IMPLEMENT | `sweetclaude:code-feature` |
-| Feature enhancement | IMPLEMENT | `sweetclaude:code-issue` |
-| Bug fix | IMPLEMENT | `sweetclaude:code-issue` |
-| Chore / tech debt | IMPLEMENT | `sweetclaude:code-debt` |
+| Net-new feature (implement) | IMPLEMENT | `sweetclaude:code-feature` |
+| Bug fix | DIAGNOSE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-issue` |
+| Enhancement | IMPLEMENT | `sweetclaude:code-issue` |
+| Tech debt / refactor | DEFINE, SCOPE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
+| Hotfix | DIAGNOSE, IMPLEMENT, SHIP, POST-MORTEM | `sweetclaude:hotfix` *(Plan 3)* |
+| Security patch | DIAGNOSE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:security-patch` *(Plan 3)* |
+| Performance optimization | DIAGNOSE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-issue` |
+| External integration | DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:external-integration` *(Plan 3)* |
+| Technology migration | ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, CUTOVER, CLEANUP | `sweetclaude:code-debt` |
+| Data migration | ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
+| API deprecation | ASSESS, DEFINE, IMPLEMENT, VERIFY, SHIP, CLEANUP | `sweetclaude:code-feature` |
+| Dependency upgrade | ASSESS, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
+| Infrastructure change | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
+| Rollback / revert | DIAGNOSE, SHIP | `sweetclaude:code-issue` |
 | Testing | any | `sweetclaude:code-testing` |
 | Code / security / compliance review | VERIFY | `sweetclaude:code-review` |
+| Compliance requirement | ASSESS, DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-feature` |
 
-3. **Update state.** Write work type, bucket, and entry phase to `.sweetclaude/state/phase.yaml`:
+### operations/ — keeping it running
+
+| Work Type | Template Phases | Skill to invoke |
+|---|---|---|
+| Something broke | DIAGNOSE, SHIP, POST-MORTEM | `sweetclaude:something-broke` *(Plan 3)* |
+| Postmortem | DIAGNOSE, SHIP | `sweetclaude:postmortem` *(Plan 3)* |
+| Break-glass notes | DEFINE, SHIP | `sweetclaude:break-glass-notes` *(Plan 3)* |
+| Onboarding playbook | DEFINE, IMPLEMENT, SHIP | `sweetclaude:code-feature` |
+
+5. **Apply entry category behavior:**
+
+   **cold-start:**
+   > "Starting fresh — full discovery pipeline. No prerequisites to check. Let's go."
+   Proceed to invoke without any prerequisite checks.
+
+   **mid-project-planned:**
+   Check whether the work type has documented prerequisites in `config/workflow-templates.yaml` (look in `hard_gate_policy.hard_gate_tasks`). If any prerequisites are missing:
+   > "Before starting {work-type}, the usual prerequisites are: {list}. These look incomplete or missing. I've addressed this informally — or would you like to create any of them first?"
+   This is advisory only (soft gate). The user can proceed regardless.
+
+   **mid-project-reactive:**
+   > "Got it — moving fast. Tell me: {triage question specific to work type, e.g. 'what exactly is broken?' for bug/hotfix, or 'which version is affected?' for security patch}."
+   Skip all prerequisite checks. One triage question max before starting.
+
+6. **Update state.** Determine the `id` by reading `phase.yaml` for the last `active_work_item.id` and incrementing (WI-001 if none). Write `active_work_item` to `.sweetclaude/state/phase.yaml`:
+
    ```yaml
-   phase: IMPLEMENT
-   work_type: bug-fix
-   bucket: code
+   active_work_item:
+     id: WI-{NNN}
+     type: {work_type_key}
+     workflow: [{phases from table above, comma-separated}]
+     phase: {first phase in workflow}
+     title: "{one-sentence description from user's request}"
+     started: {YYYY-MM-DD today}
+     entry_category: {cold-start|mid-project-planned|mid-project-reactive}
    ```
 
-4. **Invoke.** Use the Skill tool to start the matched skill. Pass any relevant context from the user's description as the skill's starting input so the user does not have to repeat themselves.
+   Example for a bug fix entered reactively:
+   ```yaml
+   active_work_item:
+     id: WI-003
+     type: bug-fix
+     workflow: [DIAGNOSE, IMPLEMENT, VERIFY, SHIP]
+     phase: DIAGNOSE
+     title: "Login fails when email contains uppercase letters"
+     started: 2026-04-29
+     entry_category: mid-project-reactive
+   ```
 
-5. **Escalation.** At any point, if the work reveals deeper issues:
+7. **Invoke.** Use the Skill tool to start the matched skill. Pass any relevant context from the user's description as the skill's starting input so the user does not have to repeat themselves.
+
+8. **Escalation.** At any point, if the work reveals deeper issues:
    > "This {type} points to a deeper {gap}. Escalate to DISCOVER and investigate?"
 
 ## Backlog Guard
