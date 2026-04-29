@@ -1,0 +1,24 @@
+# .sweetclaude/state/phase.yaml
+# SweetClaude phase state — schema version 2
+# version_stage: where this major version is in its release lifecycle
+# active_work_item: what specific work is in progress right now
+schema_version: 2
+
+# Slow-moving. Declared by user. Rarely updated.
+# Values: PROTOTYPE | ALPHA | BETA | GA | SCALED | MAINTAINED
+version_stage: PROTOTYPE
+
+deference_level: collaborative  # collaborative | guided | autonomous
+project_type: net-new           # net-new | existing-code
+safety_snapshot: ~              # set by init if applicable
+
+# The work item currently in progress.
+# Set by find-skill when work begins. Cleared on SHIP.
+active_work_item:
+  id: ~                         # e.g. WI-001
+  type: ~                       # see config/workflow-templates.yaml for valid types
+  workflow: []                  # ordered phase list for this work type
+  phase: ~                      # current phase within the workflow
+  title: ~                      # short description of the work
+  started: ~                    # YYYY-MM-DD
+  entry_category: ~             # cold-start | mid-project-planned | mid-project-reactive
