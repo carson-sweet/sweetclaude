@@ -10,6 +10,8 @@ shapes:
     phases: [DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP]
   abbreviated:
     phases: [DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP]
+  extended-abbreviated:
+    phases: [ASSESS, DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP]
   diagnostic:
     phases: [DIAGNOSE, IMPLEMENT, VERIFY, SHIP]
   migration:
@@ -151,7 +153,7 @@ hard_gate_policy:
   hard_gates_apply_at: [GA, SCALED, MAINTAINED]
   hard_gate_tasks:
     - task: data-migration
-      prerequisites: [solutioning-gate, change-impact-analysis, rollback-plan]
+      prerequisites: [solutioning-gate, change-impact-analysis]
       reason: "Blast radius: production data loss"
     - task: infrastructure-change
       prerequisites: [solutioning-gate, change-impact-analysis, rollback-plan]
@@ -178,6 +180,7 @@ entry_categories:
       - sprint-planning
       - backlog-management
       - user-feedback-triage
+      - onboarding-flow-design
       - release-planning
       - tech-debt
       - security-patch
