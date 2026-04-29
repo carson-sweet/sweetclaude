@@ -1,0 +1,220 @@
+# config/workflow-templates.yaml
+# Defines the ordered phase sequence for each work type.
+# Five shapes: full-pipeline, abbreviated, diagnostic, migration, compressed.
+# Phase names: DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP,
+#              DIAGNOSE, ASSESS, SCOPE, TRIAGE, CUTOVER, CLEANUP, POST-MORTEM
+schema_version: 1
+
+shapes:
+  full-pipeline:
+    phases: [DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP]
+  abbreviated:
+    phases: [DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP]
+  diagnostic:
+    phases: [DIAGNOSE, IMPLEMENT, VERIFY, SHIP]
+  migration:
+    phases: [ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, CUTOVER, CLEANUP]
+  compressed:
+    phases: [DIAGNOSE, IMPLEMENT, SHIP, POST-MORTEM]
+
+work_types:
+
+  net-new-feature:
+    shape: full-pipeline
+    phases: [DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [cold-start, mid-project-planned]
+    notes: "Full SDLC. Use when problem space is unknown or unvalidated."
+
+  external-integration:
+    shape: full-pipeline
+    phases: [DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [cold-start, mid-project-planned]
+    notes: "DISCOVER = understand external API, auth model, rate limits, data contracts, failure modes."
+
+  course-correction:
+    shape: full-pipeline
+    phases: [DISCOVER, DEFINE, TRIAGE]
+    entry_categories: [mid-project-planned, mid-project-reactive]
+    notes: "Ends at TRIAGE instead of SHIP. TRIAGE spawns new work items. Can be triggered deliberately (accumulated signals) or reactively (post-incident)."
+
+  security-planning:
+    shape: full-pipeline
+    phases: [DISCOVER, DEFINE, SHIP]
+    entry_categories: [cold-start, mid-project-planned]
+    notes: "SHIP = publish roadmap document. No code produced."
+
+  enhancement:
+    shape: abbreviated
+    phases: [DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned]
+    notes: "Use when problem space is known. Skip discovery."
+
+  tech-debt:
+    shape: abbreviated
+    phases: [DEFINE, SCOPE, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned]
+    notes: "SCOPE = lock existing behavior with tests before touching code."
+
+  compliance-requirement:
+    shape: extended-abbreviated
+    phases: [ASSESS, DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned, mid-project-reactive]
+    notes: "VERIFY includes audit evidence generation. Can be triggered externally (customer ask, legal) or proactively from security-planning."
+
+  infrastructure-change:
+    shape: abbreviated
+    phases: [DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned]
+    hard_gates:
+      DESIGN: "Solutioning gate required at GA+. Rollback plan must exist before DESIGN completes."
+    notes: "Hard gate at DESIGN for GA+ projects."
+
+  onboarding-flow-design:
+    shape: abbreviated
+    phases: [DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned]
+    notes: "Produces onboarding flow + playbook update."
+
+  release-planning:
+    shape: abbreviated
+    phases: [DEFINE, PLAN, SHIP]
+    entry_categories: [mid-project-planned]
+    notes: "Collapses to three phases. SHIP = publish release artifact and changelog."
+
+  bug-fix:
+    shape: diagnostic
+    phases: [DIAGNOSE, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned, mid-project-reactive]
+    notes: "DIAGNOSE = reproduction case + root cause. Fix targets root cause, not symptom."
+
+  security-patch:
+    shape: diagnostic
+    phases: [DIAGNOSE, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned, mid-project-reactive]
+    hard_gates:
+      VERIFY: "Security review mandatory before SHIP. No soft bypass."
+    notes: "Expedited ship. VERIFY is a hard gate. Coordinated disclosure deadline may apply."
+
+  performance-optimization:
+    shape: diagnostic
+    phases: [DIAGNOSE, DESIGN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned]
+    notes: "DIAGNOSE = establish baseline benchmark and identify bottleneck. VERIFY = benchmark again."
+
+  rollback-revert:
+    shape: diagnostic
+    phases: [DIAGNOSE, SHIP]
+    entry_categories: [mid-project-reactive]
+    post_ship_spawn: POST-MORTEM
+    notes: "Collapses to two phases. No implementation — reverting an artifact. Spawns POST-MORTEM."
+
+  technology-migration:
+    shape: migration
+    phases: [ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, CUTOVER, CLEANUP]
+    entry_categories: [mid-project-planned]
+    hard_gates:
+      DESIGN: "Solutioning gate required at GA+."
+      CUTOVER: "Human decision required. Explicit confirmation logged to decision log. No soft bypass."
+    notes: "Old and new systems run in parallel until CUTOVER. CLEANUP removes old system."
+
+  data-migration:
+    shape: migration
+    phases: [ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned]
+    hard_gates:
+      VERIFY: "Integrity checks mandatory (row counts, checksums, sample records). No soft bypass."
+      ASSESS: "Solutioning gate + Change impact analysis required at GA+."
+    notes: "No CUTOVER phase. VERIFY = data integrity reconciliation."
+
+  api-deprecation:
+    shape: migration
+    phases: [ASSESS, DEFINE, IMPLEMENT, VERIFY, SHIP, CLEANUP]
+    entry_categories: [mid-project-planned]
+    notes: "CLEANUP fires at sunset date, not immediately after SHIP."
+
+  dependency-upgrade:
+    shape: migration
+    phases: [ASSESS, IMPLEMENT, VERIFY, SHIP]
+    entry_categories: [mid-project-planned, mid-project-reactive]
+    notes: "Compressed migration. ASSESS = review changelog for breaking changes."
+
+  hotfix:
+    shape: compressed
+    phases: [DIAGNOSE, IMPLEMENT, SHIP, POST-MORTEM]
+    entry_categories: [mid-project-reactive]
+    post_ship_spawn: POST-MORTEM
+    notes: "Speed over ceremony. POST-MORTEM is required after SHIP, not optional."
+
+hard_gate_policy:
+  soft_gate_escape: "I've addressed this informally [optional note] — proceed."
+  hard_gate_override: "User must explicitly confirm risk acceptance. Override logged to decision log."
+  hard_gates_apply_at: [GA, SCALED, MAINTAINED]
+  hard_gate_tasks:
+    - task: data-migration
+      prerequisites: [solutioning-gate, change-impact-analysis, rollback-plan]
+      reason: "Blast radius: production data loss"
+    - task: infrastructure-change
+      prerequisites: [solutioning-gate, change-impact-analysis, rollback-plan]
+      reason: "Blast radius: outage, data loss"
+    - task: technology-migration
+      prerequisites: [solutioning-gate, change-impact-analysis, parallel-run-plan]
+      reason: "Blast radius: production instability"
+    - task: security-patch
+      prerequisites: [security-review-post-fix]
+      reason: "Cannot ship an unreviewed security fix"
+
+entry_categories:
+  cold-start:
+    description: "New project, no prior context."
+    behavior: "Run full discovery pipeline. No prerequisites checked."
+    entry_tasks: [net-new-feature, external-integration, security-planning, course-correction]
+
+  mid-project-planned:
+    description: "Continuing work, following the pipeline."
+    behavior: "Classify → check prerequisites → flag gaps as advisory → offer to create missing artifacts → proceed."
+    entry_tasks:
+      - net-new-feature
+      - enhancement
+      - sprint-planning
+      - backlog-management
+      - user-feedback-triage
+      - release-planning
+      - tech-debt
+      - security-patch
+      - performance-optimization
+      - external-integration
+      - technology-migration
+      - api-deprecation
+      - data-migration
+      - infrastructure-change
+      - compliance-requirement
+      - course-correction
+
+  mid-project-reactive:
+    description: "Something happened that demands immediate response."
+    behavior: "Skip all prerequisite checks. Triage questions only. Proceed immediately. Offer missing prerequisites as optional parallel work."
+    entry_tasks:
+      - bug-fix
+      - hotfix
+      - something-broke
+      - rollback-revert
+      - security-patch
+      - user-feedback-triage
+      - course-correction
+
+progressive_disclosure:
+  PROTOTYPE:
+    visible_domains: [discovery, definition]
+  ALPHA:
+    visible_domains: [discovery, definition, design, planning, core-implementation]
+    core_implementation: [net-new-feature, bug-fix, external-integration]
+  BETA:
+    visible_domains: [discovery, definition, design, planning, implementation, verification, documentation, release-planning]
+  GA:
+    visible_domains: [all]
+  SCALED:
+    visible_domains: [all]
+    surface_prominently: [operations]
+  MAINTAINED:
+    visible_domains: [bug-fix, security-patch, dependency-upgrade, compliance-requirement, break-glass-notes, documentation]
+    de_emphasize: [feature-work]
