@@ -103,7 +103,7 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 **Ask what problems you can hand to SweetClaude.** Type: "What kinds of problems or use cases can I hand to SweetClaude?" This surfaces capabilities you might not expect — meeting prep, competitive analysis, academic paper writing, document organization, pain thesis development.
 
-**Ask how SweetClaude is different.** Type: "How is SweetClaude different from other Claude Code coding frameworks and skills?" Claude explains what makes it unique: the strategic and product layers that happen before code, the structured pain thesis, the five domain buckets, the end-to-end lifecycle coverage.
+**Ask how SweetClaude is different.** Type: "How is SweetClaude different from other Claude Code coding frameworks and skills?" Claude explains what makes it unique: the strategic and product layers that happen before code, the structured pain thesis, the six domain buckets, the end-to-end lifecycle coverage.
 
 **Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
 
