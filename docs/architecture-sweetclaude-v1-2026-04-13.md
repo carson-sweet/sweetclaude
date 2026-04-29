@@ -2,7 +2,7 @@
 
 **Author:** Carson Sweet
 **Status:** Draft
-**Revised:** 2026-04-29 — reflects native skills redesign (flat naming), Protocol Guardian, John Wick mode, and BMAD removal
+**Revised:** 2026-04-29 — reflects phase/workflow separation (schema v2); see also: native skills redesign, Protocol Guardian, John Wick mode, BMAD removal
 **PRD:** `docs/prd-sweetclaude-v1-2026-04-12.md`
 **Product Brief:** `docs/product-brief-sweetclaude-v1-2026-04-12.md`
 
@@ -24,6 +24,31 @@ These ten constraints shape every design decision:
 | 8 | Persistent project memory | Decisions, assumptions, traceability must outlive sessions | Structured markdown in `.sweetclaude/`, committed at checkpoints |
 | 9 | Phase dwelling over rushing | User controls pace; system never pushes advancement | No unprompted "move on?" — all skills written to dwell |
 | 10 | Ripple-effect management | Changes propagate across artifacts; nothing falls out of sync | Dependency awareness across docs, code, tests, specs |
+
+---
+
+## Phase / Workflow Model (Schema v2)
+
+Phase state has two orthogonal dimensions tracked in `.sweetclaude/state/phase.yaml`.
+
+**Dimension 1 — `version_stage`:** Where is this major version in its release lifecycle? Slow-moving, declared by the user. Values: `PROTOTYPE → ALPHA → BETA → GA → SCALED → MAINTAINED`. Advances rarely; a v2 rewrite resets it. Controls progressive disclosure of tasks (PROTOTYPE sees only discovery/definition; GA sees the full catalog).
+
+**Dimension 2 — `active_work_item`:** What specific work is in progress right now? Fast-moving, type-driven. Contains:
+- `type` — one of 19 work types (net-new-feature, bug-fix, hotfix, technology-migration, etc.)
+- `workflow` — the ordered phase sequence for this work type (set from `config/workflow-templates.yaml`)
+- `phase` — the current step within that sequence
+- `entry_category` — how the work was initiated (cold-start / mid-project-planned / mid-project-reactive)
+
+**Five workflow shapes** (from `config/workflow-templates.yaml`):
+- `full-pipeline`: DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP
+- `abbreviated`: DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP
+- `diagnostic`: DIAGNOSE → IMPLEMENT → VERIFY → SHIP
+- `migration`: ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → CUTOVER → CLEANUP
+- `compressed`: DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM
+
+**Soft/hard gate policy:** Prerequisites are advisory by default ("I've addressed this informally — proceed"). Hard gates (⚠️) apply to migration-class work at GA+ and security patches — cannot be soft-bypassed; override requires explicit risk acceptance logged to the decision log.
+
+See `config/workflow-templates.yaml` for the full work type catalog and `rules/phase-gates.md` for all phase × work type exit criteria.
 
 ---
 
@@ -199,7 +224,7 @@ Skills use a flat naming convention — all files live directly under `skills/sw
 ```
 <project>/.sweetclaude/
 ├── state/
-│   ├── phase.yaml                    # Current phase, work type, deference level
+│   ├── phase.yaml                    # Schema v2: version_stage + active_work_item (type, phase, workflow)
 │   ├── decision-log.md               # What was decided and why, per phase
 │   ├── assumption-register.md        # Active assumptions, confirmed/rejected
 │   ├── scope-changes.md              # Scope change history with rationale
@@ -240,9 +265,9 @@ Skills use a flat naming convention — all files live directly under `skills/sw
 ### Component 1: Master Skill — Phase Router + Interaction Model
 **Purpose:** The entry point for every SweetClaude session. Reads phase state, determines deference level, surfaces appropriate skills, manages conversation branches.
 **Responsibilities:**
-- Read `state/phase.yaml` to determine current phase and work type
+- Read `state/phase.yaml` to determine `version_stage` (lifecycle stage) and `active_work_item.phase` (current work step)
 - Ask deference level at session start (or read from state)
-- Surface only skills relevant to current phase (from `phase-skills.yaml`)
+- Surface only skills relevant to current `version_stage` and work type (from `phase-skills.yaml`, progressive disclosure per `workflow-templates.yaml`)
 - Track conversation branches for detour management
 - Enforce phase dwelling — never prompt for advancement
 - Trigger pre-checkpoint decision summaries at phase transitions
@@ -253,8 +278,8 @@ Skills use a flat naming convention — all files live directly under `skills/sw
 ### Component 2: Find-Skill / Routing
 **Purpose:** Classifies work by type and routes to the right starting skill.
 **Responsibilities:**
-- Ask or detect work type and classify into product, design, code, or documents
-- Route to appropriate skills for the matched domain
+- Classify incoming work into one of three entry categories (cold-start, mid-project-planned, mid-project-reactive)
+- Select workflow template from `config/workflow-templates.yaml` for the work type, set `active_work_item` in phase.yaml
 - Detect mid-stream work-type shifts
 - Handle escalation when deeper issues surface
 **FRs addressed:** FR-005, FR-025
