@@ -20,9 +20,8 @@ Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Extract:
 - `active_work_item.phase` — current phase within this work item's workflow
 - `active_work_item.workflow` — ordered list of phases for this work item (e.g. [DIAGNOSE, IMPLEMENT, VERIFY, SHIP])
 - `active_work_item.title` — short description of the work
-- `active_work_item.entry_category` — how work was initiated
+- `active_work_item.entry_category` — how work was initiated (cold-start / mid-project-planned / mid-project-reactive)
 - `deference_level`
-- Any pending detour
 
 ### Step 2: Read recent activity
 
@@ -34,11 +33,16 @@ Read `.sweetclaude/state/phase.yaml` from `.sweetclaude/`. Extract:
    - Incomplete stories in `.sweetclaude/stories/`
    - Brainstorm outputs in `.sweetclaude/brainstorm/`
    - Strategy artifacts in `strategy/`
-5. **Active milestones** — scan `docs/milestones/MS-*.md`. For each with `**Status:** active`, compute the `n/N criteria met` count from Measuring-success checkboxes.
+5. **Active milestones** — scan `docs/milestones/MS-*.md` if the directory exists. For each with `**Status:** active`, compute the `n/N criteria met` count from Measuring-success checkboxes. If the directory does not exist, omit the milestones section from the output.
 
 ### Step 3: Present status
 
-If `active_work_item` fields are set (type, phase, workflow are not `~`), use this template:
+If the `active_work_item` key is present AND type, phase, and workflow are not `~` or null, use this template.
+
+Compute before rendering:
+- **N** = 1-based position of `active_work_item.phase` within `active_work_item.workflow` (first phase = 1)
+- **M** = total number of phases in `active_work_item.workflow`
+- **Workflow line** = the full phase list as arrows, with the current phase wrapped in `*asterisks*` inline
 
 ```
 SweetClaude Status — {project name}
@@ -46,9 +50,8 @@ SweetClaude Status — {project name}
 
 Version stage:  {version_stage}
 Work item:      {active_work_item.title} [{active_work_item.type}]
-Phase:          {active_work_item.phase}  (step N of M in workflow)
-Workflow:       {phase1} → {phase2} → ... → {phaseN}
-                (current: {active_work_item.phase highlighted with *asterisks*})
+Phase:          {active_work_item.phase}  (step N of M)
+Workflow:       {phase1} → *{current_phase}* → {remaining_phases}
 Deference:      {deference_level}
 
 Done:
@@ -62,7 +65,7 @@ In progress:
 Active milestones:
   - {MS-XXX Title        n/N criteria met}
   - {MS-XXX Title        n/N criteria met — ready to complete if all met}
-  (omit this section if no milestones are active)
+  (omit this section if no milestones are active or if docs/milestones/ does not exist)
 
 Next:
   → {the logical next step based on phase, open artifacts, and exit criteria}
@@ -71,7 +74,7 @@ Recent activity:
   {last 3-5 commits, one line each}
 ```
 
-If `active_work_item` is absent or all fields are `~`, use this template instead:
+If the `active_work_item` key is absent OR any of type, phase, workflow is `~` or null, use this template instead:
 
 ```
 SweetClaude Status — {project name}
@@ -87,7 +90,9 @@ Recent activity:
 
 ### Step 4: Suggest action
 
-Based on the status, propose one concrete next action:
+Based on the status, propose one concrete next action. Tailor it using `active_work_item.entry_category`:
+- **cold-start** or **mid-project-planned**: suggest the next phase skill or artifact to produce
+- **mid-project-reactive**: lead with urgency — surface the resolution skill or escalation path first
 
 > "Next step: {action}. Run `/sweetclaude:{skill}` to do that, or `/sweetclaude:next-steps` to walk through the pipeline."
 
