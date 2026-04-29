@@ -52,7 +52,7 @@ SweetClaude Status — {project name}
 ═══════════════════════════════════
 
 Version stage:  {version_stage}
-Work item:      {active_work_item.title} [{active_work_item.type}]
+Work item:      [{active_work_item.id}] {active_work_item.title} [{active_work_item.type}]
 Phase:          {active_work_item.phase}  (step {step_N} of {step_M})
 Workflow:       {all phases joined by →, current in *asterisks*}
 Deference:      {deference_level}

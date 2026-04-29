@@ -115,8 +115,9 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
    Proceed to invoke without any prerequisite checks.
 
    **mid-project-planned:**
-   Check whether the work type has documented prerequisites in `config/workflow-templates.yaml` (look in `hard_gate_policy.hard_gate_tasks`). If any prerequisites are missing:
-   > "Before starting {work-type}, the usual prerequisites are: {list}. These look incomplete or missing. I've addressed this informally — or would you like to create any of them first?"
+   Check for prerequisites by reading `config/workflow-templates.yaml` and searching the `hard_gate_policy.hard_gate_tasks` list for an entry where the `task` field matches the current work type key. If a matching entry is found, its `prerequisites` list contains the required artifacts. If no matching entry exists, no prerequisites apply — skip the check.
+   If prerequisites are found and any appear missing:
+   > "Before starting {work-type}, the usual prerequisites are: {list}. These look incomplete or missing. You can proceed anyway — or would you like to create any of them first?"
    This is advisory only (soft gate). The user can proceed regardless.
 
    **mid-project-reactive:**
@@ -140,7 +141,9 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
    **If not Plan 3:** Proceed to step 7.
 
-7. **Update state and invoke.** Write `active_work_item` to `.sweetclaude/state/phase.yaml`:
+7. **Update state and invoke.** Determine the next `id`: read the current `active_work_item.id` from phase.yaml (e.g., `WI-003`), parse the number, and increment by 1. If no existing id, start at `WI-001`. Format as `WI-{NNN}` with three zero-padded digits.
+
+   Write `active_work_item` to `.sweetclaude/state/phase.yaml`:
 
    ```yaml
    active_work_item:
