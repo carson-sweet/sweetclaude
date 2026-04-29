@@ -34,14 +34,20 @@ Phase state has two orthogonal dimensions tracked in `.sweetclaude/state/phase.y
 **Dimension 1 — `version_stage`:** Where is this major version in its release lifecycle? Slow-moving, declared by the user. Values: `PROTOTYPE → ALPHA → BETA → GA → SCALED → MAINTAINED`. Advances rarely; a v2 rewrite resets it. Controls progressive disclosure of tasks (PROTOTYPE sees only discovery/definition; GA sees the full catalog).
 
 **Dimension 2 — `active_work_item`:** What specific work is in progress right now? Fast-moving, type-driven. Contains:
+- `id` — monotonic identifier (WI-001, WI-002, …); sourced from `last_work_item_id` in phase.yaml
 - `type` — one of 19 work types (net-new-feature, bug-fix, hotfix, technology-migration, etc.)
 - `workflow` — the ordered phase sequence for this work type (set from `config/workflow-templates.yaml`)
 - `phase` — the current step within that sequence
+- `title` — short description of the work item
+- `started` — date work began (YYYY-MM-DD)
 - `entry_category` — how the work was initiated (cold-start / mid-project-planned / mid-project-reactive)
 
-**Five workflow shapes** (from `config/workflow-templates.yaml`):
+**`last_work_item_id`:** Top-level field in phase.yaml (alongside `active_work_item`). Persists across work item completions — the next work item increments from it. Ensures IDs are monotonically assigned even when the active work item changes.
+
+**Six workflow shapes** (from `config/workflow-templates.yaml`):
 - `full-pipeline`: DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP
 - `abbreviated`: DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP
+- `extended-abbreviated`: ASSESS → DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP
 - `diagnostic`: DIAGNOSE → IMPLEMENT → VERIFY → SHIP
 - `migration`: ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → CUTOVER → CLEANUP
 - `compressed`: DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM
@@ -279,7 +285,10 @@ Skills use a flat naming convention — all files live directly under `skills/sw
 **Purpose:** Classifies work by type and routes to the right starting skill.
 **Responsibilities:**
 - Classify incoming work into one of three entry categories (cold-start, mid-project-planned, mid-project-reactive)
-- Select workflow template from `config/workflow-templates.yaml` for the work type, set `active_work_item` in phase.yaml
+- Apply version_stage progressive disclosure — surfaces only work types valid for the current lifecycle stage
+- Fire Plan 3 guard before writing state: if the matched skill is not yet built, offer fallback or defer (no orphaned state)
+- Assign monotonic work item ID by reading and incrementing `last_work_item_id`; write both `last_work_item_id` and `active_work_item` to phase.yaml
+- Select workflow template from `config/workflow-templates.yaml` for the work type
 - Detect mid-stream work-type shifts
 - Handle escalation when deeper issues surface
 **FRs addressed:** FR-005, FR-025
@@ -607,7 +616,7 @@ code:
 **Validation:** Test init + TDD cycle on Python, TypeScript, Go projects.
 
 ### NFR-003: Session Recovery
-**Solution:** `.sweetclaude/state/phase.yaml` contains current phase, work type, deference level. Decision log, assumption register committed at every phase transition. Master skill reads state on session start and resumes.
+**Solution:** `.sweetclaude/state/phase.yaml` (schema v2) contains `version_stage`, `last_work_item_id`, and `active_work_item` (id, type, workflow, current phase, title, started, entry_category), plus deference level. Decision log and assumption register committed at every phase transition. Master skill reads state on session start and resumes.
 **Validation:** Kill session mid-phase, restart, verify resume from last checkpoint.
 
 ### NFR-004: Installation Simplicity
@@ -759,4 +768,4 @@ Supporting infrastructure also shipped:
 
 ---
 
-*Originally generated 2026-04-13. Revised 2026-04-29 to reflect native skills redesign, Protocol Guardian, and John Wick mode.*
+*Originally generated 2026-04-13. Revised 2026-04-29 to reflect phase/workflow separation (schema v2), native skills redesign, Protocol Guardian, and John Wick mode.*

@@ -2,7 +2,7 @@
 
 Version 1 — 2026-04-14
 
-Every document the SweetClaude pipeline produces across the 7-phase lifecycle. **Bold** items are always produced for that phase. Regular items are conditional on project type or user choice.
+Every artifact the SweetClaude pipeline produces. Work items follow different workflows depending on type (bug-fix, net-new-feature, tech-debt, hotfix, etc.) — phases vary by work type. **Bold** items are always produced for that phase. Regular items are conditional on project type or user choice.
 
 ---
 
@@ -10,7 +10,7 @@ Every document the SweetClaude pipeline produces across the 7-phase lifecycle. *
 
 | File | Format | Description |
 |------|--------|-------------|
-| **`.sweetclaude/state/phase.yaml`** | YAML | Current phase, work type, deference level, project type |
+| **`.sweetclaude/state/phase.yaml`** | YAML | Schema v2: `version_stage` (lifecycle stage), `last_work_item_id` (monotonic ID counter), `active_work_item` (id, type, workflow, phase, title, started, entry_category), deference level, project type |
 | **`.sweetclaude/state/decision-log.md`** | Markdown | Numbered decisions with context, options considered, rationale |
 | **`.sweetclaude/state/assumption-register.md`** | Markdown | Active, confirmed, and rejected assumptions with evidence |
 | **`.sweetclaude/state/improvement-register.md`** | Markdown | Process feedback — what's working, what to change, check-in log |
