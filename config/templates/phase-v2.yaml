@@ -14,6 +14,8 @@ safety_snapshot: ~              # set by init if applicable
 
 # The work item currently in progress.
 # Set by find-skill when work begins. Cleared on SHIP.
+last_work_item_id: ~            # persists across work item lifecycle for monotonic ID assignment
+
 active_work_item:
   id: ~                         # e.g. WI-001
   type: ~                       # see config/workflow-templates.yaml for valid types
