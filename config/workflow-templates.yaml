@@ -219,5 +219,6 @@ progressive_disclosure:
     visible_buckets: [all]
     surface_prominently: [operations]
   MAINTAINED:
+    visible_buckets: [code, operations]
     available_work_types: [bug-fix, security-patch, dependency-upgrade, compliance-requirement]
     de_emphasize: [feature-work]
