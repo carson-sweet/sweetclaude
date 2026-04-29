@@ -161,6 +161,8 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
    Example for a bug fix entered reactively:
    ```yaml
+   last_work_item_id: WI-003
+
    active_work_item:
      id: WI-003
      type: bug-fix
