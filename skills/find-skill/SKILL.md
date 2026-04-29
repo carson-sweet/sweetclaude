@@ -147,6 +147,8 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
    Write `active_work_item` to `.sweetclaude/state/phase.yaml`:
 
    ```yaml
+   last_work_item_id: WI-{NNN}
+
    active_work_item:
      id: WI-{NNN}
      type: {work_type_key}
