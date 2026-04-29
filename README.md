@@ -7,11 +7,13 @@
 <br>
 <br>
 
+
+
 # SweetClaude
 
 An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
-SweetClaude is a Claude Code plugin with 45 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude is a Claude Code plugin with 49 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
 Built by an enterprise CTO/CISO turned solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
 
@@ -21,7 +23,7 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 **Strategy** — Academic research, stakeholder meeting preparation, narrative arc building, and market messaging. SweetClaude helps you craft external communications by audience and build a knowledge graph of strategic claims and evidence.
 
-**Product** — A discovery-first pipeline: product-discovery (three depth levels from quick intent to full pain thesis), competitive analysis via product-competition, user persona definition with product-user-personas, positioning, product briefs, PRDs with testable acceptance criteria, user stories, and scope management.
+**Product** — A discovery-first pipeline: product-discovery (three depth levels from quick intent to full pain thesis) asks what data the product handles, where users are, and who they are — deriving applicable compliance frameworks (GDPR, HIPAA, PCI DSS, COPPA) and writing a compliance context file that flows through architecture, tech spec, and final code review. Also covers competitive analysis, user persona definition, positioning, product briefs, PRDs with testable acceptance criteria, user stories, and scope management.
 
 **Design** — System architecture, technical specifications, UX flows, data models, API design, service boundaries, infrastructure planning. Every design decision is recorded with context and rationale so future sessions understand why things are the way they are.
 
@@ -66,7 +68,7 @@ The installer:
 - Wires TDD enforcement hooks into `settings.json`
 - Generates `uninstall.sh` and `restore-config.sh` for clean removal
 
-After install, all 45 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
+After install, all 49 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
 
 #### Strategy Skills Only
 
@@ -112,6 +114,8 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 **Run a competitive landscape scan.** In any project, run `/sweetclaude:product-competition` and describe your space. SweetClaude researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond init.
 
 **Get a code review.** On any project with code, run `/sweetclaude:code-review`. It reads your recent changes and gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
+
+**Run an autonomous end-to-end pipeline.** If you have completed product discovery (personas, tasks, constraints), run `/sweetclaude:john-wick`. It executes the full product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. Human pause points are pre-defined and rare — the pipeline pauses at interactive gates, shows its work, waits for explicit approval, and resumes where it left off across sessions. If the prerequisites aren't met, it tells you exactly what to complete first.
 
 **Set up semantic search.** Run `/sweetclaude:document-corpus` in any project. It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
 
@@ -197,11 +201,13 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
 | `/sweetclaude:usage` | View, enable, or disable local usage tracking |
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
+| `/sweetclaude:guardian-on` | Enable Protocol Guardian — enforces skill invocations and protocol steps for the session |
+| `/sweetclaude:guardian-off` | Disable Protocol Guardian |
 
 ### Product
 | Command | What it does |
 |---|---|
-| `/sweetclaude:product-discovery` | Establish what is being built, for whom, and why. Three depth levels from quick intent to full pain thesis. |
+| `/sweetclaude:product-discovery` | Establish what is being built, for whom, and why. Three depth levels from quick intent to full pain thesis. Collects compliance context (data categories, geography, user type) and derives applicable frameworks — written to `.sweetclaude/state/compliance-context.yaml` for use throughout the pipeline. |
 | `/sweetclaude:product-competition` | Competitive analysis at three depth levels — survey, matrix comparison, or feature-deep analysis. |
 | `/sweetclaude:product-user-personas` | Define users — who they are, what they need to do, and what success looks like. Includes triggers and deal-breakers. |
 | `/sweetclaude:product-positioning-statement` | For/who/that/unlike positioning |
@@ -226,8 +232,8 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | Command | What it does |
 |---|---|
 | `/sweetclaude:design-user-flows` | Convert user stories into UX/UI flows — step-by-step paths through the interface. |
-| `/sweetclaude:design-architecture` | System architecture |
-| `/sweetclaude:design-tech-spec` | Technical specification |
+| `/sweetclaude:design-architecture` | System architecture — reads compliance context from discovery and surfaces each derived framework as a hard requirement throughout the architecture document |
+| `/sweetclaude:design-tech-spec` | Technical specification — enforces compliance requirements from architecture state (e.g. confirms chosen providers meet HIPAA BAA or SOC 2 requirements) |
 | `/sweetclaude:design-ux` | UX design and wireframes |
 | `/sweetclaude:design-solutioning-gate` | Validate design before implementation |
 | `/sweetclaude:design-change-impact-analysis` | Trace blast radius before changes |
@@ -258,9 +264,15 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:code-testing` | Run tests, mutation, security review, and/or PR pre-check |
 | `/sweetclaude:code-review` | Code, security, and compliance review |
 
+### Autonomous Pipeline
+| Command | What it does |
+|---|---|
+| `/sweetclaude:john-wick` | Fully autonomous, resumable, multi-session SDLC pipeline — from product definition through PR, with pre-defined human gates |
+| `/sweetclaude:john-wick-checkin` | Phase check-in subagent (invoked internally by John Wick — available standalone for drift detection) |
+
 ## How It Works
 
-SweetClaude is a Claude Code plugin. After running the installer, all 45 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. After running the installer, all 49 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 
@@ -282,6 +294,10 @@ SweetClaude is a Claude Code plugin. After running the installer, all 45 skills 
 **Auto version bumping.** An opt-in PostToolUse hook on Bash detects successful `git commit` commands, reads the conventional commit prefix, and bumps version files automatically. Enable it by creating `.sweetclaude/version-bump.yaml` listing which files to update. The hook commits the bump with a `chore(version):` prefix to prevent loops.
 
 **Self-updating.** `/sweetclaude:update-sweetclaude` fetches the latest SweetClaude from GitHub (or a local repo), shows what changed, syncs to all installed locations, surfaces new capabilities that landed in the update, and checks whether project artifacts need migration for new schema fields.
+
+**Protocol Guardian.** An optional enforcement layer that catches protocol drift mid-session. When enabled via `/sweetclaude:guardian-on`, it monitors skill invocations, TDD discipline, and artifact saves — and blocks on violations rather than issuing warnings. Disable at any time with `/sweetclaude:guardian-off`. SweetClaude will also proactively offer to enable it if it detects repeated protocol skipping.
+
+**John Wick mode.** A fully autonomous, resumable pipeline that runs the complete product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. State is persisted in `.sweetclaude/state/john-wick.yaml` so the pipeline survives session boundaries and can resume exactly where it paused. Human gate points are pre-defined and rare: PRD approval, design change approval, and significant test failure triage. Past those gates, John Wick runs without stopping. A hard scope guardrail prevents autonomous pipelines from growing beyond what can be reasoned about clearly: more than 8 epics or 6 external dependencies triggers a warning and decomposition recommendation.
 
 **Language agnostic.** SweetClaude discovers your project's language, framework, test runner, and build tools automatically. It works with TypeScript, Python, Go, Rust, Java, or anything else.
 
