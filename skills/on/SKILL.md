@@ -148,9 +148,9 @@ Run if the user wants it. Otherwise proceed.
 ### Step 6-N: Hand off
 
 Tell the user:
-> "The strategic foundation is set. Next: product definition (product brief, PRD), then design, then implementation. Run `/sweetclaude:next-steps` to continue step by step, or pick a command from `/sweetclaude:help`."
+> "The strategic foundation is set. Next: product definition (product brief, PRD), then design, then implementation. Run `/sweetclaude:go` to continue, or `/sweetclaude:help` to see what's possible."
 
-Do not auto-invoke next-steps. The user decides when to continue.
+Do not auto-invoke anything. The user decides when to continue.
 
 ---
 
@@ -237,7 +237,7 @@ If the user mentioned a problem in Step 4-E, propose a first action:
 > "You mentioned {concern}. First step: {specific action with a specific command}. Start there?"
 
 If no specific concern:
-> "Setup complete. Run `/sweetclaude:status` to see the full picture, `/sweetclaude:next-steps` to work through the pipeline, or `/sweetclaude:help` for all commands."
+> "Setup complete. Run `/sweetclaude:go` to start working, `/sweetclaude:status` to see the full picture, or `/sweetclaude:help` to learn what's possible."
 
 ---
 
