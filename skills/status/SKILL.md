@@ -95,7 +95,7 @@ Recent activity:
 
 Framework:
   SweetClaude:  v{installed_version}{" → v{latest_version} available — run /sweetclaude:update" if update_available else " (up to date)"}
-  RAG corpus:   {if corpus/canonical/ exists: "{canonical_count} canonical docs · last indexed {rag_last_indexed} · {rag_indexed_count} files indexed" else "not configured — run /sweetclaude:document-corpus to set up"}
+  RAG corpus:   {if corpus/canonical/ exists: "{canonical_count} canonical docs · last indexed {rag_last_indexed} · {rag_indexed_count} files indexed" else "not configured"}
 ```
 
 If the `active_work_item` key is absent OR any of type, phase, workflow is `~` or null, use this template instead:
@@ -105,7 +105,7 @@ SweetClaude Status — {project name}
 ═══════════════════════════════════
 
 Version stage:  {version_stage}
-Work item:      (none — run /sweetclaude:find-skill to start one)
+Work item:      (none)
 Deference:      {deference_level}
 
 Recent activity:
@@ -113,18 +113,20 @@ Recent activity:
 
 Framework:
   SweetClaude:  v{installed_version}{" → v{latest_version} available — run /sweetclaude:update" if update_available else " (up to date)"}
-  RAG corpus:   {if corpus/canonical/ exists: "{canonical_count} canonical docs · last indexed {rag_last_indexed} · {rag_indexed_count} files indexed" else "not configured — run /sweetclaude:document-corpus to set up"}
+  RAG corpus:   {if corpus/canonical/ exists: "{canonical_count} canonical docs · last indexed {rag_last_indexed} · {rag_indexed_count} files indexed" else "not configured"}
 ```
 
 ### Step 4: Suggest action
 
-If no active work item (idle template was used): suggest running `/sweetclaude:find-skill` to start one. Skip entry_category tailoring.
+If no active work item (idle template was used): suggest running `/sweetclaude:go` to pick up the next item.
 
-If an active work item exists, propose one concrete next action. Tailor it using `active_work_item.entry_category`:
-- **cold-start** or **mid-project-planned**: suggest the next phase skill or artifact to produce
-- **mid-project-reactive**: lead with urgency — surface the resolution skill or escalation path first
+If an active work item exists, propose one concrete next action in plain language. Tailor it using `active_work_item.entry_category`:
+- **cold-start** or **mid-project-planned**: describe the next artifact or milestone to produce
+- **mid-project-reactive**: lead with urgency — describe what needs to be resolved first
 - **absent or unrecognized**: default to cold-start behavior
 
-> "Next step: {action}. Run `/sweetclaude:{skill}` to do that, or `/sweetclaude:next-steps` to walk through the pipeline."
+> "Next: {plain-language description of the action}. Run `/sweetclaude:go` to continue."
+
+Do not name internal skills (find-skill, next-steps, code-feature, etc.) in the output. `/sweetclaude:go` is the only command the user needs.
 
 Do not start doing the work. Orient and suggest. The user decides what to do.
