@@ -30,36 +30,48 @@ Also scan for open artifacts:
 
 `active_work_item.type`, `.phase`, or `.workflow` is `~` or null.
 
-Before asking the user, scan for pending work:
+Before asking the user, scan for pending work and apply this priority stack:
 
 ```bash
-# Backlog items
+# 1. Open bugs — GitHub issues labeled bug or hotfix
+gh issue list --label bug,hotfix --state open --limit 5 2>/dev/null
+
+# 2. Backlog items — scan for type indicators in filenames and content
 ls .sweetclaude/backlog/*.md 2>/dev/null
+for f in .sweetclaude/backlog/*.md; do head -3 "$f" 2>/dev/null; done
 
-# Roadmap or epic plan documents
-find docs/ -name "*roadmap*" -o -name "*epic*" -o -name "*plan*" 2>/dev/null | head -5
+# 3. Roadmap / epic plan documents
+find docs/ -maxdepth 2 \( -name "*roadmap*" -o -name "*epic*" -o -name "*sprint*" \) 2>/dev/null | head -5
 
-# Unstarted stories
+# 4. Stories not yet started
 find .sweetclaude/stories/ -name "*.md" 2>/dev/null | head -10
 ```
 
-**If backlog items or roadmap exists:**
+**Apply this priority order — stop at the first tier that has items:**
 
-Read them. Identify the highest-priority next item — top of the backlog, or the next unshipped tier in the roadmap. Present it:
+**Tier 1 — Active bugs**
+If open GitHub issues labeled bug/hotfix exist, OR if any backlog item is type bug/hotfix/security:
+> "Open bug: {title}. Starting bug-fix workflow."
+Invoke `sweetclaude:find-skill` with that bug as input. Stop.
 
-> "No active work item. Here's what's queued:
->
-> **Backlog:** {N} items — top item: {title} ({filename})
-> **Roadmap:** {next unshipped epic or milestone}
->
-> Start with {recommended item}?"
+**Tier 2 — Active roadmap**
+If a roadmap/epic plan exists and has unshipped items:
+Read the plan. Find the next unshipped epic or tier.
+> "Roadmap in progress. Next: {epic title / tier}. Continue?"
+If confirmed, invoke `sweetclaude:find-skill` with that item as input. Stop.
 
-If the user confirms, invoke `sweetclaude:find-skill` with that item as input. If they redirect, invoke `sweetclaude:find-skill` with their choice instead.
+**Tier 3 — Tech debt and chores**
+If backlog items are typed as debt/chore/cleanup/refactor, or if no roadmap exists:
+> "No bugs or active roadmap. Top debt/chore item: {title}. Start that?"
+If confirmed, invoke `sweetclaude:find-skill` with that item as input. Stop.
 
-**If nothing is queued:**
+**Tier 4 — General backlog**
+If any other backlog items exist:
+> "Nothing urgent. Backlog has {N} items — top: {title}. Start that, or tell me what you want to work on."
+Invoke `sweetclaude:find-skill` with the user's choice.
 
-> "No active work item and nothing in the backlog. What do you want to work on?"
-
+**If nothing is queued anywhere:**
+> "No active work item, no backlog, no roadmap. What do you want to work on?"
 Invoke `sweetclaude:find-skill` with their response. Stop.
 
 ---
