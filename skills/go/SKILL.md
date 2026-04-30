@@ -57,18 +57,43 @@ Invoke `sweetclaude:find-skill` with that bug as input. Stop.
 **Tier 2 — Active roadmap**
 If a roadmap/epic plan exists and has unshipped items:
 Read the plan. Find the next unshipped epic or tier.
-> "Roadmap in progress. Next: {epic title / tier}. Continue?"
-If confirmed, invoke `sweetclaude:find-skill` with that item as input. Stop.
+
+Before asking the user anything, assess what already exists for this item:
+```bash
+# Search for stories, specs, designs, code related to this epic
+find .sweetclaude/stories/ -name "*.md" 2>/dev/null | xargs grep -l "{epic_id}\|{epic_title}" 2>/dev/null
+find . -name "*.feature" 2>/dev/null | head -5
+find docs/ -type f -name "*.md" 2>/dev/null | xargs grep -l "{epic_id}\|{epic_title}" 2>/dev/null | head -5
+```
+
+From what exists, determine the phase:
+- No artifacts → DISCOVER
+- Discovery/brief/PRD exists but no design → DESIGN
+- Architecture or tech spec exists but no stories → PLAN
+- User stories or Gherkin specs exist but no passing tests → IMPLEMENT
+- Tests exist and passing → VERIFY
+
+Then present:
+> "Roadmap in progress. Next: {epic title}.
+>
+> Assessment: {what was found — e.g. '4 user stories with Gherkin specs already written'}. Placing at {phase}.
+>
+> Continue from {phase}?"
+
+If confirmed, use the routing table to invoke the right skill for the assessed `{work type}` × `{phase}`. Do NOT route through `sweetclaude:find-skill` — go directly to the appropriate skill. Stop.
 
 **Tier 3 — Tech debt and chores**
 If backlog items are typed as debt/chore/cleanup/refactor, or if no roadmap exists:
-> "No bugs or active roadmap. Top debt/chore item: {title}. Start that?"
-If confirmed, invoke `sweetclaude:find-skill` with that item as input. Stop.
+
+Before asking, scan for any existing scope documents or tests related to this item in `.sweetclaude/` and `docs/`.
+
+> "No bugs or active roadmap. Top debt/chore item: {title}. {Brief assessment of what exists}. Start that?"
+If confirmed, use the routing table to invoke the right skill directly. Stop.
 
 **Tier 4 — General backlog**
 If any other backlog items exist:
 > "Nothing urgent. Backlog has {N} items — top: {title}. Start that, or tell me what you want to work on."
-Invoke `sweetclaude:find-skill` with the user's choice.
+If confirmed, assess artifacts as in Tier 2, then invoke the right skill directly.
 
 **If nothing is queued anywhere:**
 > "No active work item, no backlog, no roadmap. What do you want to work on?"
