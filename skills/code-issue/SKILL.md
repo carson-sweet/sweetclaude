@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Implement a GitHub issue end-to-end. Explore the issue, plan, implement with TDD, verify, and open a PR."
 ---
 

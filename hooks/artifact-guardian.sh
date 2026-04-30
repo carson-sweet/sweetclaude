@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Artifact Guardian Hook
 # PreToolUse Bash — warns (does not block) when committing without required phase artifacts.
 

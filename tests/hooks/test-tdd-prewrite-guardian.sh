@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # Tests for tdd-prewrite-guardian.sh
 
 PASS=0

@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: guardian-on
 description: Enable the Protocol Guardian — enforces skill invocations, TDD discipline, and artifact saves for the current session
 ---

@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: sweetclaude:product-discovery
 description: Establish what is being built, for whom, and why — at the depth appropriate for the project type. Three depth levels from quick intent to full pain thesis.
 ---

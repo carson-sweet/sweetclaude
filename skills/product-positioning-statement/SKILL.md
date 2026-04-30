@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Define how the product is positioned — for whom, what category, what differentiates it, and why that matters. Runs after discovery, research, competition, and personas are complete."
 ---
 

@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Plan a sprint by selecting stories from the backlog, estimating scope, and producing a sprint commitment."
 ---
 

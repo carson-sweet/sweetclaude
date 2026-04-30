@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Run any combination of test suite, mutation testing, security review, and PR pre-check. Opens a menu at start — pick one or several."
 ---
 

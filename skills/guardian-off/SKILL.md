@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: guardian-off
 description: Disable the Protocol Guardian for the current session
 ---

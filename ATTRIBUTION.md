@@ -52,4 +52,6 @@ mcp-local-rag uses [LanceDB](https://lancedb.com/) as its embedded vector databa
 
 ## License
 
-SweetClaude is released under the [PolyForm Shield License 1.0.0](LICENSE).
+SweetClaude is released under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later).
+
+Copyright 2026 Carson Sweet. All rights reserved under the terms of the AGPL-3.0.
