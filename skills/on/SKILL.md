@@ -35,6 +35,14 @@ Check four things in order:
    Otherwise:
    > "SweetClaude reactivated. (v{installed}, up to date)"
 
+   Check RAG status: run `find corpus/canonical/ -type f 2>/dev/null | wc -l` and `cat .rag-index/.index-manifest.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('files',{})))" 2>/dev/null`.
+
+   - If corpus has docs but RAG is not indexed (manifest missing or file count is 0): offer:
+     > "You have docs in `corpus/canonical/` but the RAG index isn't set up. Want me to index them so you can search by concept instead of just grepping text? (`/sweetclaude:document-corpus`)"
+   - If RAG is indexed: offer:
+     > "Doc corpus is active. Want me to check if it's up to date? (`/sweetclaude:document-corpus`)"
+   - If neither: no mention.
+
    Stop.
 
 2. **Already configured?** Does `.sweetclaude/state/phase.yaml` exist?
@@ -110,6 +118,11 @@ Set up SweetClaude state for this project:
 **2d. CLAUDE.md:** Generate a CLAUDE.md using the user's one-line description from Step 1-N. Include: what this is, key directories, build/test commands (placeholder), project-specific rules placeholder, SweetClaude section, and distribution warning. Present to user before writing.
 
 **2e. Existing strategy files:** Ask: "Do you have strategy documents to bring in — positioning docs, research, notes?" If yes, get the path and copy into `corpus/raw/inbox/`. Tell them to run `/sweetclaude:document-corpus` to organize them.
+
+**2f. RAG offer:** After 2e, offer:
+> "Once your docs are in place, I can index them into a searchable RAG corpus — lets you find design decisions, feature specs, and research by concept rather than by grep. Want to set that up now, or should I explain what it gives you?"
+
+If the user says yes: invoke `/sweetclaude:document-corpus`. If they ask for explanation: explain that RAG lets Claude search documentation semantically — e.g., "what did we decide about auth?" surfaces the right ADR even if it doesn't contain those exact words. Then offer to proceed. Do not auto-invoke without consent.
 
 ---
 
@@ -238,6 +251,11 @@ If the user mentioned a problem in Step 4-E, propose a first action:
 
 If no specific concern:
 > "Setup complete. Run `/sweetclaude:go` to start working, `/sweetclaude:status` to see the full picture, or `/sweetclaude:help` to learn what's possible."
+
+**RAG offer (existing projects):** After the above, check doc volume: count files in `docs/`, `corpus/`, `strategy/`, and any `.md` files in the root. If total is 5 or more, offer:
+> "You have a meaningful amount of documentation. Want to index it into a searchable RAG corpus so I can find design decisions, specs, and research by concept rather than by text search? (`/sweetclaude:document-corpus`)"
+
+Do not offer if doc count is below 5 — not worth it yet.
 
 ---
 

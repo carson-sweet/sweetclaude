@@ -148,3 +148,11 @@ If an active work item exists, propose one concrete next action in plain languag
 
 Do not name internal skills in the output. `/sweetclaude:go` is the only command the user needs.
 Do not start doing the work. Orient and suggest. The user decides what to do.
+
+### Step 5: Doc corpus offer (if RAG is active)
+
+If CANONICAL_DOCS > 0 (RAG is configured), append after the action suggestion:
+
+> "Doc corpus is active ({CANONICAL_DOCS} docs, last indexed {RAG_LAST}). Want me to check if it's up to date? (`/sweetclaude:document-corpus`)"
+
+Do not run `/sweetclaude:document-corpus` automatically — offer only.
