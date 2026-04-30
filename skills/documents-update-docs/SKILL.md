@@ -36,3 +36,15 @@ Find and update documentation affected by implementation changes.
 - If a doc reference is ambiguous, flag it and ask.
 - Skip style-only changes. Only update when behavior or interface changed.
 - If the change invalidates an ADR, flag it prominently: "ADR-XXX may need revision."
+
+## After updates are written
+
+Check RAG status: `cat .rag-index/.index-manifest.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('files',{})))" 2>/dev/null` and count total docs: `find docs/ corpus/canonical/ strategy/ -type f -name "*.md" 2>/dev/null | wc -l`.
+
+- If RAG is indexed: offer to re-index so the corpus reflects the updates:
+  > "Docs updated. Want me to re-index the RAG corpus so these changes are searchable? (`/sweetclaude:document-corpus`)"
+- If RAG is not indexed but doc count is 5 or more: offer to set it up:
+  > "You have {count} docs now — enough to be worth indexing. Want to set up the RAG corpus so future searches work by concept rather than text matching? (`/sweetclaude:document-corpus`)"
+- If RAG is not indexed and doc count is below 5: no mention.
+
+Do not invoke `/sweetclaude:document-corpus` automatically — offer only.
