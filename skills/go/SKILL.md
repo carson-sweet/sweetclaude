@@ -58,29 +58,19 @@ Invoke `sweetclaude:find-skill` with that bug as input. Stop.
 If a roadmap/epic plan exists and has unshipped items:
 Read the plan. Find the next unshipped epic or tier.
 
-Before asking the user anything, assess what already exists for this item:
-```bash
-# Search for stories, specs, designs, code related to this epic
-find .sweetclaude/stories/ -name "*.md" 2>/dev/null | xargs grep -l "{epic_id}\|{epic_title}" 2>/dev/null
-find . -name "*.feature" 2>/dev/null | head -5
-find docs/ -type f -name "*.md" 2>/dev/null | xargs grep -l "{epic_id}\|{epic_title}" 2>/dev/null | head -5
-```
-
-From what exists, determine the phase:
-- No artifacts → DISCOVER
-- Discovery/brief/PRD exists but no design → DESIGN
-- Architecture or tech spec exists but no stories → PLAN
-- User stories or Gherkin specs exist but no passing tests → IMPLEMENT
-- Tests exist and passing → VERIFY
+Read the `Status:` field for this epic directly from the roadmap file. Use it as the authoritative phase signal:
+- `not_started` → start from first phase in the workflow
+- `in_progress` or similar → read any `Phase:` annotation alongside it; if none, ask the user: "Where are you in this epic? (e.g. designing / writing code / ready for review)"
+- `blocked` → skip this epic, move to the next unblocked item
 
 Then present:
 > "Roadmap in progress. Next: {epic title}.
 >
-> Assessment: {what was found — e.g. '4 user stories with Gherkin specs already written'}. Placing at {phase}.
+> Status: {status from roadmap}. Starting at {phase}.
 >
-> Continue from {phase}?"
+> Continue?"
 
-If confirmed, use the routing table to invoke the right skill for the assessed `{work type}` × `{phase}`. Do NOT route through `sweetclaude:find-skill` — go directly to the appropriate skill. Stop.
+If confirmed, use the routing table to invoke the right skill for `{work type}` × `{phase}`. Do NOT route through `sweetclaude:find-skill` — go directly to the appropriate skill. Stop.
 
 **Tier 3 — Tech debt and chores**
 If backlog items are typed as debt/chore/cleanup/refactor, or if no roadmap exists:
