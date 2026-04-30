@@ -50,7 +50,7 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 | [Claude Code](https://claude.ai/code) | `claude --version` | [Install guide](https://docs.anthropic.com/en/docs/claude-code/getting-started) |
 | Git | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
 | [GitHub CLI](https://cli.github.com/) | `gh --version` | `brew install gh` or [cli.github.com](https://cli.github.com/) |
-| Node.js (for RAG) | `node --version` | [nodejs.org](https://nodejs.org/) — optional, needed for `/sweetclaude:document-corpus` |
+| Node.js (for RAG) | `node --version` | [nodejs.org](https://nodejs.org/) — optional, needed for corpus management and semantic search |
 
 ### Install
 
@@ -107,17 +107,17 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 **Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
 
-**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, run `/sweetclaude:document-corpus`. It presents a menu: consolidate raw files, triage (classify each one), reconcile (draft canonical documents), promote (finalize with provenance, archive, and RAG index). Select **Status** at any point to see where you are. Originals are never deleted.
+**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, tell SweetClaude "I have a pile of documents I need to organize." It runs a four-step pipeline: consolidate (scan, deduplicate, ingest), triage (classify), reconcile (draft canonical documents), promote (finalize with provenance, archive, and RAG index). Originals are never deleted.
 
-**Check the status of a project SweetClaude already knows about.** If you have already run init on a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
+**Check the status of a project SweetClaude already knows about.** If you have already activated SweetClaude for a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
 
-**Run a competitive landscape scan.** In any project, run `/sweetclaude:product-competition` and describe your space. SweetClaude researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond init.
+**Run a competitive landscape scan.** In any project, tell SweetClaude "run a competitive landscape scan for my space." It researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond activation.
 
-**Get a code review.** On any project with code, run `/sweetclaude:code-review`. It reads your recent changes and gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
+**Get a code review.** On any project with code, tell SweetClaude "review my recent changes." It gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
 
-**Run an autonomous end-to-end pipeline.** If you have completed product discovery (personas, tasks, constraints), run `/sweetclaude:john-wick`. It executes the full product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. Human pause points are pre-defined and rare — the pipeline pauses at interactive gates, shows its work, waits for explicit approval, and resumes where it left off across sessions. If the prerequisites aren't met, it tells you exactly what to complete first.
+**Run an autonomous end-to-end pipeline.** Tell SweetClaude "run the autonomous pipeline" or ask about John Wick mode. It executes the full product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. Human pause points are pre-defined and rare — the pipeline pauses at interactive gates, shows its work, waits for explicit approval, and resumes where it left off across sessions. If the prerequisites aren't met, it tells you exactly what to complete first.
 
-**Set up semantic search.** Run `/sweetclaude:document-corpus` in any project. It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
+**Set up semantic search.** Tell SweetClaude "set up semantic search for my documents." It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
 
 ### Your First Session
 
@@ -143,7 +143,7 @@ Reads your project state, checks phase gate exit criteria, and routes to the rig
 /sweetclaude:status
 ```
 
-Shows version stage, active work item, phase progress, SweetClaude version, and RAG corpus state. Fires automatically at the start of each session for active projects.
+Shows version stage, active work item, phase progress, SweetClaude version, and RAG corpus state. Prompts at the start of each session for active projects.
 
 **Suspend or remove SweetClaude:**
 
@@ -182,19 +182,19 @@ Run `/sweetclaude:on` in your project folder. SweetClaude will:
 
 ### "I need to build a specific feature"
 
-Run `/sweetclaude:find-skill` and describe what you need. SweetClaude classifies the work (strategy, product, design, or code) and routes you to the right starting point with the right tools.
+Run `/sweetclaude:go` and describe what you need. SweetClaude classifies the work (strategy, product, design, or code) and routes to the right starting point with the right tools.
 
 ### "I have a GitHub issue to implement"
 
-Run `/sweetclaude:code-issue` with the issue number. It reads the issue, analyzes impact, proposes a plan, implements with TDD, verifies, updates docs, and opens a PR.
+Run `/sweetclaude:go` and mention the issue number or paste the title. SweetClaude reads the issue, analyzes impact, proposes a plan, implements with TDD, verifies, updates docs, and opens a PR.
 
 ### "I need to write a research paper"
 
-Run `/sweetclaude:documents-academic-research`. Six-phase pipeline: establish your thesis and what is novel, review 35+ papers, pick a venue, draft section by section with quality scoring, simulate peer review, format and submit.
+Tell SweetClaude "I need to write a research paper on [topic]." Six-phase pipeline: establish your thesis and what is novel, review 35+ papers, pick a venue, draft section by section with quality scoring, simulate peer review, format and submit.
 
 ### "I have a pile of messy strategy files from various sessions"
 
-Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate** to ingest your files, then work through **Triage** → **Reconcile** → **Promote**. Select **Status** at any point to see where the pipeline stands. Each step explains why skipping it produces worse results.
+Tell SweetClaude "I have a pile of documents I need to organize." It presents a menu — select **Consolidate** to ingest your files, then work through **Triage** → **Reconcile** → **Promote**. Select **Status** at any point to see where the pipeline stands. Each step explains why skipping it produces worse results.
 
 ## All Commands
 
@@ -209,18 +209,16 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 | `/sweetclaude:update` | Fetch latest SweetClaude from GitHub and sync to all projects |
 | `/sweetclaude:help` | Conversational help — describe what you want to do, learn how to work through prompting |
 
-### Orchestration
+### Advanced
 | Command | What it does |
 |---|---|
-| `/sweetclaude:master` | Session entry point, pre-flight check, phase routing |
-| `/sweetclaude:next-steps` | Walk through the pipeline step by step |
-| `/sweetclaude:find-skill` | Classify work and enter the pipeline |
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
-| `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
-| `/sweetclaude:usage` | View, enable, or disable local usage tracking |
-| `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
 | `/sweetclaude:guardian-on` | Enable Protocol Guardian — enforces skill invocations and protocol steps for the session |
 | `/sweetclaude:guardian-off` | Disable Protocol Guardian |
+| `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
+| `/sweetclaude:usage` | View, enable, or disable local usage tracking |
+
+> **Note:** The product, design, code, and corpus skills below are invoked automatically by `/sweetclaude:go` based on your project state. You do not need to invoke them directly — but you can if you know what you want.
 
 ### Product
 | Command | What it does |
