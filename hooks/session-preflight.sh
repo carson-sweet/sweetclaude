@@ -1,8 +1,7 @@
 #!/bin/bash
 # SweetClaude Session Pre-Flight
-# SessionStart hook — checks if SweetClaude is configured for the current project.
-# If not configured, writes a flag file that the PreToolUse preflight-guard reads.
-# The guard blocks ALL tool calls until the project is configured or skipped.
+# SessionStart hook — checks SweetClaude state for the current project.
+# Outputs JSON with hookSpecificOutput.additionalContext (Claude Code format).
 # Per-project opt-out: create .sweetclaude-skip in the project root.
 
 PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
@@ -15,22 +14,29 @@ fi
 PROJECT_HASH=$(echo -n "$PROJECT_DIR" | md5 2>/dev/null || echo -n "$PROJECT_DIR" | md5sum 2>/dev/null | cut -d' ' -f1)
 FLAG="/tmp/.sweetclaude-needs-preflight-${PROJECT_HASH}"
 
+emit_json() {
+  local content="$1"
+  # Escape for JSON string embedding
+  content="${content//\\/\\\\}"
+  content="${content//\"/\\\"}"
+  content="${content//$'\n'/\\n}"
+  content="${content//$'\r'/\\r}"
+  content="${content//$'\t'/\\t}"
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$content"
+}
+
 # Project explicitly opts out
 if [ -f "$PROJECT_DIR/.sweetclaude-skip" ]; then
   rm -f "$FLAG"
   exit 0
 fi
 
-# Check if configured — .sweetclaude/ inside project (current) or legacy -sweetclaude/ repo
+# Check if configured — .sweetclaude/ inside project
 if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
   rm -f "$FLAG"
   # Auto-fire status if active (not disabled)
   if [ ! -f "$PROJECT_DIR/.sweetclaude/disabled" ]; then
-    cat << 'EOF'
-<sweetclaude-active>
-SweetClaude is active for this project. Invoke the sweetclaude:status skill NOW — before responding to any user message. Show the status output to the user. This fires automatically for all active SweetClaude projects at session start.
-</sweetclaude-active>
-EOF
+    emit_json "MANDATORY — SweetClaude is active for this project. You MUST invoke the sweetclaude:status skill as your VERY FIRST ACTION before responding to any user message. Do not greet the user, do not ask questions, do not do anything else first. Invoke sweetclaude:status NOW and show the output."
   fi
   exit 0
 fi
@@ -44,8 +50,4 @@ fi
 
 # Not configured — plant the flag and tell Claude
 touch "$FLAG"
-cat << 'EOF'
-<sweetclaude-preflight>
-STOP. SweetClaude is installed but this project is not configured. You MUST run the sweetclaude pre-flight check before doing any work. Invoke the sweetclaude:master skill now. Every tool call will be blocked until this is resolved.
-</sweetclaude-preflight>
-EOF
+emit_json "STOP. SweetClaude is installed but this project is not configured. You MUST run the sweetclaude pre-flight check before doing any work. Invoke the sweetclaude:master skill now. Every tool call will be blocked until this is resolved."
