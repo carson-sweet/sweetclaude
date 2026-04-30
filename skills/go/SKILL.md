@@ -30,8 +30,35 @@ Also scan for open artifacts:
 
 `active_work_item.type`, `.phase`, or `.workflow` is `~` or null.
 
-Tell the user what you observed, then ask what they want to work on:
-> "No active work item. What do you want to work on?"
+Before asking the user, scan for pending work:
+
+```bash
+# Backlog items
+ls .sweetclaude/backlog/*.md 2>/dev/null
+
+# Roadmap or epic plan documents
+find docs/ -name "*roadmap*" -o -name "*epic*" -o -name "*plan*" 2>/dev/null | head -5
+
+# Unstarted stories
+find .sweetclaude/stories/ -name "*.md" 2>/dev/null | head -10
+```
+
+**If backlog items or roadmap exists:**
+
+Read them. Identify the highest-priority next item — top of the backlog, or the next unshipped tier in the roadmap. Present it:
+
+> "No active work item. Here's what's queued:
+>
+> **Backlog:** {N} items — top item: {title} ({filename})
+> **Roadmap:** {next unshipped epic or milestone}
+>
+> Start with {recommended item}?"
+
+If the user confirms, invoke `sweetclaude:find-skill` with that item as input. If they redirect, invoke `sweetclaude:find-skill` with their choice instead.
+
+**If nothing is queued:**
+
+> "No active work item and nothing in the backlog. What do you want to work on?"
 
 Invoke `sweetclaude:find-skill` with their response. Stop.
 
