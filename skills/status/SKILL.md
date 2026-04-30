@@ -104,7 +104,7 @@ Recent activity:
 
 Framework:
   SweetClaude:  v{SC_INSTALLED}{" → v{SC_LATEST} available — run /sweetclaude:update" if SC_INSTALLED != SC_LATEST else " (up to date)"}
-  RAG corpus:   {if CANONICAL_DOCS > 0: "{CANONICAL_DOCS} canonical docs · last indexed {RAG_LAST} · {RAG_FILES} files indexed" else "not configured"}
+  Doc Corpus RAG:   {if CANONICAL_DOCS > 0: "{CANONICAL_DOCS} canonical docs · last indexed {RAG_LAST} · {RAG_FILES} files indexed · run /sweetclaude:document-corpus to update" else "not configured — run /sweetclaude:document-corpus to set up"}
 ```
 
 If `active_work_item` is absent or all fields are null:
@@ -122,7 +122,7 @@ Recent activity:
 
 Framework:
   SweetClaude:  v{SC_INSTALLED}{" → v{SC_LATEST} available — run /sweetclaude:update" if SC_INSTALLED != SC_LATEST else " (up to date)"}
-  RAG corpus:   {if CANONICAL_DOCS > 0: "{CANONICAL_DOCS} canonical docs · last indexed {RAG_LAST} · {RAG_FILES} files indexed" else "not configured"}
+  Doc Corpus RAG:   {if CANONICAL_DOCS > 0: "{CANONICAL_DOCS} canonical docs · last indexed {RAG_LAST} · {RAG_FILES} files indexed · run /sweetclaude:document-corpus to update" else "not configured — run /sweetclaude:document-corpus to set up"}
 ```
 
 **BMAD notice (append after template if BMAD_SKILLS is not "none"):**
