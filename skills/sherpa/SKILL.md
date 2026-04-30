@@ -1,4 +1,5 @@
 ---
+name: sweetclaude:on
 description: "Get started with SweetClaude on any project — new idea or existing codebase. Detects context automatically and walks you through setup, then hands off to the pipeline."
 ---
 
@@ -12,14 +13,36 @@ One starting point. Works whether you have an empty folder or an existing projec
 
 ## Step 0: Detect context
 
-Check three things:
+Check four things in order:
 
-1. **Already configured?** Does `.sweetclaude/state/phase.yaml` exist?
+1. **Disabled?** Does `.sweetclaude/disabled` exist?
+
+   If yes:
+   ```bash
+   rm .sweetclaude/disabled
+   ```
+
+   Check for an available update:
+   ```bash
+   installed=$(cat ~/.claude/plugins/installed_plugins.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); e=[v for k,v in d.items() if 'sweetclaude' in k.lower()]; print(e[0].get('version','?') if e else '?')" 2>/dev/null)
+   latest=$(cat ~/dev/sweetclaude/package.json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('version','?'))" 2>/dev/null)
+   echo "installed=$installed latest=$latest"
+   ```
+
+   If `latest` differs from `installed` (and neither is `?`):
+   > "SweetClaude reactivated. Update available: v{installed} → v{latest}. Run `/sweetclaude:update` to get the latest."
+
+   Otherwise:
+   > "SweetClaude reactivated. (v{installed}, up to date)"
+
+   Stop.
+
+2. **Already configured?** Does `.sweetclaude/state/phase.yaml` exist?
 
    If yes, stop:
    > "SweetClaude is already set up here. Run `/sweetclaude:status` to see where things stand, or `/sweetclaude:help` for commands."
 
-2. **Existing project?** Does `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `Makefile`, `src/`, or a git repo with commits exist?
+3. **Existing project?** Does `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `Makefile`, `src/`, or a git repo with commits exist?
 
    If yes → take the **Existing Project** path (Step 1-E through Step 6-E below).
 

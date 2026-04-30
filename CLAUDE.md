@@ -42,7 +42,7 @@
 ## SweetClaude
 
 - If the user asks to do anything involving SweetClaude workflows — phase pipeline, strategy work, file reconciliation, TDD enforcement, project init, or any `sweetclaude:` skill — invoke the `sweetclaude:master` skill FIRST and run its pre-flight check before doing any work. This applies whether or not the project is already configured.
-- Read `.sweetclaude/state/phase.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist.
+- Read `.sweetclaude/state/phase.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist. If `.sweetclaude/state/phase.yaml` exists and `.sweetclaude/disabled` does not exist, invoke `sweetclaude:status` automatically at session start.
 - Follow the interaction model in `~/.claude/rules/sweetclaude/interaction-model.md`.
 - Respect the current deference level. Ask if not set.
 - Never push for phase advancement. The user decides when to move on.

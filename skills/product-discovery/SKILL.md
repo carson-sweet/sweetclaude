@@ -10,7 +10,7 @@ Establish what is being built, for whom, and why. This skill conducts a structur
 ## Entry
 
 Check for `.sweetclaude/` directory. If not found:
-> "This project isn't configured for SweetClaude yet. Run `/sweetclaude:sherpa` to set it up, then try again."
+> "This project isn't configured for SweetClaude yet. Run `/sweetclaude:on` to set it up, then try again."
 Stop.
 
 Check for `.sweetclaude/log.md`. If not found, create it with the header `# SweetClaude Effort Log`.

@@ -1,100 +1,92 @@
 ---
-description: List all SweetClaude commands and check project configuration status. Use when the user types /sweetclaude:help or asks what SweetClaude can do.
+name: sweetclaude:help
+description: Interactive help assistant. Teaches the user how to work with SweetClaude through prompting, not commands. Ask what they want to accomplish and show them how.
 ---
-
-<preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Running pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
-</preflight-guard>
 
 # SweetClaude Help
 
-Check project status. Show available commands.
+SweetClaude works through conversation, not commands. This skill helps users understand that model.
 
-## Step 1: Project Status
+---
 
-Check and report:
+## Step 1: Set the frame
 
-```
-SweetClaude Status
-══════════════════
+Tell the user:
 
-Project:     {project name from git root}
-Configured:  {Yes/No}
-Phase:       {current phase from phase.yaml, or "not set"}
-Deference:   {level from phase.yaml, or "not set"}
-State dir:   {path if exists, or "none"}
-```
+> "SweetClaude works through conversation. You describe what you want, and I figure out the right process — you don't need to know the commands.
+>
+> What are you trying to do, or what do you want to know how to do?"
 
-## Step 2: Available Commands
+Wait for their response.
 
-```
-Getting Started
-  /sweetclaude:sherpa         New or existing project — detects context, walks you through setup
+---
 
-Orchestration
-  /sweetclaude:master         Start session, pre-flight check, phase routing
-  /sweetclaude:help           This list (you are here)
-  /sweetclaude:status         See what is done, what is pending, what is next
-  /sweetclaude:next-steps     Walk through pipeline step by step
-  /sweetclaude:find-skill       Classify work and enter the pipeline
-  /sweetclaude:fix-sweetclaude     Audit and repair SweetClaude configuration
-  /sweetclaude:update-sweetclaude  Sync latest from GitHub — update all projects
-  /sweetclaude:usage          Toggle and view local usage tracking
-  /sweetclaude:hibernate      Freeze or thaw a project
+## Step 2: Route their question
 
-Strategy
-  /sweetclaude:strategy/concept              Articulate what this is and why it exists
-  /sweetclaude:strategy/pain-thesis          Structured pain analysis
-  /sweetclaude:strategy/ideal-customer-profile  Who has this pain and will pay
-  /sweetclaude:strategy/competitive-analysis Strategic landscape and differentiation
-  /sweetclaude:strategy/academic-research    Research paper development pipeline
-  /sweetclaude:strategy/meeting-prep         Stakeholder meeting deliverables
-  /sweetclaude:strategy/narrative-arc        Knowledge graph of strategic claims
-  /sweetclaude:product/market-messaging     External communications
+### If they describe a task or goal
 
-Product
-  /sweetclaude:product/discovery             Persona interviews, feature brainstorming
-  /sweetclaude:product/positioning-statement Product positioning
-  /sweetclaude:product/product-brief         11-section product brief
-  /sweetclaude:product/prd                   Full PRD with FRs, NFRs, epics
-  /sweetclaude:product/user-story            User stories with acceptance criteria
-  /sweetclaude:product/user-tdd-tests        Stories to Gherkin .feature files
-  /sweetclaude:product/user-success-criteria Measurable success per persona
-  /sweetclaude:product/user-workflows        Stories to UX/UI flows
-  /sweetclaude:product/manage-scope          Track scope changes with rationale
-  /sweetclaude:product/backlog               Manage deferred work
-  /sweetclaude:product/sprint-plan           Plan sprints from backlog
-  /sweetclaude:product/research              Market or technical research
-  /sweetclaude:product/feature-competitive   Product-level feature comparison
+Map it to what SweetClaude would do. Show them how to ask for it naturally, not what command to run.
 
-Design
-  /sweetclaude:design/architecture           System architecture
-  /sweetclaude:design/tech-spec              Technical specification
-  /sweetclaude:design/ux                     UX design and wireframes
-  /sweetclaude:design/solutioning-gate       Validate design before implementation
-  /sweetclaude:design/change-impact-analysis Trace blast radius before changes
-  /sweetclaude:design/update-docs            Keep docs in sync after changes
-  /sweetclaude:design/data-model             Schema, entities, migrations
-  /sweetclaude:design/api-design             Endpoints, contracts, versioning
-  /sweetclaude:design/services-design        Service boundaries and communication
-  /sweetclaude:design/infra-design           Infrastructure and deployment
-  /sweetclaude:design/manage-decisions       Record decisions with rationale
+Examples:
 
-Documents
-  /sweetclaude:document-corpus     Corpus pipeline + RAG — consolidate, triage, reconcile, promote, search
+| They say | Show them this |
+|---|---|
+| "I want to start a new project" | "Just say 'I want to build X' — SweetClaude will detect context and walk you through setup." |
+| "I need to fix a bug" | "Describe the bug: 'users can't log in when X happens.' SweetClaude will open a bug-fix workflow, starting with root cause." |
+| "I want to review my code" | "Say 'review my code' or 'I'm ready for code review.' SweetClaude will run a structured code and security review." |
+| "I want to write a PRD" | "Say 'let's write the PRD' or 'I'm ready to define the product.' SweetClaude will open the product definition workflow." |
+| "I want to refactor this" | "Say 'I want to clean up X' or 'this code is messy.' SweetClaude will lock existing behavior with tests before touching anything." |
+| "I want to ship" | "Say 'I think this is ready to ship' — SweetClaude will check the verify phase gates and walk you through the handoff." |
+| "What's next?" | "Say 'what's next' or just run `/sweetclaude:go` — SweetClaude reads your project state and tells you." |
 
-Code
-  /sweetclaude:code-feature          Build a new feature (Gherkin → TDD Level 3 → PR)
-  /sweetclaude:code-issue            Implement a GitHub issue end-to-end
-  /sweetclaude:code-debt             Tech debt cleanup (lock behavior first)
-  /sweetclaude:code-testing          Run tests, mutation, security review, and/or PR pre-check
-  /sweetclaude:code-review           Code, security, and compliance review
-```
+Give a concrete example matching their specific task. Do not list all possible tasks — respond to what they actually asked.
 
-## Step 3: Quick Start
+---
 
-If the project is not configured:
-> "Run `/sweetclaude:sherpa` to set up this project."
+### If they ask how SweetClaude works
 
-If configured:
-> "You are in the {phase} phase. Run `/sweetclaude:status` to see the full picture, `/sweetclaude:next-steps` to keep working, or any command above."
+Explain the model in plain terms:
+
+> "SweetClaude tracks where your project is in its lifecycle and enforces a process — discover → define → design → build → verify → ship. Each step has exit criteria. When you say you're done with something, SweetClaude checks the criteria before moving on.
+>
+> You don't need to think about phases or commands. Just describe what you want to work on, and SweetClaude figures out where you are and what needs to happen next."
+
+Then ask: "What are you working on right now?"
+
+---
+
+### If they ask what commands exist
+
+Redirect gently:
+
+> "The commands are mostly for getting started: `/sweetclaude:on` to set up a project, `/sweetclaude:go` to pick up where you left off, `/sweetclaude:status` to see where things stand. Everything else you do through conversation — just describe what you want.
+>
+> What are you trying to accomplish?"
+
+---
+
+### If they're confused or frustrated
+
+Acknowledge it. Ask one specific question:
+
+> "Let me help. What were you trying to do when things got confusing?"
+
+Listen, then give a direct answer to that specific thing. Do not re-explain the whole system.
+
+---
+
+### If they ask about a specific topic (TDD, code review, product brief, etc.)
+
+Explain how that works in SweetClaude's terms, with an example of how to invoke it through conversation. Do not show a command — show a prompt.
+
+---
+
+## Step 3: Stay in the conversation
+
+After answering, offer to keep going:
+
+> "Does that help? Want to try it, or is there something else you want to know?"
+
+If they want to try something, hand off to the right skill or tell them what to say to get started.
+
+This is a conversation, not a reference page. Stay with the user until they have what they need.

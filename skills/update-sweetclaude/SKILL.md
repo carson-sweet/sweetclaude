@@ -1,5 +1,5 @@
 ---
-name: sweetclaude:update-sweetclaude
+name: sweetclaude:update
 description: Update SweetClaude to the latest version from GitHub (or a local repo). Syncs skills, rules, hooks, config, and agents across all projects.
 ---
 
@@ -213,78 +213,106 @@ If no new capabilities, omit this section.
 
 ---
 
-## Step 8: Migrate existing project artifacts
+## Step 8: Migrate existing project state
 
-After syncing the framework, check whether the **current project** (the working directory where this skill was run) has `.sweetclaude/` artifacts that need migration.
+After syncing the framework, check whether the **current project** (the working directory where this skill was run) has `.sweetclaude/` state that needs migration.
 
 ### 8a: Detect project state
 
-Check for `.sweetclaude/` directory. If it does not exist, this project has no SweetClaude state — skip this step.
+Check for `.sweetclaude/state/phase.yaml`.
 
-If `.sweetclaude/` exists, check for:
-- `.sweetclaude/state/phase.yaml` (old-format state)
-- `.sweetclaude/log.md` (new-format effort log)
-- `.sweetclaude/state/` directory
-- Any `.md` files in `docs/` that look like deliverable artifacts
+If `.sweetclaude/` does not exist:
+> "This project has no SweetClaude state. Run `/sweetclaude:init` to set it up."
+Stop.
 
-### 8b: Seed the effort log
+If `phase.yaml` exists, read `schema_version`.
 
-If `.sweetclaude/log.md` does not exist but `phase.yaml` does:
+### 8b: Already on v2
 
-1. Read `phase.yaml` and infer what phases were completed.
-2. Create `.sweetclaude/log.md` with a migration entry:
+If `schema_version: 2`: "Project state is current (schema v2). No migration needed." Stop.
 
-```markdown
-# SweetClaude Effort Log
+### 8c: Migrate v1 → v2
 
-## {current ISO datetime} — migration (n/a)
+If `schema_version: 1`, map the old fields:
 
-**Status:** completed
-**Note:** Seeded from legacy phase.yaml during framework upgrade.
-**Prior phase:** {phase value from phase.yaml}
-**Key decisions:** Migrated from pre-1.9 SweetClaude. Prior artifacts registered below.
-```
+| v1 field | v2 destination | Notes |
+|---|---|---|
+| `phase` | `active_work_item.phase` | Carry forward unless value is `SHIP` or `DONE` → set to `~` |
+| `work_type` | `active_work_item.type` | See mapping table below |
+| `deference_level` | `deference_level` | Carry forward |
+| `project_type` | `project_type` | Carry forward |
+| `safety_snapshot` | `safety_snapshot` | Carry forward |
+| `init_step` | *(drop)* | No v2 equivalent |
 
-### 8c: Create state directory
+**`work_type` mapping:**
 
-```bash
-mkdir -p .sweetclaude/state
-```
+| v1 value | v2 value |
+|---|---|
+| `net-new` | `net-new-feature` |
+| `bug-fix` | `bug-fix` |
+| `enhancement` | `enhancement` |
+| `refactor` | `tech-debt` |
+| `security` | `security-patch` |
+| `hotfix` | `hotfix` |
+| `performance` | `performance-optimization` |
+| anything else | `~` (find-skill will set it when work resumes) |
 
-### 8d: Register pre-existing deliverable documents
-
-Scan `docs/` for `.md` files. For each one found, append a registration entry to `.sweetclaude/log.md`:
-
-```markdown
-## {current ISO datetime} — pre-existing artifact registration (n/a)
-
-**Status:** completed
-**Note:** Pre-existing documents found in docs/ before framework upgrade. Not modified.
-**Produced:** {comma-separated list of filenames}
-```
-
-### 8e: Offer to update deliverable front matter and file naming
-
-Identify `docs/` files that do not have the new front matter format. The new format requires these YAML fields at the top: `title`, `version`, `status`, `author`, `assisted_by`, `date`, `audience`, `nda`, `changes`, `previous_file`.
-
-For each non-conforming file, determine:
-- What the new filename would be: `{title}-{status}-v{version}-{yyyymmdd}.md`
-- What the front matter block would look like with the available information
-
-Present a preview table:
+Show the user a preview before writing:
 
 ```
-Files that would be updated:
-  old-filename.md → whizbang-product-brief-draft-v1.0-20260426.md
-    Front matter added: title, version, status, author, assisted_by, date
-  ...
+Schema migration: v1 → v2
+═════════════════════════
+Current (v1):
+  phase:           {phase}
+  work_type:       {work_type}
+  deference_level: {deference_level}
+  project_type:    {project_type}
+  safety_snapshot: {safety_snapshot}
+
+After migration (v2):
+  version_stage:   (you'll set this below)
+  deference_level: {deference_level}    [carried forward]
+  project_type:    {project_type}       [carried forward]
+  safety_snapshot: {safety_snapshot}    [carried forward]
+  active_work_item:
+    type:  {mapped_type or ~}
+    phase: {phase or ~}
+    (remaining fields: null — set by find-skill when work resumes)
 ```
 
-Ask: "Approve all changes at once, or review file by file?"
+Ask:
+> "What version stage is this project at?
+> PROTOTYPE | ALPHA | BETA | GA | SCALED | MAINTAINED
+>
+> PROTOTYPE = early exploration · ALPHA = working but rough · BETA = feature complete · GA = production-ready"
 
-Apply approved changes. Never rename or reformat without explicit approval.
+Wait for the user's answer. Then confirm:
+> "Ready to write the migrated phase.yaml. Proceed?"
 
-If no non-conforming files exist, skip this step and note "No document migration needed."
+Write `.sweetclaude/state/phase.yaml`:
+
+```yaml
+# .sweetclaude/state/phase.yaml
+# SweetClaude phase state — schema version 2
+schema_version: 2
+
+version_stage: {user_answer}
+deference_level: {carried}
+project_type: {carried}
+safety_snapshot: {carried}
+last_work_item_id: ~
+
+active_work_item:
+  id: ~
+  type: {mapped_type or ~}
+  workflow: []
+  phase: {v1_phase or ~}
+  title: ~
+  started: ~
+  entry_category: ~
+```
+
+Report: "phase.yaml migrated to schema v2. Use `/sweetclaude:find-skill` to resume work."
 
 ---
 
