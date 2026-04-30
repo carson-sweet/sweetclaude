@@ -3,7 +3,7 @@ description: "Manage the full document corpus pipeline — consolidate raw files
 ---
 
 <preflight-guard>
-STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Run `/sweetclaude:sherpa` first." Then stop.
+STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Tell the user: "This project is not set up for SweetClaude. Run `/sweetclaude:on` first." Then stop.
 </preflight-guard>
 
 # Document Corpus

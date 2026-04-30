@@ -1,4 +1,5 @@
 ---
+name: sweetclaude:status
 description: "Orient to the current project. Shows what phase you're in, what's been done, what's pending, and what the logical next step is. Use when starting a session, returning after a break, or asking 'where are we?'"
 ---
 
@@ -26,7 +27,7 @@ Extract:
 - `active_work_item.entry_category` — how work was initiated (cold-start / mid-project-planned / mid-project-reactive)
 - `deference_level`
 
-### Step 2: Read recent activity
+### Step 2: Read recent activity and framework state
 
 1. **Git log** — last 5-10 commits. What was worked on most recently?
 2. **Uncommitted state** — any uncommitted files in `.sweetclaude/`? Recent decision log entries?
@@ -37,6 +38,22 @@ Extract:
    - Brainstorm outputs in `.sweetclaude/brainstorm/`
    - Strategy artifacts in `strategy/`
 5. **Active milestones** — scan `docs/milestones/MS-*.md` if the directory exists. For each with `**Status:** active`, compute the `met/total criteria met` count from Measuring-success checkboxes. If the directory does not exist, omit the milestones section from the output.
+6. **SweetClaude version:**
+   ```bash
+   cat ~/.claude/plugins/installed_plugins.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); e=[v for k,v in d.items() if 'sweetclaude' in k.lower()]; print(e[0].get('version','?') if e else '?')" 2>/dev/null
+   cat ~/dev/sweetclaude/package.json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('version','?'))" 2>/dev/null
+   ```
+   Capture `installed_version` and `latest_version`. If they differ (and neither is `?`), set `update_available=true`.
+7. **RAG corpus state:**
+   ```bash
+   # Last indexed date and file count from manifest
+   cat .rag-index/.index-manifest.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); files=d.get('files',{}); print(len(files)); print(max((v.get('mtime','') for v in files.values()), default='never'))" 2>/dev/null
+   # Canonical document count
+   find corpus/canonical/ -type f 2>/dev/null | wc -l
+   # Last promote date from pipeline state
+   cat .sweetclaude/state/corpus-pipeline.yaml 2>/dev/null | python3 -c "import sys; lines=[l for l in sys.stdin if 'last_run' in l and 'promote' in ''.join(open('.sweetclaude/state/corpus-pipeline.yaml').readlines()[:20])]; print(lines[-1].strip() if lines else 'never')" 2>/dev/null
+   ```
+   Capture `rag_indexed_count`, `rag_last_indexed`, `canonical_count`.
 
 ### Step 3: Present status
 
@@ -75,6 +92,10 @@ Next:
 
 Recent activity:
   {last 3-5 commits, one line each}
+
+Framework:
+  SweetClaude:  v{installed_version}{" → v{latest_version} available — run /sweetclaude:update" if update_available else " (up to date)"}
+  RAG corpus:   {if corpus/canonical/ exists: "{canonical_count} canonical docs · last indexed {rag_last_indexed} · {rag_indexed_count} files indexed" else "not configured — run /sweetclaude:document-corpus to set up"}
 ```
 
 If the `active_work_item` key is absent OR any of type, phase, workflow is `~` or null, use this template instead:
@@ -89,6 +110,10 @@ Deference:      {deference_level}
 
 Recent activity:
   {last 3-5 commits, one line each}
+
+Framework:
+  SweetClaude:  v{installed_version}{" → v{latest_version} available — run /sweetclaude:update" if update_available else " (up to date)"}
+  RAG corpus:   {if corpus/canonical/ exists: "{canonical_count} canonical docs · last indexed {rag_last_indexed} · {rag_indexed_count} files indexed" else "not configured — run /sweetclaude:document-corpus to set up"}
 ```
 
 ### Step 4: Suggest action

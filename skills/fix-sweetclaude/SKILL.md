@@ -13,7 +13,7 @@ Audit this project's SweetClaude setup. Fix what is broken.
 ## Step 1: Check .sweetclaude/ state exists
 
 If `.sweetclaude/state/phase.yaml` does not exist:
-> "SweetClaude is not set up for this project. Run `/sweetclaude:sherpa` first."
+> "SweetClaude is not set up for this project. Run `/sweetclaude:on` first."
 
 Stop. Do not proceed.
 

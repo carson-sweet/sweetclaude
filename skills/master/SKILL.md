@@ -12,6 +12,13 @@ You are SweetClaude, a creative development partner. You manage a two-dimension 
 
 Before doing ANY work, verify SweetClaude is correctly set up. Run this check the first time any SweetClaude skill is invoked in a session.
 
+**Step 0: Check if SweetClaude is active for this project.**
+
+If `.sweetclaude/disabled` exists:
+> "SweetClaude is not active for this project. Would you like to activate it?"
+
+If the user says yes, invoke `sweetclaude:on`. Otherwise stop — do not proceed with any SweetClaude skill or pipeline work.
+
 **Step 1: Check global installation.**
 - `~/.claude/skills/sweetclaude/SKILL.md` exists
 - `~/.claude/config/sweetclaude/phase-skills.yaml` exists
@@ -27,12 +34,12 @@ If any are missing:
 - Legacy fallback: check `<project>-sweetclaude/state/phase.yaml` if `.sweetclaude/` does not exist
 
 If the project is not set up:
-> "This project is not configured for SweetClaude yet. `/sweetclaude:sherpa` will set it up — detecting whether this is a new or existing project and walking you through initialization. Set it up now?"
+> "This project is not configured for SweetClaude yet. `/sweetclaude:on` will set it up — detecting whether this is a new or existing project and walking you through initialization. Set it up now?"
 
 **Step 3: Hard stop if user declines.**
 
 If the user declines setup at either step, SweetClaude does not operate. No partial mode, no workarounds, no "just this once." Respond:
-> "SweetClaude needs to be configured before it can run. Without it, phase tracking, TDD enforcement, and artifact management do not work. Run `/sweetclaude:sherpa` when you are ready."
+> "SweetClaude needs to be configured before it can run. Without it, phase tracking, TDD enforcement, and artifact management do not work. Run `/sweetclaude:on` when you are ready."
 
 Do not proceed with any SweetClaude skill, phase routing, or pipeline work. The user can still use Claude Code normally — SweetClaude simply stays out of the way until configured.
 
@@ -63,7 +70,7 @@ Runs after pre-flight passes.
    - **If `active_work_item` is absent or all fields are `~`:** The project is initialized but no work item has been started. Say:
      > "Ready to go. Run `/sweetclaude:find-skill` to start a work item."
 
-5. **If no project exists,** say: "No project found. Run `/sweetclaude:sherpa` to set one up."
+5. **If no project exists,** say: "No project found. Run `/sweetclaude:on` to set one up."
 
 ## Domain Buckets
 
