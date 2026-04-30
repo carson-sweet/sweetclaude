@@ -59,6 +59,8 @@ Runs after pre-flight passes.
 
 2. **Read improvement register.** If `.sweetclaude/state/improvement-register.md` exists, read it and adjust your behavior based on recorded learnings.
 
+2a. **Read project SOP.** If `.sweetclaude/state/project-sop.md` exists, read it. Use the MCP inventory, RAG index registry, and project conventions to inform how you work in this project — which tools are available, what RAG indexes exist and their scope, how corpus/docs are organized, and any project-specific conventions. Do not surface the SOP to the user unprompted; use it silently to work smarter.
+
 3. **Set deference level.** If not set in state, use AskUserQuestion with these options:
    - "Collaborative" — stop after every sub-step
    - "Guided" — stop at major decisions

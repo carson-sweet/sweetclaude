@@ -35,13 +35,20 @@ Check four things in order:
    Otherwise:
    > "SweetClaude reactivated. (v{installed}, up to date)"
 
-   Check RAG status: run `find corpus/canonical/ -type f 2>/dev/null | wc -l` and `cat .rag-index/.index-manifest.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('files',{})))" 2>/dev/null`.
+   **RAG and MCP check:** Run these to detect existing infrastructure (a manifest is not the only signal):
+   ```bash
+   canonical_count=$(find corpus/canonical/ -type f 2>/dev/null | wc -l | tr -d ' ')
+   manifest_files=$(cat .rag-index/.index-manifest.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('files',{})))" 2>/dev/null)
+   lancedb_exists=$(ls .rag-index/lancedb/ 2>/dev/null | wc -l | tr -d ' ')
+   rag_mcps=$(cat .mcp.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); servers=d.get('mcpServers',{}); rags=[k for k,v in servers.items() if 'rag' in k.lower() or 'rag' in str(v).lower()]; print('\n'.join(rags) if rags else 'none')" 2>/dev/null)
+   ```
 
-   - If corpus has docs but RAG is not indexed (manifest missing or file count is 0): offer:
-     > "You have docs in `corpus/canonical/` but the RAG index isn't set up. Want me to index them so you can search by concept instead of just grepping text? (`/sweetclaude:document-corpus`)"
-   - If RAG is indexed: offer:
-     > "Doc corpus is active. Want me to check if it's up to date? (`/sweetclaude:document-corpus`)"
-   - If neither: no mention.
+   - If `rag_mcps` is not `none` (RAG MCPs exist in `.mcp.json`): note them — the SOP may need updating.
+   - If `lancedb_exists > 0` but `manifest_files` is empty or 0: RAG data exists without a manifest — offer to write the manifest via `/sweetclaude:document-corpus`.
+   - If `canonical_count > 0` and no RAG at all: offer to index.
+   - If RAG is indexed (manifest_files > 0): offer to check freshness.
+
+   If `.sweetclaude/state/project-sop.md` does not exist but RAG MCPs or corpus were found: offer to create the SOP now so SweetClaude understands this project's tooling.
 
    Stop.
 
@@ -123,6 +130,47 @@ Set up SweetClaude state for this project:
 > "Once your docs are in place, I can index them into a searchable RAG corpus — lets you find design decisions, feature specs, and research by concept rather than by grep. Want to set that up now, or should I explain what it gives you?"
 
 If the user says yes: invoke `/sweetclaude:document-corpus`. If they ask for explanation: explain that RAG lets Claude search documentation semantically — e.g., "what did we decide about auth?" surfaces the right ADR even if it doesn't contain those exact words. Then offer to proceed. Do not auto-invoke without consent.
+
+**2g. MCP discovery + project SOP:** Read `.mcp.json` if it exists. For each configured MCP server:
+- Identify its type by name and config: `rag` (name or env contains "rag", or DB_PATH points to lancedb), `database`, `filesystem`, `api`, or `custom`.
+- For RAG servers: run `ls {DB_PATH}/ 2>/dev/null | wc -l` to check if the index has data. Note scope if determinable from BASE_DIR.
+- For unrecognized non-RAG servers: ask the user one question per server: "I see `{name}` is configured — what is it for, and how should I use it in this project?"
+
+Create `.sweetclaude/state/project-sop.md`:
+
+```markdown
+---
+updated: {today}
+---
+
+# SweetClaude Project SOP
+
+What is here and how to use it — project-specific tool knowledge for Claude.
+
+## MCP Tools
+
+| Name | Type | Purpose | Notes |
+|------|------|---------|-------|
+{one row per MCP from .mcp.json, type from detection, purpose from user answers or inference}
+
+## RAG Indexes
+
+| MCP Name | Base Dir | Scope | Last Indexed | Notes |
+|----------|----------|-------|-------------|-------|
+{one row per RAG MCP — scope = what directories are indexed; "unknown" if not yet run}
+
+## Corpus & Docs Structure
+
+{If corpus/ exists: describe canonical/, raw/, archive/ and their purpose.}
+{If docs/ exists: note what belongs here vs corpus.}
+{If neither: "Not yet configured."}
+
+## Project Conventions
+
+{Empty — populated as conventions are established.}
+```
+
+Tell the user: "I've created `.sweetclaude/state/project-sop.md` to track this project's tools and conventions. I'll keep it updated as things change."
 
 ---
 
@@ -256,6 +304,12 @@ If no specific concern:
 > "You have a meaningful amount of documentation. Want to index it into a searchable RAG corpus so I can find design decisions, specs, and research by concept rather than by text search? (`/sweetclaude:document-corpus`)"
 
 Do not offer if doc count is below 5 — not worth it yet.
+
+**MCP discovery + project SOP (existing projects):** Step 2-E runs 2b–2g from the New Project path. For existing projects, 2g is especially important — existing projects often have MCPs, RAG indexes, or corpus infrastructure that was set up before SweetClaude. The discovery step surfaces all of it and records it in `project-sop.md` so SweetClaude isn't working blind.
+
+After creating the SOP, also note the corpus/docs philosophy if relevant:
+- If this project has a `corpus/canonical/` alongside `docs/`: record in the SOP that `corpus/canonical/` is what Claude reasons from and `docs/` is for human navigation / content needed outside the dev cycle.
+- If ADRs, design docs, or strategy docs live in `docs/` rather than `corpus/`: note this as a potential migration candidate in the SOP's Project Conventions section.
 
 ---
 
