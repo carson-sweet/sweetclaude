@@ -24,6 +24,14 @@ fi
 # Check if configured — .sweetclaude/ inside project (current) or legacy -sweetclaude/ repo
 if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
   rm -f "$FLAG"
+  # Auto-fire status if active (not disabled)
+  if [ ! -f "$PROJECT_DIR/.sweetclaude/disabled" ]; then
+    cat << 'EOF'
+<sweetclaude-active>
+SweetClaude is active for this project. Invoke the sweetclaude:status skill NOW — before responding to any user message. Show the status output to the user. This fires automatically for all active SweetClaude projects at session start.
+</sweetclaude-active>
+EOF
+  fi
   exit 0
 fi
 
