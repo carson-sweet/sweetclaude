@@ -36,7 +36,7 @@ if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
   rm -f "$FLAG"
   # Auto-fire status if active (not disabled)
   if [ ! -f "$PROJECT_DIR/.sweetclaude/disabled" ]; then
-    emit_json "MANDATORY — SweetClaude is active for this project. You MUST invoke the sweetclaude:status skill as your VERY FIRST ACTION before responding to any user message. Do not greet the user, do not ask questions, do not do anything else first. Invoke sweetclaude:status NOW and show the output."
+    emit_json "SweetClaude is active for this project. Before responding to the user's first message, say exactly: 'SweetClaude is active for this project and needs to assess status. Proceed?' — then wait for the user's response. If they say yes, proceed, or anything affirmative, invoke sweetclaude:status. If they say no or want to skip, continue without it."
   fi
   exit 0
 fi
