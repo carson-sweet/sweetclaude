@@ -234,11 +234,22 @@ Stop.
 
 If `phase.yaml` exists, read `schema_version`.
 
-### 8b: Already on v2
+### 8b: Patch CLAUDE.md auto-fire instruction
+
+Check if `CLAUDE.md` exists in the current project directory. If it has a `## SweetClaude` section, check whether it contains the text `invoke \`sweetclaude:status\` automatically at session start`.
+
+If missing, find the line that reads `Read .sweetclaude/state/phase.yaml` (or similar) and replace it with:
+```
+- Read `.sweetclaude/state/phase.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist. If `.sweetclaude/state/phase.yaml` exists and `.sweetclaude/disabled` does not exist, invoke `sweetclaude:status` automatically at session start.
+```
+
+Report whether the patch was applied or already up to date.
+
+### 8c: Already on v2
 
 If `schema_version: 2`: "Project state is current (schema v2). No migration needed." Stop.
 
-### 8c: Migrate v1 → v2
+### 8d: Migrate v1 → v2
 
 If `schema_version: 1`, map the old fields:
 
