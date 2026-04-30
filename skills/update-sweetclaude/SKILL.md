@@ -92,6 +92,7 @@ Then diff against installed:
 
 ```bash
 diff -rq $SOURCE_DIR/skills/ {installPath}/skills/ 2>/dev/null
+diff -rq $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/ 2>/dev/null
 diff -rq $SOURCE_DIR/rules/ ~/.claude/rules/sweetclaude/ 2>/dev/null
 diff -rq $SOURCE_DIR/hooks/ ~/.claude/hooks/sweetclaude/ 2>/dev/null
 diff -rq $SOURCE_DIR/config/ ~/.claude/config/sweetclaude/ 2>/dev/null
@@ -135,6 +136,11 @@ done
 # Plugin manifest
 rsync -a $SOURCE_DIR/.claude-plugin/ {installPath}/.claude-plugin/
 
+# Skills → legacy install path (created by install.sh — must stay in sync)
+if [ -d "$HOME/.claude/skills/sweetclaude" ]; then
+  rsync -a --delete $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/
+fi
+
 # Framework dirs → ~/.claude/
 rsync -a --delete $SOURCE_DIR/rules/ ~/.claude/rules/sweetclaude/
 rsync -a --delete $SOURCE_DIR/hooks/ ~/.claude/hooks/sweetclaude/
@@ -170,6 +176,7 @@ rm -rf "$TMPDIR"
 Run a final diff to confirm sync:
 ```bash
 diff -rq $SOURCE_DIR/skills/ {installPath}/skills/ 2>/dev/null
+diff -rq $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/ 2>/dev/null
 ```
 
 Report:
