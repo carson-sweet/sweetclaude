@@ -13,7 +13,7 @@
 
 An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
-SweetClaude is a Claude Code plugin with 49 skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude is a Claude Code plugin with skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
 Built by an enterprise CTO/CISO turned solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
 
@@ -37,7 +37,7 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 **Review and Ship** — Adversarial code review, security testing, mutation testing to verify your tests actually catch bugs, pre-PR quality gates, and documentation updates.
 
-**Self-Updating** — Run `/sweetclaude:update-sweetclaude` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, and checks whether your project's artifacts need migration for the new version. Private repos are handled transparently via `gh` authentication.
+**Self-Updating** — Run `/sweetclaude:update` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, and migrates project artifacts from schema v1 to v2 if needed. Private repos are handled transparently via `gh` authentication.
 
 **Auto Version Bumping** — An opt-in hook that automatically bumps your project's version after every git commit. It reads conventional commit prefixes (`feat` → minor, `fix`/`chore` → patch, `BREAKING` → major), updates configured version files, and commits the bump. Enable it by creating `.sweetclaude/version-bump.yaml` in your project.
 
@@ -68,7 +68,7 @@ The installer:
 - Wires TDD enforcement hooks into `settings.json`
 - Generates `uninstall.sh` and `restore-config.sh` for clean removal
 
-After install, all 49 skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
+After install, all skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
 
 #### Strategy Skills Only
 
@@ -80,7 +80,7 @@ If you want the product thinking, strategy, and corpus management skills without
 
 This installs strategy, product, corpus, and orchestration skills — no TDD hooks, no subagents, no Superpowers prerequisite required. Just Claude Code and Git. You can upgrade to the full install later by running `./install.sh`.
 
-To update later, run `/sweetclaude:update-sweetclaude` from any project. It fetches the latest version from GitHub and syncs everywhere.
+To update later, run `/sweetclaude:update` from any project. It fetches the latest version from GitHub and syncs everywhere.
 
 ### Quick Try (No Install)
 
@@ -121,35 +121,50 @@ These are low-risk ways to see what SweetClaude can do before committing to a wo
 
 ### Your First Session
 
-**Getting started (new or existing project):**
+**Activate SweetClaude for a project (new or existing):**
 
 ```
-/sweetclaude:sherpa
+/sweetclaude:on
 ```
 
 Detects whether the folder is empty or already has a project. For new projects: walks through setup, product discovery, user personas, and hands off to the pipeline. For existing projects: creates a safety snapshot, scans the codebase, interviews you about current state, and positions you in the right phase.
 
-**Checking project status:**
+**Pick up where you left off:**
+
+```
+/sweetclaude:go
+```
+
+Reads your project state, checks phase gate exit criteria, and routes to the right skill. No menu — it tells you what needs to happen and does it.
+
+**Check project status:**
 
 ```
 /sweetclaude:status
 ```
 
-Shows where you are, what has been done, what is pending, and what the next step is.
+Shows version stage, active work item, phase progress, SweetClaude version, and RAG corpus state. Fires automatically at the start of each session for active projects.
 
-**Walking through the pipeline step by step:**
+**Suspend or remove SweetClaude:**
 
 ```
-/sweetclaude:next-steps
+/sweetclaude:off    # suspend — preserves all artifacts, reactivate with /sweetclaude:on
+/sweetclaude:purge  # delete all artifacts — warns and requires typed confirmation first
 ```
 
-Figures out the next thing to do based on where you are, runs the right skill, then moves to the next step. You approve or redirect at each point.
+**Get help:**
+
+```
+/sweetclaude:help
+```
+
+Conversational assistant that explains how to work with SweetClaude through prompting, not commands. Describe what you want to do and it shows you how.
 
 ## Key Use Cases
 
 ### "I have an idea for a product but have not started building anything"
 
-Run `/sweetclaude:sherpa` in an empty folder. SweetClaude will:
+Run `/sweetclaude:on` in an empty folder. SweetClaude will:
 1. Set up the project (git, directory structure, CLAUDE.md)
 2. Ask what you want to build
 3. Run product discovery — problem framing, personas, optional competitive landscape
@@ -157,7 +172,7 @@ Run `/sweetclaude:sherpa` in an empty folder. SweetClaude will:
 
 ### "I have a codebase and want to start using SweetClaude"
 
-Run `/sweetclaude:sherpa` in your project folder. SweetClaude will:
+Run `/sweetclaude:on` in your project folder. SweetClaude will:
 1. Detect that there is an existing project
 2. Create a safety snapshot (branch) before touching anything
 3. Scan your code, tests, docs, and issues
@@ -183,21 +198,24 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 
 ## All Commands
 
-### Getting Started
+### Core Commands
 | Command | What it does |
 |---|---|
-| `/sweetclaude:sherpa` | New or existing project — detects context, walks you through setup |
+| `/sweetclaude:on` | Activate SweetClaude — new or existing project, detects context and walks through setup. Also reactivates a suspended project. |
+| `/sweetclaude:off` | Suspend SweetClaude — preserves all artifacts, reactivate with `:on` |
+| `/sweetclaude:purge` | Delete all SweetClaude artifacts — recommends a backup branch, shows all files, requires "I understand" |
+| `/sweetclaude:go` | Pick up where you left off — reads state, checks phase exit criteria, routes to the right skill. No menu. |
+| `/sweetclaude:status` | Full project picture: phase, work item, SweetClaude version, RAG corpus state. Auto-fires at session start. |
+| `/sweetclaude:update` | Fetch latest SweetClaude from GitHub and sync to all projects |
+| `/sweetclaude:help` | Conversational help — describe what you want to do, learn how to work through prompting |
 
 ### Orchestration
 | Command | What it does |
 |---|---|
 | `/sweetclaude:master` | Session entry point, pre-flight check, phase routing |
-| `/sweetclaude:help` | Show project status and all available commands |
-| `/sweetclaude:status` | What is done, what is pending, what is next |
 | `/sweetclaude:next-steps` | Walk through the pipeline step by step |
 | `/sweetclaude:find-skill` | Classify work and enter the pipeline |
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
-| `/sweetclaude:update-sweetclaude` | Fetch latest from GitHub and sync to all projects |
 | `/sweetclaude:hibernate` | Freeze or thaw a project mid-phase |
 | `/sweetclaude:usage` | View, enable, or disable local usage tracking |
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
@@ -272,7 +290,7 @@ Run `/sweetclaude:document-corpus`. It presents a menu — select **Consolidate*
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. After running the installer, all 49 skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. After running the installer, all skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
 
 **State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
 
@@ -293,7 +311,7 @@ SweetClaude is a Claude Code plugin. After running the installer, all 49 skills 
 
 **Auto version bumping.** An opt-in PostToolUse hook on Bash detects successful `git commit` commands, reads the conventional commit prefix, and bumps version files automatically. Enable it by creating `.sweetclaude/version-bump.yaml` listing which files to update. The hook commits the bump with a `chore(version):` prefix to prevent loops.
 
-**Self-updating.** `/sweetclaude:update-sweetclaude` fetches the latest SweetClaude from GitHub (or a local repo), shows what changed, syncs to all installed locations, surfaces new capabilities that landed in the update, and checks whether project artifacts need migration for new schema fields.
+**Self-updating.** `/sweetclaude:update` fetches the latest SweetClaude from GitHub (or a local repo), shows what changed, syncs to all installed locations, surfaces new capabilities that landed in the update, and checks whether project artifacts need migration for new schema fields.
 
 **Protocol Guardian.** An optional enforcement layer that catches protocol drift mid-session. When enabled via `/sweetclaude:guardian-on`, it monitors skill invocations, TDD discipline, and artifact saves — and blocks on violations rather than issuing warnings. Disable at any time with `/sweetclaude:guardian-off`. SweetClaude will also proactively offer to enable it if it detects repeated protocol skipping.
 
