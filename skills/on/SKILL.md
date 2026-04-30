@@ -39,14 +39,19 @@ Check four things in order:
 
 2. **Already configured?** Does `.sweetclaude/state/phase.yaml` exist?
 
-   If yes, stop:
+   If yes:
+   - Check if `CLAUDE.md` has the auto-fire instruction: look for the text `invoke \`sweetclaude:status\` automatically at session start`. If missing, patch the SweetClaude section of `CLAUDE.md`:
+     - Find the line that reads `Read .sweetclaude/state/phase.yaml` (or similar)
+     - Replace it with: `- Read \`.sweetclaude/state/phase.yaml\` and \`.sweetclaude/state/improvement-register.md\` at session start if they exist. If \`.sweetclaude/state/phase.yaml\` exists and \`.sweetclaude/disabled\` does not exist, invoke \`sweetclaude:status\` automatically at session start.`
+     - Tell the user: "Also updated your CLAUDE.md with the auto-fire instruction."
+   - Stop:
    > "SweetClaude is already set up here. Run `/sweetclaude:status` to see where things stand, or `/sweetclaude:help` for commands."
 
 3. **Existing project?** Does `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `Makefile`, `src/`, or a git repo with commits exist?
 
    If yes → take the **Existing Project** path (Step 1-E through Step 6-E below).
 
-3. **Empty folder?** Nothing meaningful present (a README or .gitignore is fine).
+4. **Empty folder?** Nothing meaningful present (a README or .gitignore is fine).
 
    If yes → take the **New Project** path (Step 1-N through Step 6-N below).
 
@@ -74,11 +79,24 @@ Set up SweetClaude state for this project:
 
 - `.sweetclaude/state/phase.yaml` — initial content:
   ```yaml
-  phase: DISCOVER
-  work_type: net-new
-  deference_level: null
-  project_type: unknown
+  # .sweetclaude/state/phase.yaml
+  # SweetClaude phase state — schema version 2
+  schema_version: 2
+
+  version_stage: PROTOTYPE
+  deference_level: ~
+  project_type: new
   safety_snapshot: none
+  last_work_item_id: ~
+
+  active_work_item:
+    id: ~
+    type: net-new-feature
+    workflow: []
+    phase: DISCOVER
+    title: ~
+    started: ~
+    entry_category: ~
   ```
 - `.sweetclaude/state/decision-log.md` — empty table (Date / Phase / Decision / Rationale)
 - `.sweetclaude/state/assumption-register.md` — empty table (Assumption / Status / Evidence)
