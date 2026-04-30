@@ -14,26 +14,19 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
 1. **Read version stage.** Read `.sweetclaude/state/phase.yaml`. Extract `version_stage` (default: PROTOTYPE if not set). This controls which work types are surfaced.
 
-1b. **Scan for existing artifacts.** Before classifying or prompting, search for anything that indicates prior work on this item:
+1b. **Check structured state for starting phase.** Before classifying or prompting, read the authoritative state sources in order:
 
-```bash
-# Stories and Gherkin specs
-find .sweetclaude/stories/ -name "*.md" 2>/dev/null | head -10
-find . -name "*.feature" 2>/dev/null | head -10
-# Design and product docs
-find docs/ -type f -name "*.md" 2>/dev/null | head -20
-# Git history for relevant commits
-git log --oneline -10 2>/dev/null
-```
+1. **`phase.yaml` `active_work_item`** — already read in Step 1. If a work item is active and matches the request, use its `phase` directly. Do not re-derive.
+2. **Roadmap file** — if the request references a roadmap epic, find it in the roadmap file and read its `Status:` field:
+   - `not_started` → `{starting_phase}` = first phase in the workflow
+   - `in_progress` + a `Phase:` annotation → use that phase
+   - `blocked` → note the blocker to the user; ask if they want to proceed anyway
+3. **Backlog file front matter** — if the request matches a backlog item, read its YAML front matter for any `phase:` or `status:` field.
+4. **No structured state found** → `{starting_phase}` = first phase in the workflow (genuine cold-start)
 
-If the user's request references a specific epic, work item, or feature, grep those results for it. Based on findings, assess the current phase:
-- Nothing found → **first phase in workflow** (cold-start is appropriate)
-- Discovery/brief/PRD found, no design → **DESIGN**
-- Architecture or tech spec found, no stories → **PLAN**
-- User stories or `.feature` files found, no passing tests → **IMPLEMENT**
-- Tests found and passing, no review → **VERIFY**
+Do NOT scan code directories, git history, or arbitrary doc files to infer phase. Structured state is the source of truth. If structured state is absent, ask the user: "Where are you in this work? (Not started / In design / Writing code / Ready for review)"
 
-Store the assessed phase as `{starting_phase}` — used in Step 7.
+Store the result as `{starting_phase}` — used in Step 7.
 
 2. **Determine entry category** from context before asking anything:
    - `cold-start` — project has no prior `active_work_item` OR user is explicitly starting something new from scratch
