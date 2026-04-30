@@ -9,18 +9,52 @@ Read state. Make a call. Act.
 
 ---
 
-## Step 1: Read project state
+## Step 1: Gather project state (background)
 
-```bash
-cat .sweetclaude/state/phase.yaml
-git log --oneline -7
-git status --short
+Spawn a background agent using the Agent tool with **no subagent_type** (fork — tool calls are invisible to the main conversation). Pass this exact prompt:
+
+---
+Read the following files and run the following commands from the current working directory. Return ONLY structured data — no prose, no explanations.
+
+**Reads:**
+1. `.sweetclaude/state/phase.yaml` — full contents
+2. Find first roadmap/epic plan file: `find docs/ -maxdepth 2 \( -name "*roadmap*" -o -name "*epic*" -o -name "*sprint*" \) 2>/dev/null | head -1` — if found, read it fully; if not, return "none"
+3. Backlog files: `ls .sweetclaude/backlog/*.md 2>/dev/null` — for each, read first 5 lines
+
+**Commands:**
+4. `git log --oneline -7`
+5. `git status --short`
+6. `gh issue list --label bug,hotfix --state open --limit 5 2>/dev/null` — return "none" if no issues or gh not available
+
+**Phase gates (conditional):**
+7. If phase.yaml has `active_work_item` with type and phase both non-null/non-~: read `~/.claude/rules/sweetclaude/phase-gates.md` and extract only the section for that work type and phase. Return "not_applicable" if no active work item.
+
+**Return this exact structure:**
 ```
+PHASE_YAML:
+  {full yaml contents}
+ACTIVE_TYPE: {active_work_item.type or "none"}
+ACTIVE_PHASE: {active_work_item.phase or "none"}
+ACTIVE_WORKFLOW: {active_work_item.workflow as comma-separated list or "none"}
+ACTIVE_ID: {active_work_item.id or "none"}
+ACTIVE_TITLE: {active_work_item.title or "none"}
+GIT_LOG:
+  {output of command 4, one line per commit}
+GIT_DIRTY: {yes if command 5 has output, no if empty}
+OPEN_BUGS:
+  {output of command 6 or "none"}
+ROADMAP_PATH: {path found or "none"}
+ROADMAP_CONTENT:
+  {full content of roadmap file or "none"}
+BACKLOG_FILES:
+  {filename}: {first 5 lines}
+  ...
+PHASE_GATES_SECTION:
+  {extracted section for active type × phase, or "not_applicable"}
+```
+---
 
-Also scan for open artifacts:
-- Uncommitted files in `.sweetclaude/`
-- Files in `docs/` modified recently
-- Files in `.sweetclaude/stories/` or `.sweetclaude/brainstorm/`
+Wait for the background agent to complete. Use its returned data block for Step 2.
 
 ---
 
@@ -28,62 +62,45 @@ Also scan for open artifacts:
 
 ### Situation A — No active work item
 
-`active_work_item.type`, `.phase`, or `.workflow` is `~` or null.
+`ACTIVE_TYPE`, `ACTIVE_PHASE`, or `ACTIVE_WORKFLOW` is "none" or null.
 
-Before asking the user, scan for pending work and apply this priority stack:
-
-```bash
-# 1. Open bugs — GitHub issues labeled bug or hotfix
-gh issue list --label bug,hotfix --state open --limit 5 2>/dev/null
-
-# 2. Backlog items — scan for type indicators in filenames and content
-ls .sweetclaude/backlog/*.md 2>/dev/null
-for f in .sweetclaude/backlog/*.md; do head -3 "$f" 2>/dev/null; done
-
-# 3. Roadmap / epic plan documents
-find docs/ -maxdepth 2 \( -name "*roadmap*" -o -name "*epic*" -o -name "*sprint*" \) 2>/dev/null | head -5
-
-# 4. Stories not yet started
-find .sweetclaude/stories/ -name "*.md" 2>/dev/null | head -10
-```
-
-**Apply this priority order — stop at the first tier that has items:**
+Before asking the user, assess available work using this priority stack:
 
 **Tier 1 — Active bugs**
-If open GitHub issues labeled bug/hotfix exist, OR if any backlog item is type bug/hotfix/security:
+If `OPEN_BUGS` has entries, OR if any `BACKLOG_FILES` entry has type bug/hotfix/security in its first 5 lines:
 > "Open bug: {title}. Starting bug-fix workflow."
 Invoke `sweetclaude:find-skill` with that bug as input. Stop.
 
 **Tier 2 — Active roadmap**
-If a roadmap/epic plan exists and has unshipped items:
-Read the plan. Find the next unshipped epic or tier.
+If `ROADMAP_PATH` is not "none" and `ROADMAP_CONTENT` contains unshipped items:
 
-Read the `Status:` field for this epic directly from the roadmap file. Use it as the authoritative phase signal:
+Parse the roadmap content. Find the next epic/item where `Status:` is not `shipped` or `complete`.
+
+Read the `Status:` field directly from the roadmap content:
 - `not_started` → start from first phase in the workflow
-- `in_progress` or similar → read any `Phase:` annotation alongside it; if none, ask the user: "Where are you in this epic? (e.g. designing / writing code / ready for review)"
-- `blocked` → skip this epic, move to the next unblocked item
+- `in_progress` + a `Phase:` annotation → use that phase
+- `in_progress` without annotation → ask: "Where are you in {epic title}? (e.g. designing / writing code / ready for review)"
+- `blocked` → skip this epic, check the next one
 
 Then present:
 > "Roadmap in progress. Next: {epic title}.
 >
-> Status: {status from roadmap}. Starting at {phase}.
+> Status: {status}. Starting at {phase}.
 >
 > Continue?"
 
 If confirmed, use the routing table to invoke the right skill for `{work type}` × `{phase}`. Do NOT route through `sweetclaude:find-skill` — go directly to the appropriate skill. Stop.
 
 **Tier 3 — Tech debt and chores**
-If backlog items are typed as debt/chore/cleanup/refactor, or if no roadmap exists:
+If `BACKLOG_FILES` has items typed as debt/chore/cleanup/refactor, or if no roadmap exists:
 
-Before asking, scan for any existing scope documents or tests related to this item in `.sweetclaude/` and `docs/`.
-
-> "No bugs or active roadmap. Top debt/chore item: {title}. {Brief assessment of what exists}. Start that?"
+> "No bugs or active roadmap. Top debt/chore item: {title}. Start that?"
 If confirmed, use the routing table to invoke the right skill directly. Stop.
 
 **Tier 4 — General backlog**
 If any other backlog items exist:
 > "Nothing urgent. Backlog has {N} items — top: {title}. Start that, or tell me what you want to work on."
-If confirmed, assess artifacts as in Tier 2, then invoke the right skill directly.
+If confirmed, invoke the right skill directly.
 
 **If nothing is queued anywhere:**
 > "No active work item, no backlog, no roadmap. What do you want to work on?"
@@ -93,15 +110,13 @@ Invoke `sweetclaude:find-skill` with their response. Stop.
 
 ### Situation B — Active work item exists
 
-Read the exit criteria for `{active_work_item.type}` × `{active_work_item.phase}` from `~/.claude/rules/sweetclaude/phase-gates.md`.
-
-Assess each criterion against the observable evidence (git log, artifacts, file presence). Mark each: **met** / **open** / **unknown**.
+Use `PHASE_GATES_SECTION` from the background fork data. Assess each criterion against the observable evidence from `GIT_LOG`, `GIT_DIRTY`, and artifact presence. Mark each criterion: **met** / **open** / **unknown**.
 
 **If all criteria are met:**
-> "[{id}] {title} — {phase} is complete.
+> "[{ACTIVE_ID}] {ACTIVE_TITLE} — {ACTIVE_PHASE} is complete.
 >
 > Exit criteria: all met.
-> Next phase: {next phase in workflow}.
+> Next phase: {next phase in ACTIVE_WORKFLOW}.
 >
 > Advance?"
 
@@ -111,7 +126,7 @@ If yes, run the phase transition sequence from the master skill. Stop.
 
 Identify the single highest-priority open criterion. Map it to the skill that addresses it using the routing table below. Then act:
 
-> "[{id}] {title} — {phase}.
+> "[{ACTIVE_ID}] {ACTIVE_TITLE} — {ACTIVE_PHASE}.
 >
 > Next: {what needs to happen, one sentence}.
 >
@@ -122,7 +137,7 @@ Invoke the skill. Stop.
 **If state is ambiguous** (cannot determine met vs open from evidence alone):
 
 Ask exactly one question to resolve it:
-> "[{id}] {title} — {phase}. I can't tell from git history whether {criterion} is done.
+> "[{ACTIVE_ID}] {ACTIVE_TITLE} — {ACTIVE_PHASE}. I can't tell from git history whether {criterion} is done.
 >
 > {one yes/no question}"
 
@@ -168,3 +183,4 @@ Map the first open criterion to the right skill. For work types and phases not l
 - **Do not skip phases.** If DESIGN exit criteria are open, do not route to PLAN.
 - **One ambiguity question maximum.** If still unclear after the answer, surface the situation and stop — do not loop.
 - **When invoking a skill**, briefly tell the user what you are doing and why before invoking it. One sentence.
+- **Never scan code directories or git history to infer phase.** Use structured state: phase.yaml → roadmap Status: field → backlog front matter. If none, ask the user.
