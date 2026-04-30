@@ -34,13 +34,19 @@ These are third-party skills invoked by name but not forked or modified:
 - `reconciling-documents` — document consolidation (product phase)
 - `hibernate-project` — project freeze/thaw (extended by `sweetclaude:hibernate`)
 
+### Optional MCP Servers
+
+| Server | Install | Role |
+|---|---|---|
+| [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) | `npm install -g mcp-local-rag` | Local semantic search via per-project vector index (uses [LanceDB](https://lancedb.com/)) |
+
 ### CLI Tools
 
 | Tool | Required | Role |
 |---|---|---|
 | git | Yes | Version control, branching, commit hooks |
 | [GitHub CLI (gh)](https://cli.github.com/) | Recommended | Project init, issue/PR management |
-| Node.js | Optional | Required only if using RAG indexing |
+| Node.js | Optional | Required only if using RAG indexing (`mcp-local-rag`) |
 
 ## License
 
