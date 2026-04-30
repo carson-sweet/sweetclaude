@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: security-reviewer
 description: Security review subagent. Reviews code changes for auth issues, injection vulnerabilities, secrets exposure, tenant boundary violations, and OWASP Top 10.
 tools: Read, Grep, Glob

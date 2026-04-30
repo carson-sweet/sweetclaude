@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: workflow-guardian
 description: Reviews GitHub Actions workflow changes for security best practices — SHA pinning, least-privilege tokens, safe triggers, environment protections.
 tools: Read, Grep, Glob

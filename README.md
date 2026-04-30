@@ -11,7 +11,7 @@
 
 # SweetClaude
 
-An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
+A plugin for Claude Code that provides workflow automation and co-piloting for end-to-end product development - from "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
 
 SweetClaude is a Claude Code plugin with skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
 
@@ -327,7 +327,7 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 
 ## License
 
-[PolyForm Shield 1.0.0](LICENSE) — use SweetClaude for any purpose, including building and selling commercial products. The only restriction: you cannot sell a product that competes with SweetClaude itself.
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later) — free to use, modify, and distribute for any purpose. If you run SweetClaude as a network service or incorporate it into a distributed product, you must make the complete source available under the same license. See [LICENSE](LICENSE) for full terms.
 
 ## Contributing
 

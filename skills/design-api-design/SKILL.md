@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Design API endpoints: routes, request/response shapes, authentication, pagination, error responses, and versioning strategy."
 ---
 

@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: code-reviewer
 description: Adversarial code review. Focuses on logic errors, edge cases, regressions, performance, and missing error handling. Does not flag style issues.
 tools: Read, Grep, Glob

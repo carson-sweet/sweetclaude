@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: sweetclaude:help
 description: Interactive help assistant. Teaches the user how to work with SweetClaude through prompting, not commands. Ask what they want to accomplish and show them how.
 ---

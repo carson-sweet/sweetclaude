@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: sweetclaude:purge
 description: Delete all SweetClaude artifacts from the current project. Shows all files, warns, requires the user to type "I understand", then deletes .sweetclaude/.
 ---

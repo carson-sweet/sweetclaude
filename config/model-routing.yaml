@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Model Routing Configuration
 #
 # Maps task types to Claude model IDs. 100% user-configurable.

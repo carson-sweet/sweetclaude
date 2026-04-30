@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: qa-caucus-service
 description: QA Caucus — Service & API expert. Reviews test plan for missing service layer coverage, tenant isolation, state transitions, concurrency, and inter-service interactions.
 tools: Read, Grep, Glob

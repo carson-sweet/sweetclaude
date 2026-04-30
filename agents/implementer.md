@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: implementer
 description: Isolated implementer for SweetClaude TDD Level 2-3. Makes failing tests pass with minimal code. Cannot see user stories or Gherkin specs. Cannot modify test files.
 tools: Read, Grep, Glob, Write, Edit, Bash

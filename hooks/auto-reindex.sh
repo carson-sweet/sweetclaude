@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Auto-Reindex Hook
 # PostToolUse hook — triggers incremental RAG reindex when indexed files change.
 # Requires: mcp-local-rag installed and configured for the project.
