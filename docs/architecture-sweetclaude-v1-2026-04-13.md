@@ -128,13 +128,13 @@ Skills use a flat naming convention — all files live directly under `skills/sw
 │       ├── help/SKILL.md              # Help and onboarding
 │       ├── status/SKILL.md            # Project status dashboard
 │       ├── find-skill/SKILL.md        # Work-type detection and routing
-│       ├── sherpa/SKILL.md            # New/existing project onboarding
+│       ├── on/SKILL.md                 # Activate SweetClaude — new, existing, or reactivate
 │       ├── next-steps/SKILL.md        # Walk through pipeline step by step
 │       ├── hibernate/SKILL.md         # Project freeze/thaw with SweetClaude state
 │       ├── guardian-on/SKILL.md       # Enable Protocol Guardian
 │       ├── guardian-off/SKILL.md      # Disable Protocol Guardian
 │       ├── fix-sweetclaude/SKILL.md   # Audit and repair configuration
-│       ├── update-sweetclaude/SKILL.md # Self-update from GitHub
+│       ├── update/SKILL.md             # Self-update from GitHub
 │       ├── usage/SKILL.md             # Usage tracking
 │       ├── session-export/SKILL.md    # Export Claude.ai sessions
 │       ├── product-discovery/SKILL.md
@@ -501,7 +501,7 @@ Skills use a flat naming convention — all files live directly under `skills/sw
 
 All 49 skills are fully built and shipped. Each skill follows the standard SKILL.md format with a flat prefix naming convention. Domain grouping is by prefix, not directory hierarchy.
 
-**Orchestration (13 skills):** master, help, status, find-skill, sherpa, next-steps, hibernate, guardian-on, guardian-off, fix-sweetclaude, update-sweetclaude, usage, session-export.
+**Orchestration (16 skills):** on, off, go, purge, update, help, status, master, find-skill, next-steps, hibernate, guardian-on, guardian-off, fix-sweetclaude, usage, session-export.
 
 **Product (14 skills):** product-discovery, product-competition, product-user-personas, product-positioning-statement, product-brief, product-prd, product-user-stories, product-user-tdd-tests, product-manage-scope, product-backlog, product-sprint-plan, product-research, product-market-messaging, product-milestones.
 
@@ -647,7 +647,7 @@ All 49 skills are Tier 1 — built and shipped.
 
 | Domain | Count | Skills |
 |---|---|---|
-| Orchestration | 13 | master, help, status, find-skill, sherpa, next-steps, hibernate, guardian-on, guardian-off, fix-sweetclaude, update-sweetclaude, usage, session-export |
+| Orchestration | 13 | on, off, go, purge, update, help, status, master, find-skill, next-steps, hibernate, guardian-on, guardian-off, fix-sweetclaude, usage, session-export |
 | Product | 14 | product-discovery, product-competition, product-user-personas, product-positioning-statement, product-brief, product-prd, product-user-stories, product-user-tdd-tests, product-manage-scope, product-backlog, product-sprint-plan, product-research, product-market-messaging, product-milestones |
 | Design | 9 | design-user-flows, design-architecture, design-tech-spec, design-ux, design-solutioning-gate, design-change-impact-analysis, design-data-model, design-api-design, design-manage-decisions |
 | Code | 6 | code-feature, code-issue, code-debt, code-testing, code-review, code-tdd |

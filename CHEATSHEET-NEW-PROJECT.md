@@ -14,7 +14,7 @@ You have an idea. Maybe it is well-formed, maybe it is a napkin sketch. SweetCla
 2. Create an empty folder for your project and open Claude Code in it
 3. Run:
    ```
-   /sweetclaude:sherpa
+   /sweetclaude:on
    ```
 
 That is it. SweetClaude takes over from here and walks you through each step.
@@ -101,12 +101,12 @@ These are not part of the automatic flow. They are available anytime.
 - **Decision tracking** (`/sweetclaude:design-manage-decisions`) — record any decision with context and rationale, queryable later
 - **Positioning statement** (`/sweetclaude:product-positioning-statement`) — for/who/that/unlike framework
 - **Corpus pipeline and RAG search** (`/sweetclaude:document-corpus`) — organize messy files into canonical documents with full provenance (consolidate → triage → reconcile → promote), then index for semantic search. Presents a menu; pick the step you need or check status first.
-- **Update SweetClaude** (`/sweetclaude:update-sweetclaude`) — fetch the latest version from GitHub and sync to all projects
+- **Update SweetClaude** (`/sweetclaude:update`) — fetch the latest version from GitHub and sync to all projects
 - **Auto version bumping** — create `.sweetclaude/version-bump.yaml` to auto-bump version files after every git commit based on conventional commit prefixes
 
 ## Tips
 
-- **You can stop and resume anytime.** SweetClaude saves your progress in `.sweetclaude/`. Run `/sweetclaude:status` to see where you left off.
+- **You can stop and resume anytime.** SweetClaude saves your progress in `.sweetclaude/`. Run `/sweetclaude:go` to pick up exactly where you left off — it reads your phase state and acts.
 - **You can skip ahead.** The pipeline is a guide, not a cage. If you want to jump straight to architecture, do it.
 - **You can go back.** Revisiting earlier phases is normal. New information during design might change your pain thesis. That is how good work happens.
 - **You control the pace.** SweetClaude never pushes you to the next step. It waits until you say you are ready.
