@@ -56,7 +56,7 @@ Based on the scan and your answers, SweetClaude proposes where your project sits
 - Actively building → IMPLEMENT
 - Code exists but untested → IMPLEMENT (lock behavior with tests)
 - Feature-complete → VERIFY
-- Shipping → use `/sweetclaude:find-skill` for each piece of work
+- Shipping → use `/sweetclaude:go` for each piece of work
 
 You confirm or adjust. SweetClaude does not assume it knows better than you.
 
