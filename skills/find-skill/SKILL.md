@@ -14,6 +14,27 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 
 1. **Read version stage.** Read `.sweetclaude/state/phase.yaml`. Extract `version_stage` (default: PROTOTYPE if not set). This controls which work types are surfaced.
 
+1b. **Scan for existing artifacts.** Before classifying or prompting, search for anything that indicates prior work on this item:
+
+```bash
+# Stories and Gherkin specs
+find .sweetclaude/stories/ -name "*.md" 2>/dev/null | head -10
+find . -name "*.feature" 2>/dev/null | head -10
+# Design and product docs
+find docs/ -type f -name "*.md" 2>/dev/null | head -20
+# Git history for relevant commits
+git log --oneline -10 2>/dev/null
+```
+
+If the user's request references a specific epic, work item, or feature, grep those results for it. Based on findings, assess the current phase:
+- Nothing found → **first phase in workflow** (cold-start is appropriate)
+- Discovery/brief/PRD found, no design → **DESIGN**
+- Architecture or tech spec found, no stories → **PLAN**
+- User stories or `.feature` files found, no passing tests → **IMPLEMENT**
+- Tests found and passing, no review → **VERIFY**
+
+Store the assessed phase as `{starting_phase}` — used in Step 7.
+
 2. **Determine entry category** from context before asking anything:
    - `cold-start` — project has no prior `active_work_item` OR user is explicitly starting something new from scratch
    - `mid-project-reactive` — user describes something broken, failing, urgent, or in-progress emergency ("it's down", "something broke", "production issue", "need to hotfix")
@@ -22,8 +43,8 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
 3. **Ask or detect.** If the user has not stated the work type, ask:
    > "What do you want to work on?"
 
-   If the user has described something, classify it and propose:
-   > "This looks like {work-type} — I'll set up the {workflow-shape} pipeline and start `sweetclaude:{skill}`. Correct?"
+   If the user has described something, classify it and propose — using the assessed `{starting_phase}` from Step 1b:
+   > "This looks like {work-type}. {If starting_phase != first phase: 'Found existing {artifacts} — picking up at {starting_phase}.' Else: 'Starting from {first phase}.'} Correct?"
 
    Wait for confirmation before proceeding.
 
@@ -153,11 +174,14 @@ Describe what you want to do. This skill figures out which skill fits, confirms,
      id: WI-{NNN}
      type: {work_type_key}
      workflow: [{phases from table above, comma-separated}]
-     phase: {first phase in workflow}
+     phase: {starting_phase — assessed in Step 1b, NOT assumed to be first phase}
      title: "{one-sentence description from user's request}"
      started: {YYYY-MM-DD today}
      entry_category: {cold-start|mid-project-planned|mid-project-reactive}
    ```
+
+   If `{starting_phase}` differs from the first phase in the workflow, tell the user:
+   > "Found existing {artifact type} — starting at {starting_phase} instead of {first phase}."
 
    Example for a bug fix entered reactively:
    ```yaml
