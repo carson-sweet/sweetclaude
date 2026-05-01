@@ -2,9 +2,24 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-ux-review
 description: Virtual UX review session. Spawns parallel subagents — one per persona — each walking through a flow or wireframe independently and returning structured feedback. Synthesizes findings into prioritized recommendations. All output labeled synthetic.
+category: design
 ---
 
 # Design UX Review
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.design.base_path`. This is the base directory for all design artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. wireframes go to `{base_path}/wireframes/wireframe-*.html`).
+
+4. Write artifacts to those paths.
 
 Run a virtual UX review session. Each defined persona is instantiated as an independent subagent that walks through a user flow or wireframe and returns structured feedback. The orchestrator synthesizes findings across personas into consensus themes, divergent opinions, and prioritized recommendations.
 
@@ -142,7 +157,7 @@ Every section of the output — the report header, every finding, every recommen
 
 ## Output
 
-Write the synthesis report to `docs/{project-name}-ux-review-{story-id}-{yyyymmdd}.md` with standard front matter.
+Write the synthesis report to `{base_path}/{project-name}-ux-review-{story-id}-{yyyymmdd}.md` with standard front matter.
 
 Append to `.sweetclaude/state/assumption-register.md`: each priority recommendation as an assumption tagged `synthetic-pending-validation`.
 

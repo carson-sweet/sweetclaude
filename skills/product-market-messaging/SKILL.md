@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Craft external messaging — how you describe the product, the problem, and the value to different audiences. Builds on positioning statement and ICP."
+category: strategy
 ---
 
 <preflight-guard>
@@ -11,9 +12,23 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Craft external messaging for: $ARGUMENTS
 
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.strategy.base_path`. This is the base directory for all strategy artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/strategy`, competitive analysis goes to `.sweetclaude/strategy/competitive-analysis/`).
+
+4. Write artifacts to those paths.
+
 ## Context
 
-Read `strategy/concept.md`, `strategy/pain-thesis.md`, `strategy/ideal-customer-profile.md`, `strategy/positioning-statement.md`, and `strategy/competitive-analysis.md` if they exist. Messaging builds on all of these.
+Read `{base_path}/concept.md`, `{base_path}/pain-thesis.md`, `{base_path}/ideal-customer-profile.md`, `{base_path}/positioning-statement.md`, and `{base_path}/competitive-analysis.md` if they exist. Messaging builds on all of these.
 
 ## Process
 
@@ -50,4 +65,4 @@ Different audiences need different messages. Identify which apply:
 
 ### 4. Save
 
-Save to `strategy/market-messaging.md`. Each audience section is a standalone reference for writing landing pages, pitch decks, emails, or social content.
+Save to `{base_path}/market-messaging/market-messaging.md`. Each audience section is a standalone reference for writing landing pages, pitch decks, emails, or social content.

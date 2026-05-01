@@ -183,14 +183,27 @@ When delegating to early-phase skills, set depth expectations:
 
 ## State Directory
 
-SweetClaude state lives in `.sweetclaude/` inside the project repo. Content documents (specs, briefs, architecture) go in `docs/`. Strategy documents go in `strategy/`.
+SweetClaude internal state always lives in `.sweetclaude/`. Planning artifact paths (milestones, backlog, product briefs, architecture docs, etc.) are determined per-project by the artifact privacy manifest — set during `/sweetclaude:on` and stored in `.sweetclaude/artifact-privacy.yaml`.
+
 ```
 .sweetclaude/
-  state/           → phase.yaml, project.yaml, decision-log.md, assumption-register.md, improvement-register.md, scope-changes.md
-  traceability/    → requirements-map.md, ripple-map.md
-  stories/         → EPIC-XXX/ with story files and .feature files
-  brainstorm/      → session outputs
-  backlog/         → deferred work items
-docs/              → product-brief.md, prd.md, architecture.md, tech-spec.md, data-model.md, api-design.md
-strategy/          → concept/, pain-thesis/, ideal-customer-profile/, competitive-analysis/, etc.
+  state/                → always private — phase.yaml, project.yaml, decision-log.md,
+                          assumption-register.md, improvement-register.md, scope-changes.md
+  artifact-privacy.md   → artifact privacy manifest (human-readable, documents decisions + rationale)
+  artifact-privacy.yaml → artifact privacy routing table (machine-readable, read by all planning skills)
+  traceability/         → requirements-map.md, ripple-map.md
+  brainstorm/           → session outputs
+  product/              → product artifacts when product category is private
+                          (milestones/, backlog/, product-brief.md, prd.md, stories/, etc.)
+  strategy/             → strategy artifacts when strategy category is private
+                          (competitive-analysis/, market-messaging/, narrative-arc/, etc.)
+  technical/            → technical artifacts when technical category is private
+                          (architecture.md, tech-spec.md, data-model.md, api-design.md)
+  design/               → design artifacts when design category is private
+                          (wireframes/, user-flows/, ux.md, etc.)
+
+{configured path}/      → public artifact locations as confirmed during /sweetclaude:on
+                          (e.g. docs/, strategy/, docs/design/ — or user-specified paths)
 ```
+
+All planning skills read `.sweetclaude/artifact-privacy.yaml` before writing any file. If the manifest does not exist, skills stop and direct the user to run `/sweetclaude:on`.

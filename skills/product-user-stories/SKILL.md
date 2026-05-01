@@ -2,11 +2,26 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:product-user-stories
 description: Write user stories for a defined scope — Gherkin or generic format, scoped to all personas, SLC, or MVP. Uses best-practice naming and numbering.
+category: product
 ---
 
 # Product User Stories
 
 Write user stories for your product, in the format and scope that best fits your needs.
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.product.base_path`. This is the base directory for all product artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/product`, milestones go to `.sweetclaude/product/milestones/MS-001.md`).
+
+4. Write artifacts to those paths.
 
 ## Entry
 

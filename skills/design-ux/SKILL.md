@@ -2,9 +2,24 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-ux
 description: Define the visual and interaction design of the product — look, feel, layout, and style. Produces a UX/UI design spec for handoff to AI mockup tools or a design team.
+category: design
 ---
 
 # Design UX
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.design.base_path`. This is the base directory for all design artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. wireframes go to `{base_path}/wireframes/wireframe-*.html`).
+
+4. Write artifacts to those paths.
 
 Define the look, feel, and interaction design of your product. This skill conducts a design interview and produces a UX/UI specification suitable for handoff to mockup tools or a design team.
 
@@ -95,7 +110,7 @@ After presenting the spec:
 
 ## Document Production System
 
-File naming: `{project-name}-ux-design-{status}-v{major}.{minor}-{yyyymmdd}.md`
+File naming: `{base_path}/{project-name}-ux-design-{status}-v{major}.{minor}-{yyyymmdd}.md`
 
 Front matter: standard schema.
 

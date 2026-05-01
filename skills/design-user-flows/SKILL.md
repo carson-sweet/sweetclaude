@@ -2,9 +2,24 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-user-flows
 description: Convert user stories into UX/UI flows — step-by-step paths through the interface. Bridges product definition and UX design.
+category: design
 ---
 
 # Design User Flows
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.design.base_path`. This is the base directory for all design artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. wireframes go to `{base_path}/wireframes/wireframe-*.html`).
+
+4. Write artifacts to those paths.
 
 Convert user stories into interface flows — the step-by-step paths a user takes through the UI to complete each story. This bridges product definition and UX design.
 
@@ -86,4 +101,4 @@ Append to `.sweetclaude/log.md`:
 **Open questions:** {bullets}
 ```
 
-Write deliverable to `docs/{project-name}-user-flows-draft-v1.0-{yyyymmdd}.md` with standard front matter.
+Write deliverable to `{base_path}/{project-name}-user-flows-draft-v1.0-{yyyymmdd}.md` with standard front matter.

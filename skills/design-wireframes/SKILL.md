@@ -2,9 +2,24 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-wireframes
 description: Generate HTML/CSS wireframes from user flows. One self-contained HTML file per flow, covering all key screen states. Reads visual style from ux.yaml if available; uses neutral defaults otherwise.
+category: design
 ---
 
 # Design Wireframes
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.design.base_path`. This is the base directory for all design artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. wireframes go to `{base_path}/wireframes/wireframe-*.html`).
+
+4. Write artifacts to those paths.
 
 Generate HTML/CSS wireframes from user flows. Each wireframe is a self-contained HTML file covering the primary, error, and success states of a flow. No external dependencies — files open directly in a browser.
 
@@ -22,7 +37,7 @@ Read `.sweetclaude/state/ux.yaml` — optional. If present, use its color palett
 
 Read `.sweetclaude/state/personas.yaml` — optional. Use for annotation context if present.
 
-Ensure `docs/wireframes/` directory exists. Create it if not.
+Ensure `{base_path}/wireframes/` directory exists. Create it if not.
 
 ## Scope Selection
 
@@ -37,9 +52,9 @@ For each flow in scope, generate one self-contained HTML file.
 
 ### File naming
 
-`docs/wireframes/{story-id}-{kebab-slug}.html`
+`{base_path}/wireframes/{story-id}-{kebab-slug}.html`
 
-Example: `docs/wireframes/us-adm-001-create-contact.html`
+Example: `{base_path}/wireframes/us-adm-001-create-contact.html`
 
 ### React component annotations (optional)
 
@@ -107,7 +122,7 @@ All CSS is inline in `<style>`. No `<link>` tags, no external fonts (use system-
 ## Review
 
 After generating each wireframe, present the file path and ask:
-> "Wireframe for {story-id} written to `docs/wireframes/{filename}`. Open it in a browser and let me know what to adjust."
+> "Wireframe for {story-id} written to `{base_path}/wireframes/{filename}`. Open it in a browser and let me know what to adjust."
 
 Wait for feedback before proceeding to the next flow unless the user asks to generate all without pausing.
 
@@ -142,7 +157,7 @@ Append to `.sweetclaude/state/checkpoint.md` (create if absent):
 ```markdown
 ## {ISO datetime} — design-wireframes
 
-Done: Generated wireframes for {story IDs} — {count} files in docs/wireframes/
+Done: Generated wireframes for {story IDs} — {count} files in {base_path}/wireframes/
 Next: Run `/sweetclaude:design-ux-review` to get persona feedback on the wireframes
 Open: {any open questions, or "none"}
 ```

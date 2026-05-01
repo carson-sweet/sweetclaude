@@ -2,9 +2,24 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-architecture
 description: Define system architecture — components, boundaries, communication patterns, data flow, and compliance requirements. Produces ADRs and an architecture document.
+category: technical
 ---
 
 # Design Architecture
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.technical.base_path`. This is the base directory for all technical artifacts.
+
+3. Construct full paths as `{base_path}/{filename}`, e.g. `{base_path}/architecture.md`, `{base_path}/tech-spec-v1.md`.
+
+4. Write artifacts to those paths.
 
 Define the architecture for your system. This skill conducts a structured interview, produces Architectural Decision Records (ADRs) for each significant decision, and generates an architecture document ready for development.
 
@@ -92,7 +107,7 @@ Create an ADR for each significant decision. Use the following format (standard 
 {What other options were evaluated and why were they rejected?}
 ```
 
-Save each ADR to `docs/adr/ADR-{NNN}-{kebab-title}.md`.
+Save each ADR to `{base_path}/adr/ADR-{NNN}-{kebab-title}.md`.
 
 ## Step 5 — Boundary Design
 
@@ -125,8 +140,8 @@ Write the architecture document. Standard sections:
 
 ## Document Production System
 
-ADRs: `docs/adr/ADR-{NNN}-{title}-{yyyymmdd}.md`
-Architecture doc: `{project-name}-architecture-draft-v1.0-{yyyymmdd}.md`
+ADRs: `{base_path}/adr/ADR-{NNN}-{title}-{yyyymmdd}.md`
+Architecture doc: `{base_path}/{project-name}-architecture-draft-v1.0-{yyyymmdd}.md`
 
 Both follow the standard front matter schema.
 

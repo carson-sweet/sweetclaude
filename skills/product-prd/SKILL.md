@@ -2,11 +2,26 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:product-prd
 description: Write a Product Requirements Document — functional requirements, non-functional requirements, epics, and success metrics. Scales to available input depth.
+category: product
 ---
 
 # Product PRD
 
 Write a Product Requirements Document (PRD) from the discovery, research, brief, and persona work completed so far.
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.product.base_path`. This is the base directory for all product artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/product`, milestones go to `.sweetclaude/product/milestones/MS-001.md`).
+
+4. Write artifacts to those paths.
 
 ## Entry
 
@@ -69,7 +84,7 @@ If `compliance-context.yaml` was absent or `derived_frameworks` was empty, flag 
 
 **Step 4: Write output**
 
-Write to `docs/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md` (matching the Document Production System naming convention — compact date, no dashes).
+Write to `{base_path}/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md` (matching the Document Production System naming convention — compact date, no dashes).
 
 Derive `[feature-name]` from `discovery.yaml` → `intent` field, slugified (lowercase, hyphens, no spaces). If unavailable, use the current git branch name without the `john-wick/` prefix.
 
@@ -92,7 +107,7 @@ generated: autonomous
 Output:
 ```
 Autonomous PRD generation complete.
-File: docs/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md
+File: {base_path}/[feature-name]-prd-draft-v1.0-[YYYYMMDD].md
 
 Flagged sections for D4 review gate:
 - [Section name]: [gap description]

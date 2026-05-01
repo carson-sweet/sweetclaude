@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Manage roadmap targets (milestones) that span strategy and product work. Create, review, link work items to, and track completion of outcome-driven milestones like 'Exit Stealth' or 'Paid Pilot Live'."
+category: product
 ---
 
 <preflight-guard>
@@ -12,6 +13,20 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 Manage milestones: $ARGUMENTS
 
 A milestone is a **roadmap target** — a named strategic outcome the project is driving toward. Not a release, not a sprint, not an epic. Examples: "Exit Stealth", "Paid Pilot Live", "Series A Readiness", "MVP Shipped".
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.product.base_path`. This is the base directory for all product artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/product`, milestones go to `.sweetclaude/product/milestones/MS-001.md`).
+
+4. Write artifacts to those paths.
 
 ## Routing
 
@@ -32,7 +47,7 @@ If `$ARGUMENTS` is empty or doesn't match, default to `review`.
 ## Storage
 
 ```
-docs/milestones/
+{base_path}/milestones/
   MILESTONES-INDEX.md       Master index (one row per milestone)
   MS-001-short-name.md      One file per milestone
   MS-002-short-name.md
@@ -92,7 +107,7 @@ Free-form log of decisions, scope changes, blockers encountered.
 
 ### `add` — Create a new milestone
 
-1. Read `docs/milestones/MILESTONES-INDEX.md`. If it does not exist, create it with this header:
+1. Read `{base_path}/milestones/MILESTONES-INDEX.md`. If it does not exist, create it with this header:
 
 ```markdown
 # Milestones Index
@@ -110,18 +125,18 @@ Free-form log of decisions, scope changes, blockers encountered.
    - Depends on: list of other MS-XXX refs (optional)
    - Owner: default to the value of `owner` in `.sweetclaude/state/phase.yaml` if present; otherwise prompt.
 4. Default `Status:` to `proposed`. Ask the user only if they indicate otherwise.
-5. Write the file at `docs/milestones/MS-XXX-<slug>.md` using the milestone template from the previous section, filling in all fields. `<slug>` is a dash-lowercased version of the title (e.g., "Exit Stealth" → `exit-stealth`).
-6. Append a row to `MILESTONES-INDEX.md`:
+5. Write the file at `{base_path}/milestones/MS-XXX-<slug>.md` using the milestone template from the previous section, filling in all fields. `<slug>` is a dash-lowercased version of the title (e.g., "Exit Stealth" → `exit-stealth`).
+6. Append a row to `{base_path}/milestones/MILESTONES-INDEX.md`:
 
 ```
 | MS-XXX | [Title](MS-XXX-slug.md) | proposed | Owner | One-sentence outcome summary |
 ```
 
-7. Tell the user: "Added MS-XXX: {title}. Status: proposed. File: docs/milestones/MS-XXX-{slug}.md"
+7. Tell the user: "Added MS-XXX: {title}. Status: proposed. File: {base_path}/milestones/MS-XXX-{slug}.md"
 
 ### `review` — List milestones by commitment level
 
-1. Scan `docs/milestones/` for all files matching `MS-*.md` (exclude `MILESTONES-INDEX.md`).
+1. Scan `{base_path}/milestones/` for all files matching `MS-*.md` (exclude `MILESTONES-INDEX.md`).
 2. Read each file's `**Status:**` field.
 3. Group:
    - **Now**: `active`
@@ -163,16 +178,16 @@ Dropped:
 1. Validate the work-item ref: must match `^(US|BL)-\d+$`. If not, tell the user the expected format and stop.
 2. Locate the work-item file:
    - `US-XXX` → search `stories/**/US-XXX-*.md` then `.sweetclaude/stories/**/US-XXX-*.md`.
-   - `BL-XXX` → search `docs/backlog/BL-XXX-*.md`.
+   - `BL-XXX` → search `{base_path}/backlog/BL-XXX-*.md`.
    - If not found, tell the user and stop.
-3. Validate `docs/milestones/MS-XXX-*.md` exists. If not, tell the user and stop.
+3. Validate `{base_path}/milestones/MS-XXX-*.md` exists. If not, tell the user and stop.
 4. Read the work item. Check for an existing `**Milestone:**` header (exact match: line starting with `**Milestone:**`).
    - If present and equals the requested MS: no-op. Say "Already linked."
    - If present but different: ask "This work item is currently linked to {old MS}. Replace with {new MS}? (yes/no)" — require explicit yes. If no, stop.
 5. Write/update the work item's `**Milestone:**` header:
    - If no header exists, insert `**Milestone:** MS-XXX` immediately after the H1 title line.
    - If a header exists, replace its value.
-6. Read `docs/milestones/MS-XXX-*.md`. In the `## Contributing work items` section:
+6. Read `{base_path}/milestones/MS-XXX-*.md`. In the `## Contributing work items` section:
    - If the item is not already listed, add `- {work-item-ref} — {title from work item's H1}`.
    - If the section does not exist, create it before `## Notes`.
 7. If the work item was previously linked to a different milestone:
@@ -184,7 +199,7 @@ Dropped:
 
 ### `status <MS-XXX>` — Detail view
 
-1. Read `docs/milestones/MS-XXX-*.md`. If missing, tell user and stop.
+1. Read `{base_path}/milestones/MS-XXX-*.md`. If missing, tell user and stop.
 2. For each item in `## Measuring success`:
    - If the item references an artifact path (pattern: backtick-wrapped path like `` `strategy/narrative-arc.md` ``), read that file. Determine "met" using the finalization convention (see Open Items — default: file exists and its first heading is not `# DRAFT`).
    - Otherwise, use the checkbox state directly (`- [x]` met, `- [ ]` not met).
@@ -267,7 +282,7 @@ Blockers for MS-001 Exit Stealth
    - If no, stop. If yes, proceed.
 5. Set `**Status:**` to `achieved`.
 6. Append Changelog row: `{date} — Marked achieved. {if waived: 'Waived N criteria — see Notes.'}`
-7. Update `MILESTONES-INDEX.md`: change the status column for this milestone to `achieved`.
+7. Update `{base_path}/milestones/MILESTONES-INDEX.md`: change the status column for this milestone to `achieved`.
 8. **Follow-up chain.** Ask the user:
 
 ```
@@ -289,7 +304,7 @@ List each follow-up as: "<category>: <short title>". Enter blank line when done.
 
 1. Scan work-item files:
    - Stories: `stories/**/US-*.md` and `.sweetclaude/stories/**/US-*.md`.
-   - Backlog: `docs/backlog/BL-*.md`.
+   - Backlog: `{base_path}/backlog/BL-*.md`.
 2. For each file, check for a `**Milestone:**` header line.
 3. Group items with no header by type:
 
@@ -324,7 +339,7 @@ The `product/backlog` skill is not modified, but is invoked indirectly by the `c
 
 ## Rules / Invariants
 
-- Every milestone has its own file under `docs/milestones/`. The index is an index only.
+- Every milestone has its own file under `{base_path}/milestones/`. The index is an index only.
 - `MS-XXX` IDs are permanent. Never renumber. Gaps are fine.
 - Bidirectional links must stay consistent. `link` updates both sides. Any skill that adds or removes a work item from a milestone must do the same.
 - Terminal states (`achieved`, `dropped`, `superseded`) are never edited back to non-terminal. To re-activate a deprecated goal, create a new milestone that references the old one in its Notes.

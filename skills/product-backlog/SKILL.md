@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Manage deferred work. Add, review, prioritize, or groom backlog items. Each item gets its own file with substantive initial thinking, not just a title. Tracks what's been parked and why, surfaces items when they become relevant."
+category: product
 ---
 
 <preflight-guard>
@@ -11,18 +12,32 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Manage backlog: $ARGUMENTS
 
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.product.base_path`. This is the base directory for all product artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/product`, milestones go to `.sweetclaude/product/milestones/MS-001.md`).
+
+4. Write artifacts to those paths.
+
 ## Routing
 
 Classify before adding:
-- **Technical items** (bugs, feature requests, tech debt, test gaps) go to `docs/backlog/`.
-- **Strategic items** (product ideas, feature concepts, strategic initiatives, market opportunities) go to `strategy/`. Tell the user: "That is a strategic item. Capturing it in strategy/ instead of docs/backlog/."
+- **Technical items** (bugs, feature requests, tech debt, test gaps) go to `{base_path}/backlog/`.
+- **Strategic items** (product ideas, feature concepts, strategic initiatives, market opportunities) go to `strategy/`. Tell the user: "That is a strategic item. Capturing it in strategy/ instead of {base_path}/backlog/."
 
 Never silently put a non-technical item in docs/backlog/.
 
 ## Structure
 
 ```
-docs/backlog/
+{base_path}/backlog/
   BACKLOG-INDEX.md          # Master index with priority, summary, links
   BL-001-short-name.md      # Detail file per item
   BL-002-short-name.md
@@ -32,7 +47,7 @@ docs/backlog/
 ## Adding a Backlog Item
 
 ### Step 1: Assign the next BL number
-Read `BACKLOG-INDEX.md`, find the highest BL-XXX number, increment by 1.
+Read `{base_path}/backlog/BACKLOG-INDEX.md`, find the highest BL-XXX number, increment by 1.
 
 ### Step 2: Determine priority
 If not obvious from context, use AskUserQuestion with these options:
@@ -42,7 +57,7 @@ If not obvious from context, use AskUserQuestion with these options:
 - "SPIKE" — research needed before sizing
 
 ### Step 3: Write the detail file
-Create `BL-XXX-short-descriptive-name.md`:
+Create `{base_path}/backlog/BL-XXX-short-descriptive-name.md`:
 
 ```markdown
 # BL-XXX: Title
@@ -68,7 +83,7 @@ One paragraph describing what this is and why it matters.
 Always include substantive initial thinking, not just a title. Capture context while it is fresh. Initial thinking written during the conversation is far more valuable than reconstructing it later.
 
 ### Step 4: Update the index
-Add a row to `BACKLOG-INDEX.md`, grouped by category:
+Add a row to `{base_path}/backlog/BACKLOG-INDEX.md`, grouped by category:
 ```
 | BL-XXX | Short description | Priority | [BL-XXX](BL-XXX-short-name.md) |
 ```
@@ -79,7 +94,7 @@ Tell the user: "Added BL-XXX to the backlog: [title]. [one-sentence summary]."
 ## Reviewing the Backlog
 
 When the user asks to review:
-1. Read `BACKLOG-INDEX.md`.
+1. Read `{base_path}/backlog/BACKLOG-INDEX.md`.
 2. Summarize: total items, count by priority, stale items.
 3. Identify items now unblocked (dependencies completed).
 4. Suggest re-prioritization if project context changed.

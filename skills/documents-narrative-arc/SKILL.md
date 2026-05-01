@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Build and query a knowledge graph connecting strategic claims, proof points, objectives, and supporting/opposing evidence. Answers 'what supports this claim' and 'what would strengthen this objective.'"
+category: strategy
 ---
 
 <preflight-guard>
@@ -10,6 +11,20 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 # Narrative Arc
 
 Build and query the strategic narrative graph.
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.strategy.base_path`. This is the base directory for all strategy artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/strategy`, competitive analysis goes to `.sweetclaude/strategy/competitive-analysis/`).
+
+4. Write artifacts to those paths.
 
 ## What This Is
 
@@ -36,7 +51,7 @@ Walk the user through constructing or extending the arc:
 4. **Gaps.** Where is evidence missing? What would strengthen a weak claim?
 5. **Connections.** How do claims support objectives? How do documents feed claims?
 
-Save to `strategy/narrative-arc/arc.md` as structured markdown.
+Save to `{base_path}/narrative-arc/arc.md` as structured markdown.
 
 ### Query: `narrative-arc query {question}`
 
@@ -56,7 +71,7 @@ When new evidence, documents, or claims are added, update the graph:
 
 ## Storage
 
-`strategy/narrative-arc/arc.md` — human-readable, AI-parseable structured markdown. Not a database — the graph is small enough to fit in a file.
+`{base_path}/narrative-arc/arc.md` — human-readable, AI-parseable structured markdown. Not a database — the graph is small enough to fit in a file.
 
 ## Rules
 

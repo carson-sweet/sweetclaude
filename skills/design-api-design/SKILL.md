@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Design API endpoints: routes, request/response shapes, authentication, pagination, error responses, and versioning strategy."
+category: technical
 ---
 
 <preflight-guard>
@@ -8,6 +9,20 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 </preflight-guard>
 
 # API Design
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.technical.base_path`. This is the base directory for all technical artifacts.
+
+3. Construct full paths as `{base_path}/{filename}`, e.g. `{base_path}/architecture.md`, `{base_path}/tech-spec-v1.md`.
+
+4. Write artifacts to those paths.
 
 Design the API for: $ARGUMENTS
 
@@ -59,4 +74,4 @@ Response 5xx:
 
 ### 4. Save
 
-Save to `docs/api-design.md`. Record key decisions via `design/manage-decisions`.
+Save to `{base_path}/api-design.md`. Record key decisions via `design/manage-decisions`.

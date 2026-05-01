@@ -60,6 +60,9 @@ Check four things in order:
      - Find the line that reads `Read .sweetclaude/state/phase.yaml` (or similar)
      - Replace it with: `- Read \`.sweetclaude/state/phase.yaml\` and \`.sweetclaude/state/improvement-register.md\` at session start if they exist. If \`.sweetclaude/state/phase.yaml\` exists and \`.sweetclaude/disabled\` does not exist, invoke \`sweetclaude:status\` automatically at session start.`
      - Tell the user: "Also updated your CLAUDE.md with the auto-fire instruction."
+   - **Artifact privacy check:** Run `ls .sweetclaude/artifact-privacy.yaml 2>/dev/null`. If the file does not exist:
+     > "Artifact privacy is not yet configured for this project — this controls where planning documents (milestones, product briefs, strategy docs) are stored and whether they're tracked in git. Want to set that up now?"
+     If yes: run Step 2.5-E inline (do not re-run the full on flow). If no: stop as normal.
    - Stop:
    > "SweetClaude is already set up here. Run `/sweetclaude:status` to see where things stand, or `/sweetclaude:help` for commands."
 
@@ -175,6 +178,132 @@ Tell the user: "I've created `.sweetclaude/state/project-sop.md` to track this p
 
 ---
 
+### Step 2.5-N: Artifact privacy setup
+
+Determine where SweetClaude stores planning artifacts for this project. This is permanent until explicitly updated.
+
+**Check for existing manifest first:**
+Run: `ls .sweetclaude/artifact-privacy.yaml 2>/dev/null`
+
+If it exists: ask "You already have artifact privacy settings configured — want to update them?" If no, skip to Step 3-N. If yes, proceed with the interview below and overwrite both manifest files.
+
+**Q1 — Repo visibility (required — no default, no inference):**
+> "Before SweetClaude writes any planning documents, I need to know where to put them. Is this repo currently public, or do you plan to make it public in the future?"
+
+Require an explicit answer. Accept: "Public now" / "Private now, plan to go public" / "Private and will stay private." Do not proceed until answered explicitly.
+
+**Q2–Q5 — Per category (one at a time, in order):**
+
+For each category: ask visibility, then (if public) ask location with default shown. Require "public" or "private." Ask for one-sentence rationale. Record decision, location, and rationale for all four.
+
+**Strategy** (competitive analysis, market messaging, positioning, research):
+> "Strategy documents — competitive analysis, market messaging, positioning research. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `strategy/`." Store confirmed path.
+If private: location is `.sweetclaude/strategy/` — no question needed.
+
+**Product** (brief, PRD, milestones, roadmap, backlog, user stories):
+> "Product definition documents — product brief, PRD, milestones/roadmap, backlog, user stories. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `docs/`." Store confirmed path.
+If private: location is `.sweetclaude/product/` — no question needed.
+
+**Technical** (architecture, tech spec, data model, API design):
+> "Technical documents — architecture, tech spec, data model, API design. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `docs/`." Store confirmed path.
+If private: location is `.sweetclaude/technical/` — no question needed.
+
+**Design** (UX flows, wireframes):
+> "Design artifacts — UX flows, wireframes. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `docs/design/`." Store confirmed path.
+If private: location is `.sweetclaude/design/` — no question needed.
+
+**Write both manifest files after all four questions are answered:**
+
+`.sweetclaude/artifact-privacy.yaml`:
+```yaml
+schema_version: 1
+recorded: {today's date}
+
+repo:
+  current_visibility: "{Q1 answer}"
+  future_intent: "{verbatim answer}"
+
+categories:
+  strategy:
+    privacy: public | private
+    base_path: "{confirmed path}"
+  product:
+    privacy: public | private
+    base_path: "{confirmed path}"
+  technical:
+    privacy: public | private
+    base_path: "{confirmed path}"
+  design:
+    privacy: public | private
+    base_path: "{confirmed path}"
+```
+
+`.sweetclaude/artifact-privacy.md`:
+```markdown
+# Artifact Privacy Manifest
+**Recorded:** {today's date}
+**Schema:** 1
+
+This document records where SweetClaude stores planning artifacts for this project.
+Review and update if repo visibility changes — run `/sweetclaude:on` and choose to update settings.
+
+## Repository Visibility
+
+**Current:** {Q1 answer}
+**Future intent:** {verbatim answer}
+
+## Category Decisions
+
+### Strategy Documents
+*Competitive analysis, market messaging, positioning, research*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+### Product Definition
+*Product brief, PRD, milestones, roadmap, backlog, user stories*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+### Technical Documents
+*Architecture, tech spec, data model, API design*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+### Design Artifacts
+*UX flows, wireframes*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+## Internal State
+*Phase tracking, decision logs, improvement register, assumption register*
+Always private — stored in `.sweetclaude/state/` (gitignored). No decision required.
+
+## Changelog
+| Date | Change |
+|------|--------|
+| {today's date} | Initial manifest created during /sweetclaude:on |
+```
+
+**Confirm and warn after writing:**
+Tell the user:
+> "Artifact privacy configured. {N} categories private, {M} public. Recorded in `.sweetclaude/artifact-privacy.md`."
+
+For each public category in a repo that is/will be public, confirm:
+> "Note: {category} documents at `{path}` will be publicly visible — that's what you chose. Confirmed."
+
+Check whether any confirmed public path appears to be gitignored. If so:
+> "The path `{path}` appears to be gitignored. Documents there won't be tracked until you add a gitignore exception. Want me to add one now?"
+
+---
+
 ### Step 3-N: Product discovery
 
 Run `/sweetclaude:product-discovery` using the idea from Step 1-N as starting input.
@@ -239,6 +368,132 @@ If the project has no git: offer to initialize one (same as Step 2-N 2a). The in
 Same as Step 2-N (2b through 2e) — create state directory, strategy structure, CLAUDE.md, optionally onboard files.
 
 For CLAUDE.md generation: scan the project for language, framework, package manager, test runner, and build commands first. Use those in the CLAUDE.md instead of placeholders.
+
+---
+
+### Step 2.5-E: Artifact privacy setup
+
+Determine where SweetClaude stores planning artifacts for this project. This is permanent until explicitly updated.
+
+**Check for existing manifest first:**
+Run: `ls .sweetclaude/artifact-privacy.yaml 2>/dev/null`
+
+If it exists: ask "You already have artifact privacy settings configured — want to update them?" If no, skip to Step 3-E. If yes, proceed with the interview below and overwrite both manifest files.
+
+**Q1 — Repo visibility (required — no default, no inference):**
+> "Before SweetClaude writes any planning documents, I need to know where to put them. Is this repo currently public, or do you plan to make it public in the future?"
+
+Require an explicit answer. Accept: "Public now" / "Private now, plan to go public" / "Private and will stay private." Do not proceed until answered explicitly.
+
+**Q2–Q5 — Per category (one at a time, in order):**
+
+For each category: ask visibility, then (if public) ask location with default shown. Require "public" or "private." Ask for one-sentence rationale. Record decision, location, and rationale for all four.
+
+**Strategy** (competitive analysis, market messaging, positioning, research):
+> "Strategy documents — competitive analysis, market messaging, positioning research. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `strategy/`." Store confirmed path.
+If private: location is `.sweetclaude/strategy/` — no question needed.
+
+**Product** (brief, PRD, milestones, roadmap, backlog, user stories):
+> "Product definition documents — product brief, PRD, milestones/roadmap, backlog, user stories. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `docs/`." Store confirmed path.
+If private: location is `.sweetclaude/product/` — no question needed.
+
+**Technical** (architecture, tech spec, data model, API design):
+> "Technical documents — architecture, tech spec, data model, API design. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `docs/`." Store confirmed path.
+If private: location is `.sweetclaude/technical/` — no question needed.
+
+**Design** (UX flows, wireframes):
+> "Design artifacts — UX flows, wireframes. Should these be tracked in the repo or kept private?"
+If public: "Where should they live? Default is `docs/design/`." Store confirmed path.
+If private: location is `.sweetclaude/design/` — no question needed.
+
+**Write both manifest files after all four questions are answered:**
+
+`.sweetclaude/artifact-privacy.yaml`:
+```yaml
+schema_version: 1
+recorded: {today's date}
+
+repo:
+  current_visibility: "{Q1 answer}"
+  future_intent: "{verbatim answer}"
+
+categories:
+  strategy:
+    privacy: public | private
+    base_path: "{confirmed path}"
+  product:
+    privacy: public | private
+    base_path: "{confirmed path}"
+  technical:
+    privacy: public | private
+    base_path: "{confirmed path}"
+  design:
+    privacy: public | private
+    base_path: "{confirmed path}"
+```
+
+`.sweetclaude/artifact-privacy.md`:
+```markdown
+# Artifact Privacy Manifest
+**Recorded:** {today's date}
+**Schema:** 1
+
+This document records where SweetClaude stores planning artifacts for this project.
+Review and update if repo visibility changes — run `/sweetclaude:on` and choose to update settings.
+
+## Repository Visibility
+
+**Current:** {Q1 answer}
+**Future intent:** {verbatim answer}
+
+## Category Decisions
+
+### Strategy Documents
+*Competitive analysis, market messaging, positioning, research*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+### Product Definition
+*Product brief, PRD, milestones, roadmap, backlog, user stories*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+### Technical Documents
+*Architecture, tech spec, data model, API design*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+### Design Artifacts
+*UX flows, wireframes*
+**Decision:** {Public|Private}
+**Rationale:** {user's rationale}
+**Location:** `{base_path}/`
+
+## Internal State
+*Phase tracking, decision logs, improvement register, assumption register*
+Always private — stored in `.sweetclaude/state/` (gitignored). No decision required.
+
+## Changelog
+| Date | Change |
+|------|--------|
+| {today's date} | Initial manifest created during /sweetclaude:on |
+```
+
+**Confirm and warn after writing:**
+Tell the user:
+> "Artifact privacy configured. {N} categories private, {M} public. Recorded in `.sweetclaude/artifact-privacy.md`."
+
+For each public category in a repo that is/will be public, confirm:
+> "Note: {category} documents at `{path}` will be publicly visible — that's what you chose. Confirmed."
+
+Check whether any confirmed public path appears to be gitignored. If so:
+> "The path `{path}` appears to be gitignored. Documents there won't be tracked until you add a gitignore exception. Want me to add one now?"
 
 ---
 

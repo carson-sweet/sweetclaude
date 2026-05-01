@@ -20,13 +20,21 @@ git status --short
 tail -25 .sweetclaude/state/checkpoint.md 2>/dev/null || echo "NO_CHECKPOINT"
 ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -3
 ls .sweetclaude/backlog/*.md 2>/dev/null | head -10
+product_base=$(python3 -c "import yaml; d=yaml.safe_load(open('.sweetclaude/artifact-privacy.yaml')); print(d['categories']['product']['base_path'])" 2>/dev/null || echo "MANIFEST_MISSING")
+if [ "$product_base" != "MANIFEST_MISSING" ]; then
+  ls ${product_base}/milestones/MS-*.md 2>/dev/null | head -10
+  grep -rh "\*\*Status:\*\*" ${product_base}/milestones/ 2>/dev/null | head -10
+  ls ${product_base}/backlog/*.md 2>/dev/null | head -10
+else
+  echo "ARTIFACT_PRIVACY_NOT_CONFIGURED — milestone and backlog paths unknown"
+fi
 ```
 
 Also read:
 - `.sweetclaude/state/phase.yaml` — full contents
 - `.sweetclaude/state/improvement-register.md` — first 10 lines if it exists
 
-Do not read roadmap files speculatively. Do not call `gh`. Do not read backlog file contents — filenames are enough for routing.
+Do not call `gh`. Do not read backlog file contents — filenames are enough for routing. If `artifact-privacy.yaml` is missing, note `ARTIFACT_PRIVACY_NOT_CONFIGURED` in status but do not block operation — `go` can still run for non-planning work.
 
 ## Step 2: Apply improvement register
 
@@ -43,17 +51,25 @@ Check the checkpoint first:
   > "Last checkpoint says: {Next: line}. Continue from there?"
   If yes, route directly to the appropriate skill per the routing table. Stop.
 
-If no useful checkpoint, check backlog filenames from the `ls` output:
+If no useful checkpoint, check the roadmap and backlog from the `ls` and `grep` output:
 
-**Tier 1 — Bugs/hotfixes:** Any filename containing `bug`, `hotfix`, `security`:
+**Tier 1 — Bugs/hotfixes:** Any backlog filename containing `bug`, `hotfix`, `security`:
 > "Open item: {filename slug}. Starting that now."
 Route to `sweetclaude:code-issue`. Stop.
 
-**Tier 2 — Backlog items exist:**
+**Tier 2 — Roadmap (milestones):** Milestones exist in `${product_base}/milestones/`. Check the Status grep output:
+- If any milestone has `Status: active`: read its Contributing work items and find the first open one. Route to the appropriate skill for that work item. Say which milestone and item you're working from.
+- If milestones exist but none are `active` (all `proposed`, `achieved`, `dropped`, `superseded`):
+  > "Roadmap has no active milestone — nothing currently queued. Check backlog?"
+  If yes, fall through to Tier 3.
+- If no `MS-*.md` files exist:
+  Fall through to Tier 3 without comment.
+
+**Tier 3 — Backlog items exist (non-bug):**
 > "No active work item. Top backlog item: {first filename slug}. Start that?"
 If yes, route directly to the right skill per the routing table. Stop.
 
-**Tier 3 — Nothing queued:**
+**Tier 4 — Nothing queued:**
 > "No active work item and no backlog. What do you want to work on?"
 Invoke `sweetclaude:find-skill` with their response. Stop.
 

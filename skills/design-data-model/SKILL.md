@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Design the data model: entities, relationships, constraints, indexes, and migration strategy. Produces schema definitions and migration plans."
+category: technical
 ---
 
 <preflight-guard>
@@ -8,6 +9,20 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 </preflight-guard>
 
 # Data Model Design
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.technical.base_path`. This is the base directory for all technical artifacts.
+
+3. Construct full paths as `{base_path}/{filename}`, e.g. `{base_path}/architecture.md`, `{base_path}/tech-spec-v1.md`.
+
+4. Write artifacts to those paths.
 
 Design the data model for: $ARGUMENTS
 
@@ -55,4 +70,4 @@ If modifying an existing schema:
 
 ### 5. Save
 
-Save to `docs/data-model.md`. Record key decisions via `design/manage-decisions`.
+Save to `{base_path}/data-model.md`. Record key decisions via `design/manage-decisions`.

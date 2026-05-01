@@ -2,11 +2,26 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:product-competition
 description: Competitive analysis at three depth levels — from a quick company survey to feature-by-feature deep analysis. Consolidates strategic and feature-level competitive work.
+category: strategy
 ---
 
 # Product Competition
 
 Competitive analysis at the depth appropriate to your needs. This skill consolidates strategic positioning analysis and feature-level comparison into one progressive workflow.
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.strategy.base_path`. This is the base directory for all strategy artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/strategy`, competitive analysis goes to `.sweetclaude/strategy/competitive-analysis/`).
+
+4. Write artifacts to those paths.
 
 ## Entry
 

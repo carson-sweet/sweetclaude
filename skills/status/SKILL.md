@@ -37,6 +37,15 @@ ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -
 ls .rag-index/lancedb/ 2>/dev/null | wc -l
 find corpus/canonical/ -type f 2>/dev/null | wc -l
 
+# Roadmap (milestones) — path from artifact privacy manifest
+product_base=$(python3 -c "import yaml; d=yaml.safe_load(open('.sweetclaude/artifact-privacy.yaml')); print(d['categories']['product']['base_path'])" 2>/dev/null || echo "MANIFEST_MISSING")
+if [ "$product_base" != "MANIFEST_MISSING" ]; then
+  ls ${product_base}/milestones/MS-*.md 2>/dev/null | head -10
+  grep -rh "\*\*Status:\*\*" ${product_base}/milestones/ 2>/dev/null | head -10
+else
+  echo "ARTIFACT_PRIVACY_NOT_CONFIGURED"
+fi
+
 # Versions
 python3 -c "import json; d=json.load(open('$HOME/.claude/plugins/installed_plugins.json')); e=[v[0] for k,v in d.get('plugins',{}).items() if 'sweetclaude' in k.lower() and v]; print(e[0].get('version','?') if e else '?')" 2>/dev/null
 python3 -c "import json; print(json.load(open('$HOME/dev/sweetclaude/package.json')).get('version','?'))" 2>/dev/null
@@ -56,6 +65,7 @@ Compute:
 - **SC_UPDATE** = if installed version ≠ latest version, append `→ v{latest} available — run /sweetclaude:update`
 - **RAG_STATUS** = if lancedb count > 0: `{canonical_count} canonical docs · indexed` / else if canonical_count > 0: `{canonical_count} canonical docs · not indexed` / else: `not configured`
 - **CHECKPOINT** = if checkpoint.md has content, show the `Next:` line from the last entry. If scratch files found, list them.
+- **MILESTONES** = if `product_base` is `MANIFEST_MISSING`: show `not configured (run /sweetclaude:on)`. Otherwise: from the Status grep output: for each `active` milestone, show its filename slug and `active`. If none are active but milestone files exist, show `none active`. If no MS-*.md files exist, show `none`.
 
 **If active work item exists:**
 
@@ -68,6 +78,9 @@ Work item:      [{id}] {title} [{type}]
 Phase:          {phase}  (step {N} of {M})
 Workflow:       {workflow line}
 Deference:      {deference_level}
+
+Active milestones:
+  {MILESTONES}
 
 Last checkpoint:
   {Next: line from checkpoint.md, or "none — run a skill to create one"}
@@ -92,6 +105,9 @@ SweetClaude ACTIVE — {project name}
 Version stage:  {version_stage}
 Work item:      (none)
 Deference:      {deference_level}
+
+Active milestones:
+  {MILESTONES}
 
 Last checkpoint:
   {Next: line from checkpoint.md, or "none"}

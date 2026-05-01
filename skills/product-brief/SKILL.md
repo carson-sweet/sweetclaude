@@ -2,11 +2,26 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:product-brief
 description: Write a product brief — a strategic document describing what is being built, for whom, why it matters, and what success looks like. Scales to available input depth.
+category: product
 ---
 
 # Product Brief
 
 Write a product brief from the discovery, research, competition, and persona work completed so far. Sections and depth scale to what's available.
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.product.base_path`. This is the base directory for all product artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/product`, milestones go to `.sweetclaude/product/milestones/MS-001.md`).
+
+4. Write artifacts to those paths.
 
 ## Entry
 

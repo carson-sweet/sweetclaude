@@ -2,11 +2,26 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:product-user-personas
 description: Define product users — who they are, what they need to do, and exactly what completing each task looks and feels like. Includes triggers, deal-breakers, and optional research-backed workflow expansion.
+category: product
 ---
 
 # Product User Personas
 
 Define the users of your product or tool — who they are, what they need to accomplish, and precisely what success and failure look like for each task.
+
+## Artifact Path Resolution
+
+Before writing any artifact file:
+
+1. Read `.sweetclaude/artifact-privacy.yaml`. If it does not exist, stop and say:
+   > "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here."
+   Do not guess a path. Do not fall back to a default.
+
+2. Read `categories.product.base_path`. This is the base directory for all product artifacts.
+
+3. Construct full paths as `{base_path}/{subfolder}/{filename}`, preserving existing subdirectory structure (e.g. if base is `.sweetclaude/product`, milestones go to `.sweetclaude/product/milestones/MS-001.md`).
+
+4. Write artifacts to those paths.
 
 ## Entry
 
@@ -153,4 +168,4 @@ Append to `.sweetclaude/log.md`:
 **Open questions:** {bullets}
 ```
 
-Write deliverable to `docs/{project-name}-user-personas-draft-v1.0-{yyyymmdd}.md` with standard front matter.
+Write deliverable to `{base_path}/{project-name}-user-personas-draft-v1.0-{yyyymmdd}.md` with standard front matter.
