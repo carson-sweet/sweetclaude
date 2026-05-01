@@ -180,41 +180,71 @@ Tell the user: "I've created `.sweetclaude/state/project-sop.md` to track this p
 
 ### Step 2.5-N: Artifact privacy setup
 
-Determine where SweetClaude stores planning artifacts for this project. This is permanent until explicitly updated.
+Determine where SweetClaude stores planning artifacts. **Assess the environment first. Do not ask questions before looking.**
 
 **Check for existing manifest first:**
 Run: `ls .sweetclaude/artifact-privacy.yaml 2>/dev/null`
 
-If it exists: ask "You already have artifact privacy settings configured — want to update them?" If no, skip to Step 3-N. If yes, proceed with the interview below and overwrite both manifest files.
+If it exists: ask "You already have artifact privacy settings configured — want to update them?" If no, skip to Step 3-N. If yes, proceed below and overwrite both manifest files.
 
-**Q1 — Repo visibility (required — no default, no inference):**
-> "Before SweetClaude writes any planning documents, I need to know where to put them. Is this repo currently public, or do you plan to make it public in the future?"
+**Phase 1: Environment assessment — run all of these, ask nothing yet**
 
-Require an explicit answer. Accept: "Public now" / "Private now, plan to go public" / "Private and will stay private." Do not proceed until answered explicitly.
+```bash
+# Actual repo visibility
+gh repo view --json visibility,name 2>/dev/null || echo "NO_GH_REMOTE"
 
-**Q2–Q5 — Per category (one at a time, in order):**
+# What is gitignored
+cat .gitignore 2>/dev/null
 
-For each category: ask visibility, then (if public) ask location with default shown. Require "public" or "private." Ask for one-sentence rationale. Record decision, location, and rationale for all four.
+# Where planning artifacts currently exist
+find docs/ -maxdepth 3 -name "*.md" 2>/dev/null | head -20
+find strategy/ -maxdepth 3 -name "*.md" 2>/dev/null | head -20
+find .sweetclaude/ -name "*.md" 2>/dev/null | grep -v "/state/" | head -20
+
+# What is already tracked in git vs untracked
+git ls-files docs/ strategy/ 2>/dev/null | head -30
+git ls-files --others --exclude-standard docs/ strategy/ 2>/dev/null | head -10
+```
+
+**Phase 2: Present what you found — before asking anything**
+
+Report in plain language:
+> "Here's what I found:
+> - Repo: {private | public | no remote detected}
+> - Existing planning docs: {locations where docs already exist, or 'none found'}
+> - Gitignored: {relevant ignored paths}
+> - Already tracked in git: {any docs/strategy files committed, or 'none'}"
+
+**Phase 3: Ask only what the scan could not determine — one question at a time**
+
+**Visibility intent** — only ask if the repo is currently private:
+> "The repo is currently private. Do you plan to make it public?"
+Accept: yes / no / not sure yet. Record verbatim.
+If the repo is already public: note it, skip this question entirely.
+
+**Per category — one at a time. Lead with what was found; don't ask as if starting from scratch:**
 
 **Strategy** (competitive analysis, market messaging, positioning, research):
-> "Strategy documents — competitive analysis, market messaging, positioning research. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `strategy/`." Store confirmed path.
+> "Strategy documents. [If found: I see these at {location}.] Should these be tracked in the repo or kept private?"
+If public: "Where should they live? [Suggest found location if applicable, otherwise default `strategy/`.]" Store confirmed path.
 If private: location is `.sweetclaude/strategy/` — no question needed.
 
 **Product** (brief, PRD, milestones, roadmap, backlog, user stories):
-> "Product definition documents — product brief, PRD, milestones/roadmap, backlog, user stories. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `docs/`." Store confirmed path.
+> "Product definition documents. [If found: I see these at {location}.] Tracked or private?"
+If public: "Where? [Suggest found location or default `docs/`.]" Store confirmed path.
 If private: location is `.sweetclaude/product/` — no question needed.
 
 **Technical** (architecture, tech spec, data model, API design):
-> "Technical documents — architecture, tech spec, data model, API design. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `docs/`." Store confirmed path.
+> "Technical documents. [If found: I see these at {location}.] Tracked or private?"
+If public: "Where? [Suggest found location or default `docs/`.]" Store confirmed path.
 If private: location is `.sweetclaude/technical/` — no question needed.
 
 **Design** (UX flows, wireframes):
-> "Design artifacts — UX flows, wireframes. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `docs/design/`." Store confirmed path.
+> "Design artifacts. [If found: I see these at {location}.] Tracked or private?"
+If public: "Where? [Suggest found location or default `docs/design/`.]" Store confirmed path.
 If private: location is `.sweetclaude/design/` — no question needed.
+
+For each: ask for one-sentence rationale. Record decision, location, and rationale.
 
 **Write both manifest files after all four questions are answered:**
 
@@ -373,41 +403,71 @@ For CLAUDE.md generation: scan the project for language, framework, package mana
 
 ### Step 2.5-E: Artifact privacy setup
 
-Determine where SweetClaude stores planning artifacts for this project. This is permanent until explicitly updated.
+Determine where SweetClaude stores planning artifacts. **Assess the environment first. Do not ask questions before looking.**
 
 **Check for existing manifest first:**
 Run: `ls .sweetclaude/artifact-privacy.yaml 2>/dev/null`
 
-If it exists: ask "You already have artifact privacy settings configured — want to update them?" If no, skip to Step 3-E. If yes, proceed with the interview below and overwrite both manifest files.
+If it exists: ask "You already have artifact privacy settings configured — want to update them?" If no, skip to Step 3-E. If yes, proceed below and overwrite both manifest files.
 
-**Q1 — Repo visibility (required — no default, no inference):**
-> "Before SweetClaude writes any planning documents, I need to know where to put them. Is this repo currently public, or do you plan to make it public in the future?"
+**Phase 1: Environment assessment — run all of these, ask nothing yet**
 
-Require an explicit answer. Accept: "Public now" / "Private now, plan to go public" / "Private and will stay private." Do not proceed until answered explicitly.
+```bash
+# Actual repo visibility
+gh repo view --json visibility,name 2>/dev/null || echo "NO_GH_REMOTE"
 
-**Q2–Q5 — Per category (one at a time, in order):**
+# What is gitignored
+cat .gitignore 2>/dev/null
 
-For each category: ask visibility, then (if public) ask location with default shown. Require "public" or "private." Ask for one-sentence rationale. Record decision, location, and rationale for all four.
+# Where planning artifacts currently exist
+find docs/ -maxdepth 3 -name "*.md" 2>/dev/null | head -20
+find strategy/ -maxdepth 3 -name "*.md" 2>/dev/null | head -20
+find .sweetclaude/ -name "*.md" 2>/dev/null | grep -v "/state/" | head -20
+
+# What is already tracked in git vs untracked
+git ls-files docs/ strategy/ 2>/dev/null | head -30
+git ls-files --others --exclude-standard docs/ strategy/ 2>/dev/null | head -10
+```
+
+**Phase 2: Present what you found — before asking anything**
+
+Report in plain language:
+> "Here's what I found:
+> - Repo: {private | public | no remote detected}
+> - Existing planning docs: {locations where docs already exist, or 'none found'}
+> - Gitignored: {relevant ignored paths}
+> - Already tracked in git: {any docs/strategy files committed, or 'none'}"
+
+**Phase 3: Ask only what the scan could not determine — one question at a time**
+
+**Visibility intent** — only ask if the repo is currently private:
+> "The repo is currently private. Do you plan to make it public?"
+Accept: yes / no / not sure yet. Record verbatim.
+If the repo is already public: note it, skip this question entirely.
+
+**Per category — one at a time. Lead with what was found; don't ask as if starting from scratch:**
 
 **Strategy** (competitive analysis, market messaging, positioning, research):
-> "Strategy documents — competitive analysis, market messaging, positioning research. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `strategy/`." Store confirmed path.
+> "Strategy documents. [If found: I see these at {location}.] Should these be tracked in the repo or kept private?"
+If public: "Where should they live? [Suggest found location if applicable, otherwise default `strategy/`.]" Store confirmed path.
 If private: location is `.sweetclaude/strategy/` — no question needed.
 
 **Product** (brief, PRD, milestones, roadmap, backlog, user stories):
-> "Product definition documents — product brief, PRD, milestones/roadmap, backlog, user stories. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `docs/`." Store confirmed path.
+> "Product definition documents. [If found: I see these at {location}.] Tracked or private?"
+If public: "Where? [Suggest found location or default `docs/`.]" Store confirmed path.
 If private: location is `.sweetclaude/product/` — no question needed.
 
 **Technical** (architecture, tech spec, data model, API design):
-> "Technical documents — architecture, tech spec, data model, API design. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `docs/`." Store confirmed path.
+> "Technical documents. [If found: I see these at {location}.] Tracked or private?"
+If public: "Where? [Suggest found location or default `docs/`.]" Store confirmed path.
 If private: location is `.sweetclaude/technical/` — no question needed.
 
 **Design** (UX flows, wireframes):
-> "Design artifacts — UX flows, wireframes. Should these be tracked in the repo or kept private?"
-If public: "Where should they live? Default is `docs/design/`." Store confirmed path.
+> "Design artifacts. [If found: I see these at {location}.] Tracked or private?"
+If public: "Where? [Suggest found location or default `docs/design/`.]" Store confirmed path.
 If private: location is `.sweetclaude/design/` — no question needed.
+
+For each: ask for one-sentence rationale. Record decision, location, and rationale.
 
 **Write both manifest files after all four questions are answered:**
 
