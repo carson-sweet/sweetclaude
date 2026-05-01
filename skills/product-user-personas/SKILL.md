@@ -23,6 +23,38 @@ Before writing any artifact file:
 
 4. Write artifacts to those paths.
 
+## Onboard — First-time setup
+
+Invoked with argument `onboard` when this skill is newly installed.
+
+1. **Scan for existing persona documents:**
+
+```bash
+find . -maxdepth 4 -name "*.md" | xargs grep -li "persona\|user type\|target user\|customer" 2>/dev/null | grep -v ".sweetclaude" | head -10
+grep -ri "persona\|user type\|target user" README* docs/ .sweetclaude/state/ 2>/dev/null | head -5
+```
+
+2. **Present findings and ask:**
+
+If existing docs found:
+> "I found documents that may contain persona definitions: {list}.
+>
+> Want me to extract persona candidates from these now?
+>   yes    — I'll read them and draft persona candidates for your review
+>   fresh  — start from scratch instead
+>   cancel — set up later with `/sweetclaude:product-user-personas`"
+
+If nothing found:
+> "No existing persona documents found. Ready to define personas from scratch. Proceed? (yes/cancel)"
+
+3. **If yes (docs found):** Proceed to the **From Docs Path** below, using the found files as source documents.
+
+4. **If fresh / yes (nothing found):** Proceed to the **Persona Loop** below.
+
+5. **If cancel:** "OK. Run `/sweetclaude:product-user-personas` when ready."
+
+---
+
 ## Entry
 
 Check for `.sweetclaude/` directory. If not found, tell the user to run `/sweetclaude:init` first. Stop.

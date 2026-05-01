@@ -23,6 +23,45 @@ Before writing any artifact file:
 
 4. Write artifacts to those paths.
 
+## Onboard — First-time setup
+
+Invoked with argument `onboard` when this skill is newly installed.
+
+1. **Scan for existing story artifacts:**
+
+```bash
+# GitHub Issues
+gh issue list --state open --limit 30 2>/dev/null | head -20 || true
+
+# Markdown files with story patterns
+find . -maxdepth 4 -name "*.md" | xargs grep -li "As a\|user story\|acceptance criteria" 2>/dev/null | grep -v ".sweetclaude" | head -10
+
+# Jira / Linear exports
+find . -maxdepth 4 \( -name "*.csv" -o -name "*.json" \) | xargs grep -li "story\|issue\|ticket" 2>/dev/null | head -5
+grep -ri "linear.app\|jira\|atlassian" README* docs/ .sweetclaude/ 2>/dev/null | head -5
+```
+
+2. **Present findings and ask:**
+
+If existing stories found:
+> "I found existing user story artifacts: {list}.
+>
+> Want me to import these into SweetClaude's story format?
+>   import  — read them and create US-XXX files
+>   fresh   — write new stories from scratch
+>   cancel  — set up later with `/sweetclaude:product-user-stories`"
+
+If nothing found:
+> "No existing user stories found. Ready to write stories from scratch. This works best after personas are defined — have you run `/sweetclaude:product-user-personas`? (yes/no, we can proceed either way)"
+
+3. **If import:** Read the source files/issues. For each story found, create a `US-XXX` file in `{base_path}/stories/`. Preserve the original acceptance criteria. Present a summary.
+
+4. **If fresh / proceed without personas:** Route to **Step 1** below.
+
+5. **If cancel:** "OK. Run `/sweetclaude:product-user-stories` when ready."
+
+---
+
 ## Entry
 
 Check for `.sweetclaude/` directory. If not found, tell the user to run `/sweetclaude:init` first. Stop.

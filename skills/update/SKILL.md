@@ -231,17 +231,25 @@ New in this update:
 
 If nothing is new, show: "No new skills or hooks in this update."
 
-**Product management onboarding:**
+**New skill onboarding:**
 
-If any of `product-milestones`, `product-backlog`, or `product-sprint-plan` appear in the new skills list, after presenting them ask:
+If any of these skills appear in the new skills list, after presenting them ask the user which to set up now:
 
-> "These product management skills track your roadmap and work items directly in the project. Which would you like to set up now?
+| Keyword | Skill | What it does |
+|---------|-------|--------------|
+| `milestones` | `product-milestones` | Roadmap targets like "Exit Stealth" or "MVP Shipped" |
+| `backlog` | `product-backlog` | Deferred work items with context |
+| `sprint` | `product-sprint-plan` | Select stories from backlog into a sprint |
+| `personas` | `product-user-personas` | Define who your users are and what they need |
+| `stories` | `product-user-stories` | Write user stories for defined personas |
+| `corpus` | `document-corpus` | Import and index your project documents |
+
+Ask:
+> "These skills are new and can import your existing data. Which would you like to set up now?
 >
->   milestones  — roadmap targets like "Exit Stealth" or "MVP Shipped"
->   backlog     — deferred work items with context
->   sprint      — select stories from backlog into a sprint
+>   {list only the skills that are actually new, one per line with keyword and description}
 >
-> Enter the ones you want (e.g. "milestones backlog"), or "none" to skip."
+> Enter keywords (e.g. "milestones backlog"), or "none" to skip."
 
 For each skill the user enables, invoke it with argument `onboard`. Complete each onboard flow before starting the next. If the user says "none", continue.
 

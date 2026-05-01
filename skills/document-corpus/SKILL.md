@@ -42,9 +42,46 @@ What do you want to do?
   7. Reindex RAG     — rebuild the search index from scratch (recovery)
 ```
 
-If `$ARGUMENTS` was passed (e.g. `/sweetclaude:document-corpus triage`), skip the menu and route directly.
+If `$ARGUMENTS` is `onboard`, run the onboard flow below instead of showing the menu.
+
+If any other `$ARGUMENTS` was passed (e.g. `/sweetclaude:document-corpus triage`), skip the menu and route directly.
 
 Parse the user's selection and jump to the named section below.
+
+---
+
+## Onboard — First-time setup
+
+Invoked with argument `onboard` when this skill is newly installed.
+
+1. **Scan for existing documents:**
+
+```bash
+# Count markdown and text files outside corpus/ and .sweetclaude/
+find . -maxdepth 4 \( -name "*.md" -o -name "*.txt" -o -name "*.pdf" -o -name "*.docx" \) \
+  ! -path "./.sweetclaude/*" ! -path "./corpus/*" ! -path "./.rag-index/*" \
+  ! -path "./node_modules/*" ! -path "./.git/*" 2>/dev/null | wc -l
+
+find . -maxdepth 4 \( -name "*.md" -o -name "*.txt" \) \
+  ! -path "./.sweetclaude/*" ! -path "./corpus/*" ! -path "./.rag-index/*" \
+  ! -path "./node_modules/*" ! -path "./.git/*" 2>/dev/null | head -10
+```
+
+2. **Present findings and ask:**
+
+If documents found:
+> "I found {N} documents in this project that could be imported into the corpus ({list of sample paths}).
+>
+> The Document Corpus pipeline consolidates, deduplicates, and indexes your docs into a clean searchable corpus. Want to start that pipeline now?
+>   yes    — I'll start with Consolidate (you'll confirm before anything is copied)
+>   later  — I'll skip for now; run `/sweetclaude:document-corpus` when ready"
+
+If nothing found:
+> "No existing documents found outside SweetClaude directories. The Document Corpus skill is ready — run `/sweetclaude:document-corpus` when you have documents to import."
+
+3. **If yes:** Route to **Mode: Consolidate** with the discovered directories as suggested sources.
+
+4. **If later / nothing found:** Stop.
 
 ---
 
