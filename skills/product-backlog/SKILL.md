@@ -12,6 +12,45 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Manage backlog: $ARGUMENTS
 
+## Environment Assessment
+
+**Run this before anything else — including Artifact Path Resolution.**
+
+### Step 1: Check for existing SweetClaude backlog
+
+Read `.sweetclaude/artifact-privacy.yaml` to get `categories.product.base_path`. Check whether `{base_path}/backlog/` already contains `BL-*.md` files.
+
+- If backlog files exist: returning user. Skip to **Routing** — normal operations apply. Do not re-run assessment.
+- If empty or doesn't exist: first use. Continue to Step 2.
+
+### Step 2: Look for existing backlog systems
+
+```bash
+# GitHub Issues
+gh issue list --state open --limit 20 2>/dev/null | head -10 || true
+
+# Linear, Jira, Notion references
+grep -ri "linear.app\|jira\|atlassian\|notion.so" README* docs/ .sweetclaude/ 2>/dev/null | head -5
+
+# Existing markdown todo/backlog files
+find . -maxdepth 4 -name "*.md" | xargs grep -li "backlog\|todo\|to-do\|tasks" 2>/dev/null | grep -v ".sweetclaude" | head -10
+```
+
+### Step 3: Present findings and ask
+
+If an existing system was detected:
+> "I found what looks like an existing backlog or task tracking system: {what you found}. How do you want to proceed?
+> 1. **Import** — migrate existing items into SweetClaude backlog files
+> 2. **Start fresh** — ignore the old system, start clean
+> 3. **Side by side** — keep both, just start adding new items here"
+
+If nothing detected:
+> "No existing backlog found. Ready to set up SweetClaude backlog tracking under {base_path}/backlog/. Go ahead?"
+
+Wait for the user's answer before proceeding. If they choose **Import**, read the detected files/issues and create SweetClaude `BL-*.md` files from them. Then route normally.
+
+---
+
 ## Artifact Path Resolution
 
 Before writing any artifact file:
