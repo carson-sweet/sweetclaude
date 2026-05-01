@@ -183,7 +183,7 @@ If you want to propose a new work type or workflow shape, that is a config chang
 
 ## What's planned?
 
-The `deploy/` bucket is the largest gap right now. There are also several Plan 2 and Plan 3 skills in flight (mockup pipeline, init/adopt as standalone skills, security planning, infrastructure change). The detailed backlog lives in a private companion repo; ask in an issue if you want context on a specific item.
+The `deploy/` bucket is the largest gap right now. There are also several Plan 2 and Plan 3 skills in flight (mockup pipeline, init/adopt as standalone skills, security planning, infrastructure change).
 
 ---
 
