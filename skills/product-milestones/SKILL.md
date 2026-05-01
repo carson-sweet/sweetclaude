@@ -14,55 +14,6 @@ Manage milestones: $ARGUMENTS
 
 A milestone is a **roadmap target** — a named strategic outcome the project is driving toward. Not a release, not a sprint, not an epic. Examples: "Exit Stealth", "Paid Pilot Live", "Series A Readiness", "MVP Shipped".
 
-## Environment Assessment
-
-**Run this before anything else — including Artifact Path Resolution.**
-
-Check what already exists so you don't bulldoze the user's existing system.
-
-### Step 1: Check for existing SweetClaude milestones
-
-Read `.sweetclaude/artifact-privacy.yaml` to get `categories.product.base_path`. If the manifest exists, check whether `{base_path}/milestones/` already contains `MS-*.md` files.
-
-- If milestone files exist: this is a returning user. Skip to **Routing** — the normal operations apply. Do not re-run environment assessment.
-- If the directory is empty or doesn't exist: this is first use. Continue to Step 2.
-
-### Step 2: Look for existing tracking systems
-
-Scan the project for signs of an existing milestone or roadmap system:
-
-```bash
-# GitHub Issues / Projects
-ls .github/ 2>/dev/null
-gh issue list --label milestone --limit 10 2>/dev/null || true
-
-# Linear (check for config or links in README/docs)
-grep -ri "linear.app" README* docs/ .sweetclaude/ 2>/dev/null | head -5
-
-# Jira
-grep -ri "jira\|atlassian" README* docs/ .sweetclaude/ 2>/dev/null | head -5
-
-# Existing markdown milestone/roadmap files
-find . -maxdepth 4 -name "*.md" | xargs grep -li "milestone\|roadmap" 2>/dev/null | grep -v ".sweetclaude" | head -10
-```
-
-### Step 3: Present findings and ask
-
-Present what you found in plain language. Then ask **one question**:
-
-If an existing system was detected:
-> "I found what looks like an existing milestone/roadmap system: {what you found}. How do you want to proceed?
-> 1. **Import** — I'll read what's there and migrate it into SweetClaude's milestone files
-> 2. **Start fresh** — ignore the old system, start clean with SweetClaude
-> 3. **Side by side** — keep both, just start adding new milestones here"
-
-If nothing was detected:
-> "No existing milestone tracking found. Ready to set up SweetClaude milestones — this will create files under {base_path}/milestones/. Go ahead?"
-
-Wait for the user's answer before proceeding. If they choose **Import**, read the detected files/issues and create SweetClaude milestone files from them before routing to the normal operations. If they choose **Start fresh** or **Go ahead**, proceed to Artifact Path Resolution normally.
-
----
-
 ## Artifact Path Resolution
 
 Before writing any artifact file:
@@ -83,6 +34,7 @@ Classify the invocation by the first word of `$ARGUMENTS`:
 
 | First word | Operation |
 |------------|-----------|
+| `onboard` | First-time setup — scan for existing data and migrate |
 | `add` | Create a new milestone |
 | `review` | List milestones grouped by Now / Next / Later |
 | `link <item> <MS-XXX>` | Attach a product work item to a milestone |
@@ -153,6 +105,44 @@ Free-form log of decisions, scope changes, blockers encountered.
 | `superseded` | Replaced by a newer milestone. Links to successor in Notes. Terminal.    |
 
 ## Operations
+
+### `onboard` — First-time setup
+
+1. **Scan for existing milestone and roadmap data:**
+
+```bash
+# GitHub milestones
+gh milestone list 2>/dev/null | head -20 || true
+gh issue list --label milestone --limit 20 2>/dev/null | head -20 || true
+
+# Linear, Jira, Notion references
+grep -ri "linear.app\|jira\|atlassian\|notion.so" README* docs/ .sweetclaude/ 2>/dev/null | head -5
+
+# Existing markdown milestone/roadmap files
+find . -maxdepth 4 -name "*.md" | xargs grep -li "milestone\|roadmap" 2>/dev/null | grep -v ".sweetclaude" | head -10
+```
+
+2. **Present findings and ask:**
+
+If existing data found:
+> "I found existing milestone/roadmap data:
+>   {list what was found — file names, GitHub milestone names, etc.}
+>
+> What do you want to do?
+>   import    — create SweetClaude milestone files from this data
+>   fresh     — start clean, ignore existing data
+>   cancel    — set up later with `/sweetclaude:product-milestones onboard`"
+
+If nothing found:
+> "No existing milestone tracking found. I'll create the milestones directory at `{base_path}/milestones/`. Proceed? (yes/cancel)"
+
+3. **If import:** For each milestone or roadmap item found, read the source and create a SweetClaude `MS-XXX` file using the milestone template. Populate all fields from the source data where available; leave others as defaults. Present a summary of what was created. Then tell the user: "Use `/sweetclaude:product-milestones review` to see your milestones."
+
+4. **If fresh / yes:** Create `{base_path}/milestones/MILESTONES-INDEX.md` with the standard header. Tell the user: "Ready. Use `/sweetclaude:product-milestones add` to create your first milestone."
+
+5. **If cancel:** "OK. Run `/sweetclaude:product-milestones onboard` when ready."
+
+---
 
 ### `add` — Create a new milestone
 

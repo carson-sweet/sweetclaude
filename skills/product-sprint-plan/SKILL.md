@@ -11,6 +11,23 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Plan a sprint for: $ARGUMENTS
 
+## Onboarding — First-time setup
+
+If `$ARGUMENTS` is `onboard`:
+
+1. Check whether `{base_path}/backlog/BACKLOG-INDEX.md` exists.
+   - If not: > "Sprint planning requires the backlog to be set up first. Setting up the backlog now." Then invoke `sweetclaude:product-backlog onboard` and wait for it to complete.
+   - If yes: continue.
+
+2. Check whether `{base_path}/milestones/MILESTONES-INDEX.md` exists.
+   - If not: > "Sprint planning works best with milestones defined so each sprint can be tied to a roadmap target. Want to set up milestones now? (yes/skip)"
+     - If yes: invoke `sweetclaude:product-milestones onboard` and wait.
+     - If skip: continue.
+
+3. Tell the user: "Sprint planning is ready. Run `/sweetclaude:product-sprint-plan` when you're ready to plan a sprint."
+
+---
+
 ## SweetClaude Context
 
 - Pull candidate stories from `stories/` and `product/backlog`.

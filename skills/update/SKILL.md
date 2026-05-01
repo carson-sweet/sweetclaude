@@ -231,6 +231,20 @@ New in this update:
 
 If nothing is new, show: "No new skills or hooks in this update."
 
+**Product management onboarding:**
+
+If any of `product-milestones`, `product-backlog`, or `product-sprint-plan` appear in the new skills list, after presenting them ask:
+
+> "These product management skills track your roadmap and work items directly in the project. Which would you like to set up now?
+>
+>   milestones  — roadmap targets like "Exit Stealth" or "MVP Shipped"
+>   backlog     — deferred work items with context
+>   sprint      — select stories from backlog into a sprint
+>
+> Enter the ones you want (e.g. "milestones backlog"), or "none" to skip."
+
+For each skill the user enables, invoke it with argument `onboard`. Complete each onboard flow before starting the next. If the user says "none", continue.
+
 **Then immediately continue to 7b. Do not stop here.**
 
 ### 7b: Full skill catalog
