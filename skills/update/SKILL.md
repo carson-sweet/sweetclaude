@@ -231,9 +231,46 @@ New in this update:
 
 If nothing is new, show: "No new skills or hooks in this update."
 
-**New skill onboarding:**
+**Skill state bootstrap:**
 
-If any of these skills appear in the new skills list, after presenting them ask the user which to set up now:
+This runs unconditionally — regardless of whether any new skills were found.
+
+Only run if `.sweetclaude/` exists in the current project directory.
+
+Read `.sweetclaude/state/skills.yaml` if it exists.
+
+For each of the six data-owning skills, check whether it is already present in `skills.yaml`. If it is missing or absent, infer its state from the data files below:
+
+| Skill | Data file that indicates it's already in use |
+|---|---|
+| `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
+| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
+| `product-sprint-plan` | *(no inference — always starts as `enabled: false` if absent)* |
+| `product-user-personas` | `.sweetclaude/state/personas.yaml` |
+| `product-user-stories` | `{base_path}/stories/` contains at least one `US-*.md` file |
+| `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` |
+
+For `base_path`: read `.sweetclaude/artifact-privacy.yaml` → `categories.product.base_path`. If this file does not exist, use `.sweetclaude/artifacts/product` as the fallback.
+
+For each skill missing from `skills.yaml`:
+- If the data file exists: write `enabled: true` for that skill (it was already in use before state tracking was added).
+- If the data file does not exist: write `enabled: false`.
+
+After processing all six, write the complete `skills.yaml`. Do not remove entries for skills already in the file — only add or fill in missing ones. Preserve any existing `onboarded_at` / `offboarded_at` timestamps.
+
+**Skill onboarding prompt:**
+
+After the bootstrap, read `skills.yaml`. Build a list of all six data-owning skills where `enabled: false`. This list drives the onboarding prompt — it is not limited to "new" skill directories.
+
+If the list is empty, skip the prompt entirely and continue to 7b.
+
+If the list is non-empty, ask:
+
+> "These skills can import your existing data. Which would you like to set up now?
+>
+>   {list only the skills with enabled: false, one per line with keyword and description}
+>
+> Enter keywords (e.g. "milestones backlog"), or "none" to skip."
 
 | Keyword | Skill | What it does |
 |---------|-------|--------------|
@@ -243,15 +280,6 @@ If any of these skills appear in the new skills list, after presenting them ask 
 | `personas` | `product-user-personas` | Define who your users are and what they need |
 | `stories` | `product-user-stories` | Write user stories for defined personas |
 | `corpus` | `document-corpus` | Import and index your project documents |
-
-Before asking, read `.sweetclaude/state/skills.yaml`. From the new skills list, keep only those where `enabled: false` or the skill is absent from `skills.yaml`. If all new skills are already `enabled: true`, skip this prompt entirely.
-
-Ask:
-> "These skills are new and can import your existing data. Which would you like to set up now?
->
->   {list only the skills that are new AND not already enabled, one per line with keyword and description}
->
-> Enter keywords (e.g. "milestones backlog"), or "none" to skip."
 
 For each skill the user enables, invoke it with argument `onboard`. Complete each onboard flow before starting the next. If the user says "none", continue.
 
