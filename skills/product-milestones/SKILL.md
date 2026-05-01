@@ -18,12 +18,12 @@ A milestone is a **roadmap target** — a named strategic outcome the project is
 
 Read `.sweetclaude/state/skills.yaml`.
 
-**If `skills.yaml` does not exist** (project predates skill state tracking):
+**If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-milestones`:**
 - Check whether `{base_path}/milestones/MILESTONES-INDEX.md` exists
-- If yes: skill was already in use — write `skills.yaml` with `skills.product-milestones.enabled: true`. Proceed normally.
-- If no: write `skills.yaml` with `skills.product-milestones.enabled: false`. Route to `onboard`.
+- If yes: skill was already in use — add/write `skills.product-milestones.enabled: true` to skills.yaml. Proceed normally.
+- If no: add/write `skills.product-milestones.enabled: false` to skills.yaml. Route to `onboard`.
 
-**If `skills.yaml` exists:**
+**If `skills.yaml` exists and has an entry for `skills.product-milestones`:**
 - If `skills.product-milestones.enabled: true`: proceed normally.
 - If `skills.product-milestones.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Milestones haven't been set up for this project yet. Starting onboarding..." and route to `onboard`.
 - If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Milestones are not currently enabled. Nothing to offboard." Stop.

@@ -46,12 +46,12 @@ What do you want to do?
 
 Read `.sweetclaude/state/skills.yaml`.
 
-**If `skills.yaml` does not exist:**
+**If `skills.yaml` does not exist, OR exists but has no entry for `skills.document-corpus`:**
 - Check whether `.sweetclaude/state/corpus-pipeline.yaml` exists
-- If yes: write `skills.yaml` with `skills.document-corpus.enabled: true`. Proceed normally.
-- If no: write `skills.yaml` with `skills.document-corpus.enabled: false`. Route to `onboard`.
+- If yes: add/write `skills.document-corpus.enabled: true` to skills.yaml. Proceed normally.
+- If no: add/write `skills.document-corpus.enabled: false` to skills.yaml. Route to `onboard`.
 
-**If `skills.yaml` exists:**
+**If `skills.yaml` exists and has an entry for `skills.document-corpus`:**
 - If `skills.document-corpus.enabled: true`: proceed normally (show the menu).
 - If `skills.document-corpus.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Document corpus hasn't been set up for this project yet. Starting onboarding..." and route to `onboard`.
 - If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Document corpus is not currently enabled. Nothing to offboard." Stop.

@@ -431,6 +431,19 @@ Same as Step 2-N (2b through 2e) — create state directory, strategy structure,
 
 For CLAUDE.md generation: scan the project for language, framework, package manager, test runner, and build commands first. Use those in the CLAUDE.md instead of placeholders.
 
+**skills.yaml override for existing projects:** When creating `.sweetclaude/state/skills.yaml` in Step 2b, do NOT write all skills as `enabled: false`. Instead, bootstrap from data files first. Read `artifact-privacy.yaml` → `categories.product.base_path` (fallback: `.sweetclaude/artifacts/product`). For each skill, check the data file signal and write the correct enabled state:
+
+| Skill | Data file signal |
+|---|---|
+| `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` exists |
+| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` exists |
+| `product-sprint-plan` | *(no signal — always `enabled: false`)* |
+| `product-user-personas` | `.sweetclaude/state/personas.yaml` exists |
+| `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |
+| `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` exists |
+
+Note: `artifact-privacy.yaml` may not exist yet when this step runs (it is created in Step 2.5-E). Use the fallback path if it is absent.
+
 ---
 
 ### Step 2.5-E: Artifact privacy setup

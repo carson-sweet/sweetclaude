@@ -15,10 +15,10 @@ Plan a sprint for: $ARGUMENTS
 
 Read `.sweetclaude/state/skills.yaml`.
 
-**If `skills.yaml` does not exist:**
-- Write `skills.yaml` with `skills.product-sprint-plan.enabled: false`. Route to `onboard`.
+**If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-sprint-plan`:**
+- Add/write `skills.product-sprint-plan.enabled: false` to skills.yaml. Route to `onboard`.
 
-**If `skills.yaml` exists:**
+**If `skills.yaml` exists and has an entry for `skills.product-sprint-plan`:**
 - If `skills.product-sprint-plan.enabled: true`: proceed normally.
 - If `skills.product-sprint-plan.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Sprint planning hasn't been set up for this project yet. Starting onboarding..." and route to `onboard`.
 - If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Sprint planning is not currently enabled. Nothing to offboard." Stop.

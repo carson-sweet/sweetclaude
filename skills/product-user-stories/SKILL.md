@@ -27,12 +27,12 @@ Before writing any artifact file:
 
 Read `.sweetclaude/state/skills.yaml`.
 
-**If `skills.yaml` does not exist:**
+**If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-user-stories`:**
 - Check whether any `US-*.md` files exist under `{base_path}/stories/`
-- If yes: write `skills.yaml` with `skills.product-user-stories.enabled: true`. Proceed normally.
-- If no: write `skills.yaml` with `skills.product-user-stories.enabled: false`. Route to `onboard`.
+- If yes: add/write `skills.product-user-stories.enabled: true` to skills.yaml. Proceed normally.
+- If no: add/write `skills.product-user-stories.enabled: false` to skills.yaml. Route to `onboard`.
 
-**If `skills.yaml` exists:**
+**If `skills.yaml` exists and has an entry for `skills.product-user-stories`:**
 - If `skills.product-user-stories.enabled: true`: proceed normally.
 - If `skills.product-user-stories.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "User stories haven't been set up for this project yet. Starting onboarding..." and route to `onboard`.
 - If `$ARGUMENTS` is `offboard` and `enabled: false`: say "User stories are not currently enabled. Nothing to offboard." Stop.
