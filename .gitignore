@@ -10,4 +10,9 @@ restore-config.sh
 !.sweetclaude/version-bump.yaml
 /strategy/
 /corpus/
-/docs/backlog/
+
+# docs/ — only user-guide is public; everything else is internal and lives in
+# the carson-sweet/sweetclaude-internal private repo
+/docs/*
+!/docs/user-guide/
+!/docs/user-guide/**
