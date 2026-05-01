@@ -160,6 +160,16 @@ Append to `.sweetclaude/log.md`:
 **Report:** {filename}
 ```
 
+Append to `.sweetclaude/state/checkpoint.md` (create if absent):
+
+```markdown
+## {ISO datetime} — design-ux-review
+
+Done: UX review for {story ID} — {N}/{total} personas, {count} recommendations
+Next: {if deal-breakers: "Address deal-breakers in wireframes, then re-run review" | else: "Incorporate findings and advance to PLAN"}
+Open: {deal-breaker summary if any, or "none"}
+```
+
 ## After the Session
 
 Present the synthesis, then ask:

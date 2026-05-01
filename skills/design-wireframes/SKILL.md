@@ -129,3 +129,13 @@ Append to `.sweetclaude/log.md`:
 **Style source:** ux.yaml | defaults
 **Open questions:** {bullets}
 ```
+
+Append to `.sweetclaude/state/checkpoint.md` (create if absent):
+
+```markdown
+## {ISO datetime} — design-wireframes
+
+Done: Generated wireframes for {story IDs} — {count} files in docs/wireframes/
+Next: Run `/sweetclaude:design-ux-review` to get persona feedback on the wireframes
+Open: {any open questions, or "none"}
+```
