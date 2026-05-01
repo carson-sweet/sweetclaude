@@ -244,10 +244,12 @@ If any of these skills appear in the new skills list, after presenting them ask 
 | `stories` | `product-user-stories` | Write user stories for defined personas |
 | `corpus` | `document-corpus` | Import and index your project documents |
 
+Before asking, read `.sweetclaude/state/skills.yaml`. From the new skills list, keep only those where `enabled: false` or the skill is absent from `skills.yaml`. If all new skills are already `enabled: true`, skip this prompt entirely.
+
 Ask:
 > "These skills are new and can import your existing data. Which would you like to set up now?
 >
->   {list only the skills that are actually new, one per line with keyword and description}
+>   {list only the skills that are new AND not already enabled, one per line with keyword and description}
 >
 > Enter keywords (e.g. "milestones backlog"), or "none" to skip."
 

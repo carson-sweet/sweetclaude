@@ -42,6 +42,26 @@ What do you want to do?
   7. Reindex RAG     — rebuild the search index from scratch (recovery)
 ```
 
+## State Check
+
+Read `.sweetclaude/state/skills.yaml`.
+
+**If `skills.yaml` does not exist:**
+- Check whether `.sweetclaude/state/corpus-pipeline.yaml` exists
+- If yes: write `skills.yaml` with `skills.document-corpus.enabled: true`. Proceed normally.
+- If no: write `skills.yaml` with `skills.document-corpus.enabled: false`. Route to `onboard`.
+
+**If `skills.yaml` exists:**
+- If `skills.document-corpus.enabled: true`: proceed normally (show the menu).
+- If `skills.document-corpus.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Document corpus hasn't been set up for this project yet. Starting onboarding..." and route to `onboard`.
+- If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Document corpus is not currently enabled. Nothing to offboard." Stop.
+
+**State writes:**
+- End of `onboard` (success): set `skills.document-corpus.enabled: true`, `onboarded_at: {today ISO date}`
+- End of `offboard`: set `skills.document-corpus.enabled: false`, `offboarded_at: {today ISO date}`
+
+---
+
 If `$ARGUMENTS` is `onboard`, run the onboard flow below instead of showing the menu.
 
 If `$ARGUMENTS` is `offboard`, run the offboard flow below instead of showing the menu.

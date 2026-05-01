@@ -121,6 +121,38 @@ Set up SweetClaude state for this project:
 - `.sweetclaude/state/assumption-register.md` — empty table (Assumption / Status / Evidence)
 - `.sweetclaude/state/improvement-register.md` — empty table (Date / Type / Learning)
 - `.sweetclaude/state/scope-changes.md` — empty table (Date / Item / Direction / Phase / Rationale)
+- `.sweetclaude/state/skills.yaml` — skill enablement state:
+  ```yaml
+  # .sweetclaude/state/skills.yaml
+  # SweetClaude skill enablement state — schema version 1
+  schema_version: 1
+
+  skills:
+    product-milestones:
+      enabled: false
+      onboarded_at: ~
+      offboarded_at: ~
+    product-backlog:
+      enabled: false
+      onboarded_at: ~
+      offboarded_at: ~
+    product-sprint-plan:
+      enabled: false
+      onboarded_at: ~
+      offboarded_at: ~
+    product-user-personas:
+      enabled: false
+      onboarded_at: ~
+      offboarded_at: ~
+    product-user-stories:
+      enabled: false
+      onboarded_at: ~
+      offboarded_at: ~
+    document-corpus:
+      enabled: false
+      onboarded_at: ~
+      offboarded_at: ~
+  ```
 - `.sweetclaude/traceability/requirements-map.md` — empty table
 - `.sweetclaude/traceability/ripple-map.md` — empty table
 

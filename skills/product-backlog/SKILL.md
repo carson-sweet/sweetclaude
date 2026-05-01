@@ -12,6 +12,26 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Manage backlog: $ARGUMENTS
 
+## State Check
+
+Read `.sweetclaude/state/skills.yaml`.
+
+**If `skills.yaml` does not exist:**
+- Check whether `{base_path}/backlog/BACKLOG-INDEX.md` exists
+- If yes: write `skills.yaml` with `skills.product-backlog.enabled: true`. Proceed normally.
+- If no: write `skills.yaml` with `skills.product-backlog.enabled: false`. Route to `onboard`.
+
+**If `skills.yaml` exists:**
+- If `skills.product-backlog.enabled: true`: proceed normally.
+- If `skills.product-backlog.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Backlog hasn't been set up for this project yet. Starting onboarding..." and route to `onboard`.
+- If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Backlog is not currently enabled. Nothing to offboard." Stop.
+
+**State writes:**
+- End of `onboard` (success): set `skills.product-backlog.enabled: true`, `onboarded_at: {today ISO date}`
+- End of `offboard`: set `skills.product-backlog.enabled: false`, `offboarded_at: {today ISO date}`
+
+---
+
 ## Artifact Path Resolution
 
 Before writing any artifact file:

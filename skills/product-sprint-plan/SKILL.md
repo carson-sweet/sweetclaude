@@ -11,6 +11,24 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Plan a sprint for: $ARGUMENTS
 
+## State Check
+
+Read `.sweetclaude/state/skills.yaml`.
+
+**If `skills.yaml` does not exist:**
+- Write `skills.yaml` with `skills.product-sprint-plan.enabled: false`. Route to `onboard`.
+
+**If `skills.yaml` exists:**
+- If `skills.product-sprint-plan.enabled: true`: proceed normally.
+- If `skills.product-sprint-plan.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Sprint planning hasn't been set up for this project yet. Starting onboarding..." and route to `onboard`.
+- If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Sprint planning is not currently enabled. Nothing to offboard." Stop.
+
+**State writes:**
+- End of `onboard` (success): set `skills.product-sprint-plan.enabled: true`, `onboarded_at: {today ISO date}`
+- End of `offboard`: set `skills.product-sprint-plan.enabled: false`, `offboarded_at: {today ISO date}`
+
+---
+
 ## Offboarding — Stop using this skill
 
 Invoked with argument `offboard`.
