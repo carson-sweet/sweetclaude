@@ -305,9 +305,15 @@ SweetClaude is a Claude Code plugin. After running the installer, all skills are
 
 **Protocol Guardian.** An optional enforcement layer that catches protocol drift mid-session. When enabled via `/sweetclaude:guardian-on`, it monitors skill invocations, TDD discipline, and artifact saves — and blocks on violations rather than issuing warnings. Disable at any time with `/sweetclaude:guardian-off`. SweetClaude will also proactively offer to enable it if it detects repeated protocol skipping.
 
+**Improvement register.** SweetClaude tracks what works and what doesn't across sessions — not by updating model weights, but by maintaining a persistent feedback ledger at `.sweetclaude/state/improvement-register.md`. There are two entry types: **Correction** (something you pushed back on) and **Confirmation** (something that worked well and should continue). Both matter — capturing only corrections produces an agent that avoids past mistakes but drifts away from approaches you've already validated.
+
+Feedback is collected through five built-in triggers, not left to chance. Before every phase transition, SweetClaude asks what should be done differently going forward — even "no, it was good" gets recorded as a confirmation. After code review findings are addressed, it asks how the review process felt. After any correction or visible misalignment, it surfaces its own analysis of what happened and proposes a specific behavior change. After smooth stretches or compliments, it asks what specifically worked so it can continue doing it. At session start, if the register has entries, SweetClaude acknowledges them and checks whether they still apply.
+
+The learning mechanism is straightforward: the register re-enters the context window at the start of every session, and the session-start trigger evaluates whether each entry is still load-bearing. Because the register is a plain markdown file, you can read it, edit it, or remove entries that no longer apply.
+
 **John Wick mode.** A fully autonomous, resumable pipeline that runs the complete product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. State is persisted in `.sweetclaude/state/john-wick.yaml` so the pipeline survives session boundaries and can resume exactly where it paused. Human gate points are pre-defined and rare: PRD approval, design change approval, and significant test failure triage. Past those gates, John Wick runs without stopping. A hard scope guardrail prevents autonomous pipelines from growing beyond what can be reasoned about clearly: more than 8 epics or 6 external dependencies triggers a warning and decomposition recommendation.
 
-**Language agnostic.** SweetClaude discovers your project's language, framework, test runner, and build tools automatically. It works with TypeScript, Python, Go, Rust, Java, or anything else.
+**Language agnostic.** SweetClaude works with any language Claude Code supports — which is to say, any language. The workflows and skills don't assume a specific stack; they prompt Claude to read your project's conventions and work within them. We adopt Claude's agnosticism.
 
 ## Upstream Dependencies
 
