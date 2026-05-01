@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-description: "Audit and repair SweetClaude's own configuration for this project. Checks CLAUDE.md accuracy, phase state vs reality, file locations, stale references, empty registers, untracked files. Proposes fixes for user approval."
+description: "Audit and repair SweetClaude's own configuration for this project. Checks CLAUDE.md accuracy, phase state vs reality, file locations, skills.yaml vs artifact parity, onboarding gaps, empty registers, and untracked files. Proposes fixes for user approval."
 ---
 
 # SweetClaude Fix Config
@@ -73,9 +73,12 @@ Check that artifacts are where SweetClaude expects them:
 
 | Expected Location | Check |
 |---|---|
-| `.sweetclaude/state/` | phase.yaml, project.yaml, decision-log, assumption-register, improvement-register, scope-changes |
+| `.sweetclaude/state/` | phase.yaml, project.yaml, skills.yaml, decision-log, assumption-register, improvement-register, scope-changes |
 | `docs/` | product-brief, prd, architecture, tech-spec, data-model, api-design, workflows (if they exist anywhere in the project) |
 | `.sweetclaude/stories/` | user stories and .feature files (if they exist) |
+| `.sweetclaude/backlog/` | BACKLOG-INDEX.md and item detail files (if product-backlog has been used) |
+| `.sweetclaude/milestones/` | milestone detail files (if product-milestones has been used) |
+| `.sweetclaude/sprints/` | sprint files (if product-sprint-plan has been used) |
 | `.sweetclaude/traceability/` | requirements-map, ripple-map |
 | `strategy/` | concept, pain-thesis, ICP, competitive, etc. (at project root, NOT inside .sweetclaude/) |
 
@@ -90,7 +93,66 @@ Do not assume. The user may have good reasons for the current location.
 
 ---
 
-## Step 5: Audit registers
+## Step 5: Audit skills.yaml and onboarding state
+
+**5a: Resolve base_path**
+
+Read `.sweetclaude/artifact-privacy.yaml` → `categories.product.base_path`. If absent, use `.sweetclaude/artifacts/product` as fallback.
+
+**5b: Bootstrap skills.yaml if needed**
+
+Read `.sweetclaude/state/skills.yaml` if it exists.
+
+For each of the six data-owning skills, check whether it is present in `skills.yaml`. Use the following signals to infer state for any missing entry:
+
+| Skill | Artifact signal (file exists → was in use) |
+|---|---|
+| `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
+| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
+| `product-sprint-plan` | *(no inference — write `enabled: false` if absent)* |
+| `product-user-personas` | `.sweetclaude/state/personas.yaml` |
+| `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |
+| `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` |
+
+If `skills.yaml` is missing entirely: propose creating it with entries inferred from the above.
+If entries are missing from an existing `skills.yaml`: propose adding them with the inferred state.
+
+> "skills.yaml is missing / has gaps. Based on artifacts on disk: backlog=true, milestones=false, … Write it?"
+
+On user approval, write or update `skills.yaml`. Do not remove or modify entries that are already present.
+
+**5c: Flag remaining mismatches**
+
+After bootstrap, re-read `skills.yaml` and check for inconsistencies:
+
+| Situation | Flag |
+|---|---|
+| `enabled: true` but no artifacts on disk | "Skill marked enabled but no artifacts found — onboard may not have completed. Re-run onboard?" |
+| `enabled: false` but artifacts clearly exist on disk | "Artifacts found but skill not enabled — skills.yaml may be stale. Mark enabled?" |
+
+Propose a fix for each mismatch. Do not auto-apply.
+
+**5d: Offer onboarding for unenabled skills**
+
+After resolving all mismatches, check `skills.yaml` for any skill with `enabled: false`.
+
+If any exist, ask:
+> "These skills are not yet set up for this project: {list}. Would you like to onboard any of them now? Enter keywords (e.g. 'milestones backlog') or 'none' to skip."
+
+| Keyword | Skill |
+|---|---|
+| `milestones` | `product-milestones` |
+| `backlog` | `product-backlog` |
+| `sprint` | `product-sprint-plan` |
+| `personas` | `product-user-personas` |
+| `stories` | `product-user-stories` |
+| `corpus` | `document-corpus` |
+
+For each skill the user enables, invoke it with argument `onboard`. Complete each onboard before starting the next.
+
+---
+
+## Step 6: Audit registers
 
 Check if SweetClaude's tracking registers have content:
 - `.sweetclaude/state/decision-log.md` — any entries?
@@ -110,7 +172,7 @@ Populate as draft entries marked `[retroactive]` for user review.
 
 ---
 
-## Step 6: Check for untracked SweetClaude files
+## Step 7: Check for untracked SweetClaude files
 
 Run `git status` on the project. Check if `.sweetclaude/` and `strategy/` have untracked or uncommitted files:
 
@@ -118,7 +180,7 @@ Run `git status` on the project. Check if `.sweetclaude/` and `strategy/` have u
 
 ---
 
-## Step 7: Report
+## Step 8: Report
 
 Present a summary:
 
@@ -129,6 +191,7 @@ SweetClaude Config Audit — {project}
 Phase state:    {✓ correct | ⚠ stale → recommended fix}
 CLAUDE.md:      {✓ accurate | ⚠ {N} issues found}
 File locations: {✓ correct | ⚠ {N} misplaced artifacts}
+Skills / onboard: {✓ in sync | ⚠ {N} mismatches}
 Registers:      {✓ populated | ⚠ empty on active project}
 Git tracking:   {✓ clean | ⚠ {N} untracked files}
 
