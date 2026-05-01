@@ -35,6 +35,8 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 ## Getting Started
 
+> **Note for existing clones (2026-05-01):** The git history was rewritten today to remove internal design docs that were never meant to be public. The framework code itself is unchanged. If you cloned this repo before today, run `git fetch origin && git reset --hard origin/main && git fetch --tags --force` to sync. Fresh clones and installs via `./install.sh` are unaffected.
+
 ### Prerequisites
 
 | Dependency | Check | Install |
