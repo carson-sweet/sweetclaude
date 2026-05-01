@@ -41,6 +41,13 @@ For each flow in scope, generate one self-contained HTML file.
 
 Example: `docs/wireframes/us-adm-001-create-contact.html`
 
+### React component annotations (optional)
+
+If `.sweetclaude/state/tech.yaml` exists and `framework` contains `react`, or if the user mentions React during the session, ask once:
+> "Want component boundaries annotated on the wireframes? I'll mark component outlines with dashed borders and label them — useful for mapping wireframe regions to React components."
+
+If yes: wrap each distinct UI region in a `<div class="component-boundary">` with a `data-component="{ComponentName}"` attribute. Add a CSS rule rendering these as dashed `#94A3B8` outlines with a small label in the top-left corner. Default component names derived from the flow step and region role (e.g., `ContactForm`, `ContactList`, `ErrorBanner`). Do not add this annotation unless the user opts in.
+
 ### HTML structure per file
 
 Each file contains all states of the flow as named sections, navigable via a simple fixed sidebar or top tab strip. States to include:
