@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Prepare for a specific meeting. Pulls relevant context from strategy corpus, drafts agenda, talking points with confidence levels, key asks, anticipated questions, and leave-behinds."
 ---
 

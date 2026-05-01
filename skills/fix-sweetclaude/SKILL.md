@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Audit and repair SweetClaude's own configuration for this project. Checks CLAUDE.md accuracy, phase state vs reality, file locations, stale references, empty registers, untracked files. Proposes fixes for user approval."
 ---
 

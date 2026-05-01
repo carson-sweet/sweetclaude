@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude TDD Prewrite Guardian Hook
 # PreToolUse Write|Edit — blocks source file writes when no test files exist.
 # Complements test-guardian.sh (which blocks test modifications during implementation).

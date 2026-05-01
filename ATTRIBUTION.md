@@ -34,13 +34,11 @@ These are third-party skills invoked by name but not forked or modified:
 - `reconciling-documents` — document consolidation (product phase)
 - `hibernate-project` — project freeze/thaw (extended by `sweetclaude:hibernate`)
 
-### MCP Servers
+### Optional MCP Servers
 
 | Server | Install | Role |
 |---|---|---|
-| [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) | `npm install -g mcp-local-rag` | Local semantic search via per-project vector index |
-
-mcp-local-rag uses [LanceDB](https://lancedb.com/) as its embedded vector database (index stored at `.rag-index/lancedb/`).
+| [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) | `npm install -g mcp-local-rag` | Local semantic search via per-project vector index (uses [LanceDB](https://lancedb.com/)) |
 
 ### CLI Tools
 
@@ -48,8 +46,10 @@ mcp-local-rag uses [LanceDB](https://lancedb.com/) as its embedded vector databa
 |---|---|---|
 | git | Yes | Version control, branching, commit hooks |
 | [GitHub CLI (gh)](https://cli.github.com/) | Recommended | Project init, issue/PR management |
-| Node.js | Optional | Required only for RAG indexing (`mcp-local-rag`) |
+| Node.js | Optional | Required only if using RAG indexing (`mcp-local-rag`) |
 
 ## License
 
-SweetClaude is released under the [PolyForm Shield License 1.0.0](LICENSE).
+SweetClaude is released under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later).
+
+Copyright 2026 Carson Sweet. All rights reserved under the terms of the AGPL-3.0.

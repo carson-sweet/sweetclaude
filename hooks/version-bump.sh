@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Version Bump Hook
 # PostToolUse on Bash — auto-bumps version after successful git commits.
 # Opt-in per project via .sweetclaude/version-bump.yaml.

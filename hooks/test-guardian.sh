@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Test Guardian Hook
 # PreToolUse — blocks Write/Edit to test files during implementation phase.
 

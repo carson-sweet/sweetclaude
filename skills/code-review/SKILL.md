@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 description: "Code, security, and compliance review. Opens a menu at start — pick one or several. Adversarial: assumes problems exist and finds them."
 ---
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Installer
 # Copies framework files to ~/.claude/ for Claude Code to load.
 # Backs up existing config, scans for conflicts, and offers restore via uninstall.sh.
