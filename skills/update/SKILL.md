@@ -209,6 +209,8 @@ SweetClaude updated.
 
 ## Step 7: Surface capabilities
 
+**IMPORTANT: This step has two parts. Both parts must execute. Do not stop after 7a.**
+
 ### 7a: What's new in this update
 
 Compare the installed hooks and config files (before sync) against the new version. Identify:
@@ -219,8 +221,7 @@ Compare the installed hooks and config files (before sync) against the new versi
 
 For each new item, check whether it requires per-project opt-in. Read the hook or skill to determine what config is needed.
 
-Present:
-
+If new items exist, present:
 ```
 New in this update:
   → {skill-name}: {one-line description}
@@ -230,11 +231,15 @@ New in this update:
 
 If nothing is new, show: "No new skills or hooks in this update."
 
+**Then immediately continue to 7b. Do not stop here.**
+
 ### 7b: Full skill catalog
+
+**This section always runs regardless of what 7a found.**
 
 Read all skill directories from `$SOURCE_DIR/skills/`. For each, extract the `description` and `category` fields from `SKILL.md` frontmatter. Group by category. Infer category from directory name prefix if `category` is absent (`code-*` → Code, `design-*` → Design, `product-*` → Product, `documents-*` → Documents, everything else → Framework).
 
-Present:
+Present immediately after the 7a output:
 
 ```
 All installed skills (v{new_version}):
@@ -262,8 +267,6 @@ FRAMEWORK
   /sweetclaude:status                  — ...
   ...
 ```
-
-This section is always shown — not conditional on whether anything is new. Users need to know what's installed.
 
 ---
 
