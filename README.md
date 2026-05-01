@@ -1,19 +1,13 @@
-<p>
-  <img src="sweetclaude.png" alt="SweetClaude" width="180" align="left">
-</p>
-<br>
-<br>
-<br>
-<br>
-<br>
+<img src="sweetclaude.png" alt="SweetClaude" width="180" align="left">
+<br clear="all"/>
 
 # SweetClaude
 
-A plugin for Claude Code that provides workflow automation and co-piloting for end-to-end product development - from "I have an idea" to shipped, tested code — with structured workflows for strategy, product definition, architecture, technical design, test-driven development, QA testing, code reviews, and documentation. It includes RAG-powered document consolidation and reconciliation (optional) to turn those piles of scattered documents and chat exports into canonical documentation.
+A plugin for Claude Code that provides workflow automation and guided assistance for end-to-end product development - from "I have an idea" to shipped, tested code — with structured workflows for strategy, product definition, architecture, technical design, test-driven development, QA testing, code reviews, and documentation. It includes RAG-powered document consolidation and reconciliation (optional) to turn those piles of scattered documents and chat exports into canonical documentation.
 
-SweetClaude's skills cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. Because it sits on top of Claude Code, it works with any language or framework.
+SweetClaude's skills cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. Because it sits on top of Claude Code, it works with any language or framework. Workflow structure and discipline have tiered, because use cases differ - weekend hobby projects, internal-use utilities, and commercial SaaS projects have different needs. Workflows also automatically adjust based on project phase, because an internal prototype is not the same as an MVP open beta.
 
-Built by an enterprise CTO/CISO and serial entrepreneur- originally for himself, and later for early-stage companies and solopreneurs who need a thoughtful, organized AI partner — not passive autocomplete-on-steroids.
+Built by an enterprise CTO/CISO and serial entrepreneur, originally as his toolchain and later for early-stage companies and solopreneurs who need a thoughtful, organized AI partner — not passive autocomplete-on-steroids.
 
 ## What SweetClaude Does
 
@@ -328,11 +322,9 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 
 [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later) — free to use, modify, and distribute for any purpose. If you run SweetClaude as a network service or incorporate it into a distributed product, you must disclose the use of SweetClaude and make the complete source available, including modifications, under the same license. See [LICENSE](LICENSE) for full terms.
 
-## Contributing
+## Contribute
 
 Contributions welcome. SweetClaude is built by solo developers, for solo developers. If you have ideas, skills, or improvements — open an issue or PR.
-
-If you're getting value, consider buying me a coffee. Which in reality means you're shifting dollars from my coffee budget to my dog Smushford's treat budget. Smushford thanks you.
 
 <p>
   <img src="sweetclaude-workshop.png" alt="SweetClaude Workshop" width="600" align="left">
@@ -353,7 +345,15 @@ If you're getting value, consider buying me a coffee. Which in reality means you
 
 
 
+## Support
 
+If you're getting value from SweetClaude, consider [buying me a coffee](https://ko-fi.com/carsonsweet). Which in reality means you're moving dollars from my coffee budget to [my dog Smushford's](http://instagram.com/smushford) treat budget. 
+
+Smushford thanks you.
+
+<p>
+  <img src="smushford.png" alt="Smushford Wellington DuBois III" width="400" align="left">
+</p>
 
 
 
