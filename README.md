@@ -337,31 +337,17 @@ Contributions welcome. SweetClaude is built by solo developers, for solo develop
 <p>
   <img src="sweetclaude-workshop.png" alt="SweetClaude Workshop" width="600" align="left">
 </p>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<br clear="all"/>
 ## Support
 
 If you're getting value from SweetClaude, consider [buying me a coffee](https://ko-fi.com/carsonsweet). Which in reality means you're moving dollars from my coffee budget to [my dog Smushford's](http://instagram.com/smushford) treat budget. 
 
 Smushford thanks you.
-
+<br clear="all"/>
 <p>
   <img src="smushford.png" alt="Smushford Wellington DuBois III" width="400" align="left">
 </p>
+<br clear="all"/>
 
 
 
