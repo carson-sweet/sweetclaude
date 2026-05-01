@@ -16,6 +16,43 @@ Check for `.sweetclaude/log.md`. If not found, create it.
 
 Read `.sweetclaude/state/discovery.yaml` if it exists — use `target_user_summary` as a starting point. Read `.sweetclaude/state/research.yaml` if it exists — use for optional workflow expansion.
 
+## Path Selection
+
+Ask:
+> "Are you starting from scratch, or do you have existing documents to extract personas from — things like a PRD, brief, research notes, or prior persona definitions?"
+
+- **From scratch:** proceed to Persona Loop below.
+- **From docs:** proceed to From Docs path below, then continue into the Persona Loop for refinement.
+
+## From Docs Path
+
+Ask the user to share or specify the source documents. Accept any of:
+- File paths (read directly)
+- Pasted text
+- A mix of both
+
+Read all provided content. Extract persona candidates:
+
+For each distinct user type you identify, draft:
+- A name or role label
+- Role, context, responsibilities
+- Inferred trigger (what situation drives them to this product)
+- Inferred deal-breakers (what would make them leave)
+- Tasks they appear to need (from requirements, job descriptions, use cases, or any narrative in the docs)
+
+Present all candidates as a structured draft:
+
+> "From your documents I found {N} persona candidates. Here they are — correct anything that's wrong, add what's missing, and tell me if I missed a user type entirely."
+
+Show each candidate concisely. Wait for the user to review and confirm or adjust.
+
+After confirmation, note which fields are thin or inferred so the user knows where to fill gaps:
+> "Fields marked [inferred] came from indirect evidence. We'll sharpen them as we go through the task loop."
+
+Then continue into the Persona Loop below — start at the Task Loop for each confirmed persona, skipping the initial definition questions for fields already populated. Ask definition questions only for fields still blank or marked [inferred].
+
+---
+
 ## Persona Loop
 
 Repeat for each persona until the user says there are no more.

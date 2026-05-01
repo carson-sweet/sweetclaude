@@ -54,6 +54,8 @@ product:
 design:
   skills:
     - sweetclaude:design/user-flows
+    - sweetclaude:design/wireframes
+    - sweetclaude:design/ux-review
     - sweetclaude:design/architecture
     - sweetclaude:design/tech-spec
     - sweetclaude:design/ux
