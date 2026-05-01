@@ -28,6 +28,8 @@ Before writing any artifact file:
 
 ## Routing
 
+If `$ARGUMENTS` is `offboard`, run the offboard flow below.
+
 Classify before adding:
 - **Technical items** (bugs, feature requests, tech debt, test gaps) go to `{base_path}/backlog/`.
 - **Strategic items** (product ideas, feature concepts, strategic initiatives, market opportunities) go to `strategy/`. Tell the user: "That is a strategic item. Capturing it in strategy/ instead of {base_path}/backlog/."
@@ -43,6 +45,64 @@ Never silently put a non-technical item in docs/backlog/.
   BL-002-short-name.md
   ...
 ```
+
+## Offboarding — Export data and stop using this skill
+
+Invoked with argument `offboard`.
+
+1. **Inventory what exists:**
+
+```bash
+ls {base_path}/backlog/BL-*.md 2>/dev/null | wc -l
+ls {base_path}/backlog/ 2>/dev/null
+```
+
+Present: "This project has {N} backlog items in `{base_path}/backlog/`."
+
+If nothing exists, say: "No backlog data found. Nothing to export." Stop.
+
+2. **Ask export format:**
+
+> "Where do you want to export your backlog?
+>   github     — create GitHub Issues via `gh issue create`
+>   markdown   — copy files to a directory you specify
+>   csv        — write a summary CSV to a path you specify
+>   none       — skip export, go straight to cleanup options"
+
+3. **Export:**
+
+- **github:** For each BL-*.md, run `gh issue create --title "{title}" --body "{summary + initial thinking}"`. Report what was created.
+- **markdown:** Ask "Which directory?" Copy all `BL-*.md` files and `BACKLOG-INDEX.md` there. Report files copied.
+- **csv:** Ask "Which path?" Write one row per item: ID, title, priority, depends on, one-line summary. Report path written.
+- **none:** Skip.
+
+4. **Confirm export complete** (if export ran):
+
+> "Export complete. Confirm the files look correct before proceeding. Ready to continue? (yes/cancel)"
+
+If cancel, stop. Do not touch SweetClaude files.
+
+5. **⚠ IRREVERSIBLE DATA LOSS WARNING ⚠**
+
+> "⚠ IRREVERSIBLE DATA LOSS WARNING ⚠
+>
+> The next step will permanently delete {N} files from `{base_path}/backlog/`.
+> This cannot be undone.
+>
+> To confirm deletion, type exactly: DELETE MY BACKLOG
+> To cancel, type anything else."
+
+If the user types anything other than `DELETE MY BACKLOG` exactly, say "Cancelled. Your files are safe." and stop.
+
+6. **Delete only after exact confirmation:**
+
+```bash
+rm -rf {base_path}/backlog/
+```
+
+Report: "Backlog files deleted."
+
+---
 
 ## Onboarding — First-time setup
 

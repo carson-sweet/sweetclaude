@@ -23,6 +23,66 @@ Before writing any artifact file:
 
 4. Write artifacts to those paths.
 
+## Offboard — Export data and stop using this skill
+
+Invoked with argument `offboard`.
+
+1. **Inventory what exists:**
+
+```bash
+ls {base_path}/personas/ 2>/dev/null
+cat .sweetclaude/state/personas.yaml 2>/dev/null | python3 -c "import sys,yaml; d=yaml.safe_load(sys.stdin); print(len(d.get('personas',[]))) if d else print(0)" 2>/dev/null
+```
+
+Present: "This project has persona data in `.sweetclaude/state/personas.yaml` and `{base_path}/personas/`."
+
+If nothing exists, say: "No persona data found. Nothing to export." Stop.
+
+2. **Ask export format:**
+
+> "Where do you want to export your personas?
+>   markdown   — write each persona to a markdown file in a directory you specify
+>   json       — write all personas to a single JSON file
+>   none       — skip export, go straight to cleanup options"
+
+3. **Export:**
+
+- **markdown:** Ask "Which directory?" For each persona in `personas.yaml`, write a markdown file with all fields. Also copy any existing persona files from `{base_path}/personas/`. Report files written.
+- **json:** Ask "Which path?" Write `personas.yaml` content as JSON. Report path written.
+- **none:** Skip.
+
+4. **Confirm export complete** (if export ran):
+
+> "Export complete. Confirm the files look correct before proceeding. Ready to continue? (yes/cancel)"
+
+If cancel, stop. Do not touch SweetClaude files.
+
+5. **⚠ IRREVERSIBLE DATA LOSS WARNING ⚠**
+
+> "⚠ IRREVERSIBLE DATA LOSS WARNING ⚠
+>
+> The next step will permanently delete persona data from:
+>   - `.sweetclaude/state/personas.yaml`
+>   - `{base_path}/personas/` (if it exists)
+>
+> This cannot be undone.
+>
+> To confirm deletion, type exactly: DELETE MY PERSONAS
+> To cancel, type anything else."
+
+If the user types anything other than `DELETE MY PERSONAS` exactly, say "Cancelled. Your files are safe." and stop.
+
+6. **Delete only after exact confirmation:**
+
+```bash
+rm -f .sweetclaude/state/personas.yaml
+rm -rf {base_path}/personas/
+```
+
+Report: "Persona data deleted."
+
+---
+
 ## Onboard — First-time setup
 
 Invoked with argument `onboard` when this skill is newly installed.

@@ -35,6 +35,7 @@ Classify the invocation by the first word of `$ARGUMENTS`:
 | First word | Operation |
 |------------|-----------|
 | `onboard` | First-time setup — scan for existing data and migrate |
+| `offboard` | Export data and optionally remove SweetClaude artifacts |
 | `add` | Create a new milestone |
 | `review` | List milestones grouped by Now / Next / Later |
 | `link <item> <MS-XXX>` | Attach a product work item to a milestone |
@@ -105,6 +106,64 @@ Free-form log of decisions, scope changes, blockers encountered.
 | `superseded` | Replaced by a newer milestone. Links to successor in Notes. Terminal.    |
 
 ## Operations
+
+### `offboard` — Export data and stop using this skill
+
+1. **Inventory what exists:**
+
+```bash
+ls {base_path}/milestones/MS-*.md 2>/dev/null | wc -l
+ls {base_path}/milestones/ 2>/dev/null
+```
+
+Present: "This project has {N} milestone files in `{base_path}/milestones/`."
+
+If nothing exists, say: "No milestone data found. Nothing to export." Stop.
+
+2. **Ask export format** (one question):
+
+> "Where do you want to export your milestones?
+>   github     — create GitHub milestones via `gh milestone create`
+>   markdown   — copy files to a directory you specify
+>   csv        — write a summary CSV to a path you specify
+>   none       — skip export, go straight to cleanup options"
+
+3. **Export:**
+
+- **github:** For each MS-*.md file with status `active` or `proposed`, run `gh milestone create --title "{title}" --description "{outcome}"`. Report what was created.
+- **markdown:** Ask "Which directory?" Validate it exists. Copy all `MS-*.md` files and `MILESTONES-INDEX.md` there. Report files copied.
+- **csv:** Ask "Which path?" Write one row per milestone: ID, title, status, owner, criterion count, met count. Report path written.
+- **none:** Skip.
+
+4. **Confirm export complete** (if export ran):
+
+> "Export complete. Confirm the files look correct at the destination before proceeding. Ready to continue? (yes/cancel)"
+
+Wait for yes before continuing. If cancel, stop — do not touch SweetClaude files.
+
+5. **⚠ IRREVERSIBLE DATA LOSS WARNING ⚠**
+
+> "⚠ IRREVERSIBLE DATA LOSS WARNING ⚠
+>
+> The next step will permanently delete {N} files from `{base_path}/milestones/`.
+> This cannot be undone. There is no undo, no recycle bin, no recovery.
+>
+> Only proceed if you have confirmed your export is complete and correct.
+>
+> To confirm deletion, type exactly: DELETE MY MILESTONES
+> To cancel, type anything else."
+
+Wait for input. If the user types anything other than `DELETE MY MILESTONES` exactly, say "Cancelled. Your files are safe." and stop.
+
+6. **Delete only after exact confirmation:**
+
+```bash
+rm -rf {base_path}/milestones/
+```
+
+Report: "Milestone files deleted. SweetClaude will no longer track milestones for this project."
+
+---
 
 ### `onboard` — First-time setup
 

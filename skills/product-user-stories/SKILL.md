@@ -23,6 +23,64 @@ Before writing any artifact file:
 
 4. Write artifacts to those paths.
 
+## Offboard — Export data and stop using this skill
+
+Invoked with argument `offboard`.
+
+1. **Inventory what exists:**
+
+```bash
+find {base_path}/stories/ -name "US-*.md" 2>/dev/null | wc -l
+ls {base_path}/stories/ 2>/dev/null | head -10
+```
+
+Present: "This project has {N} user story files in `{base_path}/stories/`."
+
+If nothing exists, say: "No story data found. Nothing to export." Stop.
+
+2. **Ask export format:**
+
+> "Where do you want to export your user stories?
+>   github     — create GitHub Issues via `gh issue create`
+>   markdown   — copy files to a directory you specify
+>   csv        — write a summary CSV to a path you specify
+>   none       — skip export, go straight to cleanup options"
+
+3. **Export:**
+
+- **github:** For each US-*.md, run `gh issue create --title "{story title}" --body "{acceptance criteria}"`. Report what was created.
+- **markdown:** Ask "Which directory?" Copy all `US-*.md` files there. Report files copied.
+- **csv:** Ask "Which path?" Write one row per story: ID, title, persona, format, acceptance criteria (joined). Report path written.
+- **none:** Skip.
+
+4. **Confirm export complete** (if export ran):
+
+> "Export complete. Confirm the files look correct before proceeding. Ready to continue? (yes/cancel)"
+
+If cancel, stop. Do not touch SweetClaude files.
+
+5. **⚠ IRREVERSIBLE DATA LOSS WARNING ⚠**
+
+> "⚠ IRREVERSIBLE DATA LOSS WARNING ⚠
+>
+> The next step will permanently delete {N} story files from `{base_path}/stories/`.
+> This cannot be undone.
+>
+> To confirm deletion, type exactly: DELETE MY STORIES
+> To cancel, type anything else."
+
+If the user types anything other than `DELETE MY STORIES` exactly, say "Cancelled. Your files are safe." and stop.
+
+6. **Delete only after exact confirmation:**
+
+```bash
+rm -rf {base_path}/stories/
+```
+
+Report: "Story files deleted."
+
+---
+
 ## Onboard — First-time setup
 
 Invoked with argument `onboard` when this skill is newly installed.

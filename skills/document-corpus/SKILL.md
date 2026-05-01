@@ -44,9 +44,104 @@ What do you want to do?
 
 If `$ARGUMENTS` is `onboard`, run the onboard flow below instead of showing the menu.
 
+If `$ARGUMENTS` is `offboard`, run the offboard flow below instead of showing the menu.
+
 If any other `$ARGUMENTS` was passed (e.g. `/sweetclaude:document-corpus triage`), skip the menu and route directly.
 
 Parse the user's selection and jump to the named section below.
+
+---
+
+## Offboard — Export data and stop using this skill
+
+Invoked with argument `offboard`.
+
+1. **Inventory what exists:**
+
+```bash
+find corpus/ -type f 2>/dev/null | wc -l
+find corpus/canonical/ -type f 2>/dev/null | wc -l
+find corpus/raw/ -type f 2>/dev/null | grep -v '\.deferred\.json$\|\.triage\.json$' | wc -l
+find .rag-index/ -type f 2>/dev/null | wc -l
+```
+
+Present a summary:
+```
+Corpus inventory:
+  corpus/canonical/   {N} files  ← your finished documents
+  corpus/raw/         {N} files  ← source and inbox files
+  corpus/working/     {N} files  ← in-progress reconciliation
+  corpus/archive/     {N} files  ← processed/discarded sources
+  .rag-index/         {N} files  ← search index
+```
+
+If nothing exists, say: "No corpus data found. Nothing to export." Stop.
+
+2. **Ask what to export:**
+
+> "What do you want to export?
+>   canonical   — export only `corpus/canonical/` (your finished documents)
+>   all         — export the entire `corpus/` tree
+>   none        — skip export, go straight to cleanup options"
+
+3. **Ask export destination:**
+
+If canonical or all: "Which directory should I copy the files to?"
+
+Validate the directory exists (offer to create it if it doesn't). Copy files there with `rsync -a`. Report files copied.
+
+4. **Confirm export complete** (if export ran):
+
+> "Export complete. Confirm the files look correct at `{destination}` before proceeding. Ready to continue? (yes/cancel)"
+
+If cancel, stop. Do not touch SweetClaude files.
+
+5. **Ask what to delete** (separate question for each):
+
+Ask each question independently. For each, require separate confirmation.
+
+**corpus/ directory:**
+> "⚠ IRREVERSIBLE DATA LOSS WARNING ⚠
+>
+> Delete the entire `corpus/` directory? This contains {N} files including your canonical documents, source files, and pipeline state.
+> This cannot be undone.
+>
+> To confirm, type exactly: DELETE CORPUS
+> To skip, type anything else."
+
+**RAG index:**
+> "⚠ IRREVERSIBLE DATA LOSS WARNING ⚠
+>
+> Delete the `.rag-index/` directory? This contains the search index ({N} files).
+> The index can be rebuilt from `corpus/canonical/` if you keep those files.
+> This cannot be undone.
+>
+> To confirm, type exactly: DELETE RAG INDEX
+> To skip, type anything else."
+
+**Pipeline state:**
+> "⚠ IRREVERSIBLE DATA LOSS WARNING ⚠
+>
+> Delete pipeline state files (`.sweetclaude/state/corpus-pipeline.yaml`, `.sweetclaude/state/corpus.yaml`, `.sweetclaude/state/consolidate-plan.md`)?
+> This cannot be undone.
+>
+> To confirm, type exactly: DELETE CORPUS STATE
+> To skip, type anything else."
+
+6. **Execute only confirmed deletions:**
+
+```bash
+# Only if DELETE CORPUS confirmed:
+rm -rf corpus/
+
+# Only if DELETE RAG INDEX confirmed:
+rm -rf .rag-index/
+
+# Only if DELETE CORPUS STATE confirmed:
+rm -f .sweetclaude/state/corpus-pipeline.yaml .sweetclaude/state/corpus.yaml .sweetclaude/state/consolidate-plan.md
+```
+
+Report each deletion as it completes. Report anything skipped.
 
 ---
 

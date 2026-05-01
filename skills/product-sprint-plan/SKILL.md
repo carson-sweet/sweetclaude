@@ -11,6 +11,23 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Plan a sprint for: $ARGUMENTS
 
+## Offboarding — Stop using this skill
+
+Invoked with argument `offboard`.
+
+Sprint planning does not own data files — it reads from backlog and stories. There is nothing to export or delete here.
+
+Present:
+> "Sprint planning doesn't store its own data — it reads from your backlog and stories. Stopping sprint planning just means not running this skill anymore.
+>
+> If you also want to offboard backlog or stories, run:
+>   `/sweetclaude:product-backlog offboard`
+>   `/sweetclaude:product-user-stories offboard`"
+
+Stop.
+
+---
+
 ## Onboarding — First-time setup
 
 If `$ARGUMENTS` is `onboard`:
