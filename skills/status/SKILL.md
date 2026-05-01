@@ -18,6 +18,29 @@ Read `.sweetclaude/state/phase.yaml`. Check `schema_version`:
 - If absent or `1`: warn — "Your `phase.yaml` is on schema v1. Run `/sweetclaude:update` to upgrade." Stop.
 - If `2`: proceed.
 
+## Step 1.5: Sync skills.yaml
+
+Run silently before presenting any output. This keeps skill state current without requiring the user to run `/sweetclaude:update`.
+
+Read `.sweetclaude/artifact-privacy.yaml` → `categories.product.base_path`. If absent, use `.sweetclaude/artifacts/product` as fallback.
+
+Read `.sweetclaude/state/skills.yaml` if it exists.
+
+For each of the six data-owning skills, check whether it is present in `skills.yaml`. If missing, infer its state from the data file:
+
+| Skill | Data file that indicates already in use |
+|---|---|
+| `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
+| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
+| `product-sprint-plan` | *(no inference — write `enabled: false` if absent)* |
+| `product-user-personas` | `.sweetclaude/state/personas.yaml` |
+| `product-user-stories` | `{base_path}/stories/` contains at least one `US-*.md` |
+| `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` |
+
+For each skill missing from `skills.yaml`: if the data file exists, write `enabled: true`; otherwise write `enabled: false`. Do not remove or modify existing entries.
+
+If any entries were added, write the updated `skills.yaml`. No output to the user — this step is invisible.
+
 ## Step 2: Read state directly
 
 Run all of these inline — do NOT spawn a background agent:
