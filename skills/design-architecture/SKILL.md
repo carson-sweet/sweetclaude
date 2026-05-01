@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-architecture
 description: Define system architecture — components, boundaries, communication patterns, data flow, and compliance requirements. Produces ADRs and an architecture document.
 ---

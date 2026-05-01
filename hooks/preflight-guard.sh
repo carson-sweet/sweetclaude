@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Pre-Flight Guard
 # PreToolUse — blocks ALL tool calls if the SessionStart hook flagged this
 # project as needing configuration. The flag persists until the project is

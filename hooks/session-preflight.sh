@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Session Pre-Flight
 # SessionStart hook — checks SweetClaude state for the current project.
 # Outputs JSON with hookSpecificOutput.additionalContext (Claude Code format).

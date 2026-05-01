@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Git Checkpoint
 # Called by skills at phase transitions and TDD milestones.
 # Commits .sweetclaude/ state changes to the project repo.

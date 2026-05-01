@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Auto-Test Runner Hook
 # PostToolUse — runs relevant tests after source file edits during implementation.
 

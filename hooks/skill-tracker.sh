@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Skill Tracker Hook
 # PostToolUse — records skill invocations to session-guardian.json
 

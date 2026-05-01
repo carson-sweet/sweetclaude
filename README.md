@@ -1,21 +1,13 @@
-<p>
-  <img src="sweetclaude.png" alt="SweetClaude" width="180" align="left">
-</p>
-<br>
-<br>
-<br>
-<br>
-<br>
-
-
+<img src="sweetclaude.png" alt="SweetClaude" width="180" align="left">
+<br clear="all"/>
 
 # SweetClaude
 
-An end-to-end product development (meaning not just code) framework for Claude Code. From "I have an idea" to shipped, tested code — with strategy, product definition, architecture, and disciplined implementation. It includes an optional RAG-powered document consolidation and reconciliation system to turn those six different piles of documents and chat exports into canon.
+A plugin for Claude Code that provides workflow automation and guided assistance for end-to-end product development - from "I have an idea" to shipped, tested code — with structured workflows for strategy, product definition, architecture, technical design, test-driven development, QA testing, code reviews, and documentation. It includes RAG-powered document consolidation and reconciliation (optional) to turn those piles of scattered documents and chat exports into canonical documentation.
 
-SweetClaude is a Claude Code plugin with skills that cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. It works with any language or framework.
+SweetClaude's skills cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. Because it sits on top of Claude Code, it works with any language or framework. Workflow structure and discipline have tiered, because use cases differ - weekend hobby projects, internal-use utilities, and commercial SaaS projects have different needs. Workflows also automatically adjust based on project phase, because an internal prototype is not the same as an MVP open beta.
 
-Built by an enterprise CTO/CISO turned solo developer for solo developers who want AI as a creative partner with structure and discipline — not a passive autocomplete-on-steroids.
+Built by an enterprise CTO/CISO and serial entrepreneur, originally as his toolchain and later for early-stage companies and solopreneurs who need a thoughtful, organized AI partner — not passive autocomplete-on-steroids.
 
 ## What SweetClaude Does
 
@@ -72,7 +64,7 @@ After install, all skills are available as `/sweetclaude:skill-name` commands in
 
 #### Strategy Skills Only
 
-If you want the product thinking, strategy, and corpus management skills without the code and design phases:
+If you want the product thinking, strategy, and corpus management skills — without the code and design phases:
 
 ```bash
 ./install.sh --strategy-skills-only
@@ -218,9 +210,9 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
 | `/sweetclaude:usage` | View, enable, or disable local usage tracking |
 
-> **Note:** The product, design, code, and corpus skills below are invoked automatically by `/sweetclaude:go` based on your project state. You do not need to invoke them directly — but you can if you know what you want.
+> **Note:** The product, design, code, and corpus skills below are invoked automatically by `/sweetclaude:go` based on your project state. You do not need to invoke them directly — but you can if you know what you want. The tables below explain the workflows that are available, but don't worry. The /sweetclaude-go command keeps track of where you are and will keep you on track (and if you want to jump to a different track, just say so). 
 
-### Product
+### Product Workflows
 | Command | What it does |
 |---|---|
 | `/sweetclaude:product-discovery` | Establish what is being built, for whom, and why. Three depth levels from quick intent to full pain thesis. Collects compliance context (data categories, geography, user type) and derives applicable frameworks — written to `.sweetclaude/state/compliance-context.yaml` for use throughout the pipeline. |
@@ -244,7 +236,7 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 | `/sweetclaude:product-milestones complete` | Mark achieved with follow-up capture |
 | `/sweetclaude:product-milestones unassigned` | Find work items with no milestone |
 
-### Design
+### Design Workflows
 | Command | What it does |
 |---|---|
 | `/sweetclaude:design-user-flows` | Convert user stories into UX/UI flows — step-by-step paths through the interface. |
@@ -258,7 +250,7 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 | `/sweetclaude:design-api-design` | Endpoints, contracts, versioning |
 | `/sweetclaude:design-manage-decisions` | Record decisions with rationale |
 
-### Documents
+### Documentation Workflows
 | Command | What it does |
 |---|---|
 | `/sweetclaude:document-corpus` | Full corpus pipeline + RAG — consolidate, triage, reconcile, promote, set up semantic search, reindex |
@@ -266,12 +258,12 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 | `/sweetclaude:documents-academic-research` | Research paper development — 6-phase pipeline from thesis through submission |
 | `/sweetclaude:documents-narrative-arc` | Knowledge graph of strategic claims and evidence |
 
-### Misc
+### Misc.
 | Command | What it does |
 |---|---|
 | `/sweetclaude:misc-meeting-prep` | Stakeholder meeting deliverables — agenda, talking points, anticipated questions |
 
-### Code
+### Coding Workflows
 | Command | What it does |
 |---|---|
 | `/sweetclaude:code-feature` | Build a new feature end-to-end (Gherkin → TDD Level 3 → PR) |
@@ -321,15 +313,16 @@ SweetClaude is a Claude Code plugin. After running the installer, all skills are
 
 SweetClaude orchestrates these plugins — it does not fork or modify them:
 
-| Dependency | License | Role |
-|---|---|---|
-| [Superpowers](https://github.com/obra/superpowers) | MIT | Dev mechanics (plans, worktrees, debugging, code review) |
+| Dependency | License | Required | Role |
+|---|---|---|---|
+| [Superpowers](https://github.com/obra/superpowers) | MIT | Full install | Dev mechanics (plans, worktrees, debugging, code review) |
+| [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) | MIT | Optional | Local semantic search — per-project vector index, no external services |
 
 ## License
 
-[PolyForm Shield 1.0.0](LICENSE) — use SweetClaude for any purpose, including building and selling commercial products. The only restriction: you cannot sell a product that competes with SweetClaude itself.
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later) — free to use, modify, and distribute for any purpose. If you run SweetClaude as a network service or incorporate it into a distributed product, you must disclose the use of SweetClaude and make the complete source available, including modifications, under the same license. See [LICENSE](LICENSE) for full terms.
 
-## Contributing
+## Contribute
 
 Contributions welcome. SweetClaude is built by solo developers, for solo developers. If you have ideas, skills, or improvements — open an issue or PR.
 
@@ -352,7 +345,15 @@ Contributions welcome. SweetClaude is built by solo developers, for solo develop
 
 
 
+## Support
 
+If you're getting value from SweetClaude, consider [buying me a coffee](https://ko-fi.com/carsonsweet). Which in reality means you're moving dollars from my coffee budget to [my dog Smushford's](http://instagram.com/smushford) treat budget. 
+
+Smushford thanks you.
+
+<p>
+  <img src="smushford.png" alt="Smushford Wellington DuBois III" width="400" align="left">
+</p>
 
 
 

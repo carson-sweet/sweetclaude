@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: sweetclaude:john-wick-checkin
 description: Internal John Wick phase check-in subagent. Receives phase context and a single question, reviews artifacts for drift, returns none/minor/significant. Not a user-facing skill — invoked by the john-wick orchestrator only.
 ---

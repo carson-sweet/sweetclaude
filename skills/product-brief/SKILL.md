@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: sweetclaude:product-brief
 description: Write a product brief — a strategic document describing what is being built, for whom, why it matters, and what success looks like. Scales to available input depth.
 ---

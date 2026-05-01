@@ -7,7 +7,7 @@
   },
   "homepage": "https://github.com/carson-sweet/sweetclaude",
   "repository": "https://github.com/carson-sweet/sweetclaude",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "AGPL-3.0-or-later",
   "keywords": [
     "framework",
     "tdd",

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # config/workflow-templates.yaml
 # Defines the ordered phase sequence for each work type.
 # Five shapes: full-pipeline, abbreviated, diagnostic, migration, compressed.

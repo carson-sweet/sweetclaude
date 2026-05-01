@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-ux
 description: Define the visual and interaction design of the product — look, feel, layout, and style. Produces a UX/UI design spec for handoff to AI mockup tools or a design team.
 ---

@@ -1,4 +1,5 @@
 ---
+spdx-license: AGPL-3.0-or-later
 name: qa-caucus-component
 description: QA Caucus — Component expert. Reviews test plan for missing UI/component coverage, accessibility, loading states, user interaction edge cases.
 tools: Read, Grep, Glob
