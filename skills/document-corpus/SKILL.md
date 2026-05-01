@@ -17,6 +17,14 @@ Manage your project's documents — from a pile of raw files to a clean, indexed
 
 Read `.sweetclaude/state/corpus-pipeline.yaml` if it exists. Use it to show current status next to each option.
 
+Check for existing RAG index:
+```bash
+ls .rag-index/lancedb/ 2>/dev/null | wc -l
+cat .rag-index/.index-manifest.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('files',{})))" 2>/dev/null
+```
+
+If an index exists (lancedb directory has contents OR manifest has files), label option 6 as **"Update RAG"**. Otherwise label it **"Set up RAG"**.
+
 Present:
 
 ```
@@ -30,7 +38,7 @@ What do you want to do?
   3. Triage          — classify inbox files (keep / reconcile / discard / defer)  {triage.status}
   4. Reconcile       — draft canonical documents from staged files  {reconcile.status}
   5. Promote         — finalize, archive sources, index into RAG  {promote.status}
-  6. Set up RAG      — configure and run semantic search on your documents
+  6. {Set up RAG | Update RAG}  — {configure and run | check for changes and sync} semantic search
   7. Reindex RAG     — rebuild the search index from scratch (recovery)
 ```
 
