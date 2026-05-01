@@ -36,26 +36,27 @@ Source:    {repository}
 
 ## Step 2: Get the latest source
 
-Try sources in this order:
-
 ### 2a: Local repo (developer workflow)
 
-Check if `~/dev/sweetclaude/package.json` exists AND is a git repo with remote matching the repository URL.
+Check if `~/dev/sweetclaude/package.json` exists AND the repo has a remote matching the repository URL.
 
-If found:
+If found, fetch from origin and use it as the source:
+
 ```bash
+git -C ~/dev/sweetclaude fetch origin
 git -C ~/dev/sweetclaude log --oneline -1
 ```
-Use `~/dev/sweetclaude` as SOURCE_DIR. Skip to Step 3.
+
+- If fetch succeeds: use `~/dev/sweetclaude` as SOURCE_DIR. The local repo may be ahead of GitHub (unpushed dev commits) — that is intentional and correct. Skip to Step 3.
+- If fetch fails (network error): warn ("Could not reach GitHub to check for remote updates — proceeding with local repo state.") and use `~/dev/sweetclaude` as SOURCE_DIR. Skip to Step 3.
 
 ### 2b: GitHub (standard user workflow)
 
-Clone a shallow copy to a temp directory. Use `gh` if available (handles private repos with existing auth), fall back to `git`.
+If no local repo found, clone a fresh shallow copy from GitHub. Use `gh` if available (handles private repos with existing auth), fall back to `git`.
 
 ```bash
 TMPDIR=$(mktemp -d)
 
-# Prefer gh — it uses the user's existing GitHub auth (handles private repos)
 if command -v gh &>/dev/null; then
   gh repo clone {owner}/{repo} "$TMPDIR/sweetclaude" -- --depth 1
 else
@@ -66,7 +67,7 @@ fi
 If clone fails with an auth error, tell the user:
 > "The SweetClaude repo requires authentication. Run `! gh auth login` to authenticate with GitHub, then try again."
 
-Do not retry. Do not ask for tokens.
+Do not retry. Do not ask for tokens. On any failure, stop.
 
 Use `$TMPDIR/sweetclaude` as SOURCE_DIR.
 
@@ -74,19 +75,29 @@ Use `$TMPDIR/sweetclaude` as SOURCE_DIR.
 
 ## Step 3: Compare versions
 
+When SOURCE_DIR is the local repo (came from Step 2a), compare against `origin/HEAD` — not local `HEAD` — so commits on GitHub that haven't been pulled yet are detected. If origin is ahead of local HEAD, pull before syncing:
+
 ```bash
-# Get latest commit and version from source
-git -C $SOURCE_DIR rev-parse HEAD
+# Determine effective SHA to compare
+if [ "$SOURCE_DIR" = "$HOME/dev/sweetclaude" ]; then
+  EFFECTIVE_SHA=$(git -C $SOURCE_DIR rev-parse origin/HEAD)
+  LOCAL_SHA=$(git -C $SOURCE_DIR rev-parse HEAD)
+  if [ "$EFFECTIVE_SHA" != "$LOCAL_SHA" ]; then
+    git -C $SOURCE_DIR pull --ff-only origin
+  fi
+else
+  EFFECTIVE_SHA=$(git -C $SOURCE_DIR rev-parse HEAD)
+fi
 git -C $SOURCE_DIR log --oneline -5
 cat $SOURCE_DIR/package.json
 ```
 
-If the source HEAD SHA matches the installed `gitCommitSha`: "Already up to date." Clean up temp dir if used. Stop.
+If EFFECTIVE_SHA matches the installed `gitCommitSha`: "Already up to date." Clean up temp dir if used. Stop.
 
 Otherwise, show what changed since the installed version:
 
 ```bash
-git -C $SOURCE_DIR log --oneline {installed_sha}..HEAD
+git -C $SOURCE_DIR log --oneline {installed_sha}..{EFFECTIVE_SHA}
 ```
 
 Then diff against installed:
@@ -196,7 +207,9 @@ SweetClaude updated.
 
 ---
 
-## Step 7: Surface new capabilities
+## Step 7: Surface capabilities
+
+### 7a: What's new in this update
 
 Compare the installed hooks and config files (before sync) against the new version. Identify:
 
@@ -204,20 +217,53 @@ Compare the installed hooks and config files (before sync) against the new versi
 2. **New skills** — skill directories in `$SOURCE_DIR/skills/` that did not exist in the previously installed `{installPath}/skills/`
 3. **New config templates** — files in `$SOURCE_DIR/config/templates/` that are new
 
-For each new capability, check whether it requires per-project opt-in (e.g., a config file in `.sweetclaude/`). Read the hook or skill to determine what config is needed.
+For each new item, check whether it requires per-project opt-in. Read the hook or skill to determine what config is needed.
 
-Present after the update report:
+Present:
 
 ```
 New in this update:
-  → {capability name}: {one-line description}
-    Enable: {what the user needs to do, e.g. "create .sweetclaude/version-bump.yaml"}
-
-  → {capability name}: {one-line description}
+  → {skill-name}: {one-line description}
     Available as: /sweetclaude:{skill-name}
+    Enable: {opt-in steps if required, else omit}
 ```
 
-If no new capabilities, omit this section.
+If nothing is new, show: "No new skills or hooks in this update."
+
+### 7b: Full skill catalog
+
+Read all skill directories from `$SOURCE_DIR/skills/`. For each, extract the `description` and `category` fields from `SKILL.md` frontmatter. Group by category. Infer category from directory name prefix if `category` is absent (`code-*` → Code, `design-*` → Design, `product-*` → Product, `documents-*` → Documents, everything else → Framework).
+
+Present:
+
+```
+All installed skills (v{new_version}):
+═══════════════════════════════════════
+
+PRODUCT
+  /sweetclaude:product-backlog         — {description, truncated to ~80 chars}
+  /sweetclaude:product-milestones      — ...
+  ...
+
+CODE
+  /sweetclaude:code-feature            — ...
+  ...
+
+DESIGN
+  /sweetclaude:design-architecture     — ...
+  ...
+
+DOCUMENTS
+  /sweetclaude:document-corpus         — ...
+  ...
+
+FRAMEWORK
+  /sweetclaude:go                      — ...
+  /sweetclaude:status                  — ...
+  ...
+```
+
+This section is always shown — not conditional on whether anything is new. Users need to know what's installed.
 
 ---
 
