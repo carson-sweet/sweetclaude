@@ -26,6 +26,18 @@ emit_json() {
   printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$content"
 }
 
+# Detect Linux/WSL2 — isolation: "worktree" in agent frontmatter is silently
+# ignored on these platforms (Claude Code issue #33045, no fix timeline).
+PLATFORM_NOTE=""
+OS_TYPE=$(uname -s 2>/dev/null || echo "unknown")
+if [ "$OS_TYPE" = "Linux" ]; then
+  if grep -qi "microsoft\|wsl" /proc/version 2>/dev/null; then
+    PLATFORM_NOTE="PLATFORM: Linux/WSL2 — isolation: \"worktree\" in agent frontmatter is silently ignored on this platform (Claude Code #33045). Use explicit EnterWorktree/ExitWorktree calls for subagent isolation instead of relying on frontmatter. This is the SweetClaude MS-003 approach."
+  else
+    PLATFORM_NOTE="PLATFORM: Linux — isolation: \"worktree\" in agent frontmatter may be silently ignored (Claude Code #33045 affects Linux). Prefer explicit EnterWorktree/ExitWorktree calls for subagent isolation."
+  fi
+fi
+
 # Project explicitly opts out
 if [ -f "$PROJECT_DIR/.sweetclaude-skip" ]; then
   rm -f "$FLAG"
@@ -44,13 +56,24 @@ if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
     STATE_FILE="$PROJECT_DIR/.sweetclaude/state/session-state.yaml"
     if [ -f "$STATE_FILE" ]; then
       STATE_CONTENT=$(cat "$STATE_FILE")
-      emit_json "SweetClaude is active. Pre-loaded session state:
+      CONTEXT="SweetClaude is active. Pre-loaded session state:
 
-${STATE_CONTENT}
+${STATE_CONTENT}"
+      if [ -n "$PLATFORM_NOTE" ]; then
+        CONTEXT="${CONTEXT}
+
+${PLATFORM_NOTE}"
+      fi
+      CONTEXT="${CONTEXT}
 
 Invoke sweetclaude:status now before responding to the user."
+      emit_json "$CONTEXT"
     else
-      emit_json "SweetClaude is active. Invoke sweetclaude:status now before responding to the user."
+      if [ -n "$PLATFORM_NOTE" ]; then
+        emit_json "SweetClaude is active. ${PLATFORM_NOTE} Invoke sweetclaude:status now before responding to the user."
+      else
+        emit_json "SweetClaude is active. Invoke sweetclaude:status now before responding to the user."
+      fi
     fi
   fi
   exit 0
