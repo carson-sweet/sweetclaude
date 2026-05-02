@@ -215,7 +215,7 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 | Command | What it does |
 |---|---|
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
-| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. Verified against claude-sonnet-4-6 as of 2026-05-01. Full contract list: [skills/behavioral-regression/SKILL.md](skills/behavioral-regression/SKILL.md) |
+| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. [Contract status by model version →](docs/user-guide/behavioral-contracts.md) |
 | `/sweetclaude:guardian-on` | Enable Protocol Guardian — enforces skill invocations and protocol steps for the session |
 | `/sweetclaude:guardian-off` | Disable Protocol Guardian |
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
@@ -245,6 +245,8 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 |---|---|---|---|
 | [Superpowers](https://github.com/obra/superpowers) | MIT | Required for code/TDD features | Dev mechanics (plans, worktrees, debugging, code review). Not required for strategy-skills-only install. |
 | [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) | MIT | Optional | Local semantic search — per-project vector index, no external services |
+
+For dependency risk, failure modes, and contingency plans → [Platform Dependencies](docs/user-guide/platform-dependencies.md)
 
 ## License
 
