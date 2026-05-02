@@ -183,7 +183,7 @@ If you want to propose a new work type or workflow shape, that is a config chang
 
 ## What's planned?
 
-The `deploy/` bucket is the largest gap right now. There are also several Plan 2 and Plan 3 skills in flight (mockup pipeline, init/adopt as standalone skills, security planning, infrastructure change).
+The current backlog priorities are personas and synthetic research (a focus-group caucus skill that runs synthetic user panels against validated personas), the skill generator (describe a workflow, get a SKILL.md), and TDD tooling hardening (`allowed-tools` enforcement for test-writer and implementer subagents). Security planning, infrastructure change, and additional deployment flows are also in the backlog.
 
 ---
 

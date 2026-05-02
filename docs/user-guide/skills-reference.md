@@ -1,9 +1,9 @@
 # Skills Reference
 
-**Version:** 1.1
-**Date:** 2026-05-01
+**Version:** 1.2
+**Date:** 2026-05-02
 
-All 52 skills, organized by domain. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
+All 61 skills, organized by domain. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
 
 You rarely need to memorize commands. `/sweetclaude:go` and `/sweetclaude:find-skill` route automatically based on project state and what you describe. The list below is for when you know what you want.
 
@@ -19,7 +19,7 @@ If you are wondering "which skills go together for X?", the [Walkthroughs](walkt
 
 ---
 
-## Orchestration (16 skills)
+## Orchestration (20 skills)
 
 Session management, routing, framework health. Most of these are invoked automatically.
 
@@ -27,6 +27,8 @@ Session management, routing, framework health. Most of these are invoked automat
 |---|---|---|
 | **Master** | _(auto)_ | Session entry point. Pre-flight check, phase state read, route to the right skill. Fires automatically at session start for configured projects. |
 | **On** | `/sweetclaude:on` | Activate on any project — new idea or existing codebase. Detects context. Walks through setup. |
+| **Init** | `/sweetclaude:init` | Bootstrap SweetClaude on an empty or untracked folder. Detects project type, creates `.sweetclaude/` infrastructure, generates a CLAUDE.md stub, takes a git snapshot, and emits a ready session state. For existing codebases with real history, use `:adopt` instead. |
+| **Adopt** | `/sweetclaude:adopt` | Onboard an existing codebase with real history. ASSESS (language/toolchain/CI/CD/docs/security scan) → DIAGNOSE (findings bucketed Critical/High/Medium/Low) → PLAN (prioritized remediation sequence) → SCAFFOLD (creates SweetClaude infrastructure on a safety branch, never touches src/ or tests/) → ITERATE (writes remediation-plan.md and backlog items for Critical/High findings). |
 | **Off** | `/sweetclaude:off` | Suspend SweetClaude for this project. Preserves all artifacts. Reactivate with `:on`. |
 | **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, checks phase exit criteria, routes to the right skill. No menu — it acts. |
 | **Find Skill** | `/sweetclaude:find-skill` | Describe what you want to do. The framework classifies, confirms, updates state, and starts the right skill. |
@@ -40,6 +42,7 @@ Session management, routing, framework health. Most of these are invoked automat
 | **Behavioral Regression** | `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite against the current model version. Tests phase dwelling, propose-not-ask, TDD enforcement claims, deference levels, detour recovery, improvement register triggers, and more. Run after any Claude model upgrade to detect silent behavioral drift. |
 | **Guardian On** | `/sweetclaude:guardian-on` | Enable Protocol Guardian. Enforces skill invocations, TDD discipline, and artifact saves for the rest of the session. |
 | **Guardian Off** | `/sweetclaude:guardian-off` | Disable Protocol Guardian. |
+| **Retro** | `/sweetclaude:retro` | End-of-phase or end-of-project retrospective. Surfaces what went well, what didn't, and what to adjust. Writes learnings to the improvement register so future sessions start with them applied. |
 | **Session Export** | `/sweetclaude:session-export` | Export a Claude.ai conversation as a structured document for corpus ingestion. |
 | **Usage** | `/sweetclaude:usage` | View, enable, or disable local usage tracking. |
 
@@ -75,7 +78,7 @@ Strategy and product definition. Useful before any code is written and on existi
 
 ---
 
-## Design (9 skills)
+## Design (12 skills)
 
 Technical design. Every significant decision is recorded with context and rationale to `.sweetclaude/state/decision-log.md`.
 
@@ -90,6 +93,9 @@ Technical design. Every significant decision is recorded with context and ration
 | **Design Solutioning Gate** | `/sweetclaude:design-solutioning-gate` | Required before implementation for high-risk work. Confirms the right solution is being built, an alternative was considered, and a rollback plan exists. |
 | **Design Change Impact Analysis** | `/sweetclaude:design-change-impact-analysis` | Trace blast radius before changes. Surfaces ripple effects across artifacts before they become bugs. |
 | **Design Manage Decisions** | `/sweetclaude:design-manage-decisions` | Record any decision with context, options considered, and rationale. Query later: "Why did we choose X?" |
+| **Mockup Sandbox** | `/sweetclaude:mockup-sandbox` | Create an isolated Vite + React + Tailwind + shadcn/ui mockup environment at `artifacts/mockup-sandbox/`. Scaffold components with parallel variants, preview at `localhost:5174`, track approved mockups in `.sweetclaude/state/mockup-registry.yaml`. Start here for any UI work before touching production code. |
+| **Mockup Extract** | `/sweetclaude:mockup-extract [ComponentName]` | Extract a component from the main app into the mockup sandbox. Rewrites `@/` imports, stubs API calls/routing/auth, creates a group CSS file from the main app's globals, and type-checks before sharing a preview URL. |
+| **Mockup Graduate** | `/sweetclaude:mockup-graduate` | Graduate registry-approved mockups into production code. Analyzes production patterns (routing lib, state management, data fetching), presents a transformation plan before writing any code, adds loading/error/empty states and accessibility, and extracts Gherkin acceptance criteria to `acceptance-criteria-{group}.md`. |
 
 ---
 
@@ -122,6 +128,17 @@ Implementation. These skills enforce TDD via hooks, run tests and reviews, and m
 2 / security       Auth, injection, secrets, OWASP Top 10
 3 / compliance     Licenses, data handling, privacy, regulatory
 ```
+
+---
+
+## Deploy (2 skills)
+
+Deployment and incident response.
+
+| Skill | Invocation | What it does |
+|---|---|---|
+| **Deploy Ship** | `/sweetclaude:deploy-ship` | Guided deployment for work items that have completed VERIFY. Confirms deployment config, runs a 7-item pre-ship checklist (AC met, tests passing, no secrets in diff, changelog present, rollback plan documented, break-glass notes updated at GA+, monitoring active), guides the deploy command, and smoke-tests post-deploy. Does not run the deploy itself — guides you through it. Logs checklist result and smoke test to `decision-log.md`. |
+| **Something Broke** | `/sweetclaude:something-broke` | Production incident response. Classifies severity (P0/P1/P2) in ≤3 questions, decides fix-vs-rollback, routes to `:hotfix` or `:rollback-revert`, confirms resolution, and spawns a mandatory post-mortem work item. The post-mortem is required — a resolved incident without one is incomplete. |
 
 ---
 
@@ -171,14 +188,34 @@ You rarely use one skill in isolation. The patterns below are the chains that sh
 → code-feature
 ```
 
-**Adopting an existing project, then fixing a flagged concern:**
+**Adopting an existing codebase:**
 ```
-/sweetclaude:on
-→ (interview reveals concern)
-→ code-debt (lock behavior with tests)
-→ refactor in IMPLEMENT
-→ code-review
-→ code-testing pr-precheck
+/sweetclaude:adopt
+→ ASSESS (language/toolchain/CI/security scan)
+→ DIAGNOSE (Critical/High/Medium/Low findings)
+→ PLAN (remediation sequence)
+→ SCAFFOLD (SweetClaude infrastructure on safety branch)
+→ ITERATE (remediation backlog items created)
+→ code-debt (work through Critical/High findings)
+```
+
+**UI feature with mockup-first design:**
+```
+/sweetclaude:mockup-sandbox (scaffold environment)
+→ mockup-extract [ExistingComponent] (pull in prod components)
+→ iterate on design in sandbox
+→ mockup-graduate (graduate approved mockups to prod code)
+→ code-feature (TDD pipeline from extracted acceptance criteria)
+→ deploy-ship
+```
+
+**Shipping a completed feature:**
+```
+/sweetclaude:deploy-ship
+→ pre-ship checklist (AC, tests, secrets scan, changelog, rollback plan)
+→ deploy command
+→ smoke test
+→ work item closed
 ```
 
 **Hotfix:**
@@ -186,6 +223,15 @@ You rarely use one skill in isolation. The patterns below are the chains that sh
 /sweetclaude:find-skill "production is broken"
 → hotfix workflow (compressed)
 → DIAGNOSE → IMPLEMENT (test+fix) → SHIP → POST-MORTEM
+```
+
+**Production incident:**
+```
+/sweetclaude:something-broke
+→ severity classification (P0/P1/P2)
+→ fix-vs-rollback decision
+→ :hotfix or :rollback-revert
+→ confirm resolution → mandatory post-mortem
 ```
 
 **Document organization:**
