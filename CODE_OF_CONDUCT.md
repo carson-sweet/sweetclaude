@@ -15,7 +15,7 @@ Be direct and honest. Criticize ideas, not people. Accept that you might be wron
 
 ## Reporting
 
-If something happens that violates the spirit of this document, email cs@carsonsweet.com. Reports are handled privately.
+If something happens that violates the spirit of this document, use GitHub's private contact channel: go to the [Security tab](https://github.com/carson-sweet/sweetclaude/security) and choose **Report a vulnerability** — this reaches the maintainer privately and is not visible to other users. Reports are handled privately.
 
 ## Enforcement
 
