@@ -37,7 +37,21 @@ if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
   rm -f "$FLAG"
   # Auto-fire status if active (not disabled)
   if [ ! -f "$PROJECT_DIR/.sweetclaude/disabled" ]; then
-    emit_json "SweetClaude is active for this project. Before responding to the user's first message, say exactly: 'SweetClaude is active for this project and needs to assess status. Proceed?' — then wait for the user's response. If they say yes, proceed, or anything affirmative, invoke sweetclaude:status. If they say no or want to skip, continue without it."
+    # Refresh session-state.yaml synchronously so injected state is current
+    HOOK_DIR="$(dirname "$0")"
+    "$HOOK_DIR/generate-session-state.sh" 2>/dev/null
+
+    STATE_FILE="$PROJECT_DIR/.sweetclaude/state/session-state.yaml"
+    if [ -f "$STATE_FILE" ]; then
+      STATE_CONTENT=$(cat "$STATE_FILE")
+      emit_json "SweetClaude is active. Pre-loaded session state:
+
+${STATE_CONTENT}
+
+Invoke sweetclaude:status now before responding to the user."
+    else
+      emit_json "SweetClaude is active. Invoke sweetclaude:status now before responding to the user."
+    fi
   fi
   exit 0
 fi
