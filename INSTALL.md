@@ -68,6 +68,29 @@ Fetches the latest version from GitHub and syncs to all installed locations. Sho
 
 ---
 
+## Optional Integrations
+
+### Firecrawl (web research enhancement)
+
+[Firecrawl](https://firecrawl.dev) adds JavaScript-rendered page extraction, structured schema output, and autonomous multi-page research to `sweetclaude:product-research` and `sweetclaude:product-competition`. Both skills degrade gracefully if Firecrawl is absent.
+
+1. Create an account at [firecrawl.dev](https://firecrawl.dev) — Hobby tier ($16/mo) or free trial.
+2. Add the MCP server to Claude Code settings:
+   ```json
+   {
+     "mcpServers": {
+       "firecrawl": {
+         "command": "npx",
+         "args": ["-y", "@firecrawl/mcp-server"],
+         "env": { "FIRECRAWL_API_KEY": "YOUR_API_KEY" }
+       }
+     }
+   }
+   ```
+3. Restart Claude Code. The research and competition skills will automatically detect Firecrawl and use it when present.
+
+---
+
 ## Uninstalling
 
 ```bash

@@ -33,6 +33,8 @@ Check for `.sweetclaude/log.md`. If not found, create it.
 
 Read `.sweetclaude/state/research.yaml` if it exists — `competitor_seeds` provides the starting list. If missing, ask the user to name competitors to analyze.
 
+**Firecrawl detection:** Check if `mcp__firecrawl__extract` is available in your tool list. If yes, Firecrawl is available for structured competitor data extraction (noted in L2 and L3 below). Both levels produce equivalent output regardless of availability.
+
 ## Depth Levels
 
 Ask:
@@ -54,7 +56,17 @@ Present as a structured list. Ask: "Are there competitors missing from this list
 
 ## L2 — Matrix
 
-Select the most relevant 3–6 competitors with the user. Build a comparison matrix:
+Select the most relevant 3–6 competitors with the user.
+
+**If Firecrawl available:** For each competitor, use `mcp__firecrawl__extract` with this schema before building the matrix:
+```json
+{ "name": "", "pricing_model": "", "target_user": "", "key_features": [], "positioning": "" }
+```
+Scrape each competitor's homepage and pricing page. Use extracted data to populate the matrix.
+
+**If Firecrawl not available:** Research each competitor via web search — homepage, pricing page, review sites (G2, Capterra, Reddit).
+
+Build a comparison matrix:
 
 | Dimension | Your product | Competitor A | Competitor B | ... |
 |---|---|---|---|---|
@@ -78,8 +90,8 @@ Also capture for each competitor:
 Ask the user which specific features they want to analyze. For each selected feature:
 
 1. Research how each relevant competitor implements this feature:
-   - Read their official product documentation
-   - Find deep user reviews on G2, Capterra, Reddit, Hacker News, or equivalent
+   - **If Firecrawl available:** `mcp__firecrawl__scrape` the competitor's docs page for this feature; `mcp__firecrawl__search` for user reviews and coverage
+   - **If Firecrawl not available:** Read their official product documentation via WebFetch; search for user reviews on G2, Capterra, Reddit, Hacker News
    - Look for journalist or analyst coverage
 2. Produce a feature-by-feature comparison table for that feature across competitors
 3. Summarize: who does it best and why, what's missing across all of them, what your product's opportunity is

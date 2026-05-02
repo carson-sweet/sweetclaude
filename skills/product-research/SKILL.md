@@ -51,6 +51,21 @@ If the user declines, write a skipped entry to the log and stop.
 
 ## Research Process
 
+**Firecrawl detection:** Check if `mcp__firecrawl__scrape` is available in your tool list (i.e., a Firecrawl MCP server is connected). If yes, use the **Firecrawl path**. If not, use the **Standard path**.
+
+### Firecrawl path (when mcp__firecrawl__scrape is available)
+
+Use Firecrawl for richer, JS-rendered research:
+
+- `mcp__firecrawl__search` to find competitors: `"{problem domain} software"`, `"best {problem domain} tools {current year}"`
+- `mcp__firecrawl__scrape` on each competitor's homepage and pricing page for structured extraction
+- For L3: `mcp__firecrawl__deep_research` with a research question for autonomous multi-source synthesis
+- Extract structured data: name, URL, pricing, target user, key features, positioning
+
+For each solution: name, type (commercial/open_source), URL, one-line description, notable strengths, notable weaknesses.
+
+### Standard path (when Firecrawl is not available)
+
 Use web search to conduct research. Search for:
 - "{problem domain} software" / "{problem domain} tools"
 - "{problem domain} open source alternatives"
