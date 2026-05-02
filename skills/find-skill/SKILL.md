@@ -52,7 +52,7 @@ Store the result as `{starting_phase}` — used in Step 7.
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Concept articulation | DISCOVER, DEFINE, SHIP | `sweetclaude:documents-narrative-arc` |
+| Concept articulation / framing | DISCOVER, DEFINE, SHIP | `sweetclaude:product-discovery` *(fallback — `sweetclaude:concept-framing` planned, see BL-008)* |
 | Pain analysis | DISCOVER, DEFINE, SHIP | `sweetclaude:product-discovery` |
 | Customer profiling | DISCOVER, DEFINE, SHIP | `sweetclaude:product-user-personas` |
 | Competitive landscape | DISCOVER, DEFINE, SHIP | `sweetclaude:product-competition` |
