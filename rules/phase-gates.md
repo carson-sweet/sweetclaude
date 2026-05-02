@@ -78,6 +78,7 @@ Hard gates are marked ⚠️ and cannot be soft-bypassed at GA+.
 - Traceability map complete
 
 **SHIP**
+- Security review complete, OR security surface explicitly confirmed absent (skip reason logged in checkpoint)
 - PR merged or code deployed
 - Smoke test passing in production
 - Changelog / release notes updated
@@ -127,6 +128,7 @@ Hard gates are marked ⚠️ and cannot be soft-bypassed at GA+.
 - Failure/fallback scenarios tested end-to-end
 
 **SHIP**
+- Security review complete, OR security surface explicitly confirmed absent (skip reason logged in checkpoint)
 - Deployed and verified against production external service
 - Monitoring configured for integration health
 - Documentation updated
@@ -213,6 +215,7 @@ Hard gates are marked ⚠️ and cannot be soft-bypassed at GA+.
 - Enhancement behaves as specified in success criteria
 
 **SHIP**
+- Security review complete, OR security surface explicitly confirmed absent (skip reason logged in checkpoint)
 - Deployed and smoke tested
 - Documentation updated if behavior changed
 - Changelog entry added
@@ -312,6 +315,7 @@ Hard gates are marked ⚠️ and cannot be soft-bypassed at GA+.
 - Rollback tested in staging if possible
 
 **SHIP**
+- Security review complete, OR security surface explicitly confirmed absent (skip reason logged in checkpoint)
 - Change deployed to production
 - Monitoring confirming healthy signals
 - Rollback procedure on standby for first 24 hours

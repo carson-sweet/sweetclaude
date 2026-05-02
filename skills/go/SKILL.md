@@ -85,6 +85,14 @@ Read `~/.claude/rules/sweetclaude/phase-gates.md`. Extract only the section for 
 
 If yes, run the phase transition sequence from the master skill. Stop.
 
+**Pre-SHIP security check** (fires when advancing to SHIP, before evaluating other criteria):
+
+If `active_work_item.phase` is SHIP and the work type is one of `net-new-feature`, `external-integration`, `enhancement`, `infrastructure-change`: check the checkpoint for either a security review completion entry or an explicit security skip entry. If neither is found:
+
+> "Security review not run for this work item. Run `/sweetclaude:code-review security` now, or confirm this change has no security surface (reply with a skip reason: e.g. 'internal tool only', 'no auth/data/network changes', 'already reviewed in Verify')."
+
+If the user provides a skip reason: log it to checkpoint as `Security review skipped: {reason}` and continue with SHIP criteria evaluation. If the user runs the security review: proceed normally after completion.
+
 **If criteria are open:**
 
 Identify the single highest-priority open criterion. Map it to a skill via the routing table. Then:
@@ -124,6 +132,7 @@ Ask exactly one question to resolve it. After the answer, re-assess and act. If 
 | any | VERIFY | Code review not done | `sweetclaude:code-review` |
 | any | VERIFY | Tests not passing in CI | `sweetclaude:code-testing` |
 | any | VERIFY | Docs not updated | `sweetclaude:documents-update-docs` |
+| any | SHIP | Security review not run and not skipped | `sweetclaude:code-review` (security mode) |
 | bug-fix | DIAGNOSE | Root cause not identified | `sweetclaude:code-issue` |
 | bug-fix | IMPLEMENT | Regression test not written | `sweetclaude:code-tdd` |
 | security-patch | DIAGNOSE | Blast radius not assessed | `sweetclaude:code-review` |
