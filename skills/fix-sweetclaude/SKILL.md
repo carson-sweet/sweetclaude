@@ -114,12 +114,16 @@ For each of the six data-owning skills, check whether it is present in `skills.y
 | `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |
 | `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` |
 
-If `skills.yaml` is missing entirely: propose creating it with entries inferred from the above.
+If `skills.yaml` is missing entirely: propose creating it (schema v2) with entries inferred from the above.
 If entries are missing from an existing `skills.yaml`: propose adding them with the inferred state.
+If `skills.yaml` is schema v1: propose migrating to v2 (same mapping as the update skill's 8e migration step).
 
-> "skills.yaml is missing / has gaps. Based on artifacts on disk: backlog=true, milestones=false, … Write it?"
+> "skills.yaml is missing / has gaps / is schema v1. Based on artifacts on disk: backlog=active, milestones=uninitialized, … Write/migrate it?"
 
-On user approval, write or update `skills.yaml`. Do not remove or modify entries that are already present.
+On user approval: write or update `skills.yaml` using atomic write (temp file → rename). Use v2 schema:
+- Data file exists → `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
+- Data file missing → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+Do not remove or modify entries that are already present and consistent.
 
 **5c: Flag remaining mismatches**
 
@@ -127,8 +131,9 @@ After bootstrap, re-read `skills.yaml` and check for inconsistencies:
 
 | Situation | Flag |
 |---|---|
-| `enabled: true` but no artifacts on disk | "Skill marked enabled but no artifacts found — onboard may not have completed. Re-run onboard?" |
-| `enabled: false` but artifacts clearly exist on disk | "Artifacts found but skill not enabled — skills.yaml may be stale. Mark enabled?" |
+| `status: active` but no artifacts on disk | "Skill marked active but no artifacts found — partial deletion or failed onboard. Re-run onboard?" |
+| `status: uninitialized` or `status: paused` but artifacts clearly exist on disk | "Artifacts found but skill not active — skills.yaml may be stale. Mark active?" |
+| `status: paused` — data intact | No flag needed. Paused is an intentional state. |
 
 Propose a fix for each mismatch. Do not auto-apply.
 

@@ -1,0 +1,36 @@
+# SweetClaude skills registry
+# Static dependency graph for data-owning skills.
+# Written at install/update time. Not per-project.
+# Read by individual skills to enforce dependency gates.
+schema_version: 1
+
+skills:
+  product-milestones:
+    description: "Roadmap targets"
+    data_signal: "{base_path}/milestones/MILESTONES-INDEX.md"
+    dependencies: []
+
+  product-backlog:
+    description: "Deferred work items"
+    data_signal: "{base_path}/backlog/BACKLOG-INDEX.md"
+    dependencies: []
+
+  product-sprint-plan:
+    description: "Sprint planning"
+    data_signal: ~
+    dependencies: [product-backlog]
+
+  product-user-personas:
+    description: "User personas"
+    data_signal: ".sweetclaude/state/personas.yaml"
+    dependencies: []
+
+  product-user-stories:
+    description: "User stories"
+    data_signal: "{base_path}/stories/US-*.md"
+    dependencies: [product-user-personas]
+
+  document-corpus:
+    description: "Document corpus"
+    data_signal: ".sweetclaude/state/corpus-pipeline.yaml"
+    dependencies: []

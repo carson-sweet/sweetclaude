@@ -27,19 +27,64 @@ Before writing any artifact file:
 
 Read `.sweetclaude/state/skills.yaml`.
 
+**Schema migration:** If `skills.yaml` exists with `schema_version: 1`, migrate this skill's entry before proceeding:
+- `enabled: true` → `status: active`, `last_changed_at: {onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at` set → `status: paused`, `last_changed_at: {offboarded_at or onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at: ~` → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+Drop `onboarded_at`/`offboarded_at`. Set `schema_version: 2`. Write atomically (see write protocol below).
+
+**Dependency check (soft — warn, do not block):**
+Read `~/.claude/config/sweetclaude/skills-registry.yaml`. Find `skills.product-user-stories.dependencies`: `[product-user-personas]`.
+Read `skills.product-user-personas.status` from `skills.yaml`. If it is not `active`:
+> "Note: personas aren't set up yet — stories will be written without persona context. Run `/sweetclaude:product-user-personas` first for better results. Continue anyway? [yes/no]"
+If no: stop. If yes: proceed.
+
 **If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-user-stories`:**
 - Check whether any `US-*.md` files exist under `{base_path}/stories/`
-- If yes: add/write `skills.product-user-stories.enabled: true` to skills.yaml. Proceed normally.
-- If no: add/write `skills.product-user-stories.enabled: false` to skills.yaml. Route to `onboard`.
+- If yes: write entry with `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
+- If no: write entry with `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+- Use write protocol below.
 
 **If `skills.yaml` exists and has an entry for `skills.product-user-stories`:**
-- If `skills.product-user-stories.enabled: true`: proceed normally.
-- If `skills.product-user-stories.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "User stories haven't been set up for this project yet. Starting onboarding..." and route to `onboard`.
-- If `$ARGUMENTS` is `offboard` and `enabled: false`: say "User stories are not currently enabled. Nothing to offboard." Stop.
+- `status: active` → proceed normally
+- `status: paused` AND `$ARGUMENTS` not in `[onboard, offboard, pause]`:
+  > "User stories are currently paused. Resume? [yes/no]"
+  If yes: write `status: active`, `last_changed_at: {today}`, `last_changed_by: resume` (using write protocol). Proceed normally.
+  If no: stop.
+- `status: uninitialized` AND `$ARGUMENTS` not in `[onboard, offboard, pause]`:
+  → Run lightweight first-invocation flow (see below)
+- `$ARGUMENTS` is `pause` → run pause operation
+- `$ARGUMENTS` is `offboard` and `status: uninitialized`: "User stories aren't set up yet. Nothing to offboard." Stop.
+- `$ARGUMENTS` is `pause` and `status: paused`: "Already paused." Stop.
+- `$ARGUMENTS` is `pause` and `status: uninitialized`: "Not set up yet. Nothing to pause." Stop.
 
-**State writes:**
-- End of `onboard` (success): set `skills.product-user-stories.enabled: true`, `onboarded_at: {today ISO date}`
-- End of `offboard`: set `skills.product-user-stories.enabled: false`, `offboarded_at: {today ISO date}`
+**Write protocol — all skills.yaml writes must follow this:**
+1. Read and parse current `.sweetclaude/state/skills.yaml` (or start from default v2 structure if absent)
+2. Merge your entry — do NOT remove or overwrite other skills' entries
+3. Write merged content to `.sweetclaude/state/.skills.yaml.tmp`
+4. Run: `mv .sweetclaude/state/.skills.yaml.tmp .sweetclaude/state/skills.yaml`
+
+**State writes (use write protocol for all):**
+- End of lightweight first-invocation (success): `status: active`, `last_changed_at: {today}`, `last_changed_by: first-invocation`
+- End of onboard (success): `status: active`, `last_changed_at: {today}`, `last_changed_by: onboard`
+- Pause operation: `status: paused`, `last_changed_at: {today}`, `last_changed_by: pause`
+- Resume: `status: active`, `last_changed_at: {today}`, `last_changed_by: resume`
+- End of offboard: `status: uninitialized`, `last_changed_at: {today}`, `last_changed_by: offboard`
+
+---
+
+## Pause — Temporarily stop using this skill
+
+Invoked with argument `pause`.
+
+Sets user stories to `paused` status. Your story files are untouched and you can resume at any time.
+
+Write atomically (using write protocol):
+- `skills.product-user-stories.status: paused`
+- `skills.product-user-stories.last_changed_at: {today ISO date}`
+- `skills.product-user-stories.last_changed_by: pause`
+
+Say: "Paused. Your story files are safe — nothing was deleted. Resume anytime by running `/sweetclaude:product-user-stories`."
 
 ---
 
@@ -73,11 +118,35 @@ If nothing exists, say: "No story data found. Nothing to export." Stop.
 - **csv:** Ask "Which path?" Write one row per story: ID, title, persona, format, acceptance criteria (joined). Report path written.
 - **none:** Skip.
 
-4. **Confirm export complete** (if export ran):
+4. **Verify export (mandatory before deletion is unlocked):**
 
-> "Export complete. Confirm the files look correct before proceeding. Ready to continue? (yes/cancel)"
+- **github verification:**
+  ```bash
+  exported_count={N}
+  gh issue list --state all --limit 500 2>/dev/null | wc -l
+  ```
+  If result ≥ exported_count: "Export verified — {N} items confirmed in GitHub Issues."
+  If result < exported_count: "⚠ Export may be incomplete — only {actual} issues found but expected at least {exported_count}."
+  If `gh` unavailable: "Could not verify GitHub export automatically. Confirm all {N} items appear in GitHub."
+  On any failure or mismatch: ask "Continue anyway? [yes/cancel]". If cancel: stop.
 
-If cancel, stop. Do not touch SweetClaude files.
+- **markdown verification:**
+  ```bash
+  source_count=$(find {base_path}/stories/ -name "US-*.md" 2>/dev/null | wc -l)
+  dest_count=$(find {dest_dir}/ -name "US-*.md" 2>/dev/null | wc -l)
+  ```
+  If dest_count ≥ source_count: "Export verified — {source_count} files at `{dest_dir}`."
+  If less: "⚠ File count mismatch." Ask "Continue anyway? [yes/cancel]". If cancel: stop.
+
+- **csv verification:**
+  Read the CSV written. Count data rows (excluding header). If row_count ≥ source_count: "Export verified."
+  If less: "⚠ Row count mismatch." Ask "Continue anyway? [yes/cancel]". If cancel: stop.
+
+- **none (no export chosen):**
+  Require explicit acknowledgment:
+  > "You've chosen to skip export. Your story files will be permanently deleted with no backup.
+  > Type exactly: NO BACKUP — to confirm, or anything else to cancel."
+  If user types anything other than `NO BACKUP` exactly: "Cancelled. Your data is safe." Stop.
 
 5. **⚠ IRREVERSIBLE DATA LOSS WARNING ⚠**
 
@@ -98,6 +167,30 @@ rm -rf {base_path}/stories/
 ```
 
 Report: "Story files deleted."
+
+---
+
+## Lightweight first-invocation — Quick setup on first use
+
+Runs when the skill is invoked normally but `status` is `uninitialized`.
+
+1. Read `artifact-privacy.yaml` → `{base_path}`. If absent: "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here." Stop.
+
+2. Ask inline:
+   > "No stories set up yet. I'll create the stories directory at `{base_path}/stories/`.
+   > Import from GitHub Issues? [yes/no/skip]"
+
+3. If **yes**:
+   ```bash
+   gh issue list --state open --limit 30 2>/dev/null
+   ```
+   Create `{base_path}/stories/` directory. For each issue found that looks like a user story (title starts with "As a" or has label "story"), create a `US-XXX` file. Report how many were imported.
+
+4. If **no** or **skip**: Create the `{base_path}/stories/` directory. No files yet.
+
+5. Write state (using write protocol): `status: active`, `last_changed_at: {today}`, `last_changed_by: first-invocation`.
+
+6. Proceed to the user's originally requested operation.
 
 ---
 

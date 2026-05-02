@@ -161,6 +161,9 @@ rsync -a --delete $SOURCE_DIR/agents/ ~/.claude/agents/sweetclaude/
 
 # Ensure hooks are executable
 chmod +x ~/.claude/hooks/sweetclaude/*.sh 2>/dev/null || true
+
+# Verify registry file synced correctly
+ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNING: skills-registry.yaml not found after sync"
 ```
 
 ---
@@ -231,7 +234,7 @@ New in this update:
 
 If nothing is new, show: "No new skills or hooks in this update."
 
-**Skill state bootstrap:**
+**Skill state check and bootstrap:**
 
 This runs unconditionally — regardless of whether any new skills were found.
 
@@ -239,36 +242,40 @@ Only run if `.sweetclaude/` exists in the current project directory.
 
 Read `.sweetclaude/state/skills.yaml` if it exists.
 
-For each of the six data-owning skills, check whether it is already present in `skills.yaml`. If it is missing or absent, infer its state from the data files below:
+**Step 1 — schema migration:** If `skills.yaml` exists with `schema_version: 1`, migrate to v2 now:
+- `enabled: true` → `status: active`, `last_changed_at: {onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at` set → `status: paused`, `last_changed_at: {offboarded_at or onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at: ~` → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+- Drop `onboarded_at` and `offboarded_at` fields; update `schema_version: 2`
+- Write atomically: write to `.sweetclaude/state/.skills.yaml.tmp`, then `mv .sweetclaude/state/.skills.yaml.tmp .sweetclaude/state/skills.yaml`
+- Report: "Migrated skills.yaml to schema v2."
 
-| Skill | Data file that indicates it's already in use |
+**Step 2 — fill missing entries:** For `base_path`: read `.sweetclaude/artifact-privacy.yaml` → `categories.product.base_path`. If absent, use `.sweetclaude/artifacts/product`.
+
+For each of the six data-owning skills not already in `skills.yaml`, infer state from data files:
+
+| Skill | Data file that indicates it was in use |
 |---|---|
 | `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
 | `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
-| `product-sprint-plan` | *(no inference — always starts as `enabled: false` if absent)* |
+| `product-sprint-plan` | *(no inference — always `uninitialized` if absent)* |
 | `product-user-personas` | `.sweetclaude/state/personas.yaml` |
-| `product-user-stories` | `{base_path}/stories/` contains at least one `US-*.md` file |
+| `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |
 | `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` |
 
-For `base_path`: read `.sweetclaude/artifact-privacy.yaml` → `categories.product.base_path`. If this file does not exist, use `.sweetclaude/artifacts/product` as the fallback.
-
-For each skill missing from `skills.yaml`:
-- If the data file exists: write `enabled: true` for that skill (it was already in use before state tracking was added).
-- If the data file does not exist: write `enabled: false`.
-
-After processing all six, write the complete `skills.yaml`. Do not remove entries for skills already in the file — only add or fill in missing ones. Preserve any existing `onboarded_at` / `offboarded_at` timestamps.
+For each missing entry: data file exists → `status: active`, `last_changed_by: migrated`. Does not exist → `status: uninitialized`. Write atomically (temp file → rename). Do not remove existing entries.
 
 **Skill onboarding prompt:**
 
-After the bootstrap, read `skills.yaml`. Build a list of all six data-owning skills where `enabled: false`. This list drives the onboarding prompt — it is not limited to "new" skill directories.
+After bootstrap, read `skills.yaml`. Build a list of all six data-owning skills where `status: uninitialized`. This list drives the onboarding prompt.
 
-If the list is empty, skip the prompt entirely and continue to 7b.
+If the list is empty, skip the prompt and continue to 7b.
 
-If the list is non-empty, ask:
+If non-empty, ask:
 
-> "These skills can import your existing data. Which would you like to set up now?
+> "These skills aren't set up for this project yet. Which would you like to set up now?
 >
->   {list only the skills with enabled: false, one per line with keyword and description}
+>   {list only the skills with status: uninitialized, one per line with keyword and description}
 >
 > Enter keywords (e.g. "milestones backlog"), or "none" to skip."
 
@@ -433,6 +440,27 @@ active_work_item:
 ```
 
 Report: "phase.yaml migrated to schema v2. Use `/sweetclaude:find-skill` to resume work."
+
+### 8e: Migrate skills.yaml v1 → v2
+
+After the phase.yaml migration (or if phase.yaml is already v2), check `.sweetclaude/state/skills.yaml`.
+
+If `skills.yaml` does not exist: nothing to migrate. Continue.
+
+If `skills.yaml` exists with `schema_version: 1`:
+
+Map each entry:
+- `enabled: true` → `status: active`, `last_changed_at: {onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at` set → `status: paused`, `last_changed_at: {offboarded_at or onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at: ~` → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+- Drop `onboarded_at` and `offboarded_at` fields
+- Set `schema_version: 2`
+
+Write atomically: write to `.sweetclaude/state/.skills.yaml.tmp`, then `mv .sweetclaude/state/.skills.yaml.tmp .sweetclaude/state/skills.yaml`.
+
+Report: "skills.yaml migrated to schema v2."
+
+If `skills.yaml` exists with `schema_version: 2`: "skills.yaml already on v2. No migration needed."
 
 ---
 

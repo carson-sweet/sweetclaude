@@ -18,29 +18,6 @@ Read `.sweetclaude/state/phase.yaml`. Check `schema_version`:
 - If absent or `1`: warn — "Your `phase.yaml` is on schema v1. Run `/sweetclaude:update` to upgrade." Stop.
 - If `2`: proceed.
 
-## Step 1.5: Sync skills.yaml
-
-Run silently before presenting any output. This keeps skill state current without requiring the user to run `/sweetclaude:update`.
-
-Read `.sweetclaude/artifact-privacy.yaml` → `categories.product.base_path`. If absent, use `.sweetclaude/artifacts/product` as fallback.
-
-Read `.sweetclaude/state/skills.yaml` if it exists.
-
-For each of the six data-owning skills, check whether it is present in `skills.yaml`. If missing, infer its state from the data file:
-
-| Skill | Data file that indicates already in use |
-|---|---|
-| `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
-| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
-| `product-sprint-plan` | *(no inference — write `enabled: false` if absent)* |
-| `product-user-personas` | `.sweetclaude/state/personas.yaml` |
-| `product-user-stories` | `{base_path}/stories/` contains at least one `US-*.md` |
-| `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` |
-
-For each skill missing from `skills.yaml`: if the data file exists, write `enabled: true`; otherwise write `enabled: false`. Do not remove or modify existing entries.
-
-If any entries were added, write the updated `skills.yaml`. No output to the user — this step is invisible.
-
 ## Step 2: Read state directly
 
 Run all of these inline — do NOT spawn a background agent:
@@ -78,6 +55,29 @@ Also read:
 - `.sweetclaude/state/improvement-register.md` — does it exist and have entries beyond the header?
 - `.sweetclaude/state/project-sop.md` — exists? (yes/no only — do not read full contents)
 
+**Skills state check (read-only — do not write):**
+
+```bash
+cat .sweetclaude/state/skills.yaml 2>/dev/null || echo "SKILLS_YAML_MISSING"
+```
+
+If `SKILLS_YAML_MISSING` or `schema_version` is absent: set `SKILLS_STATUS = "not initialized — run /sweetclaude:fix-sweetclaude"`.
+
+If `schema_version: 1`: set `SKILLS_STATUS = "schema v1 — run /sweetclaude:update to migrate"`.
+
+If `schema_version: 2`: for each skill with `status: active`, check whether its artifact exists:
+
+```bash
+product_base=$(python3 -c "import yaml; d=yaml.safe_load(open('.sweetclaude/artifact-privacy.yaml')); print(d['categories']['product']['base_path'])" 2>/dev/null || echo ".sweetclaude/artifacts/product")
+ls ${product_base}/milestones/MILESTONES-INDEX.md 2>/dev/null || echo "milestones_MISSING"
+ls ${product_base}/backlog/BACKLOG-INDEX.md 2>/dev/null || echo "backlog_MISSING"
+ls .sweetclaude/state/personas.yaml 2>/dev/null || echo "personas_MISSING"
+find ${product_base}/stories/ -name "US-*.md" 2>/dev/null | head -1 || echo "stories_MISSING"
+ls .sweetclaude/state/corpus-pipeline.yaml 2>/dev/null || echo "corpus_MISSING"
+```
+
+Collect each skill marked `active` where the corresponding artifact is `*_MISSING`. Store as `SKILLS_WARNINGS` list. If none: `SKILLS_WARNINGS = []`.
+
 ## Step 3: Present status
 
 Use the data from Step 2. No other reads or commands.
@@ -89,6 +89,7 @@ Compute:
 - **RAG_STATUS** = if lancedb count > 0: `{canonical_count} canonical docs · indexed` / else if canonical_count > 0: `{canonical_count} canonical docs · not indexed` / else: `not configured`
 - **CHECKPOINT** = if checkpoint.md has content, show the `Next:` line from the last entry. If scratch files found, list them.
 - **MILESTONES** = if `product_base` is `MANIFEST_MISSING`: show `not configured (run /sweetclaude:on)`. Otherwise: from the Status grep output: for each `active` milestone, show its filename slug and `active`. If none are active but milestone files exist, show `none active`. If no MS-*.md files exist, show `none`.
+- **SKILLS_LINE** = if `SKILLS_STATUS` is set: show it. If `SKILLS_WARNINGS` is non-empty: show `⚠ {N} skill(s) marked active but missing artifacts: {list} — run /sweetclaude:fix-sweetclaude`. If both empty: omit the line entirely.
 
 **If active work item exists:**
 
@@ -117,6 +118,7 @@ Recent activity:
 Framework:
   SweetClaude:    v{installed} {SC_UPDATE}
   Doc Corpus RAG: {RAG_STATUS}
+  {SKILLS_LINE — omit line if empty}
 ```
 
 **If no active work item:**
@@ -144,6 +146,7 @@ Recent activity:
 Framework:
   SweetClaude:    v{installed} {SC_UPDATE}
   Doc Corpus RAG: {RAG_STATUS}
+  {SKILLS_LINE — omit line if empty}
 ```
 
 ## Step 4: Suggest action

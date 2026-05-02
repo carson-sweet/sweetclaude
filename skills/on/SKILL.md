@@ -124,34 +124,34 @@ Set up SweetClaude state for this project:
 - `.sweetclaude/state/skills.yaml` — skill enablement state:
   ```yaml
   # .sweetclaude/state/skills.yaml
-  # SweetClaude skill enablement state — schema version 1
-  schema_version: 1
+  # SweetClaude skill enablement state — schema version 2
+  schema_version: 2
 
   skills:
     product-milestones:
-      enabled: false
-      onboarded_at: ~
-      offboarded_at: ~
+      status: uninitialized
+      last_changed_at: ~
+      last_changed_by: ~
     product-backlog:
-      enabled: false
-      onboarded_at: ~
-      offboarded_at: ~
+      status: uninitialized
+      last_changed_at: ~
+      last_changed_by: ~
     product-sprint-plan:
-      enabled: false
-      onboarded_at: ~
-      offboarded_at: ~
+      status: uninitialized
+      last_changed_at: ~
+      last_changed_by: ~
     product-user-personas:
-      enabled: false
-      onboarded_at: ~
-      offboarded_at: ~
+      status: uninitialized
+      last_changed_at: ~
+      last_changed_by: ~
     product-user-stories:
-      enabled: false
-      onboarded_at: ~
-      offboarded_at: ~
+      status: uninitialized
+      last_changed_at: ~
+      last_changed_by: ~
     document-corpus:
-      enabled: false
-      onboarded_at: ~
-      offboarded_at: ~
+      status: uninitialized
+      last_changed_at: ~
+      last_changed_by: ~
   ```
 - `.sweetclaude/traceability/requirements-map.md` — empty table
 - `.sweetclaude/traceability/ripple-map.md` — empty table
@@ -431,16 +431,20 @@ Same as Step 2-N (2b through 2e) — create state directory, strategy structure,
 
 For CLAUDE.md generation: scan the project for language, framework, package manager, test runner, and build commands first. Use those in the CLAUDE.md instead of placeholders.
 
-**skills.yaml override for existing projects:** When creating `.sweetclaude/state/skills.yaml` in Step 2b, do NOT write all skills as `enabled: false`. Instead, bootstrap from data files first. Read `artifact-privacy.yaml` → `categories.product.base_path` (fallback: `.sweetclaude/artifacts/product`). For each skill, check the data file signal and write the correct enabled state:
+**skills.yaml override for existing projects:** When creating `.sweetclaude/state/skills.yaml` in Step 2b, use schema v2 and bootstrap from data files. Read `artifact-privacy.yaml` → `categories.product.base_path` (fallback: `.sweetclaude/artifacts/product`). For each skill, check the data file signal:
 
 | Skill | Data file signal |
 |---|---|
 | `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` exists |
 | `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` exists |
-| `product-sprint-plan` | *(no signal — always `enabled: false`)* |
+| `product-sprint-plan` | *(no signal — always `uninitialized`)* |
 | `product-user-personas` | `.sweetclaude/state/personas.yaml` exists |
 | `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |
 | `document-corpus` | `.sweetclaude/state/corpus-pipeline.yaml` exists |
+
+If data file exists → `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`. Otherwise → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`.
+
+Write atomically: write to `.sweetclaude/state/.skills.yaml.tmp`, then `mv .sweetclaude/state/.skills.yaml.tmp .sweetclaude/state/skills.yaml`.
 
 Note: `artifact-privacy.yaml` may not exist yet when this step runs (it is created in Step 2.5-E). Use the fallback path if it is absent.
 

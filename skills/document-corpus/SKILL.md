@@ -46,19 +46,46 @@ What do you want to do?
 
 Read `.sweetclaude/state/skills.yaml`.
 
+**Schema migration:** If `skills.yaml` exists with `schema_version: 1`, migrate this skill's entry before proceeding:
+- `enabled: true` → `status: active`, `last_changed_at: {onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at` set → `status: paused`, `last_changed_at: {offboarded_at or onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at: ~` → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+Drop `onboarded_at`/`offboarded_at`. Set `schema_version: 2`. Write atomically (see write protocol below).
+
+**Dependency check:**
+Read `~/.claude/config/sweetclaude/skills-registry.yaml`. Find `skills.document-corpus.dependencies`. This skill has no dependencies — skip.
+
 **If `skills.yaml` does not exist, OR exists but has no entry for `skills.document-corpus`:**
 - Check whether `.sweetclaude/state/corpus-pipeline.yaml` exists
-- If yes: add/write `skills.document-corpus.enabled: true` to skills.yaml. Proceed normally.
-- If no: add/write `skills.document-corpus.enabled: false` to skills.yaml. Route to `onboard`.
+- If yes: write entry with `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
+- If no: write entry with `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+- Use write protocol below.
 
 **If `skills.yaml` exists and has an entry for `skills.document-corpus`:**
-- If `skills.document-corpus.enabled: true`: proceed normally (show the menu).
-- If `skills.document-corpus.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Document corpus hasn't been set up for this project yet. Starting onboarding..." and route to `onboard`.
-- If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Document corpus is not currently enabled. Nothing to offboard." Stop.
+- `status: active` → proceed normally (show the menu)
+- `status: paused` AND `$ARGUMENTS` not in `[onboard, offboard, pause]`:
+  > "Document corpus is currently paused. Resume? [yes/no]"
+  If yes: write `status: active`, `last_changed_at: {today}`, `last_changed_by: resume` (using write protocol). Proceed normally.
+  If no: stop.
+- `status: uninitialized` AND `$ARGUMENTS` not in `[onboard, offboard, pause]`:
+  → Run lightweight first-invocation flow (see below)
+- `$ARGUMENTS` is `pause` → run pause operation
+- `$ARGUMENTS` is `offboard` and `status: uninitialized`: "Document corpus isn't set up yet. Nothing to offboard." Stop.
+- `$ARGUMENTS` is `pause` and `status: paused`: "Already paused." Stop.
+- `$ARGUMENTS` is `pause` and `status: uninitialized`: "Not set up yet. Nothing to pause." Stop.
 
-**State writes:**
-- End of `onboard` (success): set `skills.document-corpus.enabled: true`, `onboarded_at: {today ISO date}`
-- End of `offboard`: set `skills.document-corpus.enabled: false`, `offboarded_at: {today ISO date}`
+**Write protocol — all skills.yaml writes must follow this:**
+1. Read and parse current `.sweetclaude/state/skills.yaml` (or start from default v2 structure if absent)
+2. Merge your entry — do NOT remove or overwrite other skills' entries
+3. Write merged content to `.sweetclaude/state/.skills.yaml.tmp`
+4. Run: `mv .sweetclaude/state/.skills.yaml.tmp .sweetclaude/state/skills.yaml`
+
+**State writes (use write protocol for all):**
+- End of lightweight first-invocation (success): `status: active`, `last_changed_at: {today}`, `last_changed_by: first-invocation`
+- End of onboard (success): `status: active`, `last_changed_at: {today}`, `last_changed_by: onboard`
+- Pause operation: `status: paused`, `last_changed_at: {today}`, `last_changed_by: pause`
+- Resume: `status: active`, `last_changed_at: {today}`, `last_changed_by: resume`
+- End of offboard: `status: uninitialized`, `last_changed_at: {today}`, `last_changed_by: offboard`
 
 ---
 
@@ -69,6 +96,21 @@ If `$ARGUMENTS` is `offboard`, run the offboard flow below instead of showing th
 If any other `$ARGUMENTS` was passed (e.g. `/sweetclaude:document-corpus triage`), skip the menu and route directly.
 
 Parse the user's selection and jump to the named section below.
+
+---
+
+## Pause — Temporarily stop using this skill
+
+Invoked with argument `pause`.
+
+Sets document corpus to `paused` status. Your corpus files and RAG index are untouched and you can resume at any time.
+
+Write atomically (using write protocol):
+- `skills.document-corpus.status: paused`
+- `skills.document-corpus.last_changed_at: {today ISO date}`
+- `skills.document-corpus.last_changed_by: pause`
+
+Say: "Paused. Your corpus and index are safe — nothing was deleted. Resume anytime by running `/sweetclaude:document-corpus`."
 
 ---
 
@@ -110,11 +152,22 @@ If canonical or all: "Which directory should I copy the files to?"
 
 Validate the directory exists (offer to create it if it doesn't). Copy files there with `rsync -a`. Report files copied.
 
-4. **Confirm export complete** (if export ran):
+4. **Verify export (mandatory before deletion is unlocked):**
 
-> "Export complete. Confirm the files look correct at `{destination}` before proceeding. Ready to continue? (yes/cancel)"
+For the `canonical` or `all` export option:
+```bash
+source_count=$(find corpus/canonical/ -type f 2>/dev/null | wc -l)
+dest_count=$(find {destination}/ -type f 2>/dev/null | wc -l)
+```
+If dest_count ≥ source_count: "Export verified — {source_count} canonical files at `{destination}`."
+If dest_count < source_count: "⚠ File count mismatch — {source_count} source files, {dest_count} at destination."
+On mismatch: ask "Continue anyway despite mismatch? [yes/cancel]". If cancel: stop, do not proceed to deletion.
 
-If cancel, stop. Do not touch SweetClaude files.
+For the `none` export option:
+Require explicit acknowledgment before proceeding to deletion:
+> "You've chosen to skip export. Your corpus and index will be permanently deleted with no backup.
+> Type exactly: NO BACKUP — to confirm, or anything else to cancel."
+If user types anything other than `NO BACKUP` exactly: "Cancelled. Your data is safe." Stop.
 
 5. **Ask what to delete** (separate question for each):
 
@@ -162,6 +215,31 @@ rm -f .sweetclaude/state/corpus-pipeline.yaml .sweetclaude/state/corpus.yaml .sw
 ```
 
 Report each deletion as it completes. Report anything skipped.
+
+---
+
+## Lightweight first-invocation — Quick setup on first use
+
+Runs when the skill is invoked normally but `status` is `uninitialized`.
+
+1. Say: "Document corpus isn't set up yet. I'll create the corpus structure now."
+
+2. Create directory structure:
+   ```bash
+   mkdir -p corpus/canonical corpus/raw/inbox corpus/archive
+   ```
+
+3. Ask inline:
+   > "Do you have documents ready to add to the corpus? [yes/no]"
+
+4. If **yes**: "Drop files into `corpus/raw/inbox/` and run `/sweetclaude:document-corpus` to process them. I'll start processing now if files are already there."
+   Check `corpus/raw/inbox/` for existing files. If any exist, proceed to the Triage/Ingest flow.
+
+5. If **no**: "Ready. Drop documents into `corpus/raw/inbox/` and run `/sweetclaude:document-corpus` when ready."
+
+6. Write state (using write protocol): `status: active`, `last_changed_at: {today}`, `last_changed_by: first-invocation`.
+
+7. Proceed to the user's originally requested operation (or end here if no specific operation was requested).
 
 ---
 

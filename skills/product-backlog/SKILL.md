@@ -16,19 +16,46 @@ Manage backlog: $ARGUMENTS
 
 Read `.sweetclaude/state/skills.yaml`.
 
+**Schema migration:** If `skills.yaml` exists with `schema_version: 1`, migrate this skill's entry before proceeding:
+- `enabled: true` → `status: active`, `last_changed_at: {onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at` set → `status: paused`, `last_changed_at: {offboarded_at or onboarded_at or today}`, `last_changed_by: migrated`
+- `enabled: false` with `onboarded_at: ~` → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+Drop `onboarded_at`/`offboarded_at`. Set `schema_version: 2`. Write atomically (see write protocol below).
+
+**Dependency check:**
+Read `~/.claude/config/sweetclaude/skills-registry.yaml`. Find `skills.product-backlog.dependencies`. This skill has no dependencies — skip.
+
 **If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-backlog`:**
 - Check whether `{base_path}/backlog/BACKLOG-INDEX.md` exists
-- If yes: add/write `skills.product-backlog.enabled: true` to skills.yaml. Proceed normally.
-- If no: add/write `skills.product-backlog.enabled: false` to skills.yaml. Route to `onboard`.
+- If yes: write entry with `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
+- If no: write entry with `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
+- Use write protocol below.
 
 **If `skills.yaml` exists and has an entry for `skills.product-backlog`:**
-- If `skills.product-backlog.enabled: true`: proceed normally.
-- If `skills.product-backlog.enabled: false` AND `$ARGUMENTS` is not `onboard` or `offboard`: say "Backlog hasn't been set up for this project yet. Starting onboarding..." and route to `onboard`.
-- If `$ARGUMENTS` is `offboard` and `enabled: false`: say "Backlog is not currently enabled. Nothing to offboard." Stop.
+- `status: active` → proceed normally
+- `status: paused` AND `$ARGUMENTS` not in `[onboard, offboard, pause]`:
+  > "Backlog is currently paused. Resume? [yes/no]"
+  If yes: write `status: active`, `last_changed_at: {today}`, `last_changed_by: resume` (using write protocol). Proceed normally.
+  If no: stop.
+- `status: uninitialized` AND `$ARGUMENTS` not in `[onboard, offboard, pause]`:
+  → Run lightweight first-invocation flow (see below)
+- `$ARGUMENTS` is `pause` → run pause operation
+- `$ARGUMENTS` is `offboard` and `status: uninitialized`: "Backlog isn't set up yet. Nothing to offboard." Stop.
+- `$ARGUMENTS` is `pause` and `status: paused`: "Already paused." Stop.
+- `$ARGUMENTS` is `pause` and `status: uninitialized`: "Not set up yet. Nothing to pause." Stop.
 
-**State writes:**
-- End of `onboard` (success): set `skills.product-backlog.enabled: true`, `onboarded_at: {today ISO date}`
-- End of `offboard`: set `skills.product-backlog.enabled: false`, `offboarded_at: {today ISO date}`
+**Write protocol — all skills.yaml writes must follow this:**
+1. Read and parse current `.sweetclaude/state/skills.yaml` (or start from default v2 structure if absent)
+2. Merge your entry — do NOT remove or overwrite other skills' entries
+3. Write merged content to `.sweetclaude/state/.skills.yaml.tmp`
+4. Run: `mv .sweetclaude/state/.skills.yaml.tmp .sweetclaude/state/skills.yaml`
+
+**State writes (use write protocol for all):**
+- End of lightweight first-invocation (success): `status: active`, `last_changed_at: {today}`, `last_changed_by: first-invocation`
+- End of onboard (success): `status: active`, `last_changed_at: {today}`, `last_changed_by: onboard`
+- Pause operation: `status: paused`, `last_changed_at: {today}`, `last_changed_by: pause`
+- Resume: `status: active`, `last_changed_at: {today}`, `last_changed_by: resume`
+- End of offboard: `status: uninitialized`, `last_changed_at: {today}`, `last_changed_by: offboard`
 
 ---
 
@@ -66,6 +93,21 @@ Never silently put a non-technical item in docs/backlog/.
   ...
 ```
 
+## Pause — Temporarily stop using this skill
+
+Invoked with argument `pause`.
+
+Sets backlog to `paused` status. Your data is untouched and you can resume at any time by invoking this skill normally.
+
+Write atomically (using write protocol):
+- `skills.product-backlog.status: paused`
+- `skills.product-backlog.last_changed_at: {today ISO date}`
+- `skills.product-backlog.last_changed_by: pause`
+
+Say: "Paused. Your backlog files are safe — nothing was deleted. Resume anytime by running `/sweetclaude:product-backlog`."
+
+---
+
 ## Offboarding — Export data and stop using this skill
 
 Invoked with argument `offboard`.
@@ -96,11 +138,35 @@ If nothing exists, say: "No backlog data found. Nothing to export." Stop.
 - **csv:** Ask "Which path?" Write one row per item: ID, title, priority, depends on, one-line summary. Report path written.
 - **none:** Skip.
 
-4. **Confirm export complete** (if export ran):
+4. **Verify export (mandatory before deletion is unlocked):**
 
-> "Export complete. Confirm the files look correct before proceeding. Ready to continue? (yes/cancel)"
+- **github verification:**
+  ```bash
+  gh issue list --state all --limit 500 2>/dev/null | wc -l
+  ```
+  If result ≥ exported_count: "Export verified — {N} items confirmed in GitHub Issues."
+  If result < exported_count: "⚠ Export may be incomplete — only {actual} issues found but expected at least {exported_count}. Check GitHub Issues before proceeding."
+  If `gh` unavailable: "Could not verify GitHub export automatically. Confirm you see all {N} items in GitHub Issues."
+  On any failure or mismatch: ask "Continue anyway despite unverified export? [yes/cancel]". If cancel: stop, do not proceed to deletion.
 
-If cancel, stop. Do not touch SweetClaude files.
+- **markdown verification:**
+  ```bash
+  source_count=$(ls {base_path}/backlog/BL-*.md 2>/dev/null | wc -l)
+  dest_count=$(ls {dest_dir}/BL-*.md 2>/dev/null | wc -l)
+  ```
+  If dest_count ≥ source_count: "Export verified — {source_count} files at `{dest_dir}`."
+  If dest_count < source_count: "⚠ File count mismatch — {source_count} source files, {dest_count} at destination."
+  On mismatch: ask "Continue anyway? [yes/cancel]". If cancel: stop.
+
+- **csv verification:**
+  Read the CSV written. Count data rows (excluding header). If row_count ≥ source_count: "Export verified — {N} rows."
+  If less: "⚠ Row count mismatch." Ask "Continue anyway? [yes/cancel]". If cancel: stop.
+
+- **none (no export chosen):**
+  Require explicit acknowledgment before proceeding:
+  > "You've chosen to skip export. Your data will be permanently deleted with no backup.
+  > Type exactly: NO BACKUP — to confirm you understand, or anything else to cancel."
+  If user types anything other than `NO BACKUP` exactly: "Cancelled. Your data is safe." Stop.
 
 5. **⚠ IRREVERSIBLE DATA LOSS WARNING ⚠**
 
@@ -121,6 +187,30 @@ rm -rf {base_path}/backlog/
 ```
 
 Report: "Backlog files deleted."
+
+---
+
+## Lightweight first-invocation — Quick setup on first use
+
+Runs when the skill is invoked normally but `status` is `uninitialized`. Does NOT run when `$ARGUMENTS` is `onboard`.
+
+1. Read `artifact-privacy.yaml` → `{base_path}`. If absent: "No artifact privacy manifest found. Run `/sweetclaude:on` to configure artifact privacy, then return here." Stop.
+
+2. Present inline:
+   > "No backlog set up yet. I'll create the backlog directory at `{base_path}/backlog/`.
+   > Import from GitHub Issues? [yes/no/skip]"
+
+3. If **yes**:
+   ```bash
+   gh issue list --state open --limit 30 2>/dev/null
+   ```
+   Create `BACKLOG-INDEX.md` with the standard header. For each issue found, create a `BL-XXX` file with title, issue number, and body summary. Report how many were imported.
+
+4. If **no** or **skip**: Create `{base_path}/backlog/BACKLOG-INDEX.md` with the standard header only.
+
+5. Write state (using write protocol): `status: active`, `last_changed_at: {today}`, `last_changed_by: first-invocation`.
+
+6. Proceed to the user's originally requested operation (do not re-route to the full onboard flow).
 
 ---
 
