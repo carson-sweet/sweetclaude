@@ -1,28 +1,22 @@
-# Caucus Checkpoint — Turn 4 (Final)
+# Caucus Checkpoint — OSS Caucus Turn 4 of 6
 
-**Status:** Complete
 **Date:** 2026-05-01
-**Output file:** `caucus_review_sweetclaude_swot.md`
+**Topic:** SweetClaude OSS Success SWOT + README Review
+**Status:** Turns 1–4 complete. Turns 5–6 pending.
 
-## Turns completed: 4/4
+## Turn 4 Summary: README First Impression
 
-## Key themes (final)
+**What works:** Opening paragraph ("not for everyone") is unusually effective — selective trust signal, precise audience. Install is honest, 3-command, low friction. CONTRIBUTING.md contributor funnel is thoughtfully structured.
 
-**SWOT summary:**
-- Strengths: two-dimension phase model, TDD enforcement architecture, atomic write/three-state skills model, improvement register with mandatory triggers, unique strategy-to-code integration gap
-- Weaknesses: 52 skills × no behavioral test harness; load-bearing instruction-only behaviors; reactive migration architecture; single-contributor architecture
-- Opportunities: underserved "I have an idea" developer persona; product skills have no competition in Claude Code ecosystem; research partnership for longitudinal data
-- Threats: wrong-audience churn + negative word-of-mouth; Anthropic native phase tracking; Claude Code platform updates creating coordinated regression
+**What doesn't:**
+- README does 5 jobs simultaneously (feature catalog, tutorial, use case library, command reference, architecture explainer) — should do 1 (make someone decide to install)
+- Trust-building / human content (Smushford, Ko-fi, personal story) buried at bottom; reference material dominates first 250 lines
+- No project status signals (version number, commit frequency badge, last-release date)
+- AGPL description undersells the permissive-for-most-users reality
+- Behavioral claims not hedged for model-version risk; no "verified on model X as of date" anchor
 
-## 7 prioritized recommendations
-1. Fix "physically impossible" → "substantially raises the cost of" [unanimous]
-2. Document enforcement tier (hook vs. instruction) for every behavioral property [4/5]
-3. Build behavioral regression test harness [4/5]
-4. Put audience signal first in README; add explicit wrong-audience statement [3/5]
-5. Migration registry with validation and rollback [3/5]
-6. Hook-enforce phase dwelling via output scanner [2/5 — minority]
-7. Modular contribution boundary for community sustainability [2/5]
+**Structural verdict:** README architecture is inverted for its audience-conversion job. Comprehensive for existing users; under-optimized for evaluators.
 
-## Unresolved disagreements
-1. Phase dwelling: hook-enforce vs. improve instructions + test harness
-2. Whether current onboarding is calibrated correctly for right-audience users
+## What's Next
+
+Turn 5: Specific line-by-line issues with concrete proposed fixes.
