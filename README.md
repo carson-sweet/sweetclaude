@@ -7,6 +7,8 @@
 
 **Built for:** Early-stage founders, technical solopreneurs, and senior ICs who want a structured partner — not autocomplete-on-steroids. Projects where the 70% of work that happens before a function is written matters as much as the implementation.
 
+**Requires:** [Claude Code](https://claude.ai/code) — Anthropic's CLI (paid subscription).
+
 A plugin for Claude Code that covers the full lifecycle: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. Works with any language or framework. Workflow structure is tiered — weekend projects and commercial SaaS have different needs — and automatically adjusts as the project matures.
 
 Built by an enterprise CTO/CISO and serial entrepreneur, originally as his toolchain.
@@ -39,7 +41,31 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 ## Getting Started
 
-> **Note for existing clones (2026-05-01):** The git history was rewritten today to remove internal design docs that were never meant to be public. The framework code itself is unchanged. If you cloned this repo before today, run `git fetch origin && git reset --hard origin/main && git fetch --tags --force` to sync. Fresh clones and installs via `./install.sh` are unaffected.
+### Things to Try First
+
+These are low-risk ways to see what SweetClaude can do before committing to a workflow.
+
+**Ask Claude to explain the process.** Just type: "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?" Claude reads the master skill and gives you the full picture.
+
+**Ask to see everything SweetClaude can do.** Type: "Show me all the things SweetClaude can do." Claude walks through every domain — strategy, product, design, code, review — and explains each capability.
+
+**Ask what problems you can hand to SweetClaude.** Type: "What kinds of problems or use cases can I hand to SweetClaude?" This surfaces capabilities you might not expect — meeting prep, competitive analysis, academic paper writing, document organization, pain thesis development.
+
+**Ask how SweetClaude is different.** Type: "How is SweetClaude different from other Claude Code coding frameworks and skills?" Claude explains what makes it unique: the strategic and product layers that happen before code, the structured pain thesis, the six domain buckets, the end-to-end lifecycle coverage.
+
+**Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
+
+**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, tell SweetClaude "I have a pile of documents I need to organize." It runs a four-step pipeline: consolidate (scan, deduplicate, ingest), triage (classify), reconcile (draft canonical documents), promote (finalize with provenance, archive, and RAG index). Originals are never deleted.
+
+**Check the status of a project SweetClaude already knows about.** If you have already activated SweetClaude for a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
+
+**Run a competitive landscape scan.** In any project, tell SweetClaude "run a competitive landscape scan for my space." It researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond activation.
+
+**Get a code review.** On any project with code, tell SweetClaude "review my recent changes." It gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
+
+**Run an autonomous end-to-end pipeline.** Tell SweetClaude "run the autonomous pipeline" or ask about John Wick mode. It executes the full product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. Human pause points are pre-defined and rare — the pipeline pauses at interactive gates, shows its work, waits for explicit approval, and resumes where it left off across sessions. If the prerequisites aren't met, it tells you exactly what to complete first.
+
+**Set up semantic search.** Tell SweetClaude "set up semantic search for my documents." It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
 
 ### Prerequisites
 
@@ -90,32 +116,6 @@ claude --plugin-dir /path/to/sweetclaude
 ```
 
 All skills are available for that session. TDD enforcement hooks and global configuration are not active — those require the full install.
-
-### Things to Try First
-
-These are low-risk ways to see what SweetClaude can do before committing to a workflow.
-
-**Ask Claude to explain the process.** Just type: "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?" Claude reads the master skill and gives you the full picture.
-
-**Ask to see everything SweetClaude can do.** Type: "Show me all the things SweetClaude can do." Claude walks through every domain — strategy, product, design, code, review — and explains each capability.
-
-**Ask what problems you can hand to SweetClaude.** Type: "What kinds of problems or use cases can I hand to SweetClaude?" This surfaces capabilities you might not expect — meeting prep, competitive analysis, academic paper writing, document organization, pain thesis development.
-
-**Ask how SweetClaude is different.** Type: "How is SweetClaude different from other Claude Code coding frameworks and skills?" Claude explains what makes it unique: the strategic and product layers that happen before code, the structured pain thesis, the six domain buckets, the end-to-end lifecycle coverage.
-
-**Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
-
-**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, tell SweetClaude "I have a pile of documents I need to organize." It runs a four-step pipeline: consolidate (scan, deduplicate, ingest), triage (classify), reconcile (draft canonical documents), promote (finalize with provenance, archive, and RAG index). Originals are never deleted.
-
-**Check the status of a project SweetClaude already knows about.** If you have already activated SweetClaude for a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
-
-**Run a competitive landscape scan.** In any project, tell SweetClaude "run a competitive landscape scan for my space." It researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond activation.
-
-**Get a code review.** On any project with code, tell SweetClaude "review my recent changes." It gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
-
-**Run an autonomous end-to-end pipeline.** Tell SweetClaude "run the autonomous pipeline" or ask about John Wick mode. It executes the full product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. Human pause points are pre-defined and rare — the pipeline pauses at interactive gates, shows its work, waits for explicit approval, and resumes where it left off across sessions. If the prerequisites aren't met, it tells you exactly what to complete first.
-
-**Set up semantic search.** Tell SweetClaude "set up semantic search for my documents." It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
 
 ### Your First Session
 
@@ -211,7 +211,7 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 | Command | What it does |
 |---|---|
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
-| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. |
+| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. Verified against claude-sonnet-4-6 as of 2026-05-01. Full contract list: [skills/behavioral-regression/SKILL.md](skills/behavioral-regression/SKILL.md) |
 | `/sweetclaude:guardian-on` | Enable Protocol Guardian — enforces skill invocations and protocol steps for the session |
 | `/sweetclaude:guardian-off` | Disable Protocol Guardian |
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
@@ -287,40 +287,17 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 
 ## How It Works
 
-SweetClaude is a Claude Code plugin. After running the installer, all skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` (see Quick Try above). Each skill is a set of instructions that Claude follows when you invoke it.
+SweetClaude is a Claude Code plugin. After install, all skills are available as slash commands in every Claude Code session. You can also load it for a single session with `--plugin-dir` without a global install.
 
-**State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. This survives between sessions — when you come back, `/sweetclaude:status` tells you where you left off.
+**State tracking.** SweetClaude creates a `.sweetclaude/` directory in your project to track progress, decisions, assumptions, and scope changes. Commit it to git — it is project history, not cache. When you return, `/sweetclaude:go` reads state and re-orients. You do not need to remember where you left off.
 
-**Safety.** Before modifying an existing project, SweetClaude creates a `pre-sweetclaude` branch. You can always revert. The `.sweetclaude/` directory is committed to your project repo — it is part of your project history, not a separate system.
+**Enforcement.** TDD hooks physically block test file modification during implementation (hook-enforced, not advisory) and run tests automatically after every source edit. At higher TDD levels, test writer and implementer are separate AI agents in separate contexts — the implementer never sees the spec, only the failing tests.
 
-**Deference levels.** You control how much SweetClaude stops for approval:
-- **Collaborative** — stops after every sub-step
-- **Guided** — stops at major decisions
-- **Autonomous** — stops only at phase gates
+**Behavioral stability.** Not all behavioral properties are guaranteed equally. Hook-enforced properties are deterministic and version-stable. Protocol Guardian (`/sweetclaude:guardian-on`) upgrades instruction-guided properties to deterministic enforcement for a session. The 15-contract behavioral regression suite validates properties after model upgrades.
 
-**TDD enforcement.** During implementation, hooks physically block test file modifications. Tests run automatically after every source edit. At higher TDD levels, the test writer and implementer are separate AI agents that cannot see each other's reasoning.
+**Deference levels.** Collaborative (stop after every sub-step), Guided (stop at major decisions), Autonomous (stop only at phase gates). Changeable mid-session.
 
-**Corpus management.** The corpus pipeline organizes scattered documents into searchable canonical truth. A state machine enforces the four-step ordering (consolidate → triage → reconcile → promote) so files cannot be processed out of order. Every canonical document has provenance sidecars tracing it back to source files. Originals are never deleted.
-
-**Semantic search.** The RAG system uses [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) to run a per-project vector database locally. No external services, no API keys, no data leaving your machine. The embedding model downloads once and works offline. The corpus pipeline's promote step indexes canonical documents automatically, and `/sweetclaude:document-corpus` handles standalone indexing for any project. Supports PDF, Word (.docx), markdown, and text files.
-
-**Milestones.** Roadmap targets live in `docs/milestones/` as individual files with success criteria, contributing work items, and notes. Links between milestones and stories are bidirectional — editing one updates the other. Sprint planning aggregates milestone advancement automatically. Progress is computed from files on every read, not cached in a derived state file.
-
-**Auto version bumping.** An opt-in PostToolUse hook on Bash detects successful `git commit` commands, reads the conventional commit prefix, and bumps version files automatically. Enable it by creating `.sweetclaude/version-bump.yaml` listing which files to update. The hook commits the bump with a `chore(version):` prefix to prevent loops.
-
-**Self-updating.** `/sweetclaude:update` fetches the latest SweetClaude from GitHub (or a local repo), shows what changed, syncs to all installed locations, surfaces new capabilities that landed in the update, and checks whether project artifacts need migration for new schema fields.
-
-**Protocol Guardian.** An optional enforcement layer that catches protocol drift mid-session. When enabled via `/sweetclaude:guardian-on`, it monitors skill invocations, TDD discipline, and artifact saves — and blocks on violations rather than issuing warnings. Disable at any time with `/sweetclaude:guardian-off`. SweetClaude will also proactively offer to enable it if it detects repeated protocol skipping.
-
-**Improvement register.** SweetClaude tracks what works and what doesn't across sessions — not by updating model weights, but by maintaining a persistent feedback ledger at `.sweetclaude/state/improvement-register.md`. There are two entry types: **Correction** (something you pushed back on) and **Confirmation** (something that worked well and should continue). Both matter — capturing only corrections produces an agent that avoids past mistakes but drifts away from approaches you've already validated.
-
-Feedback is collected through five built-in triggers, not left to chance. Before every phase transition, SweetClaude asks what should be done differently going forward — even "no, it was good" gets recorded as a confirmation. After code review findings are addressed, it asks how the review process felt. After any correction or visible misalignment, it surfaces its own analysis of what happened and proposes a specific behavior change. After smooth stretches or compliments, it asks what specifically worked so it can continue doing it. At session start, if the register has entries, SweetClaude acknowledges them and checks whether they still apply.
-
-The learning mechanism is straightforward: the register re-enters the context window at the start of every session, and the session-start trigger evaluates whether each entry is still load-bearing. Because the register is a plain markdown file, you can read it, edit it, or remove entries that no longer apply.
-
-**John Wick mode.** A fully autonomous, resumable pipeline that runs the complete product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. State is persisted in `.sweetclaude/state/john-wick.yaml` so the pipeline survives session boundaries and can resume exactly where it paused. Human gate points are pre-defined and rare: PRD approval, design change approval, and significant test failure triage. Past those gates, John Wick runs without stopping. A hard scope guardrail prevents autonomous pipelines from growing beyond what can be reasoned about clearly: more than 8 epics or 6 external dependencies triggers a warning and decomposition recommendation.
-
-**Language agnostic.** SweetClaude works with any language Claude Code supports — which is to say, any language. The workflows and skills don't assume a specific stack; they prompt Claude to read your project's conventions and work within them. We adopt Claude's agnosticism.
+For a full explanation of the architecture and design decisions behind SweetClaude → [How It Works](docs/user-guide/how-it-works.md)
 
 ## Upstream Dependencies
 
@@ -328,12 +305,12 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 
 | Dependency | License | Required | Role |
 |---|---|---|---|
-| [Superpowers](https://github.com/obra/superpowers) | MIT | Full install | Dev mechanics (plans, worktrees, debugging, code review) |
+| [Superpowers](https://github.com/obra/superpowers) | MIT | Required for code/TDD features | Dev mechanics (plans, worktrees, debugging, code review). Not required for strategy-skills-only install. |
 | [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) | MIT | Optional | Local semantic search — per-project vector index, no external services |
 
 ## License
 
-[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later) — free to use, modify, and distribute for any purpose. If you run SweetClaude as a network service or incorporate it into a distributed product, you must disclose the use of SweetClaude and make the complete source available, including modifications, under the same license. See [LICENSE](LICENSE) for full terms.
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later) — free to use, modify, and distribute. No restrictions for personal or commercial tools you build. AGPL obligations activate only if you deploy SweetClaude as a network service offered to others — in that case, you must make your modified source available under the same license. See [LICENSE](LICENSE) for full terms.
 
 ## Contribute
 
