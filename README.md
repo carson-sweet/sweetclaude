@@ -79,7 +79,7 @@ These work before installing — just describe them to Claude in any session tha
 | Command | What it does |
 |---|---|
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
-| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. [Contract status by model version →](docs/user-guide/behavioral-contracts.md) |
+| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. **15/15 passing on claude-sonnet-4-6 (2026-05-01).** [Contract status by model version →](docs/user-guide/behavioral-contracts.md) |
 | `/sweetclaude:guardian-on` | Enable Protocol Guardian — enforces skill invocations and protocol steps for the session |
 | `/sweetclaude:guardian-off` | Disable Protocol Guardian |
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
