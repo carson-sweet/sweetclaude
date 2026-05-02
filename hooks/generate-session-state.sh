@@ -15,8 +15,8 @@ OUTPUT="$PROJECT_DIR/.sweetclaude/state/session-state.yaml"
 export PROJECT_DIR
 
 python3 - > "$OUTPUT" 2>/dev/null <<'PYEOF'
-import yaml, os
-from datetime import datetime, timezone
+import yaml, os, json
+from datetime import datetime, timezone, date
 
 project_dir = os.environ['PROJECT_DIR']
 state_dir = os.path.join(project_dir, '.sweetclaude', 'state')
@@ -24,11 +24,86 @@ state_dir = os.path.join(project_dir, '.sweetclaude', 'state')
 with open(os.path.join(state_dir, 'phase.yaml')) as f:
     phase = yaml.safe_load(f) or {}
 
-# Count improvement register table rows (skip header and separator lines)
+def effective_weight(entry):
+    if entry.get('decay_exempt', False):
+        return entry.get('weight', 1.0)
+    try:
+        entry_date = date.fromisoformat(entry['date'])
+    except (KeyError, ValueError):
+        return entry.get('weight', 1.0)
+    weeks = (date.today() - entry_date).days / 7
+    return entry.get('weight', 1.0) * (0.95 ** weeks)
+
+jsonl_path = os.path.join(state_dir, 'improvement-register.jsonl')
+md_path    = os.path.join(state_dir, 'improvement-register.md')
+archive_path = os.path.join(state_dir, 'improvement-register-archive.jsonl')
+
+# Migrate md → jsonl if jsonl absent and md has data rows
+if not os.path.exists(jsonl_path) and os.path.exists(md_path):
+    entries = []
+    with open(md_path) as f:
+        for line in f:
+            s = line.strip()
+            if not s.startswith('|') or s.startswith('| #') or '---' in s:
+                continue
+            parts = [p.strip() for p in s.split('|')[1:-1]]
+            if len(parts) < 4:
+                continue
+            num, d, etype, learning = parts[0], parts[1], parts[2], parts[3]
+            etype = etype.lower() or 'pattern'
+            entries.append({
+                'id': f'lr-{num.zfill(3)}',
+                'date': d if d else str(date.today()),
+                'type': etype,
+                'entry': learning,
+                'source': 'migrated',
+                'weight': 1.0,
+                'decay_exempt': etype in ('correction', 'confirmation'),
+            })
+    with open(jsonl_path, 'w') as f:
+        for e in entries:
+            f.write(json.dumps(e) + '\n')
+
+# Process jsonl: compute decay, archive low-weight, build summary
 reg_count = 0
-reg_path = os.path.join(state_dir, 'improvement-register.md')
-if os.path.exists(reg_path):
-    with open(reg_path) as f:
+improvement_register_summary = []
+
+if os.path.exists(jsonl_path):
+    active, to_archive = [], []
+    with open(jsonl_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            (to_archive if effective_weight(entry) < 0.1 else active).append(entry)
+
+    if to_archive:
+        with open(archive_path, 'a') as f:
+            for e in to_archive:
+                f.write(json.dumps(e) + '\n')
+        with open(jsonl_path, 'w') as f:
+            for e in active:
+                f.write(json.dumps(e) + '\n')
+
+    active.sort(key=effective_weight, reverse=True)
+    reg_count = len(active)
+    improvement_register_summary = [e['entry'] for e in active[:5]]
+
+    # Regenerate human-readable md
+    with open(md_path, 'w') as f:
+        f.write('# Improvement Register\n\n')
+        f.write('| # | Date | Type | Learning |\n')
+        f.write('|---|---|---|---|\n')
+        for i, e in enumerate(active, 1):
+            text = e.get('entry', '').replace('|', '\\|')
+            f.write(f"| {i} | {e.get('date','')} | {e.get('type','')} | {text} |\n")
+
+elif os.path.exists(md_path):
+    with open(md_path) as f:
         lines = f.readlines()
     reg_count = sum(1 for l in lines
                     if l.strip().startswith('|')
@@ -97,6 +172,7 @@ result = {
     'active_milestone': active_milestone,
     'ethos': ethos,
     'improvement_register_count': reg_count,
+    'improvement_register_summary': improvement_register_summary,
     'checkpoint_next': checkpoint_next,
     'paths': {
         'product_base': product_base,
