@@ -4,6 +4,8 @@ name: guardian-on
 description: Enable the Protocol Guardian — enforces skill invocations, TDD discipline, and artifact saves for the current session
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Protocol Guardian — Enable
 
 Activates enforcement for the three most common SweetClaude protocol violations:

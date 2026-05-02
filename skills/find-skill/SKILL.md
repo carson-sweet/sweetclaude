@@ -3,6 +3,8 @@ spdx-license: AGPL-3.0-or-later
 description: "Find and start the right skill for any work. Describe what you want to do — this skill classifies it, confirms the match, updates project state, and invokes the correct skill to begin the work."
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 <preflight-guard>
 STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Running pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>

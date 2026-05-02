@@ -4,6 +4,8 @@ name: sweetclaude:help
 description: Interactive help assistant. Teaches the user how to work with SweetClaude through prompting, not commands. Ask what they want to accomplish and show them how.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # SweetClaude Help
 
 SweetClaude works through conversation, not commands. This skill helps users understand that model.

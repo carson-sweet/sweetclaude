@@ -5,6 +5,8 @@ description: Write a Product Requirements Document — functional requirements, 
 category: product
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Product PRD
 
 Write a Product Requirements Document (PRD) from the discovery, research, brief, and persona work completed so far.

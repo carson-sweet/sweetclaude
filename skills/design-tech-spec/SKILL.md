@@ -5,6 +5,8 @@ description: Technical specification — every decision a developer needs before
 category: technical
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Design Tech Spec
 
 ## Artifact Path Resolution

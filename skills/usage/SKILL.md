@@ -3,6 +3,8 @@ spdx-license: AGPL-3.0-or-later
 description: "Toggle and view local usage tracking. Track skill usage, phase gate outcomes, TDD enforcement events, and session patterns. All data is local — stored in .sweetclaude/metrics/ and committed with the project. Use: /sweetclaude:usage, /sweetclaude:usage on, /sweetclaude:usage off"
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # SweetClaude Usage
 
 Opt-in local telemetry for understanding how SweetClaude is being used in a project. No external services, no network calls — just append-only event logs in `.sweetclaude/metrics/`.

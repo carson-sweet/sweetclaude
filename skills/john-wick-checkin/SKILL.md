@@ -4,6 +4,8 @@ name: sweetclaude:john-wick-checkin
 description: Internal John Wick phase check-in subagent. Receives phase context and a single question, reviews artifacts for drift, returns none/minor/significant. Not a user-facing skill — invoked by the john-wick orchestrator only.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # John Wick Phase Check-in
 
 Internal subagent invoked by the john-wick orchestrator at phase transitions.

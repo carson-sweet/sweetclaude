@@ -4,6 +4,8 @@ name: guardian-off
 description: Disable the Protocol Guardian for the current session
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Protocol Guardian — Disable
 
 **1. Check if guardian is active:**

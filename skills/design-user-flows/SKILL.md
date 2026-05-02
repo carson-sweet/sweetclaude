@@ -5,6 +5,8 @@ description: Convert user stories into UX/UI flows — step-by-step paths throug
 category: design
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Design User Flows
 
 ## Artifact Path Resolution

@@ -5,6 +5,8 @@ description: Virtual UX review session. Spawns parallel subagents — one per pe
 category: design
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Design UX Review
 
 ## Artifact Path Resolution

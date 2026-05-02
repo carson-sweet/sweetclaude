@@ -5,6 +5,8 @@ description: Write a product brief — a strategic document describing what is b
 category: product
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Product Brief
 
 Write a product brief from the discovery, research, competition, and persona work completed so far. Sections and depth scale to what's available.

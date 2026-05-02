@@ -5,6 +5,8 @@ description: Write user stories for a defined scope — Gherkin or generic forma
 category: product
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Product User Stories
 
 Write user stories for your product, in the format and scope that best fits your needs.

@@ -3,6 +3,8 @@ spdx-license: AGPL-3.0-or-later
 description: "Walk through the pipeline step by step. Figures out where you are, picks the right skill for the next step, invokes it, and loops. Stops at phase gates for approval."
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 <preflight-guard>
 STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exist in the project directory? If NO, do not proceed. Instead say: "This project is not configured for SweetClaude. Running pre-flight check." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
 </preflight-guard>

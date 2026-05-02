@@ -5,6 +5,8 @@ description: Define product users — who they are, what they need to do, and ex
 category: product
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Product User Personas
 
 Define the users of your product or tool — who they are, what they need to accomplish, and precisely what success and failure look like for each task.

@@ -4,6 +4,8 @@ name: sweetclaude:product-discovery
 description: Establish what is being built, for whom, and why — at the depth appropriate for the project type. Three depth levels from quick intent to full pain thesis.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Product Discovery
 
 Establish what is being built, for whom, and why. This skill conducts a structured interview at the depth you choose — from a quick orientation to a full pain thesis.

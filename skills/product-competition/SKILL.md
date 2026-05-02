@@ -5,6 +5,8 @@ description: Competitive analysis at three depth levels — from a quick company
 category: strategy
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Product Competition
 
 Competitive analysis at the depth appropriate to your needs. This skill consolidates strategic positioning analysis and feature-level comparison into one progressive workflow.

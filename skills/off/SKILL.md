@@ -4,6 +4,8 @@ name: sweetclaude:off
 description: Deactivate SweetClaude for the current project. Preserves all artifacts. Run sweetclaude:on to reactivate.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Deactivate SweetClaude
 
 Suspend SweetClaude for this project without deleting anything. All state, decisions, and artifacts are preserved.

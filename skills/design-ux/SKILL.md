@@ -5,6 +5,8 @@ description: Define the visual and interaction design of the product — look, f
 category: design
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Design UX
 
 ## Artifact Path Resolution

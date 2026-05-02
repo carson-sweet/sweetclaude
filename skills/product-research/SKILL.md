@@ -4,6 +4,8 @@ name: sweetclaude:product-research
 description: Survey the solution field — what exists commercially and open source — so the user understands what they're entering before building. Feeds the competitive seed list.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Product Research
 
 Survey the solution landscape for the problem you're solving. This skill produces a state-of-the-art assessment and an initial list of competing solutions — commercial and open source.

@@ -4,6 +4,8 @@ name: sweetclaude:purge
 description: Delete all SweetClaude artifacts from the current project. Shows all files, warns, requires the user to type "I understand", then deletes .sweetclaude/.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Purge SweetClaude
 
 Remove all SweetClaude artifacts from this project. This cannot be undone.

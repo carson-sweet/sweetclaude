@@ -47,6 +47,8 @@ if os.path.exists(cp_path):
 # Resolved artifact paths
 product_base = '.sweetclaude/product'
 strategy_base = '.sweetclaude/strategy'
+technical_base = '.sweetclaude/technical'
+design_base = '.sweetclaude/design'
 privacy_path = os.path.join(project_dir, '.sweetclaude', 'artifact-privacy.yaml')
 if os.path.exists(privacy_path):
     with open(privacy_path) as f:
@@ -54,6 +56,8 @@ if os.path.exists(privacy_path):
     cats = privacy.get('categories', {})
     product_base = cats.get('product', {}).get('base_path', product_base)
     strategy_base = cats.get('strategy', {}).get('base_path', strategy_base)
+    technical_base = cats.get('technical', {}).get('base_path', technical_base)
+    design_base = cats.get('design', {}).get('base_path', design_base)
 
 # First active milestone
 active_milestone = None
@@ -87,6 +91,8 @@ result = {
     'paths': {
         'product_base': product_base,
         'strategy_base': strategy_base,
+        'technical_base': technical_base,
+        'design_base': design_base,
     },
 }
 

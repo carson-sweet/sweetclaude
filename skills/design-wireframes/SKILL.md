@@ -5,6 +5,8 @@ description: Generate HTML/CSS wireframes from user flows. One self-contained HT
 category: design
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Design Wireframes
 
 ## Artifact Path Resolution

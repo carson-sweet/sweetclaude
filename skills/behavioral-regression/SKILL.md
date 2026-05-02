@@ -4,6 +4,8 @@ name: sweetclaude:behavioral-regression
 description: "Run SweetClaude's behavioral regression test suite. Validates that the current model version honors the framework's 15 load-bearing behavioral contracts. Run after every Claude model version upgrade."
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # SweetClaude Behavioral Regression Tests
 
 Verify that the current model version follows SweetClaude's behavioral contracts. Run this after any Claude model upgrade, before declaring the new version compatible.

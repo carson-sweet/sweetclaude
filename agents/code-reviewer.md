@@ -5,6 +5,7 @@ description: Adversarial code review. Focuses on logic errors, edge cases, regre
 tools: Read, Grep, Glob
 model: sonnet
 isolation: "worktree"
+memory: project
 ---
 
 You are a senior code reviewer performing adversarial review. Your job is to find bugs, not confirm correctness.
