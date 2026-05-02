@@ -20,7 +20,8 @@ This page is reference. For why state is structured the way it is, read [How It 
 │   ├── decision-log.md         ← Architecture and design decisions with rationale
 │   ├── assumption-register.md  ← Assumptions worth checking later
 │   ├── improvement-register.md ← Feedback and learnings from each phase
-│   └── scope-changes.md        ← Scope additions and removals with justification
+│   ├── scope-changes.md        ← Scope additions and removals with justification
+│   └── backups/                ← Pre-migration state snapshots (created by /sweetclaude:update)
 ├── traceability/               ← Story → requirement → test → code traceability maps
 ├── version-bump.yaml           ← (optional) Auto-bump configuration
 └── disabled                    ← (optional) Presence disables SweetClaude for this project

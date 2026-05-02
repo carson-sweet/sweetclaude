@@ -211,6 +211,7 @@ Tell SweetClaude "I have a pile of documents I need to organize." It presents a 
 | Command | What it does |
 |---|---|
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
+| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. |
 | `/sweetclaude:guardian-on` | Enable Protocol Guardian — enforces skill invocations and protocol steps for the session |
 | `/sweetclaude:guardian-off` | Disable Protocol Guardian |
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
@@ -336,7 +337,7 @@ SweetClaude orchestrates these plugins — it does not fork or modify them:
 
 ## Contribute
 
-Contributions welcome. SweetClaude is built by solo developers, for solo developers. If you have ideas, skills, or improvements — open an issue or PR.
+Contributions welcome. SweetClaude is built by solo developers, for solo developers. If you have ideas, skills, or improvements — read [CONTRIBUTING.md](CONTRIBUTING.md) for where to start, then open an issue or PR.
 
 <p>
   <img src="sweetclaude-workshop.png" alt="SweetClaude Workshop" width="600" align="left">

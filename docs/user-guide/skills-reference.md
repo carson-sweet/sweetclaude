@@ -37,6 +37,7 @@ Session management, routing, framework health. Most of these are invoked automat
 | **Purge** | `/sweetclaude:purge` | Delete all SweetClaude artifacts. Recommends a backup branch first. Requires typed confirmation. |
 | **Update** | `/sweetclaude:update` | Fetch the latest version from GitHub and sync to all installed locations. Shows what changed. Migrates `skills.yaml` from schema v1 to v2 and prompts to onboard skills that are still `uninitialized`. |
 | **Fix SweetClaude** | `/sweetclaude:fix-sweetclaude` | Audit and repair configuration. Checks CLAUDE.md accuracy, phase state, file locations, `skills.yaml` consistency, empty registers. Can bootstrap a missing `skills.yaml` by inferring state from artifacts on disk, and migrates schema v1 to v2. Proposes fixes — does not change anything without asking. |
+| **Behavioral Regression** | `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite against the current model version. Tests phase dwelling, propose-not-ask, TDD enforcement claims, deference levels, detour recovery, improvement register triggers, and more. Run after any Claude model upgrade to detect silent behavioral drift. |
 | **Guardian On** | `/sweetclaude:guardian-on` | Enable Protocol Guardian. Enforces skill invocations, TDD discipline, and artifact saves for the rest of the session. |
 | **Guardian Off** | `/sweetclaude:guardian-off` | Disable Protocol Guardian. |
 | **Session Export** | `/sweetclaude:session-export` | Export a Claude.ai conversation as a structured document for corpus ingestion. |
