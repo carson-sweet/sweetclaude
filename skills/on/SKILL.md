@@ -4,6 +4,8 @@ name: sweetclaude:on
 description: "Get started with SweetClaude on any project — new idea or existing codebase. Detects context automatically and walks you through setup, then hands off to the pipeline."
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # SweetClaude Sherpa
 
 One starting point. Works whether you have an empty folder or an existing project.

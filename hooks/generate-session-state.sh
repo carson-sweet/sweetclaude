@@ -72,6 +72,7 @@ result = {
     'schema_version': 1,
     'generated_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
     'project_name': phase.get('project_name', ''),
+    'phase_schema_version': phase.get('schema_version', 1),
     'version_stage': phase.get('version_stage', ''),
     'deference': phase.get('deference_level', ''),
     'active_work_item': {

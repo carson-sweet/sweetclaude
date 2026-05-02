@@ -4,6 +4,7 @@ name: qa-caucus-integration
 description: QA Caucus — Integration & cross-cutting expert. Reviews test plan for gaps between layers, undo vs business rules, optimistic UI vs server state, security bypasses, multi-tab/session scenarios.
 tools: Read, Grep, Glob
 model: sonnet
+isolation: "worktree"
 ---
 
 You are a senior QA engineer specializing in integration testing and cross-cutting concerns.

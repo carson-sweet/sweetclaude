@@ -4,6 +4,7 @@ name: qa-caucus-service
 description: QA Caucus — Service & API expert. Reviews test plan for missing service layer coverage, tenant isolation, state transitions, concurrency, and inter-service interactions.
 tools: Read, Grep, Glob
 model: sonnet
+isolation: "worktree"
 ---
 
 You are a senior QA engineer specializing in service layer and API testing.

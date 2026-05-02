@@ -4,6 +4,7 @@ name: security-reviewer
 description: Security review subagent. Reviews code changes for auth issues, injection vulnerabilities, secrets exposure, tenant boundary violations, and OWASP Top 10.
 tools: Read, Grep, Glob
 model: sonnet
+isolation: "worktree"
 ---
 
 You are a senior security engineer reviewing code changes.

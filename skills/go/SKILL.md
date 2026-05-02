@@ -4,6 +4,8 @@ name: sweetclaude:go
 description: Figure out what to do next and do it. Reads project state, assesses progress against phase gate exit criteria, and routes to the right skill without asking for a menu selection.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # SweetClaude Go
 
 Read state. Make a call. Act. No background agent — reads files directly.
@@ -11,6 +13,8 @@ Read state. Make a call. Act. No background agent — reads files directly.
 ---
 
 ## Step 1: Read state directly
+
+Session state is pre-loaded above. Use `active_work_item`, `deference`, `active_milestone`, `improvement_register_count`, `checkpoint_next`, and `paths.product_base` from there directly.
 
 Run inline — do NOT spawn a background agent:
 
@@ -20,7 +24,7 @@ git status --short
 tail -25 .sweetclaude/state/checkpoint.md 2>/dev/null || echo "NO_CHECKPOINT"
 ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -3
 ls .sweetclaude/backlog/*.md 2>/dev/null | head -10
-product_base=$(python3 -c "import yaml; d=yaml.safe_load(open('.sweetclaude/artifact-privacy.yaml')); print(d['categories']['product']['base_path'])" 2>/dev/null || echo "MANIFEST_MISSING")
+product_base=$(cat .sweetclaude/state/session-state.yaml 2>/dev/null | python3 -c "import yaml,sys; d=yaml.safe_load(sys.stdin); print(d.get('paths',{}).get('product_base','.sweetclaude/product'))" 2>/dev/null || echo "MANIFEST_MISSING")
 if [ "$product_base" != "MANIFEST_MISSING" ]; then
   ls ${product_base}/milestones/MS-*.md 2>/dev/null | head -10
   grep -rh "\*\*Status:\*\*" ${product_base}/milestones/ 2>/dev/null | head -10
@@ -30,24 +34,20 @@ else
 fi
 ```
 
-Also read:
-- `.sweetclaude/state/phase.yaml` — full contents
-- `.sweetclaude/state/improvement-register.md` — first 10 lines if it exists
-
-Do not call `gh`. Do not read backlog file contents — filenames are enough for routing. If `artifact-privacy.yaml` is missing, note `ARTIFACT_PRIVACY_NOT_CONFIGURED` in status but do not block operation — `go` can still run for non-planning work.
+Do not call `gh`. Do not read backlog file contents — filenames are enough for routing. If state is `STATE_NOT_FOUND`, note `ARTIFACT_PRIVACY_NOT_CONFIGURED` in status but do not block operation — `go` can still run for non-planning work.
 
 ## Step 2: Apply improvement register
 
-If improvement register has entries, silently apply them to this session's behavior before acting. Do not announce this unless the entries are directly relevant to the decision you are about to make.
+If `improvement_register_count` in pre-loaded state is > 0, silently apply learnings from previous sessions to this session's behavior before acting. Do not announce this unless the entries are directly relevant to the decision you are about to make.
 
 ## Step 3: Determine situation
 
 ### Situation A — No active work item
 
-`active_work_item` in phase.yaml is null or all fields are null/`~`.
+`active_work_item.id` in pre-loaded state is null or `~`.
 
 Check the checkpoint first:
-- If checkpoint.md has a `Next:` line from a recent entry (within the last session), surface it:
+- If `checkpoint_next` in pre-loaded state is set (or checkpoint.md has a `Next:` line from a recent entry), surface it:
   > "Last checkpoint says: {Next: line}. Continue from there?"
   If yes, route directly to the appropriate skill per the routing table. Stop.
 
@@ -139,4 +139,4 @@ Ask exactly one question to resolve it. After the answer, re-assess and act. If 
 - **Do not skip phases.** If DESIGN exit criteria are open, do not route to PLAN.
 - **One ambiguity question maximum.** If still unclear after the answer, surface the situation and stop.
 - **When invoking a skill**, one sentence explaining why before invoking.
-- **Never scan code directories or git history to infer phase.** Use phase.yaml → checkpoint → backlog filenames. If none, ask.
+- **Never scan code directories or git history to infer phase.** Use pre-loaded session state → checkpoint → backlog filenames. If none, ask.

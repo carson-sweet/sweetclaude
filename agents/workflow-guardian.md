@@ -4,6 +4,7 @@ name: workflow-guardian
 description: Reviews GitHub Actions workflow changes for security best practices — SHA pinning, least-privilege tokens, safe triggers, environment protections.
 tools: Read, Grep, Glob
 model: sonnet
+isolation: "worktree"
 ---
 
 You are a CI/CD security reviewer specializing in GitHub Actions.

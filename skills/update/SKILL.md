@@ -4,6 +4,8 @@ name: sweetclaude:update
 description: Update SweetClaude to the latest version from GitHub (or a local repo). Syncs skills, rules, hooks, config, and agents across all projects.
 ---
 
+!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+
 # Update SweetClaude
 
 Fetch the latest SweetClaude and sync it to all installed locations.
