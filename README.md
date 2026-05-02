@@ -29,7 +29,9 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 **Review and Ship** — Adversarial code review, security testing, mutation testing to verify your tests actually catch bugs, pre-PR quality gates, and documentation updates.
 
-**Self-Updating** — Run `/sweetclaude:update` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, and migrates project artifacts from schema v1 to v2 if needed. Private repos are handled transparently via `gh` authentication.
+**Skills state tracking** — Six data-owning skills (`product-backlog`, `product-milestones`, `product-sprint-plan`, `product-user-personas`, `product-user-stories`, `document-corpus`) maintain explicit onboarding state in `.sweetclaude/state/skills.yaml`. Each skill can be `active` (in use), `paused` (data intact, skill off), or `uninitialized` (never set up). First invocation runs a lightweight setup flow automatically. Pausing a skill suspends it without deleting any data — different from offboarding, which exports and removes data. `/sweetclaude:status` surfaces skill inconsistencies (e.g., a skill marked active but missing its artifacts). `/sweetclaude:fix-sweetclaude` can bootstrap or repair the file.
+
+**Self-Updating** — Run `/sweetclaude:update` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, migrates `skills.yaml` from schema v1 to v2, and prompts to onboard any skills still `uninitialized`. Private repos are handled transparently via `gh` authentication.
 
 **Auto Version Bumping** — An opt-in hook that automatically bumps your project's version after every git commit. It reads conventional commit prefixes (`feat` → minor, `fix`/`chore` → patch, `BREAKING` → major), updates configured version files, and commits the bump. Enable it by creating `.sweetclaude/version-bump.yaml` in your project.
 

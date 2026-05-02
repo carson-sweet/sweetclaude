@@ -1,6 +1,6 @@
 # State and Memory
 
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2026-05-01
 
 SweetClaude persists project context across sessions in `.sweetclaude/`. Commit this directory to git. It is project-critical data, not cache. Decision history, assumptions, scope changes, and progress live here — and they need to travel with the repo.
@@ -16,6 +16,7 @@ This page is reference. For why state is structured the way it is, read [How It 
 ├── state/
 │   ├── phase.yaml              ← Active phase, work item, version stage, deference level
 │   ├── project.yaml            ← Language, framework, test runner, build commands
+│   ├── skills.yaml             ← Onboarding state for each data-owning skill
 │   ├── decision-log.md         ← Architecture and design decisions with rationale
 │   ├── assumption-register.md  ← Assumptions worth checking later
 │   ├── improvement-register.md ← Feedback and learnings from each phase
@@ -59,6 +60,53 @@ active_work_item:
 | `safety_snapshot` | The git branch created during onboarding (`pre-sweetclaude`). Your insurance. |
 | `last_work_item_id` | Monotonic counter. Persists across work item completions so IDs do not repeat. |
 | `active_work_item` | The work in flight right now. Fast-moving. Type, workflow, phase, title, start date, entry category. |
+
+---
+
+## skills.yaml
+
+Tracks onboarding state for the six data-owning skills: `product-milestones`, `product-backlog`, `product-sprint-plan`, `product-user-personas`, `product-user-stories`, and `document-corpus`. Each skill reads this file at entry to know whether to proceed normally, offer a lightweight first-time setup, or resume from a paused state.
+
+```yaml
+schema_version: 2
+skills:
+  product-backlog:
+    status: active
+    last_changed_at: 2026-05-01
+    last_changed_by: first-invocation
+  product-milestones:
+    status: active
+    last_changed_at: 2026-05-01
+    last_changed_by: onboard
+  product-sprint-plan:
+    status: uninitialized
+    last_changed_at: ~
+    last_changed_by: ~
+  product-user-personas:
+    status: paused
+    last_changed_at: 2026-05-01
+    last_changed_by: pause
+  product-user-stories:
+    status: uninitialized
+    last_changed_at: ~
+    last_changed_by: ~
+  document-corpus:
+    status: uninitialized
+    last_changed_at: ~
+    last_changed_by: ~
+```
+
+| Status | Meaning |
+|---|---|
+| `active` | Skill is in use; data artifacts exist; normal invocation proceeds immediately |
+| `paused` | Skill is off but data is intact; normal invocation asks "Resume?" first |
+| `uninitialized` | Skill has never been set up; first normal invocation runs a lightweight onboarding flow |
+
+**Pause vs. offboard:** Pausing a skill marks it inactive but leaves all data files on disk. Offboarding exports data and then deletes it — irreversible without the export. Pause is the safe default when you just want to stop using a skill temporarily.
+
+**Dependency enforcement:** Some skills require others to be `active` first. `product-sprint-plan` requires `product-backlog`. `product-user-stories` will warn (but not block) if `product-user-personas` is not active. These dependencies are declared in `config/skills-registry.yaml` at the framework level — skills read the registry at entry rather than hardcoding their own dependency logic.
+
+**Automatic migration:** Running `/sweetclaude:update` migrates a schema v1 `skills.yaml` (which used `enabled: true/false`) to v2 automatically. Running `/sweetclaude:fix-sweetclaude` can bootstrap a missing `skills.yaml` by inferring state from artifact files on disk.
 
 ---
 

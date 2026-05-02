@@ -1,6 +1,6 @@
 # Skills Reference
 
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2026-05-01
 
 All 52 skills, organized by domain. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
@@ -30,13 +30,13 @@ Session management, routing, framework health. Most of these are invoked automat
 | **Off** | `/sweetclaude:off` | Suspend SweetClaude for this project. Preserves all artifacts. Reactivate with `:on`. |
 | **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, checks phase exit criteria, routes to the right skill. No menu — it acts. |
 | **Find Skill** | `/sweetclaude:find-skill` | Describe what you want to do. The framework classifies, confirms, updates state, and starts the right skill. |
-| **Status** | `/sweetclaude:status` | Project status dashboard. Active work item, phase, recent commits, open issues, what's next. Fires automatically at session start for active projects. |
+| **Status** | `/sweetclaude:status` | Project status dashboard. Active work item, phase, recent commits, open issues, what's next. Shows warnings when a data-owning skill is marked `active` but its artifacts are missing on disk — directs to `/sweetclaude:fix-sweetclaude`. Fires automatically at session start for active projects. |
 | **Next Steps** | `/sweetclaude:next-steps` | Walk through the pipeline step by step. Explains what the current phase requires and what comes after. |
 | **Help** | `/sweetclaude:help` | Conversational help — describe what you want, learn how to work through prompting. Or browse all commands by category. |
 | **Hibernate** | `/sweetclaude:hibernate` | Freeze a project. Saves full state, exports session context, disables auto-status. Resume later with `:on`. |
 | **Purge** | `/sweetclaude:purge` | Delete all SweetClaude artifacts. Recommends a backup branch first. Requires typed confirmation. |
-| **Update** | `/sweetclaude:update` | Fetch the latest version from GitHub and sync to all installed locations. Shows what changed. |
-| **Fix SweetClaude** | `/sweetclaude:fix-sweetclaude` | Audit and repair configuration. Checks CLAUDE.md accuracy, phase state, file locations, empty registers. Proposes fixes — does not change anything without asking. |
+| **Update** | `/sweetclaude:update` | Fetch the latest version from GitHub and sync to all installed locations. Shows what changed. Migrates `skills.yaml` from schema v1 to v2 and prompts to onboard skills that are still `uninitialized`. |
+| **Fix SweetClaude** | `/sweetclaude:fix-sweetclaude` | Audit and repair configuration. Checks CLAUDE.md accuracy, phase state, file locations, `skills.yaml` consistency, empty registers. Can bootstrap a missing `skills.yaml` by inferring state from artifacts on disk, and migrates schema v1 to v2. Proposes fixes — does not change anything without asking. |
 | **Guardian On** | `/sweetclaude:guardian-on` | Enable Protocol Guardian. Enforces skill invocations, TDD discipline, and artifact saves for the rest of the session. |
 | **Guardian Off** | `/sweetclaude:guardian-off` | Disable Protocol Guardian. |
 | **Session Export** | `/sweetclaude:session-export` | Export a Claude.ai conversation as a structured document for corpus ingestion. |
@@ -55,7 +55,7 @@ Strategy and product definition. Useful before any code is written and on existi
 | **Product Discovery** | `/sweetclaude:product-discovery` | Establish what is being built, for whom, and why. Three depth levels: L1 quick intent, L2 problem and success, L3 full pain thesis. Collects compliance context (data categories, geography, user type) and derives applicable frameworks (GDPR, HIPAA, PCI DSS) — written to state for use throughout the pipeline. |
 | **Product Research** | `/sweetclaude:product-research` | Market and solution research. Feeds the competitive seed list. |
 | **Product Competition** | `/sweetclaude:product-competition` | Three depth levels: survey (who's in the space), matrix (structured comparison), feature-deep (capability analysis). |
-| **Product User Personas** | `/sweetclaude:product-user-personas` | Define users — who they are, what tasks they need to do, what success looks like. Includes triggers and deal-breakers. |
+| **Product User Personas** | `/sweetclaude:product-user-personas` | Define users — who they are, what tasks they need to do, what success looks like. Includes triggers and deal-breakers. State-tracked: first invocation prompts for a first user type; subsequent invocations proceed immediately. Use `pause` to suspend without deleting data, `onboard` for the full setup ceremony. |
 | **Product Positioning Statement** | `/sweetclaude:product-positioning-statement` | For/who/that/unlike framework. |
 
 ### Definition layer
@@ -64,13 +64,13 @@ Strategy and product definition. Useful before any code is written and on existi
 |---|---|---|
 | **Product Brief** | `/sweetclaude:product-brief` | Strategic product brief. Outline-first. Sections scale to available input depth. |
 | **Product PRD** | `/sweetclaude:product-prd` | Full PRD — functional requirements, NFRs, epics. |
-| **Product User Stories** | `/sweetclaude:product-user-stories` | Stories with acceptance criteria. Scoped to all personas, SLC, or MVP. |
+| **Product User Stories** | `/sweetclaude:product-user-stories` | Stories with acceptance criteria. Scoped to all personas, SLC, or MVP. State-tracked: first invocation offers GitHub Issues import; warns (does not block) if `product-user-personas` is not active. Use `pause` to suspend without deleting data. |
 | **Product User TDD Tests** | `/sweetclaude:product-user-tdd-tests` | Convert stories to Gherkin `.feature` files for TDD Level 3. |
 | **Product Manage Scope** | `/sweetclaude:product-manage-scope` | Track scope changes with rationale. Prevents silent scope creep. |
-| **Product Backlog** | `/sweetclaude:product-backlog` | Manage deferred work. |
-| **Product Sprint Plan** | `/sweetclaude:product-sprint-plan` | Plan a sprint from the backlog. Reports which milestones a sprint advances. |
+| **Product Backlog** | `/sweetclaude:product-backlog` | Manage deferred work. State-tracked: first invocation runs a lightweight setup (optional GitHub Issues import); subsequent invocations proceed immediately. Use `/sweetclaude:product-backlog pause` to suspend without deleting data. |
+| **Product Sprint Plan** | `/sweetclaude:product-sprint-plan` | Plan a sprint from the backlog. Reports which milestones a sprint advances. Requires `product-backlog` to be `active`. |
 | **Product Market Messaging** | `/sweetclaude:product-market-messaging` | Elevator pitches, value propositions, key messages per audience. |
-| **Product Milestones** | `/sweetclaude:product-milestones [sub]` | Outcome-driven roadmap targets like "Exit Stealth" or "Paid Pilot Live." Sub-commands: `add`, `review`, `link [US-XXX] [MS-XXX]`, `status`, `blockers`, `complete`, `unassigned`. |
+| **Product Milestones** | `/sweetclaude:product-milestones [sub]` | Outcome-driven roadmap targets like "Exit Stealth" or "Paid Pilot Live." Sub-commands: `add`, `review`, `link [US-XXX] [MS-XXX]`, `status`, `blockers`, `complete`, `unassigned`. State-tracked: first invocation runs a lightweight setup; use `pause` to suspend, `onboard` for full ceremony. |
 
 ---
 
@@ -130,7 +130,7 @@ Long-form document work, corpus management, and specialized strategy capabilitie
 
 | Skill | Invocation | What it does |
 |---|---|---|
-| **Document Corpus** | `/sweetclaude:document-corpus [mode]` | Four-step pipeline for messy documents: consolidate → triage → reconcile → promote. Then index for RAG search. Full reference: [corpus-system.md](corpus-system.md). |
+| **Document Corpus** | `/sweetclaude:document-corpus [mode]` | Four-step pipeline for messy documents: consolidate → triage → reconcile → promote. Then index for RAG search. Full reference: [corpus-system.md](corpus-system.md). State-tracked: first invocation asks whether you have documents to add; use `pause` to suspend, `onboard` for full ceremony. |
 | **Documents Update Docs** | `/sweetclaude:documents-update-docs` | After implementation changes behavior, scan existing docs for stale references and propose updates. |
 | **Documents Academic Research** | `/sweetclaude:documents-academic-research` | Six-phase pipeline for academic papers: thesis through submission. Includes peer review simulation. |
 | **Documents Narrative Arc** | `/sweetclaude:documents-narrative-arc` | Knowledge graph connecting your claims, evidence, and strategic objectives. Query later: "What evidence supports claim X?" |
