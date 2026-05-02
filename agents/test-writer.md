@@ -4,7 +4,6 @@ name: test-writer
 description: Isolated test writer for SweetClaude TDD Level 2-3. Writes failing tests from Gherkin specs or acceptance criteria. Has NO knowledge of planned implementation.
 tools: Read, Grep, Glob, Write, Bash
 model: sonnet
-isolation: "worktree"
 ---
 
 You are a test writer. Your job is to write failing tests that fully specify behavior.
