@@ -7,60 +7,51 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/carson-sweet/sweetclaude)](https://github.com/carson-sweet/sweetclaude/graphs/contributors)
 [![GitHub last commit](https://img.shields.io/github/last-commit/carson-sweet/sweetclaude)](https://github.com/carson-sweet/sweetclaude/commits/main)
 
-**Not the right tool for everyone.** If you want fast, frictionless code completion while you're writing, [Cursor](https://cursor.sh) is a better fit. SweetClaude is built for a different job: taking you from "I have an idea" through product definition, architecture, test-driven implementation, and shipped code — as a single coherent workflow. If you keep starting projects and not finishing them, or if you're building a product and want discipline from strategy to code, keep reading.
+**Not the right tool for everyone.** If you want fast, frictionless code completion, [Cursor](https://cursor.sh) is a better fit. SweetClaude is for a different job: taking a project from idea through discovery, architecture, test-driven implementation, and shipped code as a single coherent workflow — with discipline enforced, not suggested.
 
-**Built for:** Early-stage founders, technical solopreneurs, and senior ICs who want a structured partner — not autocomplete-on-steroids. Projects where the 70% of work that happens before a function is written matters as much as the implementation.
+**Built for:** Early-stage founders, technical solopreneurs, and senior ICs who want structure from strategy to code. Projects where what you build and why matters as much as how fast you write it.
 
-**Requires:** [Claude Code](https://claude.ai/code) — Anthropic's CLI (paid subscription).
+**Requires:** [Claude Code](https://claude.ai/code).
 
-A plugin for Claude Code that covers the full lifecycle: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. Works with any language or framework. Workflow structure is tiered — weekend projects and commercial SaaS have different needs — and automatically adjusts as the project matures.
+## What SweetClaude Is
 
-Built by an enterprise CTO/CISO and serial entrepreneur, originally as his toolchain.
+A Claude Code plugin covering the full product lifecycle across 61 skills. Works with any language or framework.
 
-## What SweetClaude Does
+**Major features:**
 
-Most AI coding tools start at implementation. SweetClaude starts at the idea.
+- **Discovery-first pipeline** — Product discovery derives compliance requirements (GDPR, HIPAA, PCI DSS) from your actual users and data. That context flows automatically into architecture, tech spec, data model, and final code review — not a checkbox at the end.
+- **Enforced TDD at four levels** — At the highest level, test writer and implementer are separate AI agents in isolated contexts. Test files are physically blocked from modification during implementation by PostToolUse hooks. Tests run after every source edit.
+- **Persistent phase state** — `.sweetclaude/` tracks phase, decisions, assumptions, and scope changes in git. Return after weeks and `/sweetclaude:go` re-orients without you re-explaining anything.
+- **Mockup pipeline** — Design UI components in an isolated Vite + React sandbox before touching production code. Graduate approved mockups with acceptance criteria extracted automatically.
+- **Corpus management** — Four-step pipeline (consolidate → triage → reconcile → promote) for messy document collections, with local RAG indexing for semantic search. No external services.
+- **Behavioral contracts** — 15 behavioral properties tested against each Claude model version. Hook-enforced properties are deterministic; instruction-guided properties are validated by a regression suite after every model upgrade.
 
-**Strategy** — Academic research, stakeholder meeting preparation, narrative arc building, and market messaging. SweetClaude helps you craft external communications by audience and build a knowledge graph of strategic claims and evidence.
+**Key architectural decisions:**
 
-**Product** — A discovery-first pipeline: product-discovery (three depth levels from quick intent to full pain thesis) asks what data the product handles, where users are, and who they are — deriving applicable compliance frameworks (GDPR, HIPAA, PCI DSS, COPPA) and writing a compliance context file that flows through architecture, tech spec, and final code review. Also covers competitive analysis, user persona definition, positioning, product briefs, PRDs with testable acceptance criteria, user stories, and scope management.
+- **Skills, not chat** — Every capability is a slash command with defined entry criteria, deference levels, and exit gates. Structured contracts replace freeform prompting.
+- **Hooks for enforcement** — TDD rules and session discipline are enforced by shell hooks (PreToolUse/PostToolUse), not instructions. Instructions can drift; hooks cannot.
+- **Agent isolation** — Test writer and implementer run in separate AI contexts with restricted tool sets (`tools:` frontmatter). The implementer never sees the spec — only failing tests.
+- **State as git history** — `.sweetclaude/state/` is committed, not gitignored. Phase progression, decisions, and assumptions are project history, not session memory.
+- **Deference levels** — Collaborative (stop after every sub-step), Guided (stop at major decisions), Autonomous (stop only at phase gates). Set in state, changeable mid-session.
 
-**Design** — System architecture, technical specifications, UX flows, data models, API design, service boundaries, infrastructure planning. Every design decision is recorded with context and rationale so future sessions understand why things are the way they are.
+## Quick Start
 
-**Code** — Test-driven development at four enforcement levels. At the highest level, a test-writer agent and an implementer agent work in separate contexts — the implementer never sees the spec, only the tests. Test files are physically blocked from modification during implementation. Tests run automatically after every edit.
+```bash
+git clone https://github.com/carson-sweet/sweetclaude.git
+cd sweetclaude && ./install.sh
+```
 
-**Milestones** — Roadmap targets that span strategy and product work. Milestones are outcome-driven goals like "Exit Stealth" or "Paid Pilot Live" — not releases or sprints. Create milestones with success criteria, link user stories and backlog items to them, track progress, identify blockers, and mark milestones achieved with follow-up capture. Sprint planning reports which milestones a sprint advances. Status views show active milestones with criterion counts.
+Then go to your project and run:
 
-**Corpus Management** — Projects accumulate documents across folders, Claude.ai sessions, and external tools. SweetClaude's corpus pipeline takes messy files through a four-step process — consolidate (scan, deduplicate, ingest), triage (classify), reconcile (draft and refine canonical documents with the user), and promote (finalize with provenance tracking, archival, and RAG indexing). A state machine enforces ordering so nothing gets corrupted. Every canonical document traces back to its source files.
+```
+/sweetclaude:on
+```
 
-**Semantic Search (RAG)** — Index your project documents for search by meaning, not just keywords. SweetClaude sets up a local RAG system using [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) — a per-project vector database that runs on your machine with no external services. Supports PDF, Word, markdown, and text files. The embedding model downloads once (~90MB) then works offline. The corpus pipeline's promote step automatically indexes canonical documents into the RAG system so your best, most current documents are always searchable.
+`:on` detects whether you're starting from a new idea or an existing codebase, walks through setup, and leaves you at `/sweetclaude:go` ready to work.
 
-**Review and Ship** — Adversarial code review, security testing, mutation testing to verify your tests actually catch bugs, pre-PR quality gates, and documentation updates.
-
-**Skills state tracking** — Six data-owning skills (`product-backlog`, `product-milestones`, `product-sprint-plan`, `product-user-personas`, `product-user-stories`, `document-corpus`) maintain explicit onboarding state in `.sweetclaude/state/skills.yaml`. Each skill can be `active` (in use), `paused` (data intact, skill off), or `uninitialized` (never set up). First invocation runs a lightweight setup flow automatically. Pausing a skill suspends it without deleting any data — different from offboarding, which exports and removes data. `/sweetclaude:status` surfaces skill inconsistencies (e.g., a skill marked active but missing its artifacts). `/sweetclaude:fix-sweetclaude` can bootstrap or repair the file.
-
-**Self-Updating** — Run `/sweetclaude:update` from any project to fetch the latest version from GitHub and sync it across all installed locations. The update shows what changed, surfaces new capabilities, migrates `skills.yaml` from schema v1 to v2, and prompts to onboard any skills still `uninitialized`. Private repos are handled transparently via `gh` authentication.
-
-**Auto Version Bumping** — An opt-in hook that automatically bumps your project's version after every git commit. It reads conventional commit prefixes (`feat` → minor, `fix`/`chore` → patch, `BREAKING` → major), updates configured version files, and commits the bump. Enable it by creating `.sweetclaude/version-bump.yaml` in your project.
-
-## Getting Started
-
-→ [Install SweetClaude](INSTALL.md) — prerequisites, install options, updating, uninstalling
-→ [Your first session](QUICKSTART.md) — first commands, common starting points
-
-### Things to Try First
-
-These work before installing — just describe them to Claude in any session that has SweetClaude loaded.
-
-**Ask Claude to explain the process.** "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?"
-
-**Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category.
-
-**Organize a pile of messy documents.** Tell SweetClaude "I have a pile of documents I need to organize." Four-step corpus pipeline: consolidate → triage → reconcile → promote. Originals are never deleted.
-
-**Get a code review.** Tell SweetClaude "review my recent changes." Adversarial review focused on logic errors, edge cases, and missing error handling — not style.
-
-**Run an autonomous end-to-end pipeline.** Tell SweetClaude "run the autonomous pipeline" or ask about John Wick mode.
+→ [Full install options, updating, uninstalling](INSTALL.md)
+→ [First session walkthrough](QUICKSTART.md)
+→ [All 61 skills by category](docs/user-guide/skills-reference.md)
 
 ## All Commands
 
