@@ -45,158 +45,22 @@ Most AI coding tools start at implementation. SweetClaude starts at the idea.
 
 ## Getting Started
 
+→ [Install SweetClaude](INSTALL.md) — prerequisites, install options, updating, uninstalling
+→ [Your first session](QUICKSTART.md) — first commands, common starting points
+
 ### Things to Try First
 
-These are low-risk ways to see what SweetClaude can do before committing to a workflow.
+These work before installing — just describe them to Claude in any session that has SweetClaude loaded.
 
-**Ask Claude to explain the process.** Just type: "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?" Claude reads the master skill and gives you the full picture.
+**Ask Claude to explain the process.** "Explain the full SweetClaude process end-to-end — what are all the phases, what happens in each one, and what skills are involved?"
 
-**Ask to see everything SweetClaude can do.** Type: "Show me all the things SweetClaude can do." Claude walks through every domain — strategy, product, design, code, review — and explains each capability.
+**Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category.
 
-**Ask what problems you can hand to SweetClaude.** Type: "What kinds of problems or use cases can I hand to SweetClaude?" This surfaces capabilities you might not expect — meeting prep, competitive analysis, academic paper writing, document organization, pain thesis development.
+**Organize a pile of messy documents.** Tell SweetClaude "I have a pile of documents I need to organize." Four-step corpus pipeline: consolidate → triage → reconcile → promote. Originals are never deleted.
 
-**Ask how SweetClaude is different.** Type: "How is SweetClaude different from other Claude Code coding frameworks and skills?" Claude explains what makes it unique: the strategic and product layers that happen before code, the structured pain thesis, the six domain buckets, the end-to-end lifecycle coverage.
+**Get a code review.** Tell SweetClaude "review my recent changes." Adversarial review focused on logic errors, edge cases, and missing error handling — not style.
 
-**Browse all available commands.** Run `/sweetclaude:help` to see every command organized by category with a one-line description of each.
-
-**Organize a pile of messy documents.** If you have brainstorming notes, Claude.ai session exports, research files, or strategy documents scattered across folders, tell SweetClaude "I have a pile of documents I need to organize." It runs a four-step pipeline: consolidate (scan, deduplicate, ingest), triage (classify), reconcile (draft canonical documents), promote (finalize with provenance, archive, and RAG index). Originals are never deleted.
-
-**Check the status of a project SweetClaude already knows about.** If you have already activated SweetClaude for a project, open it and run `/sweetclaude:status`. It reads your progress and tells you where you are, what is done, and what the next step would be.
-
-**Run a competitive landscape scan.** In any project, tell SweetClaude "run a competitive landscape scan for my space." It researches competitors, maps the landscape, and produces a SWOT analysis. No project setup required beyond activation.
-
-**Get a code review.** On any project with code, tell SweetClaude "review my recent changes." It gives an adversarial review focused on logic errors, edge cases, and missing error handling — not style nitpicks.
-
-**Run an autonomous end-to-end pipeline.** Tell SweetClaude "run the autonomous pipeline" or ask about John Wick mode. It executes the full product-definition → design → TDD → implementation → review → PR cycle with minimal human involvement. Human pause points are pre-defined and rare — the pipeline pauses at interactive gates, shows its work, waits for explicit approval, and resumes where it left off across sessions. If the prerequisites aren't met, it tells you exactly what to complete first.
-
-**Set up semantic search.** Tell SweetClaude "set up semantic search for my documents." It installs a local RAG server, indexes your documents (PDF, Word, markdown, text), and makes them searchable by meaning. Ask questions like "what did we decide about authentication?" and get relevant passages from your docs. Subsequent runs only index new or changed files.
-
-### Prerequisites
-
-| Dependency | Check | Install |
-|---|---|---|
-| [Claude Code](https://claude.ai/code) | `claude --version` | [Install guide](https://docs.anthropic.com/en/docs/claude-code/getting-started) |
-| Git | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
-| [GitHub CLI](https://cli.github.com/) | `gh --version` | `brew install gh` or [cli.github.com](https://cli.github.com/) |
-| Node.js (for RAG) | `node --version` | [nodejs.org](https://nodejs.org/) — optional, needed for corpus management and semantic search |
-
-### Install
-
-```bash
-git clone https://github.com/carson-sweet/sweetclaude.git
-cd sweetclaude
-./install.sh
-```
-
-The installer:
-- Checks prerequisites (Claude Code, Git; Superpowers for full install)
-- Backs up your existing `~/.claude/` configuration
-- Scans for conflicting plugins and offers to clean them up
-- Copies skills, hooks, agents, rules, and config to `~/.claude/`
-- Wires TDD enforcement hooks into `settings.json`
-- Generates `uninstall.sh` and `restore-config.sh` for clean removal
-
-After install, all skills are available as `/sweetclaude:skill-name` commands in every Claude Code session.
-
-#### Strategy Skills Only
-
-If you want the product thinking, strategy, and corpus management skills — without the code and design phases:
-
-```bash
-./install.sh --strategy-skills-only
-```
-
-This installs strategy, product, corpus, and orchestration skills — no TDD hooks, no subagents, no Superpowers prerequisite required. Just Claude Code and Git. You can upgrade to the full install later by running `./install.sh`.
-
-To update later, run `/sweetclaude:update` from any project. It fetches the latest version from GitHub and syncs everywhere.
-
-### Quick Try (No Install)
-
-Want to try SweetClaude without installing? Load it as a plugin for a single session:
-
-```bash
-git clone https://github.com/carson-sweet/sweetclaude.git
-claude --plugin-dir /path/to/sweetclaude
-```
-
-All skills are available for that session. TDD enforcement hooks and global configuration are not active — those require the full install.
-
-### Your First Session
-
-**Activate SweetClaude for a project (new or existing):**
-
-```
-/sweetclaude:on
-```
-
-Detects whether the folder is empty or already has a project. For new projects: walks through setup, product discovery, user personas, and hands off to the pipeline. For existing projects: creates a safety snapshot, scans the codebase, interviews you about current state, and positions you in the right phase.
-
-**Pick up where you left off:**
-
-```
-/sweetclaude:go
-```
-
-Reads your project state, checks phase gate exit criteria, and routes to the right skill. No menu — it tells you what needs to happen and does it.
-
-**Check project status:**
-
-```
-/sweetclaude:status
-```
-
-Shows version stage, active work item, phase progress, SweetClaude version, and RAG corpus state. Prompts at the start of each session for active projects.
-
-**Suspend or remove SweetClaude:**
-
-```
-/sweetclaude:off    # suspend — preserves all artifacts, reactivate with /sweetclaude:on
-/sweetclaude:purge  # delete all artifacts — warns and requires typed confirmation first
-```
-
-**Get help:**
-
-```
-/sweetclaude:help
-```
-
-Conversational assistant that explains how to work with SweetClaude through prompting, not commands. Describe what you want to do and it shows you how.
-
-## Key Use Cases
-
-### "I have an idea for a product but have not started building anything"
-
-Run `/sweetclaude:on` in an empty folder. SweetClaude will:
-1. Set up the project (git, directory structure, CLAUDE.md)
-2. Ask what you want to build
-3. Run product discovery — problem framing, personas, optional competitive landscape
-4. Hand off to the product definition pipeline (brief, PRD, architecture, implementation)
-
-### "I have a codebase and want to start using SweetClaude"
-
-Run `/sweetclaude:on` in your project folder. SweetClaude will:
-1. Detect that there is an existing project
-2. Create a safety snapshot (branch) before touching anything
-3. Scan your code, tests, docs, and issues
-4. Ask you about the current state and biggest concerns
-5. Determine where your project sits in the development lifecycle
-6. Set up tracking and offer to address your immediate concerns first
-
-### "I need to build a specific feature"
-
-Run `/sweetclaude:go` and describe what you need. SweetClaude classifies the work (strategy, product, design, or code) and routes to the right starting point with the right tools.
-
-### "I have a GitHub issue to implement"
-
-Run `/sweetclaude:go` and mention the issue number or paste the title. SweetClaude reads the issue, analyzes impact, proposes a plan, implements with TDD, verifies, updates docs, and opens a PR.
-
-### "I need to write a research paper"
-
-Tell SweetClaude "I need to write a research paper on [topic]." Six-phase pipeline: establish your thesis and what is novel, review 35+ papers, pick a venue, draft section by section with quality scoring, simulate peer review, format and submit.
-
-### "I have a pile of messy strategy files from various sessions"
-
-Tell SweetClaude "I have a pile of documents I need to organize." It presents a menu — select **Consolidate** to ingest your files, then work through **Triage** → **Reconcile** → **Promote**. Select **Status** at any point to see where the pipeline stands. Each step explains why skipping it produces worse results.
+**Run an autonomous end-to-end pipeline.** Tell SweetClaude "run the autonomous pipeline" or ask about John Wick mode.
 
 ## All Commands
 
