@@ -93,11 +93,12 @@ Use AskUserQuestion with these options:
    git worktree remove "$TESTWRITER_ROOT"
    ```
 
-5. **QA Caucus.** Spawn three parallel subagents to review the test plan — these are read-only reviewers, no worktree needed:
-   - `qa-caucus-service` — service/API coverage
-   - `qa-caucus-component` — UI/component coverage (if applicable)
-   - `qa-caucus-integration` — cross-cutting concerns
-   Consolidate gaps. Present to user for approval. Add approved gaps to test files.
+5. **QA Caucus.** Invoke all three reviewer agents **in a single message** (multiple Agent tool calls in one response) so they run in parallel. These agents are read-only — no worktree needed.
+   - `sweetclaude:qa-caucus-service` — service/API coverage
+   - `sweetclaude:qa-caucus-component` — UI/component coverage (if applicable)
+   - `sweetclaude:qa-caucus-integration` — cross-cutting concerns
+
+   Each agent receives the test file paths and the `.feature` file for context. After all three return, consolidate gaps. Present to user for approval. Add approved gaps to test files.
 
 6. **Verify RED:** Run tests. All must fail.
 
