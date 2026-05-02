@@ -3,11 +3,13 @@
 
 # SweetClaude
 
-A plugin for Claude Code that provides workflow automation and guided assistance for end-to-end product development - from "I have an idea" to shipped, tested code — with structured workflows for strategy, product definition, architecture, technical design, test-driven development, QA testing, code reviews, and documentation. It includes RAG-powered document consolidation and reconciliation (optional) to turn those piles of scattered documents and chat exports into canonical documentation.
+**Not the right tool for everyone.** If you want fast, frictionless code completion while you're writing, [Cursor](https://cursor.sh) is a better fit. SweetClaude is built for a different job: taking you from "I have an idea" through product definition, architecture, test-driven implementation, and shipped code — as a single coherent workflow. If you keep starting projects and not finishing them, or if you're building a product and want discipline from strategy to code, keep reading.
 
-SweetClaude's skills cover the full lifecycle of building software: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. Because it sits on top of Claude Code, it works with any language or framework. Workflow structure and discipline have tiered, because use cases differ - weekend hobby projects, internal-use utilities, and commercial SaaS projects have different needs. Workflows also automatically adjust based on project phase, because an internal prototype is not the same as an MVP open beta.
+**Built for:** Early-stage founders, technical solopreneurs, and senior ICs who want a structured partner — not autocomplete-on-steroids. Projects where the 70% of work that happens before a function is written matters as much as the implementation.
 
-Built by an enterprise CTO/CISO and serial entrepreneur, originally as his toolchain and later for early-stage companies and solopreneurs who need a thoughtful, organized AI partner — not passive autocomplete-on-steroids.
+A plugin for Claude Code that covers the full lifecycle: articulating what you are building and why, defining who it is for, analyzing the competitive landscape, writing product specs, designing architecture, implementing with test-driven development, reviewing code, and shipping. Works with any language or framework. Workflow structure is tiered — weekend projects and commercial SaaS have different needs — and automatically adjusts as the project matures.
+
+Built by an enterprise CTO/CISO and serial entrepreneur, originally as his toolchain.
 
 ## What SweetClaude Does
 

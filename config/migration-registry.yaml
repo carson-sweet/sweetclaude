@@ -1,0 +1,60 @@
+# SweetClaude Migration Registry
+# Pre-declared migration paths for all versioned state files.
+# The update skill reads this before running any migration.
+# Format: one entry per state file. Each migration lists from/to version,
+# a validation check, and whether a backup is required before running.
+schema_version: 1
+
+state_files:
+  phase.yaml:
+    description: "Active phase, work item, version stage, deference level"
+    current_version: 2
+    backup_required: true
+    migrations:
+      - from: 1
+        to: 2
+        description: "Separated version_stage from active_work_item; added work type + workflow template"
+        implemented_in: "update skill step 8d"
+        validation:
+          required_fields: [schema_version, version_stage, deference_level]
+          required_version: 2
+
+  skills.yaml:
+    description: "Onboarding state for the six data-owning skills"
+    current_version: 2
+    backup_required: false
+    migrations:
+      - from: 1
+        to: 2
+        description: "Replaced enabled boolean with three-state status (active/paused/uninitialized); added last_changed_at and last_changed_by"
+        implemented_in: "update skill step 7a and 8e"
+        validation:
+          required_fields: [schema_version, skills]
+          required_version: 2
+
+  project.yaml:
+    description: "Language, framework, test runner, build commands"
+    current_version: 1
+    backup_required: false
+    migrations: []
+
+  john-wick.yaml:
+    description: "John Wick autonomous pipeline state"
+    current_version: 1
+    backup_required: true
+    migrations: []
+
+  corpus-pipeline.yaml:
+    description: "Document corpus pipeline state"
+    current_version: 1
+    backup_required: false
+    migrations: []
+
+# Backup behavior
+# When backup_required: true, the update skill creates a tarball of the full
+# .sweetclaude/state/ directory before running that file's migration.
+# Backup path: .sweetclaude/state/backups/pre-migration-{date}-{sha7}.tar.gz
+# Rollback: extract the tarball to restore the pre-migration state.
+backup_policy:
+  path_template: ".sweetclaude/state/backups/pre-migration-{date}-{sha7}.tar.gz"
+  retain_last_n: 5

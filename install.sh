@@ -335,6 +335,16 @@ else
         }
       ]
     }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "~/.claude/hooks/sweetclaude/phase-dwelling-guard.sh"
+        }
+      ]
+    }
   ]
 HOOKCONFIG
       echo ""
@@ -372,6 +382,16 @@ HOOKCONFIG
           {
             "type": "command",
             "command": "~/.claude/hooks/sweetclaude/auto-test-runner.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/sweetclaude/phase-dwelling-guard.sh"
           }
         ]
       }

@@ -94,7 +94,7 @@ The work type determines the shape. You do not pick. When you describe the work 
 
 Most TDD documentation is advisory: "write the test first." SweetClaude does not believe in advisory TDD because advisory TDD fails. The implementer (human or AI) ends up touching the test to make it pass, or writes the test after the code so the test rationalizes the implementation rather than specifying behavior.
 
-SweetClaude makes this physically impossible at higher levels:
+SweetClaude substantially raises the cost of this at higher levels:
 
 - **Test-guardian hook** (PreToolUse) blocks edits to test files during the IMPLEMENT phase. Not "warns" — blocks.
 - **Auto-test-runner hook** (PostToolUse) runs tests automatically after every source edit. Not "reminds" — runs.
@@ -179,6 +179,35 @@ This is the part most documentation skips. SweetClaude has explicit non-goals:
 **It will not assume your stack.** Codebase discovery drives all configuration. Templates, not constants. SweetClaude works on Python, Go, TypeScript, Rust, or anything else because the workflow is the product.
 
 **It will not replace Superpowers.** SweetClaude orchestrates Superpowers (when present); it does not fork or override it. Plans, worktrees, parallel agents, systematic debugging — those are Superpowers skills SweetClaude calls into.
+
+---
+
+## Enforcement Tiers
+
+Not all behavioral properties in SweetClaude are guaranteed equally. Some are enforced deterministically — hooks that fire regardless of what the model does. Others are instruction-guided — rules that Claude is directed to follow, but which are probabilistic by nature.
+
+This distinction matters because deterministic properties are version-stable (a hook doesn't degrade when the underlying model changes) and instruction-guided properties are not.
+
+**Deterministic (hook-enforced):**
+
+| Property | Mechanism | What it guarantees |
+|---|---|---|
+| Test files cannot be edited during IMPLEMENT | `test-guardian.sh` (PreToolUse) | Edits to test directories are blocked at the tool call level |
+| Tests run after every source edit | `auto-test-runner.sh` (PostToolUse) | Test suite runs without requiring the user to trigger it |
+| TDD Level 2-3 context isolation | Subagent architecture | Implementer agent never receives the spec or test writer's reasoning |
+| Phase advancement phrases removed from responses | `phase-dwelling-guard.sh` (Stop hook) | When Protocol Guardian is active, responses containing "ready to move on?" are blocked before reaching the user |
+
+**Instruction-guided (probabilistic):**
+
+| Property | Mechanism | What it means |
+|---|---|---|
+| Phase dwelling — never asks "ready to move on?" | `interaction-model.md` rule | Claude is directed to dwell; Protocol Guardian enforces it when active |
+| Deference level respect | `interaction-model.md` rule | Claude adjusts how frequently it stops based on the configured level |
+| Improvement register capture triggers | `interaction-model.md` rule | Claude is directed to capture feedback at defined trigger points |
+| Propose-not-ask interaction mode | `interaction-model.md` rule | Claude defaults to making proposals with reasoning rather than asking open-ended questions |
+| Adaptive language matching | `interaction-model.md` rule | Claude matches the user's vocabulary and domain language |
+
+The practical implication: instruction-guided properties are the right implementation choice for behavioral nuance that cannot be mechanically verified. They work well most of the time and degrade gracefully. Deterministic properties are the right choice for correctness guarantees that the framework's value depends on. If a property is described as "load-bearing" in this document and it is instruction-guided, enabling the Protocol Guardian (`/sweetclaude:guardian-on`) upgrades it to deterministic enforcement for that session.
 
 ---
 

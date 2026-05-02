@@ -333,7 +333,39 @@ FRAMEWORK
 
 After syncing the framework, check whether the **current project** (the working directory where this skill was run) has `.sweetclaude/` state that needs migration.
 
-### 8a: Detect project state
+### 8a: Pre-migration backup
+
+Before running any migration, create a backup of the current state directory. Read `config/migration-registry.yaml` to determine which state files require backup (`backup_required: true`).
+
+If any migration will run (detected in 8c/8d/8e), create the backup first:
+
+```bash
+BACKUP_DIR=".sweetclaude/state/backups"
+mkdir -p "$BACKUP_DIR"
+BACKUP_DATE=$(date +%Y%m%d)
+BACKUP_SHA=$(git -C . rev-parse --short HEAD 2>/dev/null || echo "nosha")
+BACKUP_FILE="$BACKUP_DIR/pre-migration-${BACKUP_DATE}-${BACKUP_SHA}.tar.gz"
+
+tar -czf "$BACKUP_FILE" -C .sweetclaude/state \
+  $(ls .sweetclaude/state/*.yaml .sweetclaude/state/*.md 2>/dev/null | xargs -I{} basename {})
+
+echo "Pre-migration backup: $BACKUP_FILE"
+```
+
+Retain only the last 5 backups — remove older ones:
+
+```bash
+ls -t .sweetclaude/state/backups/pre-migration-*.tar.gz 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null || true
+```
+
+If the backup fails (disk space, permission), warn and ask: "Could not create pre-migration backup. Proceed without backup? [yes/no]"
+
+**Rollback instructions** (display at the end of migration if backup was created):
+
+> "If migration produced unexpected results, restore with:
+> `tar -xzf {BACKUP_FILE} -C .sweetclaude/state/`"
+
+### 8b: Detect project state
 
 Check for `.sweetclaude/state/phase.yaml`.
 
@@ -343,7 +375,7 @@ Stop.
 
 If `phase.yaml` exists, read `schema_version`.
 
-### 8b: Patch CLAUDE.md auto-fire instruction
+### 8c: Patch CLAUDE.md auto-fire instruction
 
 Check if `CLAUDE.md` exists in the current project directory. If it has a `## SweetClaude` section, check whether it contains the text `invoke \`sweetclaude:status\` automatically at session start`.
 
@@ -354,11 +386,11 @@ If missing, find the line that reads `Read .sweetclaude/state/phase.yaml` (or si
 
 Report whether the patch was applied or already up to date.
 
-### 8c: Already on v2
+### 8d: Already on v2
 
 If `schema_version: 2`: "Project state is current (schema v2). No migration needed." Stop.
 
-### 8d: Migrate v1 → v2
+### 8e: Migrate v1 → v2
 
 If `schema_version: 1`, map the old fields:
 
@@ -441,7 +473,7 @@ active_work_item:
 
 Report: "phase.yaml migrated to schema v2. Use `/sweetclaude:find-skill` to resume work."
 
-### 8e: Migrate skills.yaml v1 → v2
+### 8f: Migrate skills.yaml v1 → v2
 
 After the phase.yaml migration (or if phase.yaml is already v2), check `.sweetclaude/state/skills.yaml`.
 
