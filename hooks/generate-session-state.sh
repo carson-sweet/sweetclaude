@@ -72,6 +72,15 @@ if os.path.exists(milestones_dir):
 
 awi = phase.get('active_work_item') or {}
 
+ethos = [
+    "Propose, don't ask. Give a recommendation with reasoning. Let the user redirect.",
+    "Phase dwelling: never invite advancement. User decides when to move on.",
+    "No time estimates. AI speed is not calendar speed.",
+    "Concrete examples required. Abstract framing is not sufficient input.",
+    "Challenge before acceptance. One framing question or gap before proceeding.",
+    "Improvement register: apply learnings silently unless directly relevant.",
+]
+
 result = {
     'schema_version': 1,
     'generated_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -86,6 +95,7 @@ result = {
         'phase': awi.get('phase'),
     },
     'active_milestone': active_milestone,
+    'ethos': ethos,
     'improvement_register_count': reg_count,
     'checkpoint_next': checkpoint_next,
     'paths': {
