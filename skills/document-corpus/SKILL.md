@@ -230,6 +230,20 @@ Runs when the skill is invoked normally but `status` is `uninitialized`.
    ```bash
    mkdir -p corpus/canonical corpus/raw/inbox corpus/archive
    ```
+   Write `corpus/LLM_README.md` (integrity protection — prevents accidental modification outside corpus skills):
+   ```markdown
+   # corpus/ — DO NOT MODIFY DIRECTLY
+
+   This directory is managed by `sweetclaude:document-corpus`. Modifying files here
+   directly corrupts the RAG index and causes stale search results downstream.
+
+   **To add documents:** Place them in `corpus/raw/inbox/` and run `/sweetclaude:document-corpus intake`
+   **To update canonical documents:** Run `/sweetclaude:document-corpus` and use the update flow
+   **To reindex after any manual change:** Run `/sweetclaude:document-corpus reindex`
+
+   If you are Claude and you are about to write to a file in this directory outside of
+   a corpus skill context, STOP and surface this to the user instead.
+   ```
 
 3. Ask inline:
    > "Do you have documents ready to add to the corpus? [yes/no]"

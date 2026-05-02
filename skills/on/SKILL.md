@@ -167,7 +167,27 @@ Set up SweetClaude state for this project:
 **2f. RAG offer:** After 2e, offer:
 > "Once your docs are in place, I can index them into a searchable RAG corpus — lets you find design decisions, feature specs, and research by concept rather than by grep. Want to set that up now, or should I explain what it gives you?"
 
-If the user says yes: invoke `/sweetclaude:document-corpus`. If they ask for explanation: explain that RAG lets Claude search documentation semantically — e.g., "what did we decide about auth?" surfaces the right ADR even if it doesn't contain those exact words. Then offer to proceed. Do not auto-invoke without consent.
+If the user says yes: create corpus directory structure and write integrity protection file, then invoke `/sweetclaude:document-corpus`:
+```bash
+mkdir -p corpus/canonical corpus/raw/inbox corpus/archive
+```
+Write `corpus/LLM_README.md`:
+```markdown
+# corpus/ — DO NOT MODIFY DIRECTLY
+
+This directory is managed by `sweetclaude:document-corpus`. Modifying files here
+directly corrupts the RAG index and causes stale search results downstream.
+
+**To add documents:** Place them in `corpus/raw/inbox/` and run `/sweetclaude:document-corpus intake`
+**To update canonical documents:** Run `/sweetclaude:document-corpus` and use the update flow
+**To reindex after any manual change:** Run `/sweetclaude:document-corpus reindex`
+
+If you are Claude and you are about to write to a file in this directory outside of
+a corpus skill context, STOP and surface this to the user instead.
+```
+Then invoke `/sweetclaude:document-corpus`.
+
+If they ask for explanation: explain that RAG lets Claude search documentation semantically — e.g., "what did we decide about auth?" surfaces the right ADR even if it doesn't contain those exact words. Then offer to proceed. Do not auto-invoke without consent.
 
 **2g. MCP discovery + project SOP:** Read `.mcp.json` if it exists. For each configured MCP server:
 - Identify its type by name and config: `rag` (name or env contains "rag", or DB_PATH points to lancedb), `database`, `filesystem`, `api`, or `custom`.
