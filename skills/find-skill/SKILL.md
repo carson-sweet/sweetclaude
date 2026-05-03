@@ -121,6 +121,8 @@ Store the result as `{starting_phase}` — used in Step 7.
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
 | Issue / bug tracking | any | `sweetclaude:project-issues` |
+| Import GitHub Issues into local store | any | `sweetclaude:project-gh-import-issues` |
+| Sync issue status with GitHub | any | `sweetclaude:project-gh-sync-issues` |
 | Epic management | any | `sweetclaude:project-epics` |
 | Sprint planning and execution | PLAN, IMPLEMENT | `sweetclaude:project-sprints` |
 | Backlog view and promotion | any | `sweetclaude:project-backlog` |
