@@ -57,33 +57,34 @@ print(d.get('framework',{}).get('update',{}).get('last_checked') or 'None')
 " 2>/dev/null)
 
 # --- Consistency check (every 24h) ---
-if [ "$(hours_since "$LAST_CONSISTENCY")" -gt 24 ]; then
-  DRIFT=""
+if [ "$(hours_since "$LAST_CONSISTENCY")" -ge 24 ]; then
+  (
+    DRIFT=""
 
-  # Check hooks.json exists
-  HOOKS_JSON="${HOME}/.claude/hooks/sweetclaude/hooks.json"
-  if [ ! -f "$HOOKS_JSON" ]; then
-    DRIFT="hooks.json_missing"
-  else
-    for required_hook in session-preflight.sh preflight-guard.sh; do
-      if ! grep -q "$required_hook" "$HOOKS_JSON" 2>/dev/null; then
-        DRIFT="${DRIFT} hook:${required_hook}"
+    # Check hooks.json exists
+    HOOKS_JSON="${HOME}/.claude/hooks/sweetclaude/hooks.json"
+    if [ ! -f "$HOOKS_JSON" ]; then
+      DRIFT="hooks.json_missing"
+    else
+      for required_hook in session-preflight.sh preflight-guard.sh; do
+        if ! grep -q "$required_hook" "$HOOKS_JSON" 2>/dev/null; then
+          DRIFT="${DRIFT} hook:${required_hook}"
+        fi
+      done
+    fi
+
+    # Check sweetclaude rules files
+    RULES_DIR="$HOME/.claude/rules/sweetclaude"
+    for rules_file in interaction-model.md phase-gates.md tdd-levels.md; do
+      if [ ! -f "$RULES_DIR/$rules_file" ]; then
+        DRIFT="${DRIFT} rules:${rules_file}"
       fi
     done
-  fi
 
-  # Check sweetclaude rules files
-  RULES_DIR="$HOME/.claude/rules/sweetclaude"
-  for rules_file in interaction-model.md phase-gates.md tdd-levels.md; do
-    if [ ! -f "$RULES_DIR/$rules_file" ]; then
-      DRIFT="${DRIFT} rules:${rules_file}"
-    fi
-  done
+    DRIFT="${DRIFT# }"  # trim leading space
 
-  DRIFT="${DRIFT# }"  # trim leading space
-
-  if [ -n "$DRIFT" ]; then
-    python3 - "$SC_YAML" "$DRIFT" << 'PY'
+    if [ -n "$DRIFT" ]; then
+      python3 - "$SC_YAML" "$DRIFT" << 'PY'
 import sys, yaml
 path, drift_str = sys.argv[1], sys.argv[2]
 with open(path) as f: d = yaml.safe_load(f) or {}
@@ -92,22 +93,33 @@ d['framework']['consistency']['drift'] = drift_str.split()
 d['framework']['consistency']['check_error'] = None
 with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 PY
-  else
-    python3 - "$SC_YAML" << 'PY'
+    else
+      python3 - "$SC_YAML" << 'PY'
 import sys, yaml
 path = sys.argv[1]
 with open(path) as f: d = yaml.safe_load(f) or {}
 d.setdefault('framework',{}).setdefault('consistency',{})['status'] = 'ok'
+d['framework']['consistency']['drift'] = []
 d['framework']['consistency']['check_error'] = None
 with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 PY
-  fi
-  update_yaml_field "framework.consistency.last_checked" "$NOW_ISO"
+    fi
+    update_yaml_field "framework.consistency.last_checked" "$NOW_ISO"
+  ) || {
+    python3 - "$SC_YAML" << 'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as f: d = yaml.safe_load(f) or {}
+d.setdefault('framework',{}).setdefault('consistency',{})['check_error'] = 'check_failed'
+with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+PY
+  }
 fi
 
 # --- Version check (every 24h) ---
-if [ "$(hours_since "$LAST_UPDATE")" -gt 24 ]; then
-  INSTALLED=$(python3 -c "
+if [ "$(hours_since "$LAST_UPDATE")" -ge 24 ]; then
+  (
+    INSTALLED=$(python3 -c "
 import json
 try:
     d = json.load(open('$HOME/.claude/plugins/installed_plugins.json'))
@@ -116,14 +128,14 @@ try:
 except: print('unknown')
 " 2>/dev/null)
 
-  REPO_VERSION=$(python3 -c "
+    REPO_VERSION=$(python3 -c "
 import json
 try: print(json.load(open('$HOME/dev/sweetclaude/package.json')).get('version',''))
 except: print('')
 " 2>/dev/null)
 
-  if [ -n "$REPO_VERSION" ] && [ "$REPO_VERSION" != "$INSTALLED" ] && [ "$REPO_VERSION" != "unknown" ]; then
-    python3 - "$SC_YAML" "$REPO_VERSION" << 'PY'
+    if [ -n "$REPO_VERSION" ] && [ "$REPO_VERSION" != "$INSTALLED" ] && [ "$REPO_VERSION" != "unknown" ]; then
+      python3 - "$SC_YAML" "$REPO_VERSION" << 'PY'
 import sys, yaml
 path, ver = sys.argv[1], sys.argv[2]
 with open(path) as f: d = yaml.safe_load(f) or {}
@@ -131,8 +143,8 @@ d.setdefault('framework',{}).setdefault('update',{})['available'] = ver
 d['framework']['update']['check_error'] = None
 with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 PY
-  else
-    python3 - "$SC_YAML" << 'PY'
+    else
+      python3 - "$SC_YAML" << 'PY'
 import sys, yaml
 path = sys.argv[1]
 with open(path) as f: d = yaml.safe_load(f) or {}
@@ -140,8 +152,17 @@ d.setdefault('framework',{}).setdefault('update',{})['available'] = None
 d['framework']['update']['check_error'] = None
 with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 PY
-  fi
-  update_yaml_field "framework.update.last_checked" "$NOW_ISO"
+    fi
+    update_yaml_field "framework.update.last_checked" "$NOW_ISO"
+  ) || {
+    python3 - "$SC_YAML" << 'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as f: d = yaml.safe_load(f) or {}
+d.setdefault('framework',{}).setdefault('update',{})['check_error'] = 'check_failed'
+with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+PY
+  }
 fi
 
 exit 0

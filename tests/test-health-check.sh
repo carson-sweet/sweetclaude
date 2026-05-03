@@ -41,3 +41,23 @@ assert upd_ts  != stale, f'update.last_checked not updated: {upd_ts}'
 assert hook_ts is not None, 'hook_last_ran not written'
 print('PASS')
 "
+
+# Test 2: drift cleared in ok-path
+python3 -c "
+import yaml
+d = yaml.safe_load(open('$TEST_TMPDIR/.sweetclaude/state/sweetclaude.yaml'))
+d['framework']['consistency']['status'] = 'drift_detected'
+d['framework']['consistency']['drift'] = ['fake_drift']
+d['framework']['consistency']['last_checked'] = '$STALE'
+open('$TEST_TMPDIR/.sweetclaude/state/sweetclaude.yaml','w').write(yaml.dump(d))
+"
+
+PROJECT_DIR="$TEST_TMPDIR" bash hooks/sweetclaude-health-check.sh
+
+python3 -c "
+import yaml
+d = yaml.safe_load(open('$TEST_TMPDIR/.sweetclaude/state/sweetclaude.yaml'))
+assert d['framework']['consistency']['status'] == 'ok', f\"drift not cleared: {d['framework']['consistency']['status']}\"
+assert d['framework']['consistency']['drift'] == [], f\"drift list not empty: {d['framework']['consistency']['drift']}\"
+print('DRIFT_CLEAR_PASS')
+"
