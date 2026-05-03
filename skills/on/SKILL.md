@@ -134,7 +134,7 @@ Set up SweetClaude state for this project:
       status: uninitialized
       last_changed_at: ~
       last_changed_by: ~
-    product-backlog:
+    product-parking-lot:
       status: uninitialized
       last_changed_at: ~
       last_changed_by: ~
@@ -458,7 +458,7 @@ For CLAUDE.md generation: scan the project for language, framework, package mana
 | Skill | Data file signal |
 |---|---|
 | `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` exists |
-| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` exists |
+| `product-parking-lot` | `{base_path}/backlog/BACKLOG-INDEX.md` exists |
 | `product-sprint-plan` | *(no signal — always `uninitialized`)* |
 | `product-user-personas` | `.sweetclaude/state/personas.yaml` exists |
 | `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |

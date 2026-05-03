@@ -259,7 +259,7 @@ For each of the six data-owning skills not already in `skills.yaml`, infer state
 | Skill | Data file that indicates it was in use |
 |---|---|
 | `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
-| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
+| `product-parking-lot` | `{base_path}/backlog/BACKLOG-INDEX.md` |
 | `product-sprint-plan` | *(no inference — always `uninitialized` if absent)* |
 | `product-user-personas` | `.sweetclaude/state/personas.yaml` |
 | `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |
@@ -284,7 +284,7 @@ If non-empty, ask:
 | Keyword | Skill | What it does |
 |---------|-------|--------------|
 | `milestones` | `product-milestones` | Roadmap targets like "Exit Stealth" or "MVP Shipped" |
-| `backlog` | `product-backlog` | Deferred work items with context |
+| `backlog` | `product-parking-lot` | Deferred work items with context |
 | `sprint` | `product-sprint-plan` | Select stories from backlog into a sprint |
 | `personas` | `product-user-personas` | Define who your users are and what they need |
 | `stories` | `product-user-stories` | Write user stories for defined personas |
@@ -307,7 +307,7 @@ All installed skills (v{new_version}):
 ═══════════════════════════════════════
 
 PRODUCT
-  /sweetclaude:product-backlog         — {description, truncated to ~80 chars}
+  /sweetclaude:product-parking-lot     — {description, truncated to ~80 chars}
   /sweetclaude:product-milestones      — ...
   ...
 

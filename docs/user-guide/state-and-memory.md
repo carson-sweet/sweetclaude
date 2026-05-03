@@ -66,12 +66,12 @@ active_work_item:
 
 ## skills.yaml
 
-Tracks onboarding state for the six data-owning skills: `product-milestones`, `product-backlog`, `product-sprint-plan`, `product-user-personas`, `product-user-stories`, and `document-corpus`. Each skill reads this file at entry to know whether to proceed normally, offer a lightweight first-time setup, or resume from a paused state.
+Tracks onboarding state for the six data-owning skills: `product-milestones`, `product-parking-lot`, `product-sprint-plan`, `product-user-personas`, `product-user-stories`, and `document-corpus`. Each skill reads this file at entry to know whether to proceed normally, offer a lightweight first-time setup, or resume from a paused state.
 
 ```yaml
 schema_version: 2
 skills:
-  product-backlog:
+  product-parking-lot:
     status: active
     last_changed_at: 2026-05-01
     last_changed_by: first-invocation
@@ -105,7 +105,7 @@ skills:
 
 **Pause vs. offboard:** Pausing a skill marks it inactive but leaves all data files on disk. Offboarding exports data and then deletes it — irreversible without the export. Pause is the safe default when you just want to stop using a skill temporarily.
 
-**Dependency enforcement:** Some skills require others to be `active` first. `product-sprint-plan` requires `product-backlog`. `product-user-stories` will warn (but not block) if `product-user-personas` is not active. These dependencies are declared in `config/skills-registry.yaml` at the framework level — skills read the registry at entry rather than hardcoding their own dependency logic.
+**Dependency enforcement:** Some skills require others to be `active` first. `product-sprint-plan` requires `product-parking-lot`. `product-user-stories` will warn (but not block) if `product-user-personas` is not active. These dependencies are declared in `config/skills-registry.yaml` at the framework level — skills read the registry at entry rather than hardcoding their own dependency logic.
 
 **Automatic migration:** Running `/sweetclaude:update` migrates a schema v1 `skills.yaml` (which used `enabled: true/false`) to v2 automatically. Running `/sweetclaude:fix-sweetclaude` can bootstrap a missing `skills.yaml` by inferring state from artifact files on disk.
 

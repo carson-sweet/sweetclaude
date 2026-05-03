@@ -1,5 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
+name: sweetclaude:product-parking-lot
 description: "Manage deferred work. Add, review, prioritize, or groom backlog items. Each item gets its own file with substantive initial thinking, not just a title. Tracks what's been parked and why, surfaces items when they become relevant."
 category: product
 ---
@@ -25,15 +26,15 @@ Read `.sweetclaude/state/skills.yaml`.
 Drop `onboarded_at`/`offboarded_at`. Set `schema_version: 2`. Write atomically (see write protocol below).
 
 **Dependency check:**
-Read `~/.claude/config/sweetclaude/skills-registry.yaml`. Find `skills.product-backlog.dependencies`. This skill has no dependencies — skip.
+Read `~/.claude/config/sweetclaude/skills-registry.yaml`. Find `skills.product-parking-lot.dependencies`. This skill has no dependencies — skip.
 
-**If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-backlog`:**
+**If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-parking-lot`:**
 - Check whether `{base_path}/backlog/BACKLOG-INDEX.md` exists
 - If yes: write entry with `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
 - If no: write entry with `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
 - Use write protocol below.
 
-**If `skills.yaml` exists and has an entry for `skills.product-backlog`:**
+**If `skills.yaml` exists and has an entry for `skills.product-parking-lot`:**
 - `status: active` → proceed normally
 - `status: paused` AND `$ARGUMENTS` not in `[onboard, offboard, pause]`:
   > "Backlog is currently paused. Resume? [yes/no]"
@@ -102,11 +103,11 @@ Invoked with argument `pause`.
 Sets backlog to `paused` status. Your data is untouched and you can resume at any time by invoking this skill normally.
 
 Write atomically (using write protocol):
-- `skills.product-backlog.status: paused`
-- `skills.product-backlog.last_changed_at: {today ISO date}`
-- `skills.product-backlog.last_changed_by: pause`
+- `skills.product-parking-lot.status: paused`
+- `skills.product-parking-lot.last_changed_at: {today ISO date}`
+- `skills.product-parking-lot.last_changed_by: pause`
 
-Say: "Paused. Your backlog files are safe — nothing was deleted. Resume anytime by running `/sweetclaude:product-backlog`."
+Say: "Paused. Your backlog files are safe — nothing was deleted. Resume anytime by running `/sweetclaude:product-parking-lot`."
 
 ---
 
@@ -242,16 +243,16 @@ If existing data found:
 > What do you want to do?
 >   import    — create SweetClaude BL-XXX files from this data
 >   fresh     — start clean, ignore existing data
->   cancel    — set up later with `/sweetclaude:product-backlog onboard`"
+>   cancel    — set up later with `/sweetclaude:product-parking-lot onboard`"
 
 If nothing found:
 > "No existing backlog found. I'll create the backlog directory at `{base_path}/backlog/`. Proceed? (yes/cancel)"
 
-3. **If import:** For each item found, create a `BL-XXX` file using the backlog template. Populate from source data. Present a summary. Tell the user: "Use `/sweetclaude:product-backlog` to review your backlog."
+3. **If import:** For each item found, create a `BL-XXX` file using the backlog template. Populate from source data. Present a summary. Tell the user: "Use `/sweetclaude:product-parking-lot` to review your backlog."
 
 4. **If fresh / yes:** Create `{base_path}/backlog/BACKLOG-INDEX.md` with the standard header. Tell the user: "Ready. Describe a backlog item and I'll add it."
 
-5. **If cancel:** "OK. Run `/sweetclaude:product-backlog onboard` when ready."
+5. **If cancel:** "OK. Run `/sweetclaude:product-parking-lot onboard` when ready."
 
 ---
 

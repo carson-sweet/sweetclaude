@@ -78,7 +78,7 @@ Check that artifacts are where SweetClaude expects them:
 | `.sweetclaude/state/` | phase.yaml, project.yaml, skills.yaml, decision-log, assumption-register, improvement-register, scope-changes |
 | `docs/` | product-brief, prd, architecture, tech-spec, data-model, api-design, workflows (if they exist anywhere in the project) |
 | `.sweetclaude/stories/` | user stories and .feature files (if they exist) |
-| `.sweetclaude/backlog/` | BACKLOG-INDEX.md and item detail files (if product-backlog has been used) |
+| `.sweetclaude/backlog/` | BACKLOG-INDEX.md and item detail files (if product-parking-lot has been used) |
 | `.sweetclaude/milestones/` | milestone detail files (if product-milestones has been used) |
 | `.sweetclaude/sprints/` | sprint files (if product-sprint-plan has been used) |
 | `.sweetclaude/traceability/` | requirements-map, ripple-map |
@@ -110,7 +110,7 @@ For each of the six data-owning skills, check whether it is present in `skills.y
 | Skill | Artifact signal (file exists → was in use) |
 |---|---|
 | `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
-| `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
+| `product-parking-lot` | `{base_path}/backlog/BACKLOG-INDEX.md` |
 | `product-sprint-plan` | *(no inference — write `enabled: false` if absent)* |
 | `product-user-personas` | `.sweetclaude/state/personas.yaml` |
 | `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |
@@ -149,7 +149,7 @@ If any exist, ask:
 | Keyword | Skill |
 |---|---|
 | `milestones` | `product-milestones` |
-| `backlog` | `product-backlog` |
+| `backlog` | `product-parking-lot` |
 | `sprint` | `product-sprint-plan` |
 | `personas` | `product-user-personas` |
 | `stories` | `product-user-stories` |
@@ -179,7 +179,36 @@ Populate as draft entries marked `[retroactive]` for user review.
 
 ---
 
-## Step 7: Check for untracked SweetClaude files
+## Step 7: Audit hook registrations
+
+Read `~/.claude/hooks/sweetclaude/hooks-manifest.json`. For each entry with `"required": true`, verify that its `file` is referenced in `~/.claude/hooks/sweetclaude/hooks.json`.
+
+```bash
+python3 -c "
+import json
+manifest = json.load(open('$HOME/.claude/hooks/sweetclaude/hooks-manifest.json'))
+hooks_json = open('$HOME/.claude/hooks/sweetclaude/hooks.json').read()
+missing = [h['file'] for h in manifest['hooks'] if h.get('required') and h['file'] not in hooks_json]
+print('\n'.join(missing) if missing else 'OK')
+"
+```
+
+If any required hooks are missing:
+> "These required hooks are not registered in hooks.json: {list}. Add them?"
+
+If user says yes, add the missing entries to `hooks.json` using the `event`, `matcher`, and `file` fields from the manifest. Write atomically (temp file → rename).
+
+Also check for hooks registered in `hooks.json` that have no corresponding entry in `hooks-manifest.json` (unrecognized hooks):
+> "hooks.json has entries not in the manifest: {list}. These may be from another plugin or manually added. Review?"
+
+Only flag — do not remove.
+
+If `hooks-manifest.json` does not exist:
+> "hooks-manifest.json is missing from the hooks directory. This file should have been installed with SweetClaude. Run `install.sh` from the SweetClaude repo to restore it."
+
+---
+
+## Step 8: Check for untracked SweetClaude files
 
 Run `git status` on the project. Check if `.sweetclaude/` and `strategy/` have untracked or uncommitted files:
 
@@ -187,7 +216,7 @@ Run `git status` on the project. Check if `.sweetclaude/` and `strategy/` have u
 
 ---
 
-## Step 8: Report
+## Step 9: Report
 
 Present a summary:
 
@@ -200,6 +229,7 @@ CLAUDE.md:      {✓ accurate | ⚠ {N} issues found}
 File locations: {✓ correct | ⚠ {N} misplaced artifacts}
 Skills / onboard: {✓ in sync | ⚠ {N} mismatches}
 Registers:      {✓ populated | ⚠ empty on active project}
+Hooks:          {✓ all registered | ⚠ {N} missing | hooks-manifest.json missing}
 Git tracking:   {✓ clean | ⚠ {N} untracked files}
 
 → Proposed fixes: {N}

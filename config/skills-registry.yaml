@@ -10,7 +10,7 @@ skills:
     data_signal: "{base_path}/milestones/MILESTONES-INDEX.md"
     dependencies: []
 
-  product-backlog:
+  product-parking-lot:
     description: "Deferred work items"
     data_signal: "{base_path}/backlog/BACKLOG-INDEX.md"
     dependencies: []
@@ -18,7 +18,7 @@ skills:
   product-sprint-plan:
     description: "Sprint planning"
     data_signal: ~
-    dependencies: [product-backlog]
+    dependencies: [product-parking-lot]
 
   product-user-personas:
     description: "User personas"

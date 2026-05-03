@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "description": "Declares every hook script and whether it must be registered in hooks.json. Used by session-preflight.sh to detect missing or extra registrations.",
+  "hooks": [
+    {
+      "file": "session-preflight.sh",
+      "event": "SessionStart",
+      "matcher": "startup",
+      "required": true,
+      "purpose": "Loads session state, validates hook registrations, generates session-state.yaml"
+    },
+    {
+      "file": "preflight-guard.sh",
+      "event": "PreToolUse",
+      "matcher": "",
+      "required": true,
+      "purpose": "Blocks tool calls when SweetClaude is disabled or phase.yaml is missing"
+    },
+    {
+      "file": "test-guardian.sh",
+      "event": "PreToolUse",
+      "matcher": "Write|Edit",
+      "required": true,
+      "purpose": "Prevents edits to test files during TDD implementation phase"
+    },
+    {
+      "file": "tdd-prewrite-guardian.sh",
+      "event": "PreToolUse",
+      "matcher": "Write|Edit",
+      "required": true,
+      "purpose": "Warns when writing implementation code before tests exist"
+    },
+    {
+      "file": "artifact-guardian.sh",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "required": true,
+      "purpose": "Blocks writes to artifact paths that bypass the sc-artifact adapter"
+    },
+    {
+      "file": "auto-test-runner.sh",
+      "event": "PostToolUse",
+      "matcher": "Write|Edit",
+      "required": true,
+      "purpose": "Runs the test suite after every source file edit during TDD IMPLEMENT phase"
+    },
+    {
+      "file": "state-regenerator.sh",
+      "event": "PostToolUse",
+      "matcher": "Write|Edit",
+      "required": true,
+      "purpose": "Regenerates session-state.yaml when phase.yaml or skills.yaml changes"
+    },
+    {
+      "file": "version-bump.sh",
+      "event": "PostToolUse",
+      "matcher": "Bash",
+      "required": true,
+      "purpose": "Bumps package.json patch version after successful skill file writes"
+    },
+    {
+      "file": "skill-tracker.sh",
+      "event": "PostToolUse",
+      "matcher": "Skill",
+      "required": true,
+      "purpose": "Logs every skill invocation to .sweetclaude/state/skill-usage-log.md"
+    },
+    {
+      "file": "git-checkpoint.sh",
+      "event": null,
+      "matcher": null,
+      "required": false,
+      "purpose": "Utility called explicitly by skills (e.g. code-tdd) to commit a git checkpoint. NOT an event hook — takes a $MESSAGE argument."
+    },
+    {
+      "file": "phase-dwelling-guard.sh",
+      "event": null,
+      "matcher": null,
+      "required": false,
+      "purpose": "Protocol guardian only — registered by guardian-on skill, not in baseline hooks.json. Blocks phase-advancing language."
+    },
+    {
+      "file": "auto-reindex.sh",
+      "event": null,
+      "matcher": null,
+      "required": false,
+      "purpose": "RAG corpus indexing — registered only when document-corpus skill is active. Not a baseline hook."
+    },
+    {
+      "file": "generate-session-state.sh",
+      "event": null,
+      "matcher": null,
+      "required": false,
+      "purpose": "Called by session-preflight.sh to produce session-state.yaml. Not a standalone event hook."
+    },
+    {
+      "file": "sc-artifact.sh",
+      "event": null,
+      "matcher": null,
+      "required": false,
+      "purpose": "Shell library (source'd by skills). Not an event hook."
+    }
+  ]
+}

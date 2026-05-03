@@ -75,7 +75,7 @@ Store the result as `{starting_phase}` — used in Step 7.
 | User stories | PLAN | `sweetclaude:product-user-stories` |
 | Test specs from stories | PLAN | `sweetclaude:product-user-tdd-tests` |
 | Scope change | any | `sweetclaude:product-manage-scope` |
-| Backlog management | any | `sweetclaude:product-backlog` |
+| Parking lot / deferred ideas | any | `sweetclaude:product-parking-lot` |
 | Sprint / release planning | DEFINE, PLAN, SHIP | `sweetclaude:product-sprint-plan` |
 | Market / technical research | DISCOVER | `sweetclaude:product-research` |
 | Release planning | DEFINE, PLAN, SHIP | `sweetclaude:release-planning` *(Plan 3)* |
@@ -128,7 +128,7 @@ Store the result as `{starting_phase}` — used in Step 7.
 | Roadmap management | any | `sweetclaude:project-roadmap` |
 | Roadmap prioritization / RICE analysis | any | `sweetclaude:product-roadmap-analysis` |
 | Scope definition and updates | DEFINE, any | `sweetclaude:project-scope` |
-| Milestone tracking | any | `sweetclaude:project-milestones` |
+| Goal tracking | any | `sweetclaude:project-goals` |
 | Project mode (flow/kanban/agile) | any | `sweetclaude:project-mode` |
 
 ### testing/ — validating the work

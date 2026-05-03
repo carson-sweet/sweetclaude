@@ -71,8 +71,8 @@ Strategy and product definition. Useful before any code is written and on existi
 | **Product User Stories** | `/sweetclaude:product-user-stories` | Stories with acceptance criteria. Scoped to all personas, SLC, or MVP. State-tracked: first invocation offers GitHub Issues import; warns (does not block) if `product-user-personas` is not active. Use `pause` to suspend without deleting data. |
 | **Product User TDD Tests** | `/sweetclaude:product-user-tdd-tests` | Convert stories to Gherkin `.feature` files for TDD Level 3. |
 | **Product Manage Scope** | `/sweetclaude:product-manage-scope` | Track scope changes with rationale. Prevents silent scope creep. |
-| **Product Backlog** | `/sweetclaude:product-backlog` | Manage deferred work. State-tracked: first invocation runs a lightweight setup (optional GitHub Issues import); subsequent invocations proceed immediately. Use `/sweetclaude:product-backlog pause` to suspend without deleting data. |
-| **Product Sprint Plan** | `/sweetclaude:product-sprint-plan` | Plan a sprint from the backlog. Reports which milestones a sprint advances. Requires `product-backlog` to be `active`. |
+| **Product Parking Lot** | `/sweetclaude:product-parking-lot` | Manage deferred work. State-tracked: first invocation runs a lightweight setup (optional GitHub Issues import); subsequent invocations proceed immediately. Use `/sweetclaude:product-parking-lot pause` to suspend without deleting data. |
+| **Product Sprint Plan** | `/sweetclaude:product-sprint-plan` | Plan a sprint from the backlog. Reports which milestones a sprint advances. Requires `product-parking-lot` to be `active`. |
 | **Product Market Messaging** | `/sweetclaude:product-market-messaging` | Elevator pitches, value propositions, key messages per audience. |
 | **Product Milestones** | `/sweetclaude:product-milestones [sub]` | Outcome-driven roadmap targets like "Exit Stealth" or "Paid Pilot Live." Sub-commands: `add`, `review`, `link [US-XXX] [MS-XXX]`, `status`, `blockers`, `complete`, `unassigned`. State-tracked: first invocation runs a lightweight setup; use `pause` to suspend, `onboard` for full ceremony. |
 | **Product Roadmap Analysis** | `/sweetclaude:product-roadmap-analysis [analyze\|alignment\|item RM-NNN]` | RICE scoring (Reach × Impact × Confidence ÷ Effort) for all planned and active roadmap items. Scope and milestone alignment check. Proposes a revised stack-rank — applies only on confirmation. |
@@ -145,7 +145,7 @@ Execution-layer tracking. These skills manage the work that delivers the product
 | **Project Backlog Triage** | `/sweetclaude:project-backlog-triage` | Structured grooming session. Works through ungroomed issues one at a time using INVEST criteria. Recommend priority + effort, accept/override/skip/split/cancel. Sets status to `ready` when groomed. |
 | **Project Roadmap** | `/sweetclaude:project-roadmap` | Priority-stacked roadmap with force-ranked items. Create, activate (routes to correct downstream workflow by type), defer, complete, cancel. Create and view releases. |
 | **Project Scope** | `/sweetclaude:project-scope` | Singleton scope document — one statement, in-scope list, minimum three out-of-scope items. Cascade review on update flags conflicting open roadmap items and issues. |
-| **Project Milestones** | `/sweetclaude:project-milestones` | Binary business goals — achieved or not. Criteria must be evaluable as true/false. `list`, `view`, `new`, `achieved`, `missed`. |
+| **Project Goals** | `/sweetclaude:project-goals` | Binary business goals — achieved or not. Criteria must be evaluable as true/false. `list`, `view`, `new`, `achieved`, `missed`. |
 | **Project Mode** | `/sweetclaude:project-mode` | Assess and shift project modes: flow → kanban → shape_up → agile → agile_enterprise. Snapshots state before every shift. Detects upshift/downshift signals from artifact counts. Hard block: agile_enterprise → flow requires `--force`. |
 
 ---

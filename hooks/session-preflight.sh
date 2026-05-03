@@ -53,6 +53,25 @@ if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
     HOOK_DIR="$(dirname "$0")"
     "$HOOK_DIR/generate-session-state.sh" 2>/dev/null
 
+    # Hooks validation — check required hooks are registered
+    HOOKS_MANIFEST="$(dirname "$0")/hooks-manifest.json"
+    HOOKS_JSON="$(dirname "$0")/hooks.json"
+    HOOKS_WARNING=""
+    if [ -f "$HOOKS_MANIFEST" ] && [ -f "$HOOKS_JSON" ]; then
+      HOOKS_JSON_CONTENT=$(cat "$HOOKS_JSON")
+      while IFS= read -r hook_file; do
+        if ! echo "$HOOKS_JSON_CONTENT" | grep -q "$hook_file"; then
+          HOOKS_WARNING="${HOOKS_WARNING} ${hook_file}"
+        fi
+      done < <(python3 -c "
+import json, sys
+manifest = json.load(open('$HOOKS_MANIFEST'))
+for h in manifest['hooks']:
+    if h.get('required'):
+        print(h['file'])
+" 2>/dev/null)
+    fi
+
     STATE_FILE="$PROJECT_DIR/.sweetclaude/state/session-state.yaml"
     if [ -f "$STATE_FILE" ]; then
       STATE_CONTENT=$(cat "$STATE_FILE")
@@ -63,6 +82,11 @@ ${STATE_CONTENT}"
         CONTEXT="${CONTEXT}
 
 ${PLATFORM_NOTE}"
+      fi
+      if [ -n "$HOOKS_WARNING" ]; then
+        CONTEXT="${CONTEXT}
+
+HOOKS WARNING: These required hooks are not registered in hooks.json:${HOOKS_WARNING}. Run /sweetclaude:fix-sweetclaude to diagnose."
       fi
       CONTEXT="${CONTEXT}
 

@@ -19,7 +19,7 @@ All SweetClaude slash commands organized by domain. The core and orchestration c
 | `/sweetclaude:product-user-stories` | User stories in Gherkin or generic format, scoped to all personas, SLC, or MVP. |
 | `/sweetclaude:product-user-tdd-tests` | Stories to Gherkin .feature files |
 | `/sweetclaude:product-manage-scope` | Track scope changes with rationale |
-| `/sweetclaude:product-backlog` | Manage deferred work |
+| `/sweetclaude:product-parking-lot` | Manage deferred work |
 | `/sweetclaude:product-sprint-plan` | Plan sprints from backlog |
 | `/sweetclaude:product-research` | Market and solution landscape research. Feeds the competitive seed list. |
 | `/sweetclaude:product-market-messaging` | External communications by audience |
@@ -45,7 +45,7 @@ All SweetClaude slash commands organized by domain. The core and orchestration c
 | `/sweetclaude:project-backlog-triage` | INVEST-based grooming session. Works through ungroomed issues one at a time — recommend priority + effort, accept/override/skip/split. Sets status to `ready` when groomed. |
 | `/sweetclaude:project-roadmap` | Priority-stacked roadmap. Create items, activate with workflow routing by type, defer, complete, cancel. Create and view releases. |
 | `/sweetclaude:project-scope` | Define and maintain the project scope document. One statement, in-scope list, out-of-scope list (minimum 3). Cascade review on updates flags conflicting open items. |
-| `/sweetclaude:project-milestones` | Binary business goals — achieved or not. Challenge vague criteria at creation. `achieved`, `missed` sub-commands. |
+| `/sweetclaude:project-goals` | Binary business goals — achieved or not. Challenge vague criteria at creation. `achieved`, `missed` sub-commands. |
 | `/sweetclaude:project-mode` | Assess and shift project modes: flow → kanban → shape_up → agile → agile_enterprise. Snapshots state before every shift. Upshift/downshift signal detection. |
 | `/sweetclaude:product-roadmap-analysis` | RICE scoring and stack-rank analysis for roadmap items. Scope and milestone alignment check. Proposed priority order for confirmation. |
 

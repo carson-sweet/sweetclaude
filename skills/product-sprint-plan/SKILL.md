@@ -24,9 +24,9 @@ Read `.sweetclaude/state/skills.yaml`.
 Drop `onboarded_at`/`offboarded_at`. Set `schema_version: 2`. Write atomically (see write protocol below).
 
 **Dependency check:**
-Read `~/.claude/config/sweetclaude/skills-registry.yaml`. Find `skills.product-sprint-plan.dependencies`: `[product-backlog]`.
-Read `skills.product-backlog.status` from `skills.yaml`. If it is not `active`:
-> "Sprint planning requires backlog to be active first. Run `/sweetclaude:product-backlog` to set it up." Stop.
+Read `~/.claude/config/sweetclaude/skills-registry.yaml`. Find `skills.product-sprint-plan.dependencies`: `[product-parking-lot]`.
+Read `skills.product-parking-lot.status` from `skills.yaml`. If it is not `active`:
+> "Sprint planning requires the parking lot to be active first. Run `/sweetclaude:product-parking-lot` to set it up." Stop.
 
 **If `skills.yaml` does not exist, OR exists but has no entry for `skills.product-sprint-plan`:**
 - Sprint planning has no data files to infer from — write entry with `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
@@ -85,7 +85,7 @@ Present:
 > "Sprint planning doesn't store its own data — it reads from your backlog and stories. Stopping sprint planning just means not running this skill anymore.
 >
 > If you also want to offboard backlog or stories, run:
->   `/sweetclaude:product-backlog offboard`
+>   `/sweetclaude:product-parking-lot offboard`
 >   `/sweetclaude:product-user-stories offboard`"
 
 Write state (using write protocol): `status: uninitialized`, `last_changed_at: {today}`, `last_changed_by: offboard`.
@@ -115,7 +115,7 @@ Sprint planning has no data files to set up — it reads from backlog and storie
 If `$ARGUMENTS` is `onboard`:
 
 1. Check whether `{base_path}/backlog/BACKLOG-INDEX.md` exists.
-   - If not: > "Sprint planning requires the backlog to be set up first. Setting up the backlog now." Then invoke `sweetclaude:product-backlog onboard` and wait for it to complete.
+   - If not: > "Sprint planning requires the parking lot to be set up first. Setting up the parking lot now." Then invoke `sweetclaude:product-parking-lot onboard` and wait for it to complete.
    - If yes: continue.
 
 2. Check whether `{base_path}/milestones/MILESTONES-INDEX.md` exists.
