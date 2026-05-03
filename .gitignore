@@ -11,10 +11,12 @@ restore-config.sh
 /strategy/
 /corpus/
 
-# docs/ — only user-guide is public; everything else is internal
+# docs/ — only user-guide and plans are public; everything else is internal
 /docs/*
 !/docs/user-guide/
 !/docs/user-guide/**
+!/docs/plans/
+!/docs/plans/**
 
 # Explicit belt-and-braces: internal design docs, plans, backlog, etc.
 /docs/internal/
