@@ -45,13 +45,18 @@ if [ -f "$PROJECT_DIR/.sweetclaude-skip" ]; then
 fi
 
 # Check if configured — .sweetclaude/ inside project
-if [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ]; then
+SC_YAML="$PROJECT_DIR/.sweetclaude/state/sweetclaude.yaml"
+PHASE_YAML="$PROJECT_DIR/.sweetclaude/state/phase.yaml"
+if [ -f "$SC_YAML" ] || [ -f "$PHASE_YAML" ]; then
   rm -f "$FLAG"
   # Auto-fire status if active (not disabled)
   if [ ! -f "$PROJECT_DIR/.sweetclaude/disabled" ]; then
     # Refresh session-state.yaml synchronously so injected state is current
     HOOK_DIR="$(dirname "$0")"
     "$HOOK_DIR/generate-session-state.sh" 2>/dev/null
+
+    # Run 24h health checks (write results to sweetclaude.yaml)
+    PROJECT_DIR="$PROJECT_DIR" "$HOOK_DIR/sweetclaude-health-check.sh" 2>/dev/null || true
 
     # Hooks validation — check required hooks are registered
     HOOKS_MANIFEST="$(dirname "$0")/hooks-manifest.json"
@@ -72,7 +77,8 @@ for h in manifest['hooks']:
 " 2>/dev/null)
     fi
 
-    STATE_FILE="$PROJECT_DIR/.sweetclaude/state/session-state.yaml"
+    STATE_FILE="$SC_YAML"
+    [ -f "$STATE_FILE" ] || STATE_FILE="$PROJECT_DIR/.sweetclaude/state/session-state.yaml"
     if [ -f "$STATE_FILE" ]; then
       STATE_CONTENT=$(cat "$STATE_FILE")
       CONTEXT="SweetClaude is active. Pre-loaded session state:
