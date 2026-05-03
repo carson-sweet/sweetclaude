@@ -92,7 +92,7 @@ def main():
 
     content = yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False)
     if args.output == '-':
-        print(content)
+        sys.stdout.write(content)
     else:
         with open(args.output, 'w') as f:
             f.write(content)

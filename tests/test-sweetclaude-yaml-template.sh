@@ -29,5 +29,21 @@ for feat in ['product_milestones','product_backlog','product_personas','product_
     assert feat in d['features'], f'missing feature: {feat}'
     assert d['features'][feat]['status'] == 'not_offered'
     assert d['features'][feat]['defer_until'] is None
+    assert d['features'][feat]['offered_at'] is None
+    assert d['features'][feat]['decided_at'] is None
+assert 'session' in d, 'missing key: session'
+assert 'work' in d, 'missing key: work'
+
+# Also test migrated-from path
+import subprocess, tempfile, os
+with tempfile.NamedTemporaryFile(suffix='.yaml', delete=False) as tmp:
+    tmp_path = tmp.name
+subprocess.run(['python3', 'scripts/sweetclaude-yaml-template.py',
+    '--name', 'migrated-proj', '--migrated-from', '2.39.0',
+    '--output', tmp_path], check=True)
+dm = yaml.safe_load(open(tmp_path))
+os.unlink(tmp_path)
+assert dm['framework']['migrated_from'] == '2.39.0', 'migrated_from not set'
+assert dm['framework']['migrated_at'] is not None, 'migrated_at should be set'
 print('PASS')
 "
