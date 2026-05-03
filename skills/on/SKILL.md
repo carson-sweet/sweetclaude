@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:on
+user-invocable: false
 description: "Get started with SweetClaude on any project — new idea or existing codebase. Detects context automatically and walks you through setup, then hands off to the pipeline."
 ---
 

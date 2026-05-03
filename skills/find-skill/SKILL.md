@@ -1,5 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
+user-invocable: false
 description: "Find and start the right skill for any work. Describe what you want to do — this skill classifies it, confirms the match, updates project state, and invokes the correct skill to begin the work."
 ---
 

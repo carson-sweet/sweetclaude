@@ -13,6 +13,61 @@ Audit this project's SweetClaude setup. Fix what is broken.
 
 ---
 
+## Step 0: Check for YAML parse failure
+
+If called because `sweetclaude.yaml` failed to parse (the `/sweetclaude` orchestrator routes here on parse error), run:
+
+```bash
+python3 -c "
+import yaml
+try:
+    yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml'))
+    print('YAML_OK')
+except yaml.YAMLError as e:
+    print(f'YAML_ERROR: {e}')
+except FileNotFoundError:
+    print('YAML_MISSING')
+" 2>/dev/null
+```
+
+If `YAML_ERROR`, show the problematic area:
+```bash
+python3 -c "
+import yaml
+try:
+    yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml'))
+except yaml.YAMLError as e:
+    if hasattr(e, 'problem_mark'):
+        m = e.problem_mark
+        lines = open('.sweetclaude/state/sweetclaude.yaml').readlines()
+        start = max(0, m.line - 2)
+        end = min(len(lines), m.line + 3)
+        for i, l in enumerate(lines[start:end], start+1):
+            marker = ' <<<' if i == m.line+1 else ''
+            print(f'{i:3}: {l.rstrip()}{marker}')
+    else:
+        print(str(e))
+" 2>/dev/null
+```
+
+> "Your \`sweetclaude.yaml\` has a syntax error at the line marked above. Most common cause: a manual edit introduced bad indentation or a special character."
+
+Options for the user:
+1. **Fix it for me** → attempt auto-repair: run `sweetclaude:_migrate` (will rebuild from archived files if present)
+2. **Show me the file** → `cat .sweetclaude/state/sweetclaude.yaml`
+3. **Restore from archive** → copy archive back and re-migrate:
+   ```bash
+   cp .sweetclaude/state/archive/phase.yaml.bak .sweetclaude/state/phase.yaml 2>/dev/null || true
+   cp .sweetclaude/state/archive/skills.yaml.bak .sweetclaude/state/skills.yaml 2>/dev/null || true
+   rm -f .sweetclaude/state/sweetclaude.yaml
+   ```
+   Then invoke `sweetclaude:_migrate`.
+
+If `YAML_OK`, proceed to the existing steps below (the YAML is fine — the issue is something else).
+If `YAML_MISSING`, say: "Looks like the config file is missing entirely. Let me set things up." Then invoke `sweetclaude:setup`.
+
+---
+
 ## Step 1: Check .sweetclaude/ state exists
 
 If `.sweetclaude/state/phase.yaml` does not exist:

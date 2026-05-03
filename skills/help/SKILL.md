@@ -1,95 +1,133 @@
 ---
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:help
-description: Interactive help assistant. Teaches the user how to work with SweetClaude through prompting, not commands. Ask what they want to accomplish and show them how.
+user-invocable: true
+description: Interactive help for SweetClaude. Explains free-language usage, walks through setup, shows available features, and explains project modes. Conversation flows from the user's question.
 ---
-
-!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 # SweetClaude Help
 
-SweetClaude works through conversation, not commands. This skill helps users understand that model.
-
----
+SweetClaude works through conversation. You don't need to know any commands.
 
 ## Step 1: Set the frame
 
 Tell the user:
 
-> "SweetClaude works through conversation. You describe what you want, and I figure out the right process — you don't need to know the commands.
+> "SweetClaude works through plain English — you describe what you want, and I figure out the right process. You don't need to know any skill names or commands.
 >
-> What are you trying to do, or what do you want to know how to do?"
+> What would you like help with?"
 
-Wait for their response.
+Offer these options (conversationally based on context):
 
----
+1. **Set up SweetClaude** — for a new project or an existing codebase
+2. **See what's available** — browse the features: product planning, coding workflows, design, testing, and more
+3. **Understand project modes** — Flow, Kanban, Shape Up, Agile
+4. **Learn how to use SweetClaude** — examples of what to type
+5. **Something else** — ask freely
 
-## Step 2: Route their question
+## Step 2: Follow the user's choice
 
-### If they describe a task or goal
+**"Set up SweetClaude":**
+> "Just type `/sweetclaude` and I'll walk you through it — I'll detect whether this is a new project or an existing codebase and ask a couple of questions."
 
-Map it to what SweetClaude would do. Show them how to ask for it naturally, not what command to run.
+**"See what's available":**
+Present a plain-language feature tour (grouped by area, no skill names):
 
-Examples:
+*Building things*
+- Plan a new feature from scratch (discovery → stories → code → ship)
+- Fix a bug end-to-end with a proper diagnosis
+- Review code before merging
+- Deploy and run a smoke test
 
-| They say | Show them this |
-|---|---|
-| "I want to start a new project" | "Just say 'I want to build X' — SweetClaude will detect context and walk you through setup." |
-| "I need to fix a bug" | "Describe the bug: 'users can't log in when X happens.' SweetClaude will open a bug-fix workflow, starting with root cause." |
-| "I want to review my code" | "Say 'review my code' or 'I'm ready for code review.' SweetClaude will run a structured code and security review." |
-| "I want to write a PRD" | "Say 'let's write the PRD' or 'I'm ready to define the product.' SweetClaude will open the product definition workflow." |
-| "I want to refactor this" | "Say 'I want to clean up X' or 'this code is messy.' SweetClaude will lock existing behavior with tests before touching anything." |
-| "I want to ship" | "Say 'I think this is ready to ship' — SweetClaude will check the verify phase gates and walk you through the handoff." |
-| "What's next?" | "Say 'what's next' or just run `/sweetclaude:go` — SweetClaude reads your project state and tells you." |
+*Product work*
+- Write a product brief or PRD
+- Define your users (personas)
+- Prioritize your backlog (RICE scoring, roadmap)
+- Plan a sprint
 
-Give a concrete example matching their specific task. Do not list all possible tasks — respond to what they actually asked.
+*Design*
+- Define your architecture
+- Design an API
+- Create wireframes and user flows
 
----
+*Testing*
+- Plan your test strategy
+- Run a security review (STRIDE / OWASP)
+- Accessibility audit (WCAG 2.1)
 
-### If they ask how SweetClaude works
+*Day-to-day*
+- See where things stand (`/sweetclaude` with no text)
+- Prepare for a meeting
+- Export a session
 
-Explain the model in plain terms:
+**"Understand project modes":**
+Explain each mode in 2 sentences:
+- **Flow** — unstructured creative work, minimal process overhead
+- **Kanban** — visual board, continuous flow, limit WIP
+- **Shape Up** — fixed time, variable scope, 6-week cycles with appetite-based bets
+- **Agile** — sprints, ceremonies, velocity tracking
 
-> "SweetClaude tracks where your project is in its lifecycle and enforces a process — discover → define → design → build → verify → ship. Each step has exit criteria. When you say you're done with something, SweetClaude checks the criteria before moving on.
->
-> You don't need to think about phases or commands. Just describe what you want to work on, and SweetClaude figures out where you are and what needs to happen next."
+> "To switch modes, just tell me: 'Switch to Kanban mode' or 'I want to use Shape Up.'"
 
-Then ask: "What are you working on right now?"
+**"Learn how to use SweetClaude":**
+Show examples:
+```
+/sweetclaude                          → see where things stand
+/sweetclaude build a login page       → start a new feature
+/sweetclaude fix the auth bug         → diagnose and fix a bug
+/sweetclaude review my PR             → code review
+/sweetclaude something broke in prod  → incident response
+/sweetclaude use code-review          → explicit skill routing
+```
 
----
+**"Something else":**
+Answer the user's question directly and offer to continue exploring.
 
-### If they ask what commands exist
+## Step 3: Continue the conversation
 
-Redirect gently:
+After answering, ask:
+> "Anything else you'd like to know, or ready to dive in?"
 
-> "The commands are mostly for getting started: `/sweetclaude:on` to set up a project, `/sweetclaude:go` to pick up where you left off, `/sweetclaude:status` to see where things stand. Everything else you do through conversation — just describe what you want.
->
-> What are you trying to accomplish?"
+If they're ready: "Just type `/sweetclaude` and tell me what you want to build."
 
----
+## Learnings visibility
 
-### If they're confused or frustrated
+If the user asks "what have you learned about me?" or "show my preferences":
 
-Acknowledge it. Ask one specific question:
+```bash
+python3 - << 'PY'
+import yaml
+try:
+    d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml'))
+    learnings = d.get('learnings', [])
+    if learnings:
+        print("Here's what I've learned from our sessions:\n")
+        for i, l in enumerate(learnings, 1):
+            print(f"{i}. {l}")
+    else:
+        print("No learnings recorded yet.")
+except:
+    print("Can't read learnings right now.")
+PY
+```
 
-> "Let me help. What were you trying to do when things got confusing?"
+Offer: "Want to remove any of these? Just tell me which number."
 
-Listen, then give a direct answer to that specific thing. Do not re-explain the whole system.
-
----
-
-### If they ask about a specific topic (TDD, code review, product brief, etc.)
-
-Explain how that works in SweetClaude's terms, with an example of how to invoke it through conversation. Do not show a command — show a prompt.
-
----
-
-## Step 3: Stay in the conversation
-
-After answering, offer to keep going:
-
-> "Does that help? Want to try it, or is there something else you want to know?"
-
-If they want to try something, hand off to the right skill or tell them what to say to get started.
-
-This is a conversation, not a reference page. Stay with the user until they have what they need.
+If they specify one, remove it:
+```bash
+python3 - .sweetclaude/state/sweetclaude.yaml INDEX << 'PY'
+import sys, yaml, tempfile, os
+path, idx = sys.argv[1], int(sys.argv[2]) - 1
+with open(path) as f: d = yaml.safe_load(f)
+learnings = d.get('learnings', [])
+if 0 <= idx < len(learnings):
+    removed = learnings.pop(idx)
+    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+        yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        tmp_name = tmp.name
+    os.replace(tmp_name, path)
+    print(f"Removed: {removed}")
+else:
+    print("Index out of range.")
+PY
+```

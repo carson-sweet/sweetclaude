@@ -1,5 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
+user-invocable: false
 description: "Walk through the pipeline step by step. Figures out where you are, picks the right skill for the next step, invokes it, and loops. Stops at phase gates for approval."
 ---
 

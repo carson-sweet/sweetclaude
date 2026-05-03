@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:adopt
+user-invocable: false
 description: "Drop SweetClaude into a messy, vibe-coded, or inherited codebase through ASSESS → DIAGNOSE → PLAN → SCAFFOLD → ITERATE. Treats the codebase as an archaeological site — nothing deleted or overwritten without explicit consent. Heavier-weight than sweetclaude:on for complex existing projects."
 ---
 
