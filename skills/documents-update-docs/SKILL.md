@@ -1,5 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
+user-invocable: false
 description: Update documentation when implementation changes behavior. Runs during Verify phase. Detects which docs reference changed behavior, proposes updates for user approval.
 ---
 

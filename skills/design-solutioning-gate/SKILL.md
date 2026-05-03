@@ -1,5 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
+user-invocable: false
 description: "Validate the proposed solution before implementation. Checks architecture decisions, identifies risks, confirms design addresses requirements."
 ---
 
