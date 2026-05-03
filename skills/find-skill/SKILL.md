@@ -49,6 +49,7 @@ Store the result as `{starting_phase}` — used in Step 7.
    - **ALPHA**: strategy + product + design + code (net-new-feature, bug-fix, external-integration, enhancement)
    - **BETA / GA / SCALED**: full catalog
    - **MAINTAINED**: code + operations buckets only (bug-fix, security-patch, dependency-upgrade, compliance-requirement)
+   - **system/ is always visible** at every version stage — framework management is never hidden.
 
 ### strategy/ — why it matters and to whom
 
@@ -152,6 +153,25 @@ Store the result as `{starting_phase}` — used in Step 7.
 | Postmortem | DIAGNOSE, SHIP | `sweetclaude:postmortem` *(Plan 3)* |
 | Break-glass notes | DEFINE, SHIP | `sweetclaude:break-glass-notes` *(Plan 3)* |
 | Onboarding playbook | DEFINE, IMPLEMENT, SHIP | `sweetclaude:code-feature` |
+
+### system/ — managing the framework
+
+Always visible regardless of `version_stage`. No phases — these are point-in-time management operations.
+
+| Work Type | Skill to invoke |
+|---|---|
+| Set up SweetClaude on a project | `sweetclaude:on` |
+| Set up SweetClaude on an existing or messy codebase | `sweetclaude:adopt` |
+| Bootstrap infrastructure only (no product discovery) | `sweetclaude:init` |
+| Deactivate SweetClaude for a project | `sweetclaude:off` |
+| Update SweetClaude to the latest version | `sweetclaude:update` |
+| Audit or repair SweetClaude configuration | `sweetclaude:fix-sweetclaude` |
+| Delete all SweetClaude artifacts | `sweetclaude:purge` |
+| Validate framework behavioral contracts | `sweetclaude:behavioral-regression` |
+| Enable protocol enforcement for the session | `sweetclaude:guardian-on` |
+| Disable protocol enforcement | `sweetclaude:guardian-off` |
+| Toggle or view usage tracking | `sweetclaude:usage` |
+| Get help with SweetClaude | `sweetclaude:help` |
 
 5. **Apply entry category behavior:**
 

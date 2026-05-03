@@ -111,6 +111,27 @@ All SweetClaude slash commands organized by domain. The core and orchestration c
 
 ---
 
+## System
+
+SweetClaude framework management. These commands configure, repair, and control the framework itself — not project work.
+
+| Command | What it does |
+|---|---|
+| `/sweetclaude:on` | Activate SweetClaude on a project — new idea or existing codebase. Detects context automatically. |
+| `/sweetclaude:init` | Bootstrap infrastructure only (no product discovery). Use when you want the scaffolding without the onboarding ceremony. |
+| `/sweetclaude:adopt` | Onboard an existing or messy codebase. Full ASSESS → DIAGNOSE → PLAN → SCAFFOLD → ITERATE pipeline. |
+| `/sweetclaude:off` | Deactivate SweetClaude. Preserves all artifacts. Reactivate with `:on`. |
+| `/sweetclaude:update` | Fetch and install the latest SweetClaude version. Migrates state files and prompts to onboard new skills. |
+| `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration — phase state, CLAUDE.md accuracy, file locations, skills.yaml, registers, hooks, git tracking. |
+| `/sweetclaude:purge` | Delete all SweetClaude artifacts from the project. Requires typed confirmation. |
+| `/sweetclaude:behavioral-regression` | Validate that the current Claude model version honors the framework's 15 behavioral contracts. Run after model upgrades. |
+| `/sweetclaude:guardian-on` | Enable Protocol Guardian for the session — enforces skill invocations, TDD discipline, artifact saves. |
+| `/sweetclaude:guardian-off` | Disable Protocol Guardian. |
+| `/sweetclaude:usage` | Toggle or view local usage tracking. |
+| `/sweetclaude:help` | Conversational help. Describe what you want to accomplish; the assistant shows you how. |
+
+---
+
 ## Autonomous Pipeline
 
 | Command | What it does |
