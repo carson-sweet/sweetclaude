@@ -3,7 +3,7 @@ import argparse, yaml, sys
 from datetime import datetime, timezone
 
 def now_iso():
-    return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    return datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 def build_template(name, project_type, version_stage, installed_version='unknown',
                    migrated_from=None):
@@ -22,7 +22,7 @@ def build_template(name, project_type, version_stage, installed_version='unknown
             'setup_complete': False,
             'migrated_at': now_iso() if migrated_from else None,
             'migrated_from': migrated_from,
-            'migration_status': 'complete',
+            'migration_status': 'complete' if migrated_from else None,
             'hook_last_ran': None,
             'consistency': {
                 'last_checked': None,
