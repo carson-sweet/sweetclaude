@@ -57,7 +57,7 @@ Framework management — setup, teardown, updates, audits, and guards. Always av
 
 ---
 
-## Product (14 skills)
+## Product (15 skills)
 
 Strategy and product definition. Useful before any code is written and on existing projects to document implicit strategy.
 
@@ -141,7 +141,7 @@ Implementation. These skills enforce TDD via hooks, run tests and reviews, and m
 
 ---
 
-## Project Management (10 skills)
+## Project Management (11 skills)
 
 Execution-layer tracking. These skills manage the work that delivers the product — not what to build (that's product/), but how the building is organized and tracked.
 
@@ -156,6 +156,8 @@ Execution-layer tracking. These skills manage the work that delivers the product
 | **Project Scope** | `/sweetclaude:project-scope` | Singleton scope document — one statement, in-scope list, minimum three out-of-scope items. Cascade review on update flags conflicting open roadmap items and issues. |
 | **Project Goals** | `/sweetclaude:project-goals` | Binary business goals — achieved or not. Criteria must be evaluable as true/false. `list`, `view`, `new`, `achieved`, `missed`. |
 | **Project Mode** | `/sweetclaude:project-mode` | Assess and shift project modes: flow → kanban → shape_up → agile → agile_enterprise. Snapshots state before every shift. Detects upshift/downshift signals from artifact counts. Hard block: agile_enterprise → flow requires `--force`. |
+| **GitHub Import Issues** | `/sweetclaude:project-gh-import-issues` | Pull open GitHub Issues into the local issue store as I-NNN artifacts. Idempotent — issues already imported by GitHub number are skipped. Maps size/effort labels to effort field. |
+| **GitHub Sync Issues** | `/sweetclaude:project-gh-sync-issues` | Bidirectional status sync. Pass 1: GH closed → local done. Pass 2: local done → `gh issue close`. Reports counts for each direction. |
 
 ---
 
