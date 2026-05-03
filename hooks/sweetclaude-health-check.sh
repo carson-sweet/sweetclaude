@@ -14,15 +14,16 @@ NOW_ISO=$(python3 -c "from datetime import datetime,timezone; print(datetime.now
 
 hours_since() {
   python3 -c "
+import sys
 from datetime import datetime, timezone
-ts = '$1'
+ts = sys.argv[1] if len(sys.argv) > 1 else ''
 if not ts or ts == 'None': print(9999); exit()
 try:
     t = datetime.fromisoformat(ts.replace('Z','+00:00'))
     diff = (datetime.now(timezone.utc) - t).total_seconds() / 3600
     print(int(diff))
-except: print(9999)
-"
+except Exception: print(9999)
+" "$1"
 }
 
 update_yaml_field() {
@@ -36,7 +37,11 @@ node = d
 for p in parts[:-1]:
     node = node.setdefault(p, {})
 node[parts[-1]] = None if val == 'null' else val
-with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+_os.replace(tmp_name, path)
 PY
 }
 
@@ -91,7 +96,11 @@ with open(path) as f: d = yaml.safe_load(f) or {}
 d.setdefault('framework',{}).setdefault('consistency',{})['status'] = 'drift_detected'
 d['framework']['consistency']['drift'] = drift_str.split()
 d['framework']['consistency']['check_error'] = None
-with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+_os.replace(tmp_name, path)
 PY
     else
       python3 - "$SC_YAML" << 'PY'
@@ -101,7 +110,11 @@ with open(path) as f: d = yaml.safe_load(f) or {}
 d.setdefault('framework',{}).setdefault('consistency',{})['status'] = 'ok'
 d['framework']['consistency']['drift'] = []
 d['framework']['consistency']['check_error'] = None
-with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+_os.replace(tmp_name, path)
 PY
     fi
     update_yaml_field "framework.consistency.last_checked" "$NOW_ISO"
@@ -111,7 +124,11 @@ import sys, yaml
 path = sys.argv[1]
 with open(path) as f: d = yaml.safe_load(f) or {}
 d.setdefault('framework',{}).setdefault('consistency',{})['check_error'] = 'check_failed'
-with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+_os.replace(tmp_name, path)
 PY
   }
 fi
@@ -134,14 +151,18 @@ try: print(json.load(open('$HOME/dev/sweetclaude/package.json')).get('version','
 except: print('')
 " 2>/dev/null)
 
-    if [ -n "$REPO_VERSION" ] && [ "$REPO_VERSION" != "$INSTALLED" ] && [ "$REPO_VERSION" != "unknown" ]; then
+    if [ -n "$REPO_VERSION" ] && [ "$REPO_VERSION" != "$INSTALLED" ] && [ "$REPO_VERSION" != "unknown" ] && [ "$INSTALLED" != "unknown" ]; then
       python3 - "$SC_YAML" "$REPO_VERSION" << 'PY'
 import sys, yaml
 path, ver = sys.argv[1], sys.argv[2]
 with open(path) as f: d = yaml.safe_load(f) or {}
 d.setdefault('framework',{}).setdefault('update',{})['available'] = ver
 d['framework']['update']['check_error'] = None
-with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+_os.replace(tmp_name, path)
 PY
     else
       python3 - "$SC_YAML" << 'PY'
@@ -150,7 +171,11 @@ path = sys.argv[1]
 with open(path) as f: d = yaml.safe_load(f) or {}
 d.setdefault('framework',{}).setdefault('update',{})['available'] = None
 d['framework']['update']['check_error'] = None
-with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+_os.replace(tmp_name, path)
 PY
     fi
     update_yaml_field "framework.update.last_checked" "$NOW_ISO"
@@ -160,7 +185,11 @@ import sys, yaml
 path = sys.argv[1]
 with open(path) as f: d = yaml.safe_load(f) or {}
 d.setdefault('framework',{}).setdefault('update',{})['check_error'] = 'check_failed'
-with open(path, 'w') as f: yaml.dump(d, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+import tempfile, os as _os
+with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+_os.replace(tmp_name, path)
 PY
   }
 fi
