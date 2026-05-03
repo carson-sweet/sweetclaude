@@ -54,8 +54,18 @@ assert sc['framework']['migrated_from'] is not None, 'migrated_from'
 assert sc['features']['product_milestones']['status'] == 'active', 'milestones'
 assert sc['features']['product_backlog']['status'] == 'active', 'backlog'
 assert sc['features']['product_personas']['status'] == 'not_offered', 'personas'
+assert sc['features']['product_stories']['status'] == 'active', 'stories'
 # Old files archived
 assert os.path.exists('$TEST_TMPDIR/.sweetclaude/state/archive/phase.yaml.bak'), 'phase archive'
 assert os.path.exists('$TEST_TMPDIR/.sweetclaude/state/archive/skills.yaml.bak'), 'skills archive'
-print('PASS')
+print('MIGRATION_PASS')
 "
+
+# Test idempotency: re-running should be a no-op
+OUTPUT=$(python3 scripts/migrate-to-sweetclaude-yaml.py \
+  --project-dir "$TEST_TMPDIR" \
+  --installed-version "2.40.0" 2>&1)
+echo "$OUTPUT" | grep -q "Already migrated" || { echo "FAIL: idempotency check failed, output: $OUTPUT"; exit 1; }
+echo "IDEMPOTENCY_PASS"
+
+echo "ALL PASS"

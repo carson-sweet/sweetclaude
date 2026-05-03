@@ -39,6 +39,7 @@ def migrate(project_dir, installed_version):
     # Step 1: write in_progress sentinel immediately
     sentinel = {'schema_version': 1,
                 'framework': {'migration_status': 'in_progress'}}
+    state_dir.mkdir(parents=True, exist_ok=True)
     sc_yaml.write_text(yaml.dump(sentinel))
 
     # Step 2: read phase.yaml
@@ -53,7 +54,7 @@ def migrate(project_dir, installed_version):
     if ir_f.exists():
         for line in ir_f.read_text().splitlines():
             line = line.strip()
-            if line.startswith('- ') and len(line) > 10:
+            if line.startswith('- ') and len(line) > 2:
                 learnings.append(line[2:])
                 if len(learnings) >= 15:
                     break
