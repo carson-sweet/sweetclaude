@@ -30,6 +30,37 @@ All SweetClaude slash commands organized by domain. The core and orchestration c
 | `/sweetclaude:product-milestones blockers` | What is stopping a milestone from completing |
 | `/sweetclaude:product-milestones complete` | Mark achieved with follow-up capture |
 | `/sweetclaude:product-milestones unassigned` | Find work items with no milestone |
+| `/sweetclaude:product-roadmap-analysis` | RICE scoring and stack-rank analysis. Scope and milestone alignment check. Proposed priority order for user confirmation. |
+
+---
+
+## Project Management Workflows
+
+| Command | What it does |
+|---|---|
+| `/sweetclaude:project-issues` | Create, view, update, and close issues. Tracks sprint history per issue. Warns on adrift issues (carried over 2+ sprints). |
+| `/sweetclaude:project-epics` | Group issues into epics. View progress (done/total). Cancel epics and return issues to backlog. Warns if an epic exceeds 12 issues. |
+| `/sweetclaude:project-sprints` | Plan, start, and close sprints. Sprint board grouped by status. Carry/descope/close on sprint closure. Velocity and retrospective on close. Enforces single active sprint. |
+| `/sweetclaude:project-backlog` | Backlog view grouped by priority bucket (NOW/SOONER/SOONISH/LATER/SOMEDAY). Promote issues to sprint. Surface inferred issues from Flow mode. |
+| `/sweetclaude:project-backlog-triage` | INVEST-based grooming session. Works through ungroomed issues one at a time — recommend priority + effort, accept/override/skip/split. Sets status to `ready` when groomed. |
+| `/sweetclaude:project-roadmap` | Priority-stacked roadmap. Create items, activate with workflow routing by type, defer, complete, cancel. Create and view releases. |
+| `/sweetclaude:project-scope` | Define and maintain the project scope document. One statement, in-scope list, out-of-scope list (minimum 3). Cascade review on updates flags conflicting open items. |
+| `/sweetclaude:project-milestones` | Binary business goals — achieved or not. Challenge vague criteria at creation. `achieved`, `missed` sub-commands. |
+| `/sweetclaude:project-mode` | Assess and shift project modes: flow → kanban → shape_up → agile → agile_enterprise. Snapshots state before every shift. Upshift/downshift signal detection. |
+| `/sweetclaude:product-roadmap-analysis` | RICE scoring and stack-rank analysis for roadmap items. Scope and milestone alignment check. Proposed priority order for confirmation. |
+
+---
+
+## Testing Workflows
+
+| Command | What it does |
+|---|---|
+| `/sweetclaude:testing-plan` | Define a test strategy for a feature or release. Scope, test types, environments, entry and exit criteria. Challenges vague exit criteria before accepting. |
+| `/sweetclaude:testing-security` | Structured security review. STRIDE threat model → OWASP Top 10 checklist → dependency audit. P0/P1 findings filed as `now`-priority issues. |
+| `/sweetclaude:testing-compliance` | Compliance control testing. SOC 2 / HIPAA / GDPR / PCI-DSS control catalog. Track status (pass/partial/gap/N/A), log evidence, generate gap report. Gaps filed as issues. |
+| `/sweetclaude:testing-session` | Manual QA session — scripted or exploratory charter. Pass/fail per test case. File bugs mid-session with severity → priority mapping. |
+| `/sweetclaude:testing-performance` | Define load scenarios, record baselines, compare benchmarks. Regression detection with threshold alerts. Integrates with k6, Locust, wrk, or manual runs. |
+| `/sweetclaude:testing-accessibility` | WCAG 2.1 Level AA audit. Automated scan guidance + manual keyboard, screen reader, and visual checklist. Critical findings block release. |
 
 ---
 

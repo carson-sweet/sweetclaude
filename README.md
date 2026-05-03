@@ -15,7 +15,7 @@
 
 ## What SweetClaude Is
 
-A Claude Code plugin covering the full product lifecycle across 61 skills. Works with any language or framework.
+A Claude Code plugin covering the full product lifecycle across 77 skills. Works with any language or framework.
 
 **Major features:**
 
@@ -51,7 +51,7 @@ Then go to your project and run:
 
 → [Full install options, updating, uninstalling](INSTALL.md)
 → [First session walkthrough](QUICKSTART.md)
-→ [All 61 skills by category](docs/user-guide/skills-reference.md)
+→ [All 77 skills by category](docs/user-guide/skills-reference.md)
 
 ## All Commands
 
@@ -76,7 +76,7 @@ Then go to your project and run:
 | `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
 | `/sweetclaude:usage` | View, enable, or disable local usage tracking |
 
-→ [Full command reference — all product, design, code, corpus, and autonomous pipeline skills](COMMANDS.md)
+→ [Full command reference — product, design, code, project management, testing, corpus, and autonomous pipeline skills](COMMANDS.md)
 
 ## How It Works
 

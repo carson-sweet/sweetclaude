@@ -1,9 +1,9 @@
 # Skills Reference
 
-**Version:** 1.2
-**Date:** 2026-05-02
+**Version:** 1.3
+**Date:** 2026-05-03
 
-All 61 skills, organized by domain. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
+All 77 skills, organized by domain. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
 
 You rarely need to memorize commands. `/sweetclaude:go` and `/sweetclaude:find-skill` route automatically based on project state and what you describe. The list below is for when you know what you want.
 
@@ -13,7 +13,7 @@ Many skills accept `$ARGUMENTS` to skip menus: `/sweetclaude:code-testing securi
 
 ## How to Use This Page
 
-If you are looking up a specific skill, jump to its section. The bucket headings are: Orchestration, Product, Design, Code, Documents, plus the specialist subagent roster at the bottom.
+If you are looking up a specific skill, jump to its section. The bucket headings are: Orchestration, Product, Design, Code, Project Management, Testing, Documents, plus the specialist subagent roster at the bottom.
 
 If you are wondering "which skills go together for X?", the [Walkthroughs](walkthroughs.md) page chains skills end-to-end for six common scenarios. This page is the lookup; that page is the recipe.
 
@@ -75,6 +75,7 @@ Strategy and product definition. Useful before any code is written and on existi
 | **Product Sprint Plan** | `/sweetclaude:product-sprint-plan` | Plan a sprint from the backlog. Reports which milestones a sprint advances. Requires `product-backlog` to be `active`. |
 | **Product Market Messaging** | `/sweetclaude:product-market-messaging` | Elevator pitches, value propositions, key messages per audience. |
 | **Product Milestones** | `/sweetclaude:product-milestones [sub]` | Outcome-driven roadmap targets like "Exit Stealth" or "Paid Pilot Live." Sub-commands: `add`, `review`, `link [US-XXX] [MS-XXX]`, `status`, `blockers`, `complete`, `unassigned`. State-tracked: first invocation runs a lightweight setup; use `pause` to suspend, `onboard` for full ceremony. |
+| **Product Roadmap Analysis** | `/sweetclaude:product-roadmap-analysis [analyze\|alignment\|item RM-NNN]` | RICE scoring (Reach × Impact × Confidence ÷ Effort) for all planned and active roadmap items. Scope and milestone alignment check. Proposes a revised stack-rank — applies only on confirmation. |
 
 ---
 
@@ -128,6 +129,39 @@ Implementation. These skills enforce TDD via hooks, run tests and reviews, and m
 2 / security       Auth, injection, secrets, OWASP Top 10
 3 / compliance     Licenses, data handling, privacy, regulatory
 ```
+
+---
+
+## Project Management (10 skills)
+
+Execution-layer tracking. These skills manage the work that delivers the product — not what to build (that's product/), but how the building is organized and tracked.
+
+| Skill | Invocation | What it does |
+|---|---|---|
+| **Project Issues** | `/sweetclaude:project-issues` | Create, view, update, and close issues. Maintains sprint history per issue. Warns on adrift issues (carried over 2+ sprints). Supports `list`, `backlog`, `view`, `new`, `update`, `close`, `reopen`. |
+| **Project Epics** | `/sweetclaude:project-epics` | Group issues into epics with progress tracking. Cancel an epic and its issues return to backlog. Warns if an epic exceeds 12 issues. |
+| **Project Sprints** | `/sweetclaude:project-sprints` | Full sprint lifecycle: plan, start, board, update, close, retrospective. Velocity calculated on close. Sprint history maintained per issue. Enforces single active sprint. |
+| **Project Backlog** | `/sweetclaude:project-backlog` | Backlog view grouped by priority bucket (NOW/SOONER/SOONISH/LATER/SOMEDAY/UNESTIMATED). Promote issues to a sprint. Surface inferred issues from Flow mode inference. |
+| **Project Backlog Triage** | `/sweetclaude:project-backlog-triage` | Structured grooming session. Works through ungroomed issues one at a time using INVEST criteria. Recommend priority + effort, accept/override/skip/split/cancel. Sets status to `ready` when groomed. |
+| **Project Roadmap** | `/sweetclaude:project-roadmap` | Priority-stacked roadmap with force-ranked items. Create, activate (routes to correct downstream workflow by type), defer, complete, cancel. Create and view releases. |
+| **Project Scope** | `/sweetclaude:project-scope` | Singleton scope document — one statement, in-scope list, minimum three out-of-scope items. Cascade review on update flags conflicting open roadmap items and issues. |
+| **Project Milestones** | `/sweetclaude:project-milestones` | Binary business goals — achieved or not. Criteria must be evaluable as true/false. `list`, `view`, `new`, `achieved`, `missed`. |
+| **Project Mode** | `/sweetclaude:project-mode` | Assess and shift project modes: flow → kanban → shape_up → agile → agile_enterprise. Snapshots state before every shift. Detects upshift/downshift signals from artifact counts. Hard block: agile_enterprise → flow requires `--force`. |
+
+---
+
+## Testing (6 skills)
+
+Independent QA, security, compliance, and performance validation — not tied to a single feature's TDD cycle. All actionable findings file directly to project-issues.
+
+| Skill | Invocation | What it does |
+|---|---|---|
+| **Testing Plan** | `/sweetclaude:testing-plan` | Define a test strategy for a feature, release, or area. Scope, test types, environments, entry criteria, exit criteria. Challenges vague exit criteria before accepting. |
+| **Testing Security** | `/sweetclaude:testing-security` | Structured security review. STRIDE threat model → OWASP Top 10 checklist → dependency audit. P0 findings block release. P0/P1 filed as `now`-priority issues. |
+| **Testing Compliance** | `/sweetclaude:testing-compliance` | Control testing and evidence collection for SOC 2, HIPAA, GDPR, and PCI-DSS. Track per-control status (pass/partial/gap/N/A), log evidence locations, generate gap reports. Gaps filed as issues. |
+| **Testing Session** | `/sweetclaude:testing-session` | Manual QA session — scripted test cases or exploratory charter. Pass/fail per case. File bugs mid-session; severity maps to issue priority. Resume open sessions. |
+| **Testing Performance** | `/sweetclaude:testing-performance` | Load scenario definitions, baseline recording, and benchmark comparison. Regression detection with configurable p50/p95/p99 and error rate thresholds. Tool-agnostic: works with k6, Locust, wrk, or manual runs. |
+| **Testing Accessibility** | `/sweetclaude:testing-accessibility` | WCAG 2.1 Level AA audit. Automated scan guidance + manual keyboard navigation, screen reader, and visual checklist. Critical findings block release. Findings filed as issues. |
 
 ---
 
