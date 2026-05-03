@@ -44,9 +44,11 @@ def migrate(project_dir, installed_version):
 
     # Step 2: read phase.yaml
     phase = yaml.safe_load(phase_f.read_text()) if phase_f.exists() else {}
+    phase = phase or {}
 
     # Step 3: read skills.yaml
     skills_raw = yaml.safe_load(skills_f.read_text()) if skills_f.exists() else {}
+    skills_raw = skills_raw or {}
     skills_raw.pop('schema_version', None)
 
     # Step 4: read improvement-register.md (extract bullet lines, max 15)
@@ -79,6 +81,8 @@ def migrate(project_dir, installed_version):
                 }
             elif old_status == 'uninitialized':
                 features[new_key] = blank_feature()
+            else:
+                print(f"Warning: unknown status '{old_status}' for '{old_key}' — treating as not_offered", file=sys.stderr)
 
     # Step 6: active work item
     awi = phase.get('active_work_item', {}) or {}
@@ -143,7 +147,7 @@ def migrate(project_dir, installed_version):
     for src, name in [(phase_f, 'phase.yaml.bak'),
                       (skills_f, 'skills.yaml.bak')]:
         if src.exists():
-            shutil.copy2(src, archive / name)
+            shutil.move(src, archive / name)
 
     print(f"Migration complete. Old files archived to {archive}/")
 
