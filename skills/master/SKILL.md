@@ -1,5 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
+user-invocable: false
 description: SweetClaude master skill — phase router, interaction model, and session entry point. Manages the two-dimension lifecycle model (version_stage + active work item), deference levels, conversation branch tracking, and creative partnership. Use at session start or when the user invokes SweetClaude directly.
 ---
 
