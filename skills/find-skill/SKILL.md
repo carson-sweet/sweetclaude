@@ -113,9 +113,34 @@ Store the result as `{starting_phase}` — used in Step 7.
 | Dependency upgrade | ASSESS, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
 | Infrastructure change | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
 | Rollback / revert | DIAGNOSE, SHIP | `sweetclaude:code-issue` |
-| Testing | any | `sweetclaude:code-testing` |
-| Code / security / compliance review | VERIFY | `sweetclaude:code-review` |
+| Code review | VERIFY | `sweetclaude:code-review` |
 | Compliance requirement | ASSESS, DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-feature` |
+
+### project/ — managing the work
+
+| Work Type | Template Phases | Skill to invoke |
+|---|---|---|
+| Issue / bug tracking | any | `sweetclaude:project-issues` |
+| Epic management | any | `sweetclaude:project-epics` |
+| Sprint planning and execution | PLAN, IMPLEMENT | `sweetclaude:project-sprints` |
+| Backlog view and promotion | any | `sweetclaude:project-backlog` |
+| Backlog grooming / triage | any | `sweetclaude:project-backlog-triage` |
+| Roadmap management | any | `sweetclaude:project-roadmap` |
+| Roadmap prioritization / RICE analysis | any | `sweetclaude:product-roadmap-analysis` |
+| Scope definition and updates | DEFINE, any | `sweetclaude:project-scope` |
+| Milestone tracking | any | `sweetclaude:project-milestones` |
+| Project mode (flow/kanban/agile) | any | `sweetclaude:project-mode` |
+
+### testing/ — validating the work
+
+| Work Type | Template Phases | Skill to invoke |
+|---|---|---|
+| Test plan / test strategy | PLAN, VERIFY | `sweetclaude:testing-plan` |
+| Security review / threat model | VERIFY, any | `sweetclaude:testing-security` |
+| Compliance control testing | any | `sweetclaude:testing-compliance` |
+| Manual QA session | VERIFY | `sweetclaude:testing-session` |
+| Performance / load testing | VERIFY, any | `sweetclaude:testing-performance` |
+| Accessibility audit | VERIFY, any | `sweetclaude:testing-accessibility` |
 
 ### operations/ — keeping it running
 
@@ -152,6 +177,8 @@ Store the result as `{starting_phase}` — used in Step 7.
    - **product/** Plan 3 → `sweetclaude:product-sprint-plan`
    - **design/** Plan 3 → `sweetclaude:design-ux`
    - **code/** Plan 3 hotfix/security-patch → `sweetclaude:code-issue`; external-integration → `sweetclaude:code-feature`
+   - **project/** Plan 3 → `sweetclaude:project-issues`
+   - **testing/** Plan 3 → `sweetclaude:testing-session`
    - **operations/** Plan 3 → `sweetclaude:code-issue`
 
    If the user chooses **defer**: add the work type to `docs/backlog/` and stop. Do not write state.

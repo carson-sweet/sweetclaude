@@ -73,13 +73,15 @@ Runs after pre-flight passes.
 
 ## Domain Buckets
 
-SweetClaude organizes skills into six domain buckets. The `find-skill` skill classifies work into the right bucket.
+SweetClaude organizes skills into eight domain buckets. The `find-skill` skill classifies work into the right bucket.
 
 ```
 strategy/    — Why does this matter and to whom? Concept, pain, ICP, competitive, research, messaging.
 product/     — What to build and why? Discovery, brief, PRD, stories, scope, backlog, release planning.
 design/      — How is it structured? Architecture, tech spec, UX, data model, API, services, infra.
-code/        — Writing and verifying code. TDD, issues, debt, testing, review, migration, hotfix, security patch.
+code/        — Writing and verifying code. TDD, issues, debt, review, migration, hotfix, security patch.
+project/     — Managing the work. Issues, epics, sprints, backlog, roadmap, scope, modes, milestones.
+testing/     — Validating the work. QA sessions, security reviews, compliance, performance, accessibility.
 operations/  — Keeping it running. Something broke, postmortem, break-glass notes, SLA review, security planning.
 deploy/      — Shipping it. (Deferred — not yet scoped.)
 ```
@@ -89,7 +91,9 @@ deploy/      — Shipping it. (Deferred — not yet scoped.)
 *strategy/* — concept articulation, pain analysis, customer profiling, strategic competitive analysis, research papers, meeting prep, market messaging
 *product/* — new features, product briefs, PRDs, user stories, scope changes, backlog, sprint planning, product-level competitive analysis
 *design/* — architecture, tech specs, UX, data models, API design, services, infrastructure, impact analysis
-*code/* — bug fixes, feature implementation, tech debt, TDD, testing, code review, PR preparation
+*code/* — bug fixes, feature implementation, tech debt, TDD, code review, PR preparation
+*project/* — issue and epic management, sprint planning and execution, roadmap management, scope definition, backlog grooming, mode selection, milestone tracking
+*testing/* — manual QA sessions, security reviews, compliance control testing, performance benchmarking, accessibility audits, test plan definition
 *operations/* — something broke, postmortem, break-glass notes, SLA/error budget review, monitoring setup, onboarding playbook
 
 Any work can shift buckets as understanding deepens. This is normal.
@@ -154,12 +158,14 @@ Follow `~/.claude/rules/sweetclaude/interaction-model.md` at all times:
 
 ## Skill Surfacing
 
-Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available. The config has six domain buckets:
+Read `~/.claude/config/sweetclaude/phase-skills.yaml` to determine which skills are available. The config has eight domain buckets:
 
 - **`strategy:`** — strategic positioning, competitive analysis, research, messaging
-- **`product:`** — discovery, product definition, stories, scope, backlog
+- **`product:`** — discovery, product definition, stories, scope, backlog, roadmap analysis
 - **`design:`** — architecture, specs, UX, data model, API, services, infrastructure
-- **`code:`** — TDD, implementation, testing, code review
+- **`code:`** — TDD, implementation, code review
+- **`project:`** — issues, epics, sprints, backlog, roadmap, scope, milestones, mode
+- **`testing:`** — test plans, security reviews, compliance, manual QA sessions, performance, accessibility
 - **`deploy:`** — shipping (deferred)
 - **`operations:`** — operations skills (something-broke, postmortem, break-glass-notes, sla-error-budget-review, monitoring-alerting, onboarding-playbook)
 
