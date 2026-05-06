@@ -31,7 +31,7 @@ if [ "$product_base" != "MANIFEST_MISSING" ]; then
   python3 -c "
 import glob, re, os
 base = '${product_base}'
-HORIZON_ORDER = {'next':1,'sooner':2,'soon':3,'later':4,'someday':5}
+HORIZON_ORDER = {'next':1,'sooner':2,'soon':3,'later':4,'someday':5,'unscheduled':6}
 rows = []
 for f in sorted(glob.glob(os.path.join(base,'backlog','BL-*.md'))):
     c = open(f).read()
