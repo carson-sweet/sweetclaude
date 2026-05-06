@@ -511,6 +511,13 @@ List each follow-up as: "<category>: <short title>". Enter blank line when done.
 ```
 
 9. For each follow-up entered, invoke `sweetclaude:product/backlog` with arguments that route to its `add` flow. Pass the category as context. Do not inline the backlog-add logic — delegate. If the user indicated a strategic item, the backlog skill's existing router will redirect to `strategy/`.
+
+Before delegating each follow-up, ask: "Horizon for this item? (next/sooner/soon/later/someday — press enter to skip): " If the user provides a horizon, pass it as the `horizon` field when creating the item.
+
+If the user also provides a priority of P0 or P1 AND the horizon is `later` or `someday`, surface before saving:
+> "P0/P1 item assigned to '{horizon}' — these usually signal urgent work. Reconcile: raise the horizon (next/sooner/soon), lower the priority (P2/SPIKE/none), or keep as-is with a note."
+Wait for response; apply whichever field the user adjusts, or write both as specified if they choose keep-as-is.
+
 10. Tell the user: "MS-XXX marked achieved. {N} follow-ups filed."
 
 ### `unassigned` — Hygiene check
