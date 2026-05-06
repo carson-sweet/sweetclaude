@@ -52,23 +52,23 @@ Present backlog grouped by priority bucket:
 Backlog — {N} unscheduled issues
 ══════════════════════════════════════════════════════════════
 
-NOW ({n})
+\033[1;34mNEXT\033[0m ({n})
   I-NNN  story  xs  Title of issue
 
-SOONER ({n})
+\033[1;34mSOONER\033[0m ({n})
   I-NNN  story  m   Title of issue
   I-NNN  bug    s   Title of issue
 
-SOONISH ({n})
+\033[1;34mSOON\033[0m ({n})
   ...
 
-LATER ({n})
+\033[1;34mLATER\033[0m ({n})
   ...
 
-SOMEDAY ({n})
+\033[1;34mSOMEDAY\033[0m ({n})
   ...
 
-UNESTIMATED ({n} — no priority or effort set)
+\033[1;34mUNESTIMATED\033[0m ({n} — no priority or effort set)
   I-NNN  story  —   Title of issue
 ```
 
