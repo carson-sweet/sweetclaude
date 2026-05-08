@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:claude-config-audit
+name: claude-config-audit
 user-invocable: false
 description: "Scan the CLAUDE.md hierarchy, settings.json, and ~/.claude/rules/ for instructions that conflict with SweetClaude. Each conflict is raised for reconciliation. Accepted conflicts are logged to .sweetclaude/state/known-conflicts.md."
 ---

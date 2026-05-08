@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:testing-plan
+name: testing-plan
 user-invocable: true
 description: "Define and maintain a test strategy for a feature or release. Covers scope, test types, environments, entry/exit criteria, and ownership."
 ---

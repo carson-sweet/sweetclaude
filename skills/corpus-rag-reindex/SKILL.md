@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:corpus-rag-reindex
+name: corpus-rag-reindex
 user-invocable: true
 description: "Rebuild RAG collections from source files. Use when embeddings are corrupted, lost, or when the embedding model changes. Recovery tool, not a shortcut around the pipeline — if your source files are messy, the rebuilt index will be messy."
 ---

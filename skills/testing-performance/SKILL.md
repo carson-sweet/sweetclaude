@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:testing-performance
+name: testing-performance
 user-invocable: true
 description: "Define load scenarios, establish performance baselines, set thresholds. Compare benchmark results. Ties into performance optimization phase gates."
 ---

@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:project-gh-import-issues
+name: project-gh-import-issues
 user-invocable: true
 description: "Import open GitHub Issues into the local issue store as I-NNN artifacts. Idempotent — issues already imported by GitHub issue number are skipped."
 ---

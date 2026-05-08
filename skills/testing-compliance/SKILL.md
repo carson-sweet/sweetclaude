@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:testing-compliance
+name: testing-compliance
 user-invocable: true
 description: "Compliance control testing and evidence collection. SOC 2, HIPAA, GDPR, PCI-DSS. Track control status, log evidence, and generate gap reports."
 ---

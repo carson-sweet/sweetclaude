@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:product-user-stories
+name: product-user-stories
 user-invocable: true
 description: Write user stories for a defined scope — Gherkin or generic format, scoped to all personas, SLC, or MVP. Uses best-practice naming and numbering.
 category: product

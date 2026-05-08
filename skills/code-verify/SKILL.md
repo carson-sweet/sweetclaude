@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:code-verify
+name: code-verify
 user-invocable: true
 description: "Run verification before claiming work is complete. Evidence before claims — always. Required before any success assertion, commit, or phase advancement."
 ---

@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:product-terminology
+name: product-terminology
 user-invocable: true
 description: "Define and maintain a shared domain glossary. Each entry records a term's name, definition, rationale, aliases, and words to avoid — preventing naming drift across docs, code, and conversation."
 ---

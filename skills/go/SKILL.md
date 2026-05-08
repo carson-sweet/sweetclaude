@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:go
+name: go
 user-invocable: true
 description: Assess what to work on next and propose it. Stops at the first obvious item found — unfinished work, hot bugs, roadmap, or debt — and waits for user approval before doing anything.
 ---

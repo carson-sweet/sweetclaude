@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:retro
+name: retro
 user-invocable: true
 description: "Review and maintain the improvement register. Surfaces top learnings for confirmation, lets you retire stale entries, and writes a session-close summary to the checkpoint. Run at the end of a work session or when the register feels stale."
 ---

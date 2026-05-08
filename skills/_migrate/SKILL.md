@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:_migrate
+name: _migrate
 user-invocable: false
 description: One-time migration from phase.yaml/skills.yaml to sweetclaude.yaml. Also handles schema version upgrades. Idempotent — safe to re-run.
 ---

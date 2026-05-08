@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:design-tech-spec
+name: design-tech-spec
 user-invocable: true
 description: Technical specification — every decision a developer needs before writing the first line of code. Repo, environments, CI/CD, hosting, auth, monitoring, scaling.
 category: technical
