@@ -64,6 +64,17 @@ print('WIP_LIMIT=' + str(d.get('wip_limit','null')))
 print('TDD_DEFAULT=' + str(d.get('default_tdd_level','1')))
 " 2>/dev/null || echo -e "MODE=unset\nWIP_LIMIT=null\nTDD_DEFAULT=1"
 
+# Active sprint check (agile drift warning)
+python3 -c "
+import glob, yaml, os
+d = '.sweetclaude/artifacts/sprints'
+if not os.path.exists(d):
+    print('HAS_ACTIVE_SPRINT=false')
+else:
+    has = any((yaml.safe_load(open(f)) or {}).get('status') == 'active' for f in glob.glob(os.path.join(d, '*.yaml')))
+    print('HAS_ACTIVE_SPRINT=' + ('true' if has else 'false'))
+" 2>/dev/null || echo "HAS_ACTIVE_SPRINT=false"
+
 # Known config conflicts
 python3 -c "
 import re, os
@@ -160,6 +171,8 @@ For each of the following, emit a `-` list item if the condition is true. If non
 - checkpoint_next is set (non-null, non-empty): `- Checkpoint: {checkpoint_next}`
 - scratch files found: `- Scratch: {filenames}`
 - IN_PROGRESS_ISSUES non-empty: `- {N} issue(s) in progress: {comma-separated IDs}`
+- MODE=kanban AND WIP_LIMIT is not null AND len(IN_PROGRESS_ISSUES) >= WIP_LIMIT: `- ⚠ WIP limit reached: {N}/{WIP_LIMIT} items in progress`
+- MODE=agile AND HAS_ACTIVE_SPRINT=false: `- ⚠ No active sprint`
 
 Then:
 

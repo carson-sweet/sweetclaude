@@ -136,7 +136,44 @@ If the user picks Start planning, invoke `sweetclaude:product-milestones`. If So
 ## Step 5: Handle the user's selection
 
 **Proceed:**
-Invoke the appropriate skill from the routing table below. Before invoking, one sentence explaining what you're doing.
+Before invoking an IMPLEMENT-phase skill, check mode gates:
+
+```bash
+python3 -c "
+import yaml, os, glob, sys
+PROJECT_DIR = os.environ.get('PROJECT_DIR', os.getcwd())
+gates_path = os.path.join(PROJECT_DIR, '.sweetclaude/state/effective-gates.yaml')
+if not os.path.exists(gates_path):
+    print('GATES_OK'); sys.exit()
+d = yaml.safe_load(open(gates_path)) or {}
+mode = d.get('mode', '')
+gates = [g for g in d.get('gates', []) if g.get('phase') == 'IMPLEMENT' and g.get('action') == 'block']
+for gate in gates:
+    cond = gate.get('condition', '')
+    req = gate.get('requires', '')
+    msg = gate.get('message', 'Gate condition not met.')
+    if req == 'betting_table_approved' and mode == 'shape_up':
+        sc = yaml.safe_load(open(os.path.join(PROJECT_DIR, '.sweetclaude/state/sweetclaude.yaml'))) or {}
+        active_id = ((sc.get('work') or {}).get('active') or {}).get('id') or ''
+        issue_path = os.path.join(PROJECT_DIR, '.sweetclaude/artifacts/issues', f'{active_id}.yaml')
+        approved = bool(active_id and os.path.exists(issue_path) and (yaml.safe_load(open(issue_path)) or {}).get('betting_table_approved'))
+        if not approved:
+            print('BLOCKED:' + msg); sys.exit()
+    if cond == 'no_active_sprint' and mode == 'agile':
+        sprints_dir = os.path.join(PROJECT_DIR, '.sweetclaude/artifacts/sprints')
+        has_active = os.path.exists(sprints_dir) and any(
+            (yaml.safe_load(open(f)) or {}).get('status') == 'active'
+            for f in glob.glob(os.path.join(sprints_dir, '*.yaml'))
+        )
+        if not has_active:
+            print('BLOCKED:' + msg); sys.exit()
+print('GATES_OK')
+"
+```
+
+If output starts with `BLOCKED:`, do not invoke any skill. Output the text after `BLOCKED:` and stop.
+
+Otherwise, invoke the appropriate skill from the routing table below. One sentence explaining what you're doing.
 
 **Review other items:**
 List the next 2–3 candidates from the priority tiers, in order. For each: name it, say which tier it came from, and say which skill would handle it. Then call AskUserQuestion again with one option per candidate plus a "None of these" escape.

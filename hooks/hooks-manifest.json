@@ -48,6 +48,15 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/artifact-guardian.sh"
     },
     {
+      "file": "wip-limit.sh",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "required": true,
+      "scope": "project",
+      "purpose": "Blocks IMPLEMENT entry in Kanban mode when WIP limit is reached",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/wip-limit.sh"
+    },
+    {
       "file": "auto-test-runner.sh",
       "event": "PostToolUse",
       "matcher": "Write|Edit",
