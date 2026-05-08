@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: guardian-on
 user-invocable: false
-disable-model-invocation: true
 description: Enable the Protocol Guardian — enforces skill invocations, TDD discipline, and artifact saves for the current session
 ---
 

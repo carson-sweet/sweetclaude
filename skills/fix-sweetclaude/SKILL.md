@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: "Audit and repair SweetClaude's own configuration for this project. Checks CLAUDE.md accuracy, phase state vs reality, file locations, skills.yaml vs artifact parity, onboarding gaps, empty registers, and untracked files. Proposes fixes for user approval."
 ---
 

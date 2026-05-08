@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: "Use when hibernating or unhibernating a project managed by SweetClaude. Extends hibernate-project with SweetClaude phase state, deference level, and improvement register handling. NEVER invoke without explicit user request. Triggers on explicit keywords: 'hibernate', 'freeze', 'shelve', 'thaw', 'unhibernate'."
 ---
 

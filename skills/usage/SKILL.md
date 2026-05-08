@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: "Toggle and view local usage tracking. Track skill usage, phase gate outcomes, TDD enforcement events, and session patterns. All data is local — stored in .sweetclaude/metrics/ and committed with the project. Use: /sweetclaude:usage, /sweetclaude:usage on, /sweetclaude:usage off"
 ---
 

@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: "Record and track design and architecture decisions with context, options considered, decision made, and rationale. Queryable later. Replaces ADR templates."
 ---
 

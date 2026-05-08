@@ -1,7 +1,6 @@
 ---
 name: project-assess-shape
 user-invocable: true
-disable-model-invocation: true
 description: Interview user and recommend a SweetClaude project mode (Flow, Kanban, Shape Up, or Agile)
 version: 1.0.0
 ---

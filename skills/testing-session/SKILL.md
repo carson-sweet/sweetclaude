@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:testing-session
 user-invocable: true
-disable-model-invocation: true
 description: "Run a manual QA session. Charter-based or scripted. Pass/fail tracking per test case. File bugs directly to project-issues."
 ---
 

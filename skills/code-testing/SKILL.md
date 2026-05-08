@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: "Run any combination of test suite, mutation testing, security review, and PR pre-check. Opens a menu at start — pick one or several."
 ---
 
