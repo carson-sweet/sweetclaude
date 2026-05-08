@@ -1,7 +1,6 @@
 ---
 name: sweetclaude-behavioral-regression
 user-invocable: false
-disable-model-invocation: true
 description: Validates that mode enforcement is working correctly across all four modes. Run after implementing the modes system or after any enforcement layer change.
 version: 1.0.0
 ---

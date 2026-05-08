@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:corpus-triage
 user-invocable: true
-disable-model-invocation: true
 description: "Classify files in corpus/raw/inbox/ as keep-as-is, needs-reconciliation, discard, or defer. Batch classification — fast decisions, no synthesis. Second step of the document-corpus pipeline; requires consolidate complete."
 ---
 

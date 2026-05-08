@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: "Plan a sprint by selecting stories from the backlog, estimating scope, and producing a sprint commitment."
 ---
 

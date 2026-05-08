@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:mockup-extract
 user-invocable: true
-disable-model-invocation: true
 description: "Pull an existing production component into the mockup sandbox as an accurate 'Current' baseline for design iteration. Traces the full import graph, stubs external dependencies, syncs design tokens. Use before mockup-sandbox when redesigning a component that already exists in the app."
 ---
 

@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:corpus-promote
 user-invocable: true
-disable-model-invocation: true
 description: "Finalize approved documents from corpus/working/. Move to corpus/canonical/, write provenance sidecars, archive source files, index into RAG, commit. No creative decisions — pure finalization. Fourth step of the document-corpus pipeline; requires reconcile complete or in-progress."
 ---
 

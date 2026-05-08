@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:corpus-rag-setup
 user-invocable: true
-disable-model-invocation: true
 description: "Configure and run local semantic search on project documents using mcp-local-rag. Supports PDF, DOCX, TXT, Markdown. Default scope is canonical documents only — gates raw indexing with a noise check. Fully offline; no external services or API keys required."
 ---
 

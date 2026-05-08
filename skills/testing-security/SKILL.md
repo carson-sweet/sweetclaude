@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:testing-security
 user-invocable: true
-disable-model-invocation: true
 description: "Structured security review. Threat modeling (STRIDE), OWASP Top 10 checklist, findings tracked as issues. Covers auth, injection, data handling, and dependencies."
 ---
 

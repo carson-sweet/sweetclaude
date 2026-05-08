@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:project-sprints
 user-invocable: true
-disable-model-invocation: true
 description: "Sprint planning, activation, board view, and close. Tracks velocity and retrospectives."
 ---
 
