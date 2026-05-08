@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:project-themes
 user-invocable: true
-disable-model-invocation: true
 description: "Manage themes — optional domain-grouping labels on stories. Classification attributes, not hierarchy nodes. For large multi-service projects with 50+ issues where epics alone leave the inventory unnavigable."
 ---
 

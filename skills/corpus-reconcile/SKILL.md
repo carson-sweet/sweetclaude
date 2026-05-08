@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:corpus-reconcile
 user-invocable: true
-disable-model-invocation: true
 description: "Take staged files and work with the user to produce approved canonical documents in corpus/working/. Drafting, merging, refining. Third step of the document-corpus pipeline; requires triage complete."
 ---
 

@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:testing-accessibility
 user-invocable: true
-disable-model-invocation: true
 description: "WCAG 2.1 Level AA audit. Automated scan guidance + manual keyboard, screen reader, and visual checklist. Findings filed as issues."
 ---
 

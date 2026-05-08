@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:testing-performance
 user-invocable: true
-disable-model-invocation: true
 description: "Define load scenarios, establish performance baselines, set thresholds. Compare benchmark results. Ties into performance optimization phase gates."
 ---
 

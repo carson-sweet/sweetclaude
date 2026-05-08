@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:deploy-ship
 user-invocable: true
-disable-model-invocation: true
 description: "SHIP phase skill. Pre-ship checklist, deployment target validation, smoke test documentation, and rollback plan. The first skill in the deploy bucket. Bridges VERIFY to live production."
 ---
 

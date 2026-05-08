@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:init
 user-invocable: true
-disable-model-invocation: true
 description: "Bootstrap the SweetClaude infrastructure for any project — new or existing. Creates .sweetclaude/state/, strategy/, and CLAUDE.md. Thin infrastructure primitive; does not run product discovery (use /sweetclaude:setup for that)."
 ---
 

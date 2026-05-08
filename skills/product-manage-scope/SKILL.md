@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: Track scope changes when items move between in-scope and out-of-scope. Logs the change with rationale and date. Use when scope decisions are made during any phase.
 ---
 

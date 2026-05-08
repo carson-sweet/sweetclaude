@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:project-gh-sync-issues
 user-invocable: true
-disable-model-invocation: true
 description: "Bidirectional status sync between local I-NNN issues and GitHub Issues. Pass 1: GH closed → local done. Pass 2: local done → gh issue close."
 ---
 
