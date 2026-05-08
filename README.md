@@ -38,7 +38,7 @@ Start Claude Code in your project folder as you normally would, then inside Clau
 Once install is complete, run:
 
 ```
-/sweetclaude:go introduce me to sweetclaude
+/sweetclaude:help
 ```
 
 If you want to do a manual install:
