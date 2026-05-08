@@ -4,6 +4,17 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-3.52.12-blue)](https://github.com/carson-sweet/sweetclaude/releases) [![Behavioral Contracts](https://img.shields.io/badge/behavioral_contracts-15%2F15_passing-brightgreen)](docs/user-guide/behavioral-contracts.md)
 
+## TL;DR
+
+Start Claude Code and run:
+```
+/plugin marketplace add https://github.com/carson-sweet/sweetclaude
+/plugin install sweetclaude@sweetclaude
+/sweetclaude:help
+```
+
+## What It Is
+
 A software development partner for the full project lifecycle — from the first idea through design, implementation, testing, and ship. SweetClaude teaches itself about your project and preferences through conversation, then applies those learnings to deal with the less-fun parts of the project.
 
 SweetClaude works well when structure, traceability, and product thinking is valued over raw coding speed. It's the wrong tool if you **just** want to go faster — we suggest [GStack](https://github.com/garry-tan/gstack) if speed is your primary goal. It was built for software development, but has also been used successfully for academic research, product marketing strategy, and other knowledge-intensive work. 
