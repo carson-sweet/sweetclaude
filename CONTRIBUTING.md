@@ -99,6 +99,16 @@ This runs 15 tests against the current model version. If your change causes a FA
 
 ---
 
+## Dev Setup
+
+After cloning, activate the pre-commit hook that blocks gitignored files from entering history:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+---
+
 ## Submitting
 
 1. Fork the repo
