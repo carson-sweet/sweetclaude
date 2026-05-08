@@ -32,7 +32,7 @@ cd sweetclaude
 
 The installer backs up your existing `~/.claude/` configuration, copies skills, hooks, agents, rules, and config files, wires TDD enforcement hooks into Claude Code's `settings.json`, and writes an `uninstall.sh` and `restore-config.sh` so you can roll back cleanly.
 
-After install, every Claude Code session — in any project folder — has 52 SweetClaude skills available as `/sweetclaude:something` commands.
+After install, every Claude Code session — in any project folder — has over 100 SweetClaude skills available as `/sweetclaude:something` commands.
 
 If you only want the strategy and product skills (no TDD hooks, no subagent infrastructure), install the lighter variant:
 
@@ -117,7 +117,7 @@ The "Is there anything messy" question is intentional. It is the thing most onbo
 You set SweetClaude up yesterday. You are coming back today.
 
 ```
-/sweetclaude
+/sweetclaude:go
 ```
 
 That is it. SweetClaude reads `sweetclaude.yaml`, sees what work item is active, checks the phase exit criteria, and either advances or tells you what is missing. It does not show a menu. It just goes.

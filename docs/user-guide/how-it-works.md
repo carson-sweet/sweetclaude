@@ -161,7 +161,7 @@ Claude Code sessions die. Context windows fill. Networks drop. SweetClaude is de
 
 The structured state files in `.sweetclaude/state/` are the source of truth — not conversation history. Skills re-read state files at every step rather than relying on what was said earlier. Decisions go to `decision-log.md`. Assumptions go to `assumption-register.md`. Scope changes go to `scope-changes.md`. Improvement feedback goes to `improvement-register.md`.
 
-When you resume a session, `/sweetclaude` reads state and re-orients. You do not have to remember what you were doing.
+When you resume a session, `/sweetclaude:go` reads state and re-orients. You do not have to remember what you were doing.
 
 `.sweetclaude/` is intentionally separate from your distributable code — SweetClaude keeps its own artifacts there so they never mingle with the codebase you ship. This is why `.sweetclaude/` should be committed to git. The state is project history, not scratch. If you switch machines or someone else picks up the work, the context travels with the repo.
 

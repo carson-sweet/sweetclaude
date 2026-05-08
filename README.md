@@ -132,7 +132,7 @@ TDD hooks physically block test file modification during implementation and run 
 
 You can invoke skills directly if you know what you want. These are the most common. You can also refer to the [complete skills reference](docs/user-guide/skills-reference.md).
 
-### Primary Commands
+### Primary
 | Command | What it does |
 |---|---|
 | `/sweetclaude:go` | Pick up where you left off. Reads state, checks phase exit criteria, routes to the right skill. Pass plain-English arguments to describe what you want. |
@@ -174,7 +174,7 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 
 ## License
 
-[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later) — free to use, modify, and distribute. No restrictions for personal or commercial tools you build. AGPL obligations activate only if you deploy SweetClaude as a network service offered to others — full terms in [LICENSE](LICENSE).
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later) — free to use, modify, and distribute. No restrictions for personal or commercial tools you build — you just can't monetize SweetClaude directly, via distribution or SaaS. Full terms in [LICENSE](LICENSE).
 
 **Enterprises**: use the [contact form on the project owner's website](https://www.carsonsweet.com) to inquire about licensing or customizations for your organization's needs.
 
