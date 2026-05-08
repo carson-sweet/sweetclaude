@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: false
-disable-model-invocation: true
 description: "Internal TDD process skill — invoked by code-feature, code-issue, and code-debt. Not a direct user entry point. Defines the four TDD levels (hotfix, light, standard, full) and the rules that govern all implementation work."
 ---
 

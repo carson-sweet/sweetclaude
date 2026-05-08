@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-architecture
 user-invocable: true
-disable-model-invocation: true
 description: Define system architecture — components, boundaries, communication patterns, data flow, and compliance requirements. Produces ADRs and an architecture document.
 category: technical
 ---
