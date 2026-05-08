@@ -1,7 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-disable-model-invocation: true
 description: "Design the data model: entities, relationships, constraints, indexes, and migration strategy. Produces schema definitions and migration plans."
 category: technical
 ---

@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-wireframes
 user-invocable: true
-disable-model-invocation: true
 description: Generate HTML/CSS wireframes from user flows. One self-contained HTML file per flow, covering all key screen states. Reads visual style from ux.yaml if available; uses neutral defaults otherwise.
 category: design
 ---

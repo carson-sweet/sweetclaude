@@ -2,7 +2,6 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:design-ux-review
 user-invocable: true
-disable-model-invocation: true
 description: Virtual UX review session. Spawns parallel subagents — one per persona — each walking through a flow or wireframe independently and returning structured feedback. Synthesizes findings into prioritized recommendations. All output labeled synthetic.
 category: design
 ---
