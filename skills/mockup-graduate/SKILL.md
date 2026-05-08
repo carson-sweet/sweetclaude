@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:mockup-graduate
+name: mockup-graduate
 user-invocable: true
 description: "Move an approved mockup from the sandbox into the main application. Wires real data, routing, auth, and error handling. Extracts acceptance criteria for TDD. The design-to-IMPLEMENT bridge."
 ---

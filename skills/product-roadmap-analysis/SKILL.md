@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:product-roadmap-analysis
+name: product-roadmap-analysis
 user-invocable: true
 description: "RICE scoring and stack-rank analysis for roadmap items. Alignment check against milestones and scope. Proposed re-priority for user confirmation."
 ---

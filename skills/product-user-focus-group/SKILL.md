@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:product-user-focus-group
+name: product-user-focus-group
 user-invocable: true
 description: "Synthetic panel research using persona archetypes as parallel subagent respondents. Three modes: ask (open qualitative), concept-test (comparison), message-test (variant testing). All outputs mandatorily labeled synthetic."
 category: product

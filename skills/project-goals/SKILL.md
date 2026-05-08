@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:project-goals
+name: project-goals
 user-invocable: true
 description: "Manage project goals — binary business goals. Create, view, mark achieved or missed."
 ---

@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:project-backlog-triage
+name: project-backlog-triage
 user-invocable: true
 description: "Structured backlog grooming session. Applies INVEST criteria and sets priority and effort estimates on ungroomed issues one at a time."
 ---

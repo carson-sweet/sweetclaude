@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:project-mode
+name: project-mode
 user-invocable: true
 description: "Assess and shift project modes. Flow → Kanban → Shape Up → Agile → Agile Enterprise. Creates a snapshot before any transition."
 ---

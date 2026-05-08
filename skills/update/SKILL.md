@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:update
+name: update
 user-invocable: true
 description: Update SweetClaude to the latest version from GitHub (or a local repo). Syncs skills, rules, hooks, config, and agents across all projects.
 ---

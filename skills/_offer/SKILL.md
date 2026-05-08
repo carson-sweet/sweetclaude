@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:_offer
+name: _offer
 user-invocable: false
 description: Feature offer loop — surfaces one not_offered feature per session with human-language copy. Writes decision back to sweetclaude.yaml.
 ---

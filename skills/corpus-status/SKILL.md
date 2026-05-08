@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:corpus-status
+name: corpus-status
 user-invocable: true
 description: "Show the current state of the document corpus pipeline — file counts in each stage, last-run timestamps per step, and recommended next action. Read-only. Part of the document-corpus pipeline; use /sweetclaude:document-corpus for the full menu."
 ---

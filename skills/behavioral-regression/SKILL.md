@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:behavioral-regression
+name: behavioral-regression
 user-invocable: false
 description: "Run SweetClaude's behavioral regression test suite. Validates that the current model version honors the framework's 15 load-bearing behavioral contracts. Run after every Claude model version upgrade."
 ---

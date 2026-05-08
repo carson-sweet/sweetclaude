@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:project-scope
+name: project-scope
 user-invocable: true
 description: "Define and maintain project scope. Changes cascade — roadmap items and backlog issues are flagged for review when scope shifts."
 ---

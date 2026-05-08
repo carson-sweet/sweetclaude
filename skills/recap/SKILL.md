@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:recap
+name: recap
 user-invocable: true
 description: "Produce a concise 'where we are' summary: current phase, active work item, last 3 commits, checkpoint state, and any open flags. Run after a long break, a context switch, or any time you need to reorient."
 ---
