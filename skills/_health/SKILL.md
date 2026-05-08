@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:_health
+name: _health
 user-invocable: false
 description: Consistency scan and version check. Normally called by session-preflight.sh hook. Called inline by /sweetclaude when hook_last_ran is stale (> 2h).
 ---

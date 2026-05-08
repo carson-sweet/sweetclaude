@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:design-user-flows
+name: design-user-flows
 user-invocable: true
 description: Convert user stories into UX/UI flows — step-by-step paths through the interface. Bridges product definition and UX design.
 category: design

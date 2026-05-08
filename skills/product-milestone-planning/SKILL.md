@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:product-milestone-planning
+name: product-milestone-planning
 user-invocable: true
 description: "Guided milestone planning workshop. Produces outcome-driven milestone definitions with falsifiable success criteria, dependency mapping, and risk bets. Challenges weak definitions. Hands off to sweetclaude:product-milestones for tracking."
 ---

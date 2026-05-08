@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:project-epics
+name: project-epics
 user-invocable: true
 description: "Manage epics — optional goal lenses that group stories by functional area. A classification attribute, not a delivery container. Create, view, list, and close."
 ---

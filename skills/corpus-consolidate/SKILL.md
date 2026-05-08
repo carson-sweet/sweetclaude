@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:corpus-consolidate
+name: corpus-consolidate
 user-invocable: true
 description: "Scan source directories, deduplicate files, copy unique files into corpus/raw/inbox/. Originals are never moved or deleted. First step of the document-corpus pipeline; precedes triage."
 ---

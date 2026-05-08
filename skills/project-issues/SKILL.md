@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: sweetclaude:project-issues
+name: project-issues
 user-invocable: true
 description: "Manage project issues — list, view, create, update, and close. The primary interface for individual work items."
 ---
