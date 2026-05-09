@@ -191,6 +191,17 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 
 
 
+## Known Issues
+
+**SweetClaude startup message appears twice.** When Claude Code starts or restarts after context compression, you may see the SweetClaude activation message printed twice:
+
+```
+SessionStart:startup says: SweetClaude is active. Type /sweetclaude:go to begin.
+SessionStart:startup says: SweetClaude is active. Type /sweetclaude:go to begin.
+```
+
+This is a [known Claude Code bug](https://github.com/anthropics/claude-code/issues/24115) where plugin hooks are loaded from both the marketplace source directory and the installed cache simultaneously, causing each SessionStart event to fire twice. There is no stable workaround. It is annoying but harmless — SweetClaude is only activated once.
+
 ## Contribute
 
 Contributions welcome. SweetClaude is built by solo developers, for solo developers.
