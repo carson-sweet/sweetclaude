@@ -340,6 +340,35 @@ Use **AskUserQuestion** (single-select):
 
 ---
 
+## Step 7c: Configure plan directory
+
+Only run if `.sweetclaude/` exists in the current project directory — skip silently otherwise.
+
+Ensure the plan directory exists and `plansDirectory` is set in both project settings files:
+
+```bash
+if [ -d ".sweetclaude" ]; then
+  mkdir -p .sweetclaude/plans
+  python3 - << 'PY'
+import json, os, tempfile
+os.makedirs('.claude', exist_ok=True)
+for path in ['.claude/settings.json', '.claude/settings.local.json']:
+    try:
+        d = json.load(open(path))
+    except:
+        d = {}
+    if d.get('plansDirectory') != '.sweetclaude/plans':
+        d['plansDirectory'] = '.sweetclaude/plans'
+        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
+            json.dump(d, tmp, indent=2)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+PY
+fi
+```
+
+---
+
 ## Step 8: Migrate existing project state
 
 Read [project-migration.md](project-migration.md) and execute it in full.
