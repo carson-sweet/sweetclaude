@@ -3,7 +3,7 @@
 **Version:** 1.6
 **Date:** 2026-05-07
 
-All 103 skills, organized by domain. Internal framework skills (_health, _migrate, _offer, _route, bootstrap, master) are listed in their sections but not user-invocable. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
+All 103 skills, organized by domain. Internal framework skills (_features, _health, _migrate, _route, bootstrap, master) are listed in their sections but not user-invocable. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
 
 You rarely need to memorize commands. `/sweetclaude:go` is the single entry point — it routes automatically based on project state and what you describe in plain English. The list below is for when you know exactly what you want.
 

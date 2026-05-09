@@ -5,7 +5,7 @@
 #   1. Set `disable-model-invocation: true` (skill is always explicitly invoked), OR
 #   2. Be one of the protected ambient-core skills (bootstrap, find-skill,
 #      master, go, status, help, code-feature, code-issue, _health, _migrate,
-#      _offer, _route).
+#      _features, _route).
 #
 # Otherwise the skill claims ambient injection and we fail the commit so
 # the author has to make the decision deliberately.
@@ -14,7 +14,7 @@ set -euo pipefail
 
 AMBIENT_CORE=(
     bootstrap code-feature code-issue find-skill go help master status
-    _health _migrate _offer _route
+    _health _migrate _features _route
 )
 
 is_ambient_core() {
