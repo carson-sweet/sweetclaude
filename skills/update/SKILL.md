@@ -288,6 +288,58 @@ It has two parts (7a and 7b) — both must run. 7a presents new items in this up
 
 ---
 
+## Step 7b: Feature configuration check
+
+Only run this step if `.sweetclaude/state/sweetclaude.yaml` exists in the current project directory — skip silently otherwise.
+
+```bash
+python3 - << 'PY'
+import yaml, os
+
+sc_path = '.sweetclaude/state/sweetclaude.yaml'
+if not os.path.exists(sc_path):
+    print("NO_SC")
+    exit()
+
+try:
+    d = yaml.safe_load(open(sc_path)) or {}
+except:
+    print("NO_SC")
+    exit()
+
+features = d.get('features', {})
+keys = ['product_milestones', 'product_backlog', 'product_personas',
+        'product_stories', 'document_corpus', 'usage_tracking', 'behavioral_regression']
+
+enabled = sum(1 for k in keys
+              if isinstance(features.get(k), dict) and features[k].get('status') == 'active')
+unconfigured = sum(1 for k in keys
+                   if not isinstance(features.get(k), dict)
+                   or features[k].get('status') not in ('active', 'declined'))
+
+try:
+    mc = yaml.safe_load(open('.sweetclaude/metrics/config.yaml'))
+    if mc.get('enabled', False) and features.get('usage_tracking', {}).get('status') != 'active':
+        enabled += 1
+        unconfigured = max(0, unconfigured - 1)
+except:
+    pass
+
+print(f"ENABLED:{enabled}")
+print(f"TOTAL:{len(keys)}")
+print(f"UNCONFIGURED:{unconfigured}")
+PY
+```
+
+If output is `NO_SC`, skip. Otherwise, if `UNCONFIGURED` > 0 or `ENABLED` < `TOTAL`:
+
+Use **AskUserQuestion** (single-select):
+> "This project has {ENABLED} of {TOTAL} features enabled. Want to review the feature setup?"
+- **Yes** → invoke `sweetclaude:_features`
+- **No** → continue
+
+---
+
 ## Step 8: Migrate existing project state
 
 Read [project-migration.md](project-migration.md) and execute it in full.
