@@ -94,7 +94,7 @@ framework:
 | `project.safety_snapshot` | The git branch created during onboarding (`pre-sweetclaude`). Your insurance. |
 | `work.last_item_id` | Monotonic counter. Persists across work item completions so IDs do not repeat. |
 | `work.active` | The work in flight right now. Fast-moving. Type, workflow, phase, title, start date, entry category. |
-| `features.*` | Per-feature activation state. `not_offered` → offered → `active`, `declined`, or `deferred`. Managed by the `/sweetclaude` orchestrator. |
+| `features.*` | Per-feature activation state. `not_configured` → `active` or `declined`. Configured at setup and reviewable via fix-sweetclaude or update. |
 | `framework.consistency` | Last drift-check result. Updated by the health hook. |
 | `framework.update` | Whether a newer version is available. Updated by the health hook. |
 
