@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: mockup-sandbox
 user-invocable: true
-description: "Create and iterate on interactive UI mockups in an isolated Vite + React + Tailwind + shadcn/ui sandbox. Bridges UX spec to production-ready components. Design phase skill. Leads to mockup-extract (for redesigns of existing components) and mockup-graduate (when a design is approved)."
+description: "Create and iterate on interactive UI mockups in an isolated Vite + React + Tailwind + shadcn/ui sandbox."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

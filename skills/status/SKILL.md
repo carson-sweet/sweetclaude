@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: status
 user-invocable: true
-description: "Orient to the current project. Shows what phase you're in, what's been done, what's pending, and what the logical next step is. Use when starting a session, returning after a break, or asking 'where are we?'"
+description: "Orient to the current project."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

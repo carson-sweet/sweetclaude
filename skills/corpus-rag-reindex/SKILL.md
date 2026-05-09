@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: corpus-rag-reindex
 user-invocable: true
-description: "Rebuild RAG collections from source files. Use when embeddings are corrupted, lost, or when the embedding model changes. Recovery tool, not a shortcut around the pipeline — if your source files are messy, the rebuilt index will be messy."
+description: "Rebuild RAG collections from source files."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

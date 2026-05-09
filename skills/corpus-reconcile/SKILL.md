@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: corpus-reconcile
 user-invocable: true
-description: "Take staged files and work with the user to produce approved canonical documents in corpus/working/. Drafting, merging, refining. Third step of the document-corpus pipeline; requires triage complete."
+description: "Take staged files and work with the user to produce approved canonical documents in corpus/working/."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

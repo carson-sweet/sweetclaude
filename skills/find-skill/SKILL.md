@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: false
-description: "Find and start the right skill for any work. Describe what you want to do — this skill classifies it, confirms the match, updates project state, and invokes the correct skill to begin the work."
+description: "Find and start the right skill for any work."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

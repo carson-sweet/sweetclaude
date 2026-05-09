@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: recap
 user-invocable: true
-description: "Produce a concise 'where we are' summary: current phase, active work item, last 3 commits, checkpoint state, and any open flags. Run after a long break, a context switch, or any time you need to reorient."
+description: "Produce a concise 'where we are' summary: current phase, active work item, last 3 commits, checkpoint state, and any open flags."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

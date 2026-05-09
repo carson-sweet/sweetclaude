@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: deploy-ship
 user-invocable: true
-description: "SHIP phase skill. Pre-ship checklist, deployment target validation, smoke test documentation, and rollback plan. The first skill in the deploy bucket. Bridges VERIFY to live production."
+description: "SHIP phase skill."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

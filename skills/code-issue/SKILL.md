@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-description: "Implement a GitHub issue end-to-end. Explore the issue, plan, implement with TDD, verify, and open a PR."
+description: "Implement a GitHub issue end-to-end."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

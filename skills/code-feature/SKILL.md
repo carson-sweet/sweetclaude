@@ -1,6 +1,6 @@
 ---
 spdx-license: AGPL-3.0-or-later
-description: "Build a new feature end-to-end. Generates Gherkin specs if needed, runs full TDD Level 3 pipeline (test writer → QA caucus → implementer), then verifies and opens a PR."
+description: "Build a new feature end-to-end."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

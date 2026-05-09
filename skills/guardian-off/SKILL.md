@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: guardian-off
 user-invocable: false
-description: Disable the Protocol Guardian for the current session
+description: "Disable the Protocol Guardian for the current session"
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

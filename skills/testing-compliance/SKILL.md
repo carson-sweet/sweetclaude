@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: testing-compliance
 user-invocable: true
-description: "Compliance control testing and evidence collection. SOC 2, HIPAA, GDPR, PCI-DSS. Track control status, log evidence, and generate gap reports."
+description: "Compliance control testing and evidence collection."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

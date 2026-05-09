@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-backlog-triage
 user-invocable: true
-description: "Structured backlog grooming session. Applies INVEST criteria and sets priority and effort estimates on ungroomed issues one at a time."
+description: "Structured backlog grooming session."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

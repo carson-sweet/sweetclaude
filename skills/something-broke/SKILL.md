@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: something-broke
 user-invocable: true
-description: "Reactive production incident skill. DIAGNOSE → SHIP → POST-MORTEM. Triage scope and severity, identify root cause, decide fix vs. rollback, resolve, and spawn the required postmortem. Entry point for anything broken in a live environment."
+description: "Reactive production incident skill."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

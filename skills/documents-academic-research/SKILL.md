@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Academic paper development — from first principles through submission. Six-phase pipeline: first principles, literature & positioning, structure & venue, modular drafting, review & revision, submission. Use when writing research papers, position papers, or academic publications."
+description: "Academic paper development — from first principles through submission."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Record and track design and architecture decisions with context, options considered, decision made, and rationale. Queryable later. Replaces ADR templates."
+description: "Record and track design and architecture decisions with context, options considered, decision made, and rationale."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

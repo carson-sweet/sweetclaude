@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: corpus-consolidate
 user-invocable: true
-description: "Scan source directories, deduplicate files, copy unique files into corpus/raw/inbox/. Originals are never moved or deleted. First step of the document-corpus pipeline; precedes triage."
+description: "Scan source directories, deduplicate files, copy unique files into corpus/raw/inbox/."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

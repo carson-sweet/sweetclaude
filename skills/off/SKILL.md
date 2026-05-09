@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: off
 user-invocable: true
-description: Deactivate SweetClaude for the current project. Preserves all artifacts. Run sweetclaude:setup to reactivate.
+description: "Deactivate SweetClaude for the current project."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

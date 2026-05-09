@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: bootstrap
 user-invocable: false
-description: "Session startup skill — pre-flight checks, drift/update offers, and initial routing. Invoked automatically at session start. Not user-callable."
+description: "Session startup skill — pre-flight checks, drift/update offers, and initial routing."
 ---
 
 !`cat .sweetclaude/state/sweetclaude.yaml 2>/dev/null || echo "SC_YAML_NOT_FOUND"`

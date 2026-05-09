@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: _route
 user-invocable: false
-description: Natural language classifier — maps user text to the right internal skill. Called by the /sweetclaude orchestrator when args are present.
+description: "Natural language classifier — maps user text to the right internal skill."
 ---
 
 # Route

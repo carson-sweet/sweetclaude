@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: mockup-graduate
 user-invocable: true
-description: "Move an approved mockup from the sandbox into the main application. Wires real data, routing, auth, and error handling. Extracts acceptance criteria for TDD. The design-to-IMPLEMENT bridge."
+description: "Move an approved mockup from the sandbox into the main application."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

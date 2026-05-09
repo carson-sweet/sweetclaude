@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: Ripple-effect analysis for changes to EXISTING code or specs — trace what is affected across code, tests, docs, APIs, and specs. ONLY invoke when the user explicitly asks for impact analysis, or when a change targets existing artifacts. NEVER invoke when designing new features from scratch.
+description: "Ripple-effect analysis for changes to EXISTING code or specs — trace what is affected across code, tests, docs, APIs, and specs."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

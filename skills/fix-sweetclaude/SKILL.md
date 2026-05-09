@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Audit and repair SweetClaude's own configuration for this project. Checks CLAUDE.md accuracy, phase state vs reality, file locations, skills.yaml vs artifact parity, onboarding gaps, empty registers, and untracked files. Proposes fixes for user approval."
+description: "Audit and repair SweetClaude's own configuration for this project."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

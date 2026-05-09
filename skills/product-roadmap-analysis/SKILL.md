@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: product-roadmap-analysis
 user-invocable: true
-description: "RICE scoring and stack-rank analysis for roadmap items. Alignment check against milestones and scope. Proposed re-priority for user confirmation."
+description: "RICE scoring and stack-rank analysis for roadmap items."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

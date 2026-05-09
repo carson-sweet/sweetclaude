@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: epic-design
 user-invocable: true
-description: "Produce a complete, ordered story list for an epic. Design-first: promise → contracts → design → debt → implementation → test/review. No implementation stories before design is complete."
+description: "Produce a complete, ordered story list for an epic."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

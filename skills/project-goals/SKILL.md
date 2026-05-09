@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-goals
 user-invocable: true
-description: "Manage project goals — binary business goals. Create, view, mark achieved or missed."
+description: "Manage project goals — binary business goals."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
