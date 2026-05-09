@@ -192,7 +192,7 @@ Deployment and incident response.
 
 | Skill | Invocation | What it does |
 |---|---|---|
-| **Deploy Ship** | `/sweetclaude:deploy-ship` | Guided deployment for work items that have completed VERIFY. Confirms deployment config, runs a 7-item pre-ship checklist (AC met, tests passing, no secrets in diff, changelog present, rollback plan documented, break-glass notes updated at GA+, monitoring active), guides the deploy command, and smoke-tests post-deploy. Does not run the deploy itself — guides you through it. Logs checklist result and smoke test to `decision-log.md`. |
+| **Deploy Ship** | `/sweetclaude:deploy-ship` | Guided deployment for work items that have completed VERIFY. Confirms deployment config, runs a 7-item pre-ship checklist (AC met, tests passing, no secrets in diff, changelog present, rollback plan documented, break-glass notes updated at GA+, monitoring active), guides the deploy command, and smoke-tests post-deploy. Does not run the deploy itself — guides you through it. Logs checklist result and smoke test to `decision-log.md`. Archives the active plan file to `.sweetclaude/plans/archive/` organized by milestone and sprint. |
 | **Something Broke** | `/sweetclaude:something-broke` | Production incident response. Classifies severity (P0/P1/P2) in ≤3 questions, decides fix-vs-rollback, routes to `:hotfix` or `:rollback-revert`, confirms resolution, and spawns a mandatory post-mortem work item. The post-mortem is required — a resolved incident without one is incomplete. |
 
 ---
