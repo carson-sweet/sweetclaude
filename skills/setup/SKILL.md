@@ -40,7 +40,7 @@ Then run:
 ```bash
 mkdir -p .sweetclaude/state .sweetclaude/product/milestones \
          .sweetclaude/product/backlog .sweetclaude/product/stories \
-         .sweetclaude/state/archive
+         .sweetclaude/state/archive .sweetclaude/plans
 
 INSTALLED=$(python3 -c "
 import json
@@ -75,7 +75,29 @@ os.replace(tmp_name, path)
 PY
 ```
 
-> "All set. Here's where things stand: [project name] · IDEA stage. What do you want to work on first?"
+Configure the plan directory in project settings:
+
+```bash
+python3 - << 'PY'
+import json, os, tempfile
+os.makedirs('.claude', exist_ok=True)
+for path in ['.claude/settings.json', '.claude/settings.local.json']:
+    try:
+        d = json.load(open(path))
+    except:
+        d = {}
+    if d.get('plansDirectory') != '.sweetclaude/plans':
+        d['plansDirectory'] = '.sweetclaude/plans'
+        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
+            json.dump(d, tmp, indent=2)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+PY
+```
+
+> "All set. Here's where things stand: [project name] · IDEA stage."
+
+Invoke `sweetclaude:_features`.
 
 ## Branch B: Existing Codebase
 
@@ -99,7 +121,9 @@ Map stage to version_stage:
 
 Run the same directory setup and write as Branch A, with `type: existing-code` and the mapped version_stage.
 
-> "All set. [Project name] is configured. Here's where things stand: [status summary]. What do you want to work on first?"
+> "All set. [Project name] is configured. Here's where things stand: [status summary]."
+
+Invoke `sweetclaude:_features`.
 
 ## Branch C: Messy/Inherited Codebase
 
@@ -110,6 +134,27 @@ Run the full ASSESS → DIAGNOSE → PLAN → SCAFFOLD flow for existing codebas
 **ASSESS:** Understand what exists — architecture, dependencies, test coverage, naming conventions, tech debt surface area.
 **DIAGNOSE:** Identify the highest-impact problems. Prioritize by: broken builds > no tests > no structure > style issues.
 **PLAN:** Propose a scaffolding plan. Show the user what will be created/changed before touching anything.
-**SCAFFOLD:** With user approval, create `.sweetclaude/` structure, generate CLAUDE.md reflecting actual codebase patterns, write `sweetclaude.yaml`.
+**SCAFFOLD:** With user approval, create `.sweetclaude/` structure (including `.sweetclaude/plans/`), generate CLAUDE.md reflecting actual codebase patterns, write `sweetclaude.yaml`. Also configure `plansDirectory`:
+
+```bash
+mkdir -p .sweetclaude/plans
+python3 - << 'PY'
+import json, os, tempfile
+os.makedirs('.claude', exist_ok=True)
+for path in ['.claude/settings.json', '.claude/settings.local.json']:
+    try:
+        d = json.load(open(path))
+    except:
+        d = {}
+    if d.get('plansDirectory') != '.sweetclaude/plans':
+        d['plansDirectory'] = '.sweetclaude/plans'
+        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
+            json.dump(d, tmp, indent=2)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+PY
+```
 
 Handoff: "SweetClaude is set up. Given what I found, here's what I'd suggest tackling first: [top recommendation from DIAGNOSE]."
+
+Invoke `sweetclaude:_features`.

@@ -534,6 +534,78 @@ List each proposed fix. Wait for user to approve individually or as a batch.
 
 ---
 
+## Step 11: Feature configuration review
+
+After all proposed fixes are resolved, check whether a feature review is warranted:
+
+```bash
+python3 - << 'PY'
+import yaml
+
+try:
+    d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
+except:
+    d = {}
+
+features = d.get('features', {})
+keys = ['product_milestones', 'product_backlog', 'product_personas',
+        'product_stories', 'document_corpus', 'usage_tracking', 'behavioral_regression']
+
+enabled = sum(1 for k in keys
+              if isinstance(features.get(k), dict) and features[k].get('status') == 'active')
+unconfigured = sum(1 for k in keys
+                   if not isinstance(features.get(k), dict)
+                   or features[k].get('status') not in ('active', 'declined'))
+
+# usage_tracking: check actual metrics config
+try:
+    mc = yaml.safe_load(open('.sweetclaude/metrics/config.yaml'))
+    if mc.get('enabled', False) and features.get('usage_tracking', {}).get('status') != 'active':
+        enabled += 1
+        unconfigured = max(0, unconfigured - 1)
+except:
+    pass
+
+print(f"ENABLED:{enabled}")
+print(f"TOTAL:{len(keys)}")
+print(f"UNCONFIGURED:{unconfigured}")
+PY
+```
+
+If `UNCONFIGURED` > 0 or `ENABLED` < `TOTAL`:
+
+Use **AskUserQuestion** (single-select):
+> "This project has {ENABLED} of {TOTAL} features enabled. Want to review the feature setup?"
+- **Yes** → invoke `sweetclaude:_features`
+- **No** → stop
+
+---
+
+## Step 12: Configure plan directory
+
+Ensure the plan directory exists and `plansDirectory` points to it in both project settings files. Run silently — no proposal needed.
+
+```bash
+mkdir -p .sweetclaude/plans
+python3 - << 'PY'
+import json, os, tempfile
+os.makedirs('.claude', exist_ok=True)
+for path in ['.claude/settings.json', '.claude/settings.local.json']:
+    try:
+        d = json.load(open(path))
+    except:
+        d = {}
+    if d.get('plansDirectory') != '.sweetclaude/plans':
+        d['plansDirectory'] = '.sweetclaude/plans'
+        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
+            json.dump(d, tmp, indent=2)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+PY
+```
+
+---
+
 ## Rules
 
 - **Propose, do not apply.** Every change needs user approval.

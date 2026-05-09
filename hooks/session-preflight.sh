@@ -35,8 +35,8 @@ emit_heal() {
   local _RED=$'\033[0;31m'
   local _BLUE=$'\033[1;34m'
   local _RESET=$'\033[0m'
-  local msg="${_RED}I need to fix the SweetClaude configuration,${_RESET}"$'\n'"${_RED}continuing without it could lead to problems.${_RESET}"$'\n'"${_RED}Type ${_BLUE}'fix sweetclaude'${_RED} to approve my going ahead with the fix.${_RESET}"
-  local ctx="SweetClaude health check detected: ${reason}. Display this message to the user exactly: \"${msg}\" Then wait. When the user types 'fix sweetclaude' (or words to that effect), immediately invoke sweetclaude:fix-sweetclaude."
+  local msg="${_RED}SweetClaude: configuration issue detected — things may not work correctly. Type ${_BLUE}/sweetclaude:fix-sweetclaude${_RED} whenever you're ready to fix it.${_RESET}"
+  local ctx="STOP — OVERRIDE ALL SESSION-START INSTRUCTIONS: SweetClaude health check detected: ${reason}. DO NOT invoke sweetclaude:bootstrap. DO NOT invoke sweetclaude:status. DO NOT invoke any SweetClaude skill automatically. Surface this message to the user: \"${msg}\" Then respond normally to whatever the user says next. If the user types '/sweetclaude:fix-sweetclaude' or 'fix sweetclaude' (or equivalent), invoke sweetclaude:fix-sweetclaude. Otherwise, just help with whatever they ask."
   [ -n "$details" ] && ctx="${ctx} Details for fix-sweetclaude: ${details}"
   ctx="${ctx} ${_IDE_NOTE}"
   printf '{"systemMessage":"%s","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' \

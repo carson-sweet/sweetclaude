@@ -16,11 +16,14 @@ This page is reference. For why state is structured the way it is, read [How It 
 ├── state/
 │   ├── sweetclaude.yaml        ← Unified state: phase, work item, features, framework health
 │   ├── project.yaml            ← Language, framework, test runner, build commands
+│   ├── active-plan.txt         ← Pointer to the current plan file + sprint/milestone context
 │   ├── decision-log.md         ← Architecture and design decisions with rationale
 │   ├── assumption-register.md  ← Assumptions worth checking later
 │   ├── improvement-register.md ← Feedback and learnings from each phase
 │   ├── scope-changes.md        ← Scope additions and removals with justification
 │   └── backups/                ← Pre-migration state snapshots (created by /sweetclaude:update)
+├── plans/                      ← Claude Code plan files (.sweetclaude/plans is set as plansDirectory)
+│   └── archive/                ← Plans archived at ship time, organized by milestone/sprint
 ├── traceability/               ← Story → requirement → test → code traceability maps
 ├── version-bump.yaml           ← (optional) Auto-bump configuration
 └── disabled                    ← (optional) Presence disables SweetClaude for this project
@@ -94,7 +97,7 @@ framework:
 | `project.safety_snapshot` | The git branch created during onboarding (`pre-sweetclaude`). Your insurance. |
 | `work.last_item_id` | Monotonic counter. Persists across work item completions so IDs do not repeat. |
 | `work.active` | The work in flight right now. Fast-moving. Type, workflow, phase, title, start date, entry category. |
-| `features.*` | Per-feature activation state. `not_offered` → offered → `active`, `declined`, or `deferred`. Managed by the `/sweetclaude` orchestrator. |
+| `features.*` | Per-feature activation state. `not_configured` → `active` or `declined`. Configured at setup and reviewable via fix-sweetclaude or update. |
 | `framework.consistency` | Last drift-check result. Updated by the health hook. |
 | `framework.update` | Whether a newer version is available. Updated by the health hook. |
 

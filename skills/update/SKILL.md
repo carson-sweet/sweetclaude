@@ -288,6 +288,87 @@ It has two parts (7a and 7b) — both must run. 7a presents new items in this up
 
 ---
 
+## Step 7b: Feature configuration check
+
+Only run this step if `.sweetclaude/state/sweetclaude.yaml` exists in the current project directory — skip silently otherwise.
+
+```bash
+python3 - << 'PY'
+import yaml, os
+
+sc_path = '.sweetclaude/state/sweetclaude.yaml'
+if not os.path.exists(sc_path):
+    print("NO_SC")
+    exit()
+
+try:
+    d = yaml.safe_load(open(sc_path)) or {}
+except:
+    print("NO_SC")
+    exit()
+
+features = d.get('features', {})
+keys = ['product_milestones', 'product_backlog', 'product_personas',
+        'product_stories', 'document_corpus', 'usage_tracking', 'behavioral_regression']
+
+enabled = sum(1 for k in keys
+              if isinstance(features.get(k), dict) and features[k].get('status') == 'active')
+unconfigured = sum(1 for k in keys
+                   if not isinstance(features.get(k), dict)
+                   or features[k].get('status') not in ('active', 'declined'))
+
+try:
+    mc = yaml.safe_load(open('.sweetclaude/metrics/config.yaml'))
+    if mc.get('enabled', False) and features.get('usage_tracking', {}).get('status') != 'active':
+        enabled += 1
+        unconfigured = max(0, unconfigured - 1)
+except:
+    pass
+
+print(f"ENABLED:{enabled}")
+print(f"TOTAL:{len(keys)}")
+print(f"UNCONFIGURED:{unconfigured}")
+PY
+```
+
+If output is `NO_SC`, skip. Otherwise, if `UNCONFIGURED` > 0 or `ENABLED` < `TOTAL`:
+
+Use **AskUserQuestion** (single-select):
+> "This project has {ENABLED} of {TOTAL} features enabled. Want to review the feature setup?"
+- **Yes** → invoke `sweetclaude:_features`
+- **No** → continue
+
+---
+
+## Step 7c: Configure plan directory
+
+Only run if `.sweetclaude/` exists in the current project directory — skip silently otherwise.
+
+Ensure the plan directory exists and `plansDirectory` is set in both project settings files:
+
+```bash
+if [ -d ".sweetclaude" ]; then
+  mkdir -p .sweetclaude/plans
+  python3 - << 'PY'
+import json, os, tempfile
+os.makedirs('.claude', exist_ok=True)
+for path in ['.claude/settings.json', '.claude/settings.local.json']:
+    try:
+        d = json.load(open(path))
+    except:
+        d = {}
+    if d.get('plansDirectory') != '.sweetclaude/plans':
+        d['plansDirectory'] = '.sweetclaude/plans'
+        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
+            json.dump(d, tmp, indent=2)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+PY
+fi
+```
+
+---
+
 ## Step 8: Migrate existing project state
 
 Read [project-migration.md](project-migration.md) and execute it in full.

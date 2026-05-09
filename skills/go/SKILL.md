@@ -136,6 +136,36 @@ If the user picks Start planning, invoke `sweetclaude:product-milestones`. If So
 ## Step 5: Handle the user's selection
 
 **Proceed:**
+Before checking mode gates, check for a stale plan pointer:
+
+```bash
+python3 - << 'PY'
+import os
+pointer = '.sweetclaude/state/active-plan.txt'
+if not os.path.exists(pointer):
+    print('NO_PLAN')
+    exit()
+lines = dict(
+    line.split(': ', 1) for line in open(pointer).read().strip().splitlines()
+    if ': ' in line
+)
+plan = lines.get('plan', '').strip()
+if plan and os.path.exists(plan):
+    print(f'STALE_PLAN:{plan}')
+else:
+    print('NO_PLAN')
+PY
+```
+
+If output starts with `STALE_PLAN:`, surface the plan and offer to archive it before starting new work. Use AskUserQuestion:
+
+| Option | Description |
+|---|---|
+| **Archive it** | Move the plan to `.sweetclaude/plans/archive/` before starting new work |
+| **Keep it** | Leave the plan file as-is and start new work |
+
+If "Archive it": run the archive logic from `deploy-ship` Step 7 (read pointer, slug H1, move to milestone/sprint folder, clear pointer). Then continue.
+
 Before invoking an IMPLEMENT-phase skill, check mode gates:
 
 ```bash

@@ -115,13 +115,7 @@ If `$ARGUMENTS` is present and non-empty:
 → invoke `sweetclaude:_route` with `$ARGUMENTS`
 Stop.
 
-## Step 8: Feature offer loop
-
-Invoke `sweetclaude:_offer`.
-If it returns `NO_OFFER_NEEDED`, continue to Step 9.
-Otherwise `sweetclaude:_offer` handles the offer and response. Stop after one offer.
-
-## Step 9: All-clear status surface
+## Step 8: All-clear status surface
 
 Read from pre-loaded state:
 
