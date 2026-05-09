@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: testing-performance
 user-invocable: true
-description: "Define load scenarios, establish performance baselines, set thresholds. Compare benchmark results. Ties into performance optimization phase gates."
+description: "Define load scenarios, establish performance baselines, set thresholds."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

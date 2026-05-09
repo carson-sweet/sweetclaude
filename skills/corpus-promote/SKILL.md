@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: corpus-promote
 user-invocable: true
-description: "Finalize approved documents from corpus/working/. Move to corpus/canonical/, write provenance sidecars, archive source files, index into RAG, commit. No creative decisions — pure finalization. Fourth step of the document-corpus pipeline; requires reconcile complete or in-progress."
+description: "Finalize approved documents from corpus/working/."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

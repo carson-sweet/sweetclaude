@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: john-wick
 user-invocable: true
-description: Fully autonomous, resumable, multi-session SDLC pipeline. Given completed discovery artifacts, runs product-definition → design → TDD → implementation → review → PR with minimal human involvement. Interactive gates are explicit, pre-defined, and rare.
+description: "Fully autonomous, resumable, multi-session SDLC pipeline."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

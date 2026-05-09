@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: guardian-on
 user-invocable: false
-description: Enable the Protocol Guardian — enforces skill invocations, TDD discipline, and artifact saves for the current session
+description: "Enable the Protocol Guardian — enforces skill invocations, TDD discipline, and artifact saves for the current session"
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-themes
 user-invocable: true
-description: "Manage themes — optional domain-grouping labels on stories. Classification attributes, not hierarchy nodes. For large multi-service projects with 50+ issues where epics alone leave the inventory unnavigable."
+description: "Manage themes — optional domain-grouping labels on stories."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

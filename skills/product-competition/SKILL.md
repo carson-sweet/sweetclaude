@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: product-competition
 user-invocable: true
-description: Competitive analysis at three depth levels — from a quick company survey to feature-by-feature deep analysis. Consolidates strategic and feature-level competitive work.
+description: "Competitive analysis at three depth levels — from a quick company survey to feature-by-feature deep analysis."
 category: strategy
 ---
 

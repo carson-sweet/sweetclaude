@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Prepare for a specific meeting. Pulls relevant context from strategy corpus, drafts agenda, talking points with confidence levels, key asks, anticipated questions, and leave-behinds."
+description: "Prepare for a specific meeting."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

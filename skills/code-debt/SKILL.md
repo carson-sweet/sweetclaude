@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Tech debt cleanup. Locks current behavior with tests first, then refactors. Tests before touch, always. Use for refactoring, cleanup, performance work, or maintainability improvements."
+description: "Tech debt cleanup."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

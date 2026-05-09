@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: product-roadmap
 user-invocable: true
-description: "Manage the product roadmap — feature delivery targets, releases, and priority stack. Routes to the correct workflow on activation."
+description: "Manage the product roadmap — feature delivery targets, releases, and priority stack."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

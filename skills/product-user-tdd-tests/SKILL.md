@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: Transition user stories into Gherkin .feature files. The .feature files become the contract for TDD test generation. Use during PLAN phase after stories are written.
+description: "Transition user stories into Gherkin .feature files."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

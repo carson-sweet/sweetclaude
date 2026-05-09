@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: init
 user-invocable: true
-description: "Bootstrap the SweetClaude infrastructure for any project — new or existing. Creates .sweetclaude/state/, strategy/, and CLAUDE.md. Thin infrastructure primitive; does not run product discovery (use /sweetclaude:setup for that)."
+description: "Bootstrap the SweetClaude infrastructure for any project — new or existing."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

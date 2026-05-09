@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-mode
 user-invocable: true
-description: "Assess and shift project modes. Flow → Kanban → Shape Up → Agile → Agile Enterprise. Creates a snapshot before any transition."
+description: "Assess and shift project modes."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

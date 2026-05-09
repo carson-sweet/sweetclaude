@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: design-user-flows
 user-invocable: true
-description: Convert user stories into UX/UI flows — step-by-step paths through the interface. Bridges product definition and UX design.
+description: "Convert user stories into UX/UI flows — step-by-step paths through the interface."
 category: design
 ---
 

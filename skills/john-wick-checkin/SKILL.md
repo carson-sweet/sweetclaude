@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: john-wick-checkin
 user-invocable: false
-description: Internal John Wick phase check-in subagent. Receives phase context and a single question, reviews artifacts for drift, returns none/minor/significant. Not a user-facing skill — invoked by the john-wick orchestrator only.
+description: "Internal John Wick phase check-in subagent."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

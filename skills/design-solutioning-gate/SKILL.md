@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: false
-description: "Validate the proposed solution before implementation. Checks architecture decisions, identifies risks, confirms design addresses requirements."
+description: "Validate the proposed solution before implementation."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

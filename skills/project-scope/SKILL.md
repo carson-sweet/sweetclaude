@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-scope
 user-invocable: true
-description: "Define and maintain project scope. Changes cascade — roadmap items and backlog issues are flagged for review when scope shifts."
+description: "Define and maintain project scope."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

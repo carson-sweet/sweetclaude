@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: mockup-extract
 user-invocable: true
-description: "Pull an existing production component into the mockup sandbox as an accurate 'Current' baseline for design iteration. Traces the full import graph, stubs external dependencies, syncs design tokens. Use before mockup-sandbox when redesigning a component that already exists in the app."
+description: "Pull an existing production component into the mockup sandbox as an accurate 'Current' baseline for design iteration."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

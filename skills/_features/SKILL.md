@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: _features
 user-invocable: false
-description: Feature configuration — shows all optional SweetClaude features with descriptions and current status, lets the user enable or disable them. Called at setup, fix-sweetclaude, and update.
+description: "Feature configuration — shows all optional SweetClaude features with descriptions and current status, lets the user enable or disable them."
 ---
 
 # Feature Configuration

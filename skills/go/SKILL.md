@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: go
 user-invocable: true
-description: Assess what to work on next and propose it. Stops at the first obvious item found — unfinished work, hot bugs, roadmap, or debt — and waits for user approval before doing anything.
+description: "Assess what to work on next and propose it."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

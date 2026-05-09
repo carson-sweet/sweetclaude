@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: testing-plan
 user-invocable: true
-description: "Define and maintain a test strategy for a feature or release. Covers scope, test types, environments, entry/exit criteria, and ownership."
+description: "Define and maintain a test strategy for a feature or release."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
