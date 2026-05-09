@@ -581,6 +581,31 @@ Use **AskUserQuestion** (single-select):
 
 ---
 
+## Step 12: Configure plan directory
+
+Ensure the plan directory exists and `plansDirectory` points to it in both project settings files. Run silently — no proposal needed.
+
+```bash
+mkdir -p .sweetclaude/plans
+python3 - << 'PY'
+import json, os, tempfile
+os.makedirs('.claude', exist_ok=True)
+for path in ['.claude/settings.json', '.claude/settings.local.json']:
+    try:
+        d = json.load(open(path))
+    except:
+        d = {}
+    if d.get('plansDirectory') != '.sweetclaude/plans':
+        d['plansDirectory'] = '.sweetclaude/plans'
+        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
+            json.dump(d, tmp, indent=2)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+PY
+```
+
+---
+
 ## Rules
 
 - **Propose, do not apply.** Every change needs user approval.

@@ -147,6 +147,55 @@ active_work_item:
 
 And update `last_work_item_id` to the completed item's ID.
 
+Archive the active plan file if one exists:
+
+```bash
+python3 - << 'PY'
+import os, re, shutil
+from datetime import datetime, timezone
+
+POINTER = '.sweetclaude/state/active-plan.txt'
+if not os.path.exists(POINTER):
+    exit()
+
+lines = dict(
+    line.split(': ', 1) for line in open(POINTER).read().strip().splitlines()
+    if ': ' in line
+)
+plan_file = lines.get('plan', '').strip()
+if not plan_file or not os.path.exists(plan_file):
+    os.remove(POINTER)
+    exit()
+
+# Slug from H1 heading
+content = open(plan_file).read()
+h1 = re.search(r'^# (.+)', content, re.MULTILINE)
+slug = re.sub(r'[^a-z0-9]+', '-', (h1.group(1) if h1 else os.path.basename(plan_file)).lower()).strip('-')
+date_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+# Archive folder: milestone/sprint or misc
+ms_raw = lines.get('milestone', '').strip()
+sp_raw = lines.get('sprint', '').strip()
+ms_slug = re.sub(r'[^a-z0-9]+', '-', ms_raw.lower()).strip('-') if ms_raw else ''
+sp_slug = re.sub(r'[^a-z0-9]+', '-', sp_raw.lower()).strip('-') if sp_raw else ''
+
+if ms_slug and sp_slug:
+    folder = os.path.join('.sweetclaude/plans/archive', ms_slug, sp_slug)
+elif ms_slug:
+    folder = os.path.join('.sweetclaude/plans/archive', ms_slug)
+elif sp_slug:
+    folder = os.path.join('.sweetclaude/plans/archive', sp_slug)
+else:
+    folder = '.sweetclaude/plans/archive/misc'
+
+os.makedirs(folder, exist_ok=True)
+dest = os.path.join(folder, f'{date_str}-{slug}.md')
+shutil.move(plan_file, dest)
+os.remove(POINTER)
+print(f'Archived plan → {dest}')
+PY
+```
+
 Tell the user:
 
 ```

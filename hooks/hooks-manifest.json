@@ -93,6 +93,15 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-tracker.sh"
     },
     {
+      "file": "plan-tracker.sh",
+      "event": "PostToolUse",
+      "matcher": "ExitPlanMode",
+      "required": true,
+      "scope": "project",
+      "purpose": "Records the active plan file path and sprint/milestone context to .sweetclaude/state/active-plan.txt when plan mode exits",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/plan-tracker.sh"
+    },
+    {
       "file": "git-checkpoint.sh",
       "event": null,
       "matcher": null,
