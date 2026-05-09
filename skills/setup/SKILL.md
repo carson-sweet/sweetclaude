@@ -75,7 +75,9 @@ os.replace(tmp_name, path)
 PY
 ```
 
-> "All set. Here's where things stand: [project name] · IDEA stage. What do you want to work on first?"
+> "All set. Here's where things stand: [project name] · IDEA stage."
+
+Invoke `sweetclaude:_features`.
 
 ## Branch B: Existing Codebase
 
@@ -99,7 +101,9 @@ Map stage to version_stage:
 
 Run the same directory setup and write as Branch A, with `type: existing-code` and the mapped version_stage.
 
-> "All set. [Project name] is configured. Here's where things stand: [status summary]. What do you want to work on first?"
+> "All set. [Project name] is configured. Here's where things stand: [status summary]."
+
+Invoke `sweetclaude:_features`.
 
 ## Branch C: Messy/Inherited Codebase
 
@@ -113,3 +117,5 @@ Run the full ASSESS → DIAGNOSE → PLAN → SCAFFOLD flow for existing codebas
 **SCAFFOLD:** With user approval, create `.sweetclaude/` structure, generate CLAUDE.md reflecting actual codebase patterns, write `sweetclaude.yaml`.
 
 Handoff: "SweetClaude is set up. Given what I found, here's what I'd suggest tackling first: [top recommendation from DIAGNOSE]."
+
+Invoke `sweetclaude:_features`.

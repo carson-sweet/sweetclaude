@@ -534,6 +534,53 @@ List each proposed fix. Wait for user to approve individually or as a batch.
 
 ---
 
+## Step 11: Feature configuration review
+
+After all proposed fixes are resolved, check whether a feature review is warranted:
+
+```bash
+python3 - << 'PY'
+import yaml
+
+try:
+    d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
+except:
+    d = {}
+
+features = d.get('features', {})
+keys = ['product_milestones', 'product_backlog', 'product_personas',
+        'product_stories', 'document_corpus', 'usage_tracking', 'behavioral_regression']
+
+enabled = sum(1 for k in keys
+              if isinstance(features.get(k), dict) and features[k].get('status') == 'active')
+unconfigured = sum(1 for k in keys
+                   if not isinstance(features.get(k), dict)
+                   or features[k].get('status') not in ('active', 'declined'))
+
+# usage_tracking: check actual metrics config
+try:
+    mc = yaml.safe_load(open('.sweetclaude/metrics/config.yaml'))
+    if mc.get('enabled', False) and features.get('usage_tracking', {}).get('status') != 'active':
+        enabled += 1
+        unconfigured = max(0, unconfigured - 1)
+except:
+    pass
+
+print(f"ENABLED:{enabled}")
+print(f"TOTAL:{len(keys)}")
+print(f"UNCONFIGURED:{unconfigured}")
+PY
+```
+
+If `UNCONFIGURED` > 0 or `ENABLED` < `TOTAL`:
+
+Use **AskUserQuestion** (single-select):
+> "This project has {ENABLED} of {TOTAL} features enabled. Want to review the feature setup?"
+- **Yes** → invoke `sweetclaude:_features`
+- **No** → stop
+
+---
+
 ## Rules
 
 - **Propose, do not apply.** Every change needs user approval.
