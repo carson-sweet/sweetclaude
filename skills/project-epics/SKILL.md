@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-epics
 user-invocable: true
-description: "Manage epics — optional goal lenses that group stories by functional area. A classification attribute, not a delivery container. Create, view, list, and close."
+description: "Manage epics — optional goal lenses that group stories by functional area."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

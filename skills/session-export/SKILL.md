@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: Export a Claude.ai session as a complete, portable package. Includes conversation transcript, deliverables inventory, file manifest, web searches, decisions, open items, entity index, and continuity prompt. Trigger on "export this session", "wrap up", "package this conversation", "session handoff", "session report", "save this conversation", or when switching models. Also trigger when the user asks for summary + files together.
+description: "Export a Claude.ai session as a complete, portable package."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

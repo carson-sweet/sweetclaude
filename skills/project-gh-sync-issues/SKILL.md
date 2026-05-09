@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-gh-sync-issues
 user-invocable: true
-description: "Bidirectional status sync between local I-NNN issues and GitHub Issues. Pass 1: GH closed → local done. Pass 2: local done → gh issue close."
+description: "Bidirectional status sync between local I-NNN issues and GitHub Issues."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: design-ux-review
 user-invocable: true
-description: Virtual UX review session. Spawns parallel subagents — one per persona — each walking through a flow or wireframe independently and returning structured feedback. Synthesizes findings into prioritized recommendations. All output labeled synthetic.
+description: "Virtual UX review session."
 category: design
 ---
 

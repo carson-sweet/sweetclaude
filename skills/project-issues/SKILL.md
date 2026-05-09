@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-issues
 user-invocable: true
-description: "Manage project issues — list, view, create, update, and close. The primary interface for individual work items."
+description: "Manage project issues — list, view, create, update, and close."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

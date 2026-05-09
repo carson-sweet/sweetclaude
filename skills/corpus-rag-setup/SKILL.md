@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: corpus-rag-setup
 user-invocable: true
-description: "Configure and run local semantic search on project documents using mcp-local-rag. Supports PDF, DOCX, TXT, Markdown. Default scope is canonical documents only — gates raw indexing with a noise check. Fully offline; no external services or API keys required."
+description: "Configure and run local semantic search on project documents using mcp-local-rag."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

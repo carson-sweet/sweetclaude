@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-backlog
 user-invocable: true
-description: "View and manage the unscheduled issue backlog. Promotes issues into sprints. Surfaces triage needs."
+description: "View and manage the unscheduled issue backlog."
 ---
 
 ## MODE CHECK

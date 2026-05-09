@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Code, security, and compliance review. Opens a menu at start — pick one or several. Adversarial: assumes problems exist and finds them."
+description: "Code, security, and compliance review."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

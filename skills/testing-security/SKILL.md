@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: testing-security
 user-invocable: true
-description: "Structured security review. Threat modeling (STRIDE), OWASP Top 10 checklist, findings tracked as issues. Covers auth, injection, data handling, and dependencies."
+description: "Structured security review."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

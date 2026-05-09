@@ -10,8 +10,8 @@
 ## Session discipline
 
 - Before context compression, save current progress to a plan file or commit.
-- If resuming work, read `docs/plans/` and recent git history before acting.
-- Don't conclude work is missing until you've checked git working tree, `docs/plans/`, `scratch/`, and uncommitted changes.
+- If resuming work, read `.sweetclaude/plans/` and recent git history before acting.
+- Don't conclude work is missing until you've checked git working tree, `.sweetclaude/plans/`, `scratch/`, and uncommitted changes.
 
 ## Global invariants
 

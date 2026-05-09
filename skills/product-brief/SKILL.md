@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: product-brief
 user-invocable: true
-description: Write a product brief — a strategic document describing what is being built, for whom, why it matters, and what success looks like. Scales to available input depth.
+description: "Write a product brief — a strategic document describing what is being built, for whom, why it matters, and what success looks like."
 category: product
 ---
 

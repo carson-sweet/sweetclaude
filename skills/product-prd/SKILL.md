@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: product-prd
 user-invocable: true
-description: Write a Product Requirements Document — functional requirements, non-functional requirements, epics, and success metrics. Scales to available input depth.
+description: "Write a Product Requirements Document — functional requirements, non-functional requirements, epics, and success metrics."
 category: product
 ---
 

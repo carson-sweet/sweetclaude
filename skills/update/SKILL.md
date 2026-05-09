@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: update
 user-invocable: true
-description: Update SweetClaude to the latest version from GitHub (or a local repo). Syncs skills, rules, hooks, config, and agents across all projects.
+description: "Update SweetClaude to the latest version from GitHub (or a local repo)."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

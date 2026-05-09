@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: purge
 user-invocable: true
-description: Delete all SweetClaude artifacts from the current project. Shows all files, warns, requires the user to type "I understand", then deletes .sweetclaude/.
+description: "Delete all SweetClaude artifacts from the current project."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: testing-accessibility
 user-invocable: true
-description: "WCAG 2.1 Level AA audit. Automated scan guidance + manual keyboard, screen reader, and visual checklist. Findings filed as issues."
+description: "WCAG 2.1 Level AA audit."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

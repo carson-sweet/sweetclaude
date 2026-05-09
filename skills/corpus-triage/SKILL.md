@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: corpus-triage
 user-invocable: true
-description: "Classify files in corpus/raw/inbox/ as keep-as-is, needs-reconciliation, discard, or defer. Batch classification — fast decisions, no synthesis. Second step of the document-corpus pipeline; requires consolidate complete."
+description: "Classify files in corpus/raw/inbox/ as keep-as-is, needs-reconciliation, discard, or defer."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

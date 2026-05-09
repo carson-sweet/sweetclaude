@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-gh-import-issues
 user-invocable: true
-description: "Import open GitHub Issues into the local issue store as I-NNN artifacts. Idempotent — issues already imported by GitHub issue number are skipped."
+description: "Import open GitHub Issues into the local issue store as I-NNN artifacts."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: project-sprints
 user-invocable: true
-description: "Sprint planning, activation, board view, and close. Tracks velocity and retrospectives."
+description: "Sprint planning, activation, board view, and close."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

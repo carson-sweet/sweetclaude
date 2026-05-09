@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: product-terminology
 user-invocable: true
-description: "Define and maintain a shared domain glossary. Each entry records a term's name, definition, rationale, aliases, and words to avoid — preventing naming drift across docs, code, and conversation."
+description: "Define and maintain a shared domain glossary."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

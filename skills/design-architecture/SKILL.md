@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: design-architecture
 user-invocable: true
-description: Define system architecture — components, boundaries, communication patterns, data flow, and compliance requirements. Produces ADRs and an architecture document.
+description: "Define system architecture — components, boundaries, communication patterns, data flow, and compliance requirements."
 category: technical
 ---
 

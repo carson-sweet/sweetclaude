@@ -1,8 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-name: product-discovery
 user-invocable: true
-description: Establish what is being built, for whom, and why — at the depth appropriate for the project type. Three depth levels from quick intent to full pain thesis.
+description: "Establish what is being built, for whom, and why — at the depth appropriate for the project type."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
