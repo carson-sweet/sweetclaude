@@ -4,9 +4,20 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-3.52.12-blue)](https://github.com/carson-sweet/sweetclaude/releases) [![Behavioral Contracts](https://img.shields.io/badge/behavioral_contracts-15%2F15_passing-brightgreen)](docs/user-guide/behavioral-contracts.md)
 
+## TL;DR
+
+Start Claude Code and run:
+```
+/plugin marketplace add https://github.com/carson-sweet/sweetclaude
+/plugin install sweetclaude@sweetclaude
+/sweetclaude:help
+```
+
+## What It Is
+
 A software development partner for the full project lifecycle — from the first idea through design, implementation, testing, and ship. SweetClaude teaches itself about your project and preferences through conversation, then applies those learnings to deal with the less-fun parts of the project.
 
-SweetClaude works well when structure, traceability, and product thinking over is valued over raw coding speed. It's the wrong tool if you just want to go faster — we suggest [GStack](https://github.com/garry-tan/gstack) if speed is your primary goal. It was built for software development, but has also been used successfully for academic research, product marketing strategy, and other knowledge-intensive work. 
+SweetClaude works well when structure, traceability, and product thinking is valued over raw coding speed. It's the wrong tool if you **just** want to go faster — we suggest [GStack](https://github.com/garry-tan/gstack) if speed is your primary goal. It was built for software development, but has also been used successfully for academic research, product marketing strategy, and other knowledge-intensive work. 
 
 *EXPERIMENTAL: If you want fast and disciplined, there is the experimental (and therefore potentially unpredictable) [John Wick mode](#operating-modes).*
 
@@ -20,7 +31,7 @@ Install SweetClaude (below) then run `/sweetclaude:help` to get a guided walk-th
 
 There are too many Claude Code plugins to count, so it's important to know if one's design principals align with what you want. To help you decide if SweetClaude might be helpful, here are several of the top principles used when designing SweetClaude:
 
-* **Successful projects take more than code.** If you're here you probably already know this, but really thinking through what you're building, for who, why, and how they'll use it results in a good product that delivers value to users. Unfortunately, that part is a lot less fun than vibe-coding — it's real work. SweetClaude is primarily about taking care of that work for you in a structured, reliable way.
+* **Successful projects take more than code.** If you're here you probably already know this, but really thinking through what you're building, for who, why, and how they'll use it results in a good product that delivers value to users. Unfortunately, that part is a lot less fun than vibe-coding — it's real work. SweetClaude is primarily about taking care of that work — and a bunch of other lessfun work — in a structured, reliable way.
 * **Hide the complexity**. SweetClaude has over 100 skills built natively on Claude Code's Skills framework and Anthropic's multi-agent architecture. These skills compose into dynamic, situation-driven workflows across four operating modes. *Few people want to learn all that.*  To hide the complexity, SweetClaude uses a conversational interface with just a few commands as entry points, and an orchestrator skill does the rest (you can also manually invoke most skills if you want).
 * **Adapt to user preferences as they evolve.** AI assisted vibe-coding is fantastic for rapid experimentation and iteration to see if an idea is viable. An assistant framework should be able to capture things passively without killing the vibe and then be able to use what it captured to dial up the structure and discipline as needed, based on what it learned in the vibe phase. The framework adjusts to the user's preferences — not the other way around — and is designed to dial up or dial back the level of structure mid-project as needed.
 
