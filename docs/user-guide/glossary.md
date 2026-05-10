@@ -40,5 +40,38 @@ Where the project is in its lifecycle: IDEA → PRE-ALPHA → PROTOTYPE → ALPH
 **Betting table**
 A Shape Up concept (does not exist in Kanban or Agile modes). A decision artifact produced during the DEFINE phase that records: the core outcome if this ships, the rabbit holes (likely scope explosions), and what is explicitly out of scope. Implementation is hard-blocked until the betting table is approved.
 
+**Agile mode**
+SweetClaude's most structured mode. Uses the full hierarchy: milestones, epics, sprints, and stories. Epics are first-class. Implementation is hard-blocked without an active sprint. Best for teams with stakeholder delivery commitments. See [Planning Concepts](planning-concepts.md).
+
+**Backlog**
+A flat, priority-ranked list of stories that have not yet been scheduled for work. The default landing zone for all new ideas. The backlog is a completely separate structure from the roadmap — backlog stories have no epic and no milestone assignment. When a story moves from the backlog to the roadmap, it is physically moved and its ID does not change. See [Planning Concepts](planning-concepts.md).
+
+**Backlog-driven development**
+A development approach where the only planning structure is a priority-ranked backlog. Triage the list a couple of times a week, work the top item. No milestones, no epics, no sprints. The natural next step up from vibe coding. See [Planning Concepts](planning-concepts.md).
+
+**Epic**
+A named bundle of stories grouped by feature area or functional domain. An epic belongs to exactly one milestone. Stories within an epic are worked closely together because they are feature-related or technically interdependent. See [Planning Concepts](planning-concepts.md).
+
+**Milestone**
+A named strategic outcome — a meaningful product state the project is driving toward. Milestones are not releases and not dated. A milestone is complete when all its epics are complete. See [Planning Concepts](planning-concepts.md).
+
+**Flow mode**
+SweetClaude's lightest mode. No phase gates, no required artifacts. Backlog and milestones are optional. TDD Level 1. SweetClaude observes quietly and builds what you ask. Best for exploration, prototypes, and personal projects. See [Planning Concepts](planning-concepts.md).
+
+**Kanban mode**
+A continuous-flow mode with a hard WIP limit of 3 in-progress stories. No sprints. Backlog is used but epics are not surfaced. Best for solo developers or small teams who deliver continuously without sprint ceremonies. See [Planning Concepts](planning-concepts.md).
+
+**Roadmap-driven development**
+A development approach where stories are organized into milestones and epics, with optional sprint planning for time-boxed execution. Used by product teams delivering software commercially. See [Planning Concepts](planning-concepts.md).
+
+**Shape Up mode**
+A mode based on the Basecamp methodology. Work enters through shaped pitches, not a backlog. A betting table approves pitches before implementation begins (hard gate). 6-week cycles; fixed appetite, variable scope. No milestones, epics, or sprints. See [Planning Concepts](planning-concepts.md).
+
+**Sprint**
+A fixed-length time container for work (Agile). Groups stories by when they will be worked, not by what they are about. Optional in SweetClaude — solo developers often skip sprints and work directly from epics. See [Planning Concepts](planning-concepts.md).
+
+**Story**
+The atomic unit of work. Describes something a user or the system needs, with enough specificity to know when it is done. Every story has a status and a priority. Stories keep their ID when promoted from the backlog to the roadmap. See [Planning Concepts](planning-concepts.md).
+
 **`.sweetclaude/` directory**
 Where SweetClaude keeps all its own artifacts — state, product docs, design docs, plans. Intentionally separate from your distributable codebase so SweetClaude's work never mingles with the code you ship. Commit this directory to git — it's project history, not scratch.

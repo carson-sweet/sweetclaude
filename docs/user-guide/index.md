@@ -40,6 +40,7 @@ If you are deciding whether SweetClaude is the right tool for what you are doing
 | [Skills Reference](skills-reference.md) | All skills with invocation, purpose, and common combinations. |
 | [TDD Levels](tdd.md) | The four enforcement levels and the design choice underneath them. Why hooks, not prompts. |
 | [State and Memory](state-and-memory.md) | What lives in `.sweetclaude/`, how it survives sessions, what to commit. |
+| [Planning Concepts](planning-concepts.md) | What backlogs, epics, milestones, and sprints are; backlog-driven vs. roadmap-driven development; status and priority values. |
 | [Corpus and RAG](corpus-system.md) | Document pipeline (consolidate → triage → reconcile → promote) and local semantic search. |
 | [FAQ](faq.md) | Honest answers. When SweetClaude is the right tool. When it is not. |
 | [Glossary](glossary.md) | Definitions for SweetClaude-specific terms: phase gates, caucus, deference levels, subagent isolation, and more. |
