@@ -25,7 +25,7 @@ Session navigation and automatic routing. Most of these fire without being invok
 
 | Skill | Invocation | What it does |
 |---|---|---|
-| **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, checks phase exit criteria, routes to the right skill. Pass plain-English arguments to describe what you want. |
+| **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, reads v4 backlog from `docs/product/backlog/INDEX.md`, checks phase exit criteria, routes to the right skill. Pass plain-English arguments to describe what you want. |
 | **Recap** | `/sweetclaude:recap` | One-screen orientation: current phase, active work item, last 3 commits, checkpoint state. Run after a break or context switch. Auto-triggers a checkpoint check-in at session start when unfinished work exists. |
 | **Status** | `/sweetclaude:status` | Project status dashboard. Active work item, phase, roadmap, backlog, recent commits. |
 | **Find Skill** | _(internal)_ | Classifies plain-English input, confirms routing, updates state, and starts the right skill. Invoked automatically by `/sweetclaude:go` when arguments are present. |
