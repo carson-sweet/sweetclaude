@@ -7,11 +7,11 @@
 
 ## Welcome to v4
 
-SweetClaude v4 is a significant step forward in how your product backlog is organized and stored. The short version: your work items now live where they belong — alongside your code, in your project's `docs/` directory — instead of buried inside SweetClaude's internal state folder.
+SweetClaude v4 is a significant step forward in how your product backlog is organized and stored. The short version: your work items now live alongside your code, in your project's `docs/` directory.
 
 ### What's new and why it matters
 
-**Backlog lives in your repo, not inside the framework.** In v3, stories were stored under `.sweetclaude/product/backlog/` — a framework-internal location that most projects kept out of git. In v4, the backlog moves to `docs/product/backlog/`, which is a normal project directory that you control. If you want it tracked in git, track it. If you want it gitignored, gitignore it. SweetClaude no longer makes that decision for you.
+**Backlog lives in your project directory, not the framework directory.** In v3, stories lived under `.sweetclaude/product/backlog/` alongside framework state. In v4, the backlog moves to `docs/product/backlog/` — a first-class project directory that you own and control. If you want it tracked in git, track it. If you want it gitignored, gitignore it. SweetClaude no longer makes that decision for you.
 
 **IDs tell you what something is.** The old `BL-NNN` prefix told you nothing. v4 uses per-type IDs: `STORY-NNN`, `BUG-NNN`, `DEBT-NNN`, `CHORE-NNN`. At a glance, you know what you're looking at — in file names, commit messages, and skill output.
 
