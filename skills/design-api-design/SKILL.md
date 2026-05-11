@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Design API endpoints: routes, request/response shapes, authentication, pagination, error responses, and versioning strategy."
+description: "Design API endpoints: routes, payloads, auth, pagination, errors, versioning."
 category: technical
 ---
 

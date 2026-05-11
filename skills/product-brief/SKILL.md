@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Write a product brief — a strategic document describing what is being built, for whom, why it matters, and what success looks like."
+description: "Write a product brief — what's being built, for whom, why, and what success looks like."
 category: product
 ---
 

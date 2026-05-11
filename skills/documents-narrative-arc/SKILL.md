@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Build and query a knowledge graph connecting strategic claims, proof points, objectives, and supporting/opposing evidence."
+description: "Knowledge graph linking strategic claims, proof points, objectives, and evidence."
 category: strategy
 ---
 
