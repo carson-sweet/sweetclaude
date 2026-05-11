@@ -18,11 +18,55 @@ If `mode` is `shape_up`, output and stop:
 
 All other modes: proceed normally.
 
-!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+```python
+import pathlib, yaml, re, datetime
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_query issue sprint_id= status=backlog
+BACKLOG_BASE = pathlib.Path('docs/product/backlog')
+INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
+TYPE_DIRS = {'story': 'stories', 'bug': 'bugs', 'debt': 'debt', 'chore': 'chores'}
+
+def read_index():
+    raw = INDEX_PATH.read_text(encoding='utf-8')
+    parts = raw.split('---', 2)
+    fm = yaml.safe_load(parts[1]) or {}
+    return fm
+
+def read_story_file(path):
+    raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
+    parts = raw.split('---', 2)
+    fm = yaml.safe_load(parts[1]) or {}
+    body = parts[2] if len(parts) > 2 else ''
+    return fm, body
+
+def find_story_by_id(story_id):
+    for p in BACKLOG_BASE.rglob('*.md'):
+        if p.stem.startswith(story_id + '-') or p.stem == story_id:
+            return p
+    return None
+
+def write_story_file(path, fm, body):
+    content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
+    pathlib.Path(path).write_text(content, encoding='utf-8')
+
+def patch_index_counters(counters):
+    raw = INDEX_PATH.read_text(encoding='utf-8')
+    parts = raw.split('---', 2)
+    index_fm = yaml.safe_load(parts[1]) or {}
+    index_fm['counters'] = counters
+    index_fm['updated'] = datetime.date.today().isoformat()
+    new_front = yaml.safe_dump(index_fm, default_flow_style=False, sort_keys=False).rstrip()
+    INDEX_PATH.write_text(f"---\n{new_front}\n---{parts[2]}", encoding='utf-8')
+
+# Load active backlog items (exclude done/ subdirs)
+active_files = [
+    p for p in BACKLOG_BASE.rglob('*.md')
+    if p.name != 'INDEX.md' and p.name != 'MIGRATION-MAP.md' and '/done/' not in str(p)
+]
+items = []
+for p in active_files:
+    fm, _ = read_story_file(p)
+    if fm.get('status') not in ('done', 'abandoned', 'deferred'):
+        items.append((p, fm))
 ```
 
 # Project Backlog
@@ -38,52 +82,37 @@ The backlog is every issue with no sprint assignment. Arguments: `$ARGUMENTS`
 | (empty) | → **View** the full backlog |
 | `promote <ID> <SP-NNN>` | → **Promote** issue into a sprint |
 | `defer <ID>` | → **Defer** issue (status → deferred) |
-| `review-inferred` | → **Review** Flow-mode inferred issues |
+| `review-inferred` | → **Review** imported issues needing confirmation |
 
 ---
 
 ## View (default)
 
-Use the query output from the shell block above.
-
-Present backlog grouped by priority bucket:
+Use the items loaded above. Present backlog grouped by priority bucket:
 
 ```
 Backlog — {N} unscheduled issues
-══════════════════════════════════════════════════════════════
 
-\033[1;34mNEXT\033[0m ({n})
-  I-NNN  story  xs  Title of issue
+NOW ({n})
+  STORY-001  story  xs  Title of issue
 
-\033[1;34mSOONER\033[0m ({n})
-  I-NNN  story  m   Title of issue
-  I-NNN  bug    s   Title of issue
+SOON ({n})
+  STORY-002  story  m   Title of issue
+  BUG-001    bug    s   Title of issue
 
-\033[1;34mSOON\033[0m ({n})
+LATER ({n})
   ...
 
-\033[1;34mLATER\033[0m ({n})
-  ...
-
-\033[1;34mSOMEDAY\033[0m ({n})
-  ...
-
-\033[1;34mUNESTIMATED\033[0m ({n} — no priority or effort set)
-  I-NNN  story  —   Title of issue
+UNESTIMATED ({n} — no priority or effort set)
+  STORY-NNN  story  —   Title of issue
 ```
+
+Priority buckets: `now`, `soon`, `later`, `someday` (in that order). Items with no priority → UNESTIMATED.
 
 After the list, surface any of these conditions if present:
 
 - **Unestimated count ≥ 10:** "Run `/sweetclaude:project-backlog-triage` — {N} issues have no effort or priority estimate."
-- **Any inferred issues (source=inferred):** "{N} Flow-mode inferred issues need review. Run `project-backlog review-inferred`."
-- **No active sprint:**
-
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_query sprint status=active
-```
-
-If no active sprint: "No active sprint. Run `/sweetclaude:project-sprints new` to plan one."
+- **Any items with `origin: imported`:** "{N} imported issues need review. Run `project-backlog review-inferred`."
 
 ---
 
@@ -91,42 +120,39 @@ If no active sprint: "No active sprint. Run `/sweetclaude:project-sprints new` t
 
 Move issue `<ID>` into sprint `<SP-NNN>`.
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_read <ID>
-sc_artifact_read <SP-NNN>
+```python
+path = find_story_by_id('<ID>')
+fm, body = read_story_file(path)
 ```
 
 Verify:
-- Issue status is `backlog` or `ready`. If `done` or `cancelled`, say: "Can't promote a {status} issue."
-- Sprint status is `planned` or `active`. If `complete` or `cancelled`, say: "Can't promote into a {status} sprint."
+- Issue status is `new`, `ready`, or `active`. If `done` or `abandoned`, say: "Can't promote a {status} issue."
 
-If both valid:
+If valid:
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_write <ID> '{"sprint_id": "<SP-NNN>", "status": "ready"}'
+```python
+today = datetime.date.today().isoformat()
+fm['sprint'] = '<SP-NNN>'
+fm['status'] = 'ready'
+fm['updated'] = today
+# Append to Sprint History in body
+write_story_file(path, fm, body)
 ```
 
-Then append to sprint_history. Read current sprint_history, add entry:
-`{sprint_id: <SP-NNN>, added_date: <today>, removed_date: null, outcome: null}`
-
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_write <ID> '{"sprint_history": "<updated sprint_history string>"}'
-```
-
-Confirm: `Promoted I-NNN → SP-NNN`
+Confirm: `Promoted {ID} → {SP-NNN}`
 
 ---
 
 ## Defer
 
-Set issue status to `deferred`. This hides it from the default backlog view without cancelling it.
+Set issue status to `deferred`. Hides it from the default backlog view without closing it.
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_write <ID> '{"status": "deferred"}'
+```python
+path = find_story_by_id('<ID>')
+fm, body = read_story_file(path)
+fm['status'] = 'deferred'
+fm['updated'] = datetime.date.today().isoformat()
+write_story_file(path, fm, body)
 ```
 
 Confirm: `Deferred <ID> — removed from active backlog`
@@ -135,39 +161,39 @@ Confirm: `Deferred <ID> — removed from active backlog`
 
 ## Review inferred
 
-Load all inferred issues:
+Load all items with `origin: imported` that haven't been reviewed:
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_query issue source=inferred status=backlog
+```python
+imported = [(p, fm) for p, fm in items if fm.get('origin') == 'imported']
 ```
 
-If none: "No inferred issues to review."
+If none: "No imported issues to review."
 
 Otherwise, present them one at a time:
 
 ```
-Inferred issue {n} of {total}:
+Imported issue {n} of {total}:
 
   {ID} — {title}
-  Evidence: {evidence}
-  Inferred type: {type}
+  Origin: imported
+  Type: {type}
 
-  Promote (keep as-is), Edit (change title/type), or Discard?
+  Keep (accept as-is), Edit (change title/type), or Discard?
 ```
 
 Wait for response per issue.
-- **Promote:** `sc_artifact_write <ID> '{"source": "manual"}'` — confirm: "Kept as I-NNN"
-- **Edit:** ask for new title and/or type, then write both fields + set source=manual
-- **Discard:** `sc_artifact_delete <ID>` — confirm: "Discarded"
+- **Keep:** `fm['origin'] = 'manual'` → write_story_file → confirm "Kept as {ID}"
+- **Edit:** ask for new title and/or type, write both fields + set origin=manual
+- **Discard:** delete the file + remove from INDEX.md table
 
-After all reviewed: "Reviewed {N} inferred issues: {kept} kept, {edited} edited, {discarded} discarded."
+After all reviewed: "Reviewed {N} imported issues: {kept} kept, {edited} edited, {discarded} discarded."
 
 ---
 
 ## Rules
 
-- The backlog view never shows `done`, `cancelled`, or `deferred` issues — those are archived.
+- The backlog view never shows `done`, `abandoned`, or `deferred` issues — those are archived.
 - Promoting into a sprint does not start the sprint. Sprint activation is done in `project-sprints`.
 - An issue promoted into an active sprint gets status `ready`. An issue promoted into a planned sprint stays `ready`.
 - Never auto-promote an entire backlog into a sprint — always promote individual issues deliberately.
+- All reads and writes go directly to `docs/product/backlog/<type>s/<ID>-<slug>.md` files. Never touch `.sweetclaude/product/backlog/`.
