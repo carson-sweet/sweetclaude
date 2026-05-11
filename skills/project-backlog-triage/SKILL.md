@@ -73,6 +73,19 @@ A focused grooming session. Works through ungroomed issues one at a time using I
 
 ---
 
+## Step 0: v4 lint check
+
+Before starting the triage session, run the v4 lint rules from `sweetclaude:_health` Step 3 inline. Surface any findings at the top of the output:
+
+```
+## v4 Storage Warnings
+- counter-drift:bug (stored=2, max_id_seen=4)
+```
+
+Proceed to the triage session regardless — findings are informational, not blocking.
+
+---
+
 ## Entry check
 
 If `UNGROOMED_COUNT` is 0: "Backlog is fully groomed — all {TOTAL_BACKLOG} issues have priority and effort estimates. Nothing to triage."

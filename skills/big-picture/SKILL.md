@@ -14,6 +14,20 @@ STOP. Before executing this skill, check: if pre-loaded state above shows STATE_
 
 Render the full project as a milestone pipeline. Milestones in dependency order. Work items nested under each. No background agents — reads state files directly.
 
+## Step 0: v4 lint check
+
+Before rendering the pipeline, run the v4 lint rules from `sweetclaude:_health` Step 3 inline. If any findings are present, surface them before the normal output:
+
+```
+## v4 Storage Warnings
+- counter-drift:story (stored=3, max_id_seen=5)
+- done-status-mismatch:STORY-002-foo.md has status=done but is not in done/
+```
+
+Roadmap-related warnings (cross-location-duplicate-id, roadmap-epic-structure) remain inert until Phase 2 (gated by `docs/product/roadmap/` existence). Counter-drift and done-status-mismatch findings are always surfaced.
+
+Proceed to Step 1 regardless of findings — this is informational, not blocking.
+
 ## Step 1: Schema check
 
 Use `phase_schema_version` from pre-loaded session state above:
