@@ -5,6 +5,28 @@
 
 ---
 
+## Welcome to v4
+
+SweetClaude v4 is a significant step forward in how your product backlog is organized and stored. The short version: your work items now live where they belong — alongside your code, in your project's `docs/` directory — instead of buried inside SweetClaude's internal state folder.
+
+### What's new and why it matters
+
+**Backlog lives in your repo, not inside the framework.** In v3, stories were stored under `.sweetclaude/product/backlog/` — a framework-internal location that most projects kept out of git. In v4, the backlog moves to `docs/product/backlog/`, which is a normal project directory that you control. If you want it tracked in git, track it. If you want it gitignored, gitignore it. SweetClaude no longer makes that decision for you.
+
+**IDs tell you what something is.** The old `BL-NNN` prefix told you nothing. v4 uses per-type IDs: `STORY-NNN`, `BUG-NNN`, `DEBT-NNN`, `CHORE-NNN`. At a glance, you know what you're looking at — in file names, commit messages, and skill output.
+
+**Closed work is archived, not deleted.** Done and abandoned items move to a `done/` subdirectory. They're out of the way but still there when you need them. No data is ever lost on close.
+
+**A single INDEX.md is the source of truth.** `docs/product/backlog/INDEX.md` holds the counter state and a live table of all active work. Every skill reads from and writes to this file atomically — no more hunting across directories to figure out what's in the backlog.
+
+**Health checks catch problems before they cause damage.** v4 includes built-in lint rules that detect counter drift, misplaced files, and stale v3 artifacts. `/sweetclaude:fix-sweetclaude` can repair most findings automatically.
+
+### Migration is safe and reversible
+
+Before touching a single file, `/sweetclaude:migrate` creates a full timestamped backup of your `.sweetclaude/` directory. If anything goes wrong, one command restores you to exactly where you started. The original `BL-NNN.md` files are never deleted during migration — they stay in place until you explicitly choose to remove them.
+
+---
+
 ## What's changing in v4
 
 - Stories move from `.sweetclaude/product/backlog/BL-NNN.md` to `docs/product/backlog/<type>s/<TYPE>-NNN-<slug>.md`.
