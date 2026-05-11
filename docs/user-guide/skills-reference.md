@@ -171,18 +171,20 @@ Execution-layer tracking. These skills manage the work that delivers the product
 
 ---
 
-## Testing (6 skills)
+## Testing (subcommands of `code-testing`)
 
-Independent QA, security, compliance, and performance validation — not tied to a single feature's TDD cycle. All actionable findings file directly to project-issues.
+Independent QA, security, compliance, and performance validation. All accessed as subcommands of `code-testing`. All actionable findings file directly to project-issues.
 
-| Skill | Invocation | What it does |
-|---|---|---|
-| **Testing Plan** | `/sweetclaude:testing-plan` | Define a test strategy for a feature, release, or area. Scope, test types, environments, entry criteria, exit criteria. Challenges vague exit criteria before accepting. |
-| **Testing Security** | `/sweetclaude:testing-security` | Structured security review. STRIDE threat model → OWASP Top 10 checklist → dependency audit. P0 findings block release. P0/P1 filed as `next`-priority issues. |
-| **Testing Compliance** | `/sweetclaude:testing-compliance` | Control testing and evidence collection for SOC 2, HIPAA, GDPR, and PCI-DSS. Track per-control status (pass/partial/gap/N/A), log evidence locations, generate gap reports. Gaps filed as issues. |
-| **Testing Session** | `/sweetclaude:testing-session` | Manual QA session — scripted test cases or exploratory charter. Pass/fail per case. File bugs mid-session; severity maps to issue priority. Resume open sessions. |
-| **Testing Performance** | `/sweetclaude:testing-performance` | Load scenario definitions, baseline recording, and benchmark comparison. Regression detection with configurable p50/p95/p99 and error rate thresholds. Tool-agnostic: works with k6, Locust, wrk, or manual runs. |
-| **Testing Accessibility** | `/sweetclaude:testing-accessibility` | WCAG 2.1 Level AA audit. Automated scan guidance + manual keyboard navigation, screen reader, and visual checklist. Critical findings block release. Findings filed as issues. |
+| Subcommand | What it does |
+|---|---|
+| `/sweetclaude:code-testing plan` | Define a test strategy for a feature, release, or area. Scope, test types, environments, entry criteria, exit criteria. Challenges vague exit criteria before accepting. |
+| `/sweetclaude:code-testing security` | Structured security review. STRIDE threat model → OWASP Top 10 checklist → dependency audit. P0 findings block release. P0/P1 filed as `next`-priority issues. |
+| `/sweetclaude:code-testing compliance` | Control testing and evidence collection for SOC 2, HIPAA, GDPR, and PCI-DSS. Track per-control status (pass/partial/gap/N/A), log evidence locations, generate gap reports. Gaps filed as issues. |
+| `/sweetclaude:code-testing session` | Manual QA session — scripted test cases or exploratory charter. Pass/fail per case. File bugs mid-session; severity maps to issue priority. Resume open sessions. |
+| `/sweetclaude:code-testing performance` | Load scenario definitions, baseline recording, and benchmark comparison. Regression detection with configurable p50/p95/p99 and error rate thresholds. Tool-agnostic: works with k6, Locust, wrk, or manual runs. |
+| `/sweetclaude:code-testing accessibility` | WCAG 2.1 Level AA audit. Automated scan guidance + manual keyboard navigation, screen reader, and visual checklist. Critical findings block release. Findings filed as issues. |
+
+The umbrella `/sweetclaude:code-testing` (no argument) shows the original test suite / mutation / quickscan / PR pre-check menu. The subcommands above route to dedicated internal subskills.
 
 ---
 

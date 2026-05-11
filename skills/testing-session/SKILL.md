@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-user-invocable: true
-description: "Run a manual QA session."
+user-invocable: false
+description: "Internal subskill of code-testing. Run a manual QA session."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

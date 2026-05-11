@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-user-invocable: true
-description: "Compliance control testing and evidence collection."
+user-invocable: false
+description: "Internal subskill of code-testing. Compliance control testing and evidence collection."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

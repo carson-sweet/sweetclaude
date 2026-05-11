@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Run any combination of test suite, mutation testing, security review, and PR pre-check."
+description: "Umbrella for all testing operations — test suite, mutation, security, PR pre-check, plan, session, performance, accessibility, compliance."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
@@ -11,6 +11,21 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 </preflight-guard>
 
 # Code Testing
+
+## Step 0: Subcommand routing
+
+If `$ARGUMENTS` matches one of the following testing subcommands, invoke the corresponding internal subskill via the Skill tool and stop. Otherwise proceed to Step 1.
+
+| Argument | Invoke |
+|---|---|
+| `plan` | `sweetclaude:testing-plan` |
+| `session` | `sweetclaude:testing-session` |
+| `security` (when used as a structured-review request) | `sweetclaude:testing-security` |
+| `performance` | `sweetclaude:testing-performance` |
+| `accessibility` | `sweetclaude:testing-accessibility` |
+| `compliance` | `sweetclaude:testing-compliance` |
+
+Note on `security`: this routes to the structured security review (`testing-security`). The quick-scan Security Review section below is still reachable via menu option 3 (or `$ARGUMENTS=quickscan`).
 
 ## Step 1: Choose what to run
 
