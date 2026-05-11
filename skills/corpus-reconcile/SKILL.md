@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-user-invocable: true
-description: "Take staged files and work with the user to produce approved canonical documents in corpus/working/."
+user-invocable: false
+description: "Internal subskill of document-corpus. Produce approved canonical documents from staged files into corpus/working/."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

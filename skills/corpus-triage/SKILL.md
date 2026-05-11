@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-user-invocable: true
-description: "Classify files in corpus/raw/inbox/ as keep-as-is, needs-reconciliation, discard, or defer."
+user-invocable: false
+description: "Internal subskill of document-corpus. Classify inbox files as keep-as-is, needs-reconciliation, discard, or defer."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

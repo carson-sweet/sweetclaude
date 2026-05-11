@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-user-invocable: true
-description: "Scan source directories, deduplicate files, copy unique files into corpus/raw/inbox/."
+user-invocable: false
+description: "Internal subskill of document-corpus. Scan source directories, deduplicate, copy unique files into corpus/raw/inbox/."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

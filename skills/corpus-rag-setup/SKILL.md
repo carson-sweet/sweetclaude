@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-user-invocable: true
-description: "Configure and run local semantic search on project documents using mcp-local-rag."
+user-invocable: false
+description: "Internal subskill of document-corpus. Configure and run local semantic search using mcp-local-rag."
 ---
 
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`

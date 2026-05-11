@@ -211,19 +211,19 @@ Long-form document work, corpus management, and specialized strategy capabilitie
 | **John Wick** | `/sweetclaude:john-wick` | Autonomous multi-session SDLC pipeline. Runs the full pipeline without stopping at every sub-step, using phase check-ins to validate exit criteria. For when you want maximum autonomy. |
 | **John Wick Check-In** | `/sweetclaude:john-wick-checkin` | Phase check-in subagent used internally by John Wick. Available standalone for drift detection. |
 
-### Document Corpus sub-skills
+### Document Corpus sub-commands
 
-Each pipeline step is also a standalone skill you can invoke directly:
+The seven pipeline steps are accessed as sub-commands of `document-corpus`. Pass the step name as an argument to jump directly to it (skipping the menu):
 
-| Skill | Invocation | What it does |
-|---|---|---|
-| **Corpus Status** | `/sweetclaude:corpus-status` | Pipeline state, file counts, what to do next. |
-| **Corpus Consolidate** | `/sweetclaude:corpus-consolidate` | Scan, deduplicate, ingest documents into `raw/inbox/`. |
-| **Corpus Triage** | `/sweetclaude:corpus-triage` | Classify each file: keep / reconcile / discard / defer. |
-| **Corpus Reconcile** | `/sweetclaude:corpus-reconcile` | Draft canonical documents from related or conflicting files. |
-| **Corpus Promote** | `/sweetclaude:corpus-promote` | Finalize with provenance, archive sources, rebuild RAG index. |
-| **Corpus RAG Setup** | `/sweetclaude:corpus-rag-setup` | Set up local RAG search (installs mcp-local-rag). |
-| **Corpus RAG Reindex** | `/sweetclaude:corpus-rag-reindex` | Rebuild RAG embeddings after document changes. |
+| Sub-command | What it does |
+|---|---|
+| `/sweetclaude:document-corpus status` | Pipeline state, file counts, what to do next. |
+| `/sweetclaude:document-corpus consolidate` | Scan, deduplicate, ingest documents into `raw/inbox/`. |
+| `/sweetclaude:document-corpus triage` | Classify each file: keep / reconcile / discard / defer. |
+| `/sweetclaude:document-corpus reconcile` | Draft canonical documents from related or conflicting files. |
+| `/sweetclaude:document-corpus promote` | Finalize with provenance, archive sources, rebuild RAG index. |
+| `/sweetclaude:document-corpus rag-setup` | Set up local RAG search (installs mcp-local-rag). |
+| `/sweetclaude:document-corpus rag-reindex` | Rebuild RAG embeddings after document changes. |
 
 ---
 
