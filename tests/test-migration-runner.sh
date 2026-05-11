@@ -186,6 +186,132 @@ echo "$CHAIN_OUTPUT" | grep -q "chain_broken" \
   || fail "chain_broken: $CHAIN_OUTPUT"
 
 # ---------------------------------------------------------------------------
+# Test 7: directory-entry migration (artifact dirs)
+# ---------------------------------------------------------------------------
+
+echo "[7] directory-entry migration"
+
+DIR_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR" EXIT
+
+# v1 layout: ITEM-NNN-slug.md at top level with frontmatter type field
+mkdir -p "$DIR_TMPDIR/.sweetclaude/product/backlog"
+cat > "$DIR_TMPDIR/.sweetclaude/product/backlog/ITEM-001-add-oauth.md" << 'MD'
+---
+id: ITEM-001
+title: Add OAuth login
+type: story
+---
+Body content for OAuth login.
+MD
+cat > "$DIR_TMPDIR/.sweetclaude/product/backlog/ITEM-002-crash-empty.md" << 'MD'
+---
+id: ITEM-002
+title: Crash on empty input
+type: bug
+---
+Body content for crash bug.
+MD
+
+# Registry that references the fixture handler.
+DIR_REGISTRY="$DIR_TMPDIR/registry.yaml"
+cat > "$DIR_REGISTRY" << 'YAML'
+schema_version: 1
+state_files:
+  backlog:
+    type: directory
+    description: "Fixture artifact directory"
+    path_template: "{product_base}/backlog"
+    current_version: 2
+    backup_required: false
+    migrations:
+      - from: 1
+        to: 2
+        handler: items_dir_v1_to_v2
+YAML
+
+DIR_HANDLER_DIR="$REPO_ROOT/tests/fixtures/migration-runner"
+
+# Dry-run plan should detect v1.
+DIR_PLAN=$(python3 "$RUNNER" --project-dir "$DIR_TMPDIR" --registry "$DIR_REGISTRY" \
+  --migrations-dir "$DIR_HANDLER_DIR" --dry-run 2>&1)
+echo "$DIR_PLAN" | grep -q "backlog: on_disk=v1 target=v2" \
+  && pass "directory plan detected v1->v2 via pattern inference" \
+  || fail "directory plan: $DIR_PLAN"
+
+# Execute.
+DIR_RUN=$(python3 "$RUNNER" --project-dir "$DIR_TMPDIR" --registry "$DIR_REGISTRY" \
+  --migrations-dir "$DIR_HANDLER_DIR" 2>&1)
+echo "$DIR_RUN" | grep -qE "backlog: OK v1.>v2|backlog: OK v1.v2" \
+  && pass "directory migration executed" \
+  || fail "directory run: $DIR_RUN"
+
+# Verify v2 layout.
+if [ -f "$DIR_TMPDIR/.sweetclaude/product/backlog/story/THING-001-add-oauth.md" ] \
+  && [ -f "$DIR_TMPDIR/.sweetclaude/product/backlog/bug/THING-001-crash-empty.md" ] \
+  && [ ! -f "$DIR_TMPDIR/.sweetclaude/product/backlog/ITEM-001-add-oauth.md" ]; then
+  pass "directory v2 layout correct (per-type subdirs, originals removed)"
+else
+  fail "directory v2 layout wrong"
+  ls -laR "$DIR_TMPDIR/.sweetclaude/product/backlog"
+fi
+
+# Verify MIGRATION-MAP.md written.
+MAP="$DIR_TMPDIR/.sweetclaude/product/backlog/MIGRATION-MAP.md"
+if [ -f "$MAP" ] && grep -q "ITEM-001" "$MAP" && grep -q "THING-001" "$MAP"; then
+  pass "MIGRATION-MAP.md written next to artifacts"
+else
+  fail "MIGRATION-MAP.md missing or malformed"
+  [ -f "$MAP" ] && cat "$MAP"
+fi
+
+# Verify idempotency for directory entry.
+DIR_RERUN=$(python3 "$RUNNER" --project-dir "$DIR_TMPDIR" --registry "$DIR_REGISTRY" \
+  --migrations-dir "$DIR_HANDLER_DIR" 2>&1)
+echo "$DIR_RERUN" | grep -q "backlog: idempotent" \
+  && pass "directory migration is idempotent on re-run" \
+  || fail "directory re-run: $DIR_RERUN"
+
+# ---------------------------------------------------------------------------
+# Test 8: path_template variable resolution from artifact-privacy.yaml
+# ---------------------------------------------------------------------------
+
+echo "[8] path_template resolution from artifact-privacy.yaml"
+
+VAR_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR" EXIT
+
+# Use docs/product as product_base instead of the default .sweetclaude/product.
+mkdir -p "$VAR_TMPDIR/.sweetclaude" "$VAR_TMPDIR/docs/product/backlog"
+cat > "$VAR_TMPDIR/.sweetclaude/artifact-privacy.yaml" << 'YAML'
+categories:
+  product:
+    base_path: docs/product
+YAML
+cat > "$VAR_TMPDIR/docs/product/backlog/ITEM-001-thing.md" << 'MD'
+---
+id: ITEM-001
+title: A thing
+type: story
+---
+body
+MD
+
+VAR_PLAN=$(python3 "$RUNNER" --project-dir "$VAR_TMPDIR" --registry "$DIR_REGISTRY" \
+  --migrations-dir "$DIR_HANDLER_DIR" --dry-run 2>&1)
+echo "$VAR_PLAN" | grep -q "backlog: on_disk=v1 target=v2" \
+  && pass "path_template resolved {product_base} -> docs/product" \
+  || fail "var plan: $VAR_PLAN"
+
+VAR_RUN=$(python3 "$RUNNER" --project-dir "$VAR_TMPDIR" --registry "$DIR_REGISTRY" \
+  --migrations-dir "$DIR_HANDLER_DIR" 2>&1)
+if [ -f "$VAR_TMPDIR/docs/product/backlog/story/THING-001-thing.md" ]; then
+  pass "migration ran against custom product_base (docs/product)"
+else
+  fail "expected file at docs/product/backlog/story/THING-001-thing.md not found; run output: $VAR_RUN"
+fi
+
+# ---------------------------------------------------------------------------
 
 echo
 if [ "$FAILED" -eq 0 ]; then
