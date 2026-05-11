@@ -155,7 +155,7 @@ Execution-layer tracking. These skills manage the work that delivers the product
 
 | Skill | Invocation | What it does |
 |---|---|---|
-| **Project Issues** | `/sweetclaude:project-issues` | Create, view, update, and close issues. Maintains sprint history per issue. Warns on adrift issues (carried over 2+ sprints). Supports `list`, `backlog`, `view`, `new`, `update`, `close`, `reopen`. |
+| **Project Issues** | `/sweetclaude:project-issues` | Create, view, update, and close issues. Reads and writes v4 story files under `docs/product/backlog/`. Closing a story moves the file to `done/` and sets `closed_date`. Supports `list`, `backlog`, `view`, `new`, `update`, `close`, `reopen`. |
 | **Project Epics** | `/sweetclaude:project-epics` | Optional goal lens that groups stories by functional area. A classification attribute — tracks progress toward a named goal across multiple sprints, not a delivery container. Cancel an epic and its stories return to the backlog. Warns if an epic exceeds 20 stories. |
 | **Epic Design** | `/sweetclaude:epic-design [EP-NNN\|new <title>]` | Produce a complete, ordered story list for an epic. Design-first sequence: no implementation stories are written until design stories are complete and their outputs are on disk. Accepts an existing epic or creates a new one. |
 | **Project Sprints** | `/sweetclaude:project-sprints` | Full sprint lifecycle: plan, start, board, update, close, retrospective. Each sprint anchors to a milestone (`milestone_id`). Velocity calculated on close. Sprint history maintained per issue. Enforces single active sprint. |

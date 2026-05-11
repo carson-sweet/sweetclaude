@@ -4,17 +4,59 @@ user-invocable: true
 description: "Manage project issues — list, view, create, update, and close."
 ---
 
-!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+```python
+import pathlib, yaml, re, datetime, shutil
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
+BACKLOG_BASE = pathlib.Path('docs/product/backlog')
+INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
+TYPE_DIRS = {'story': 'stories', 'bug': 'bugs', 'debt': 'debt', 'chore': 'chores'}
+TYPE_PREFIX = {'story': 'STORY', 'bug': 'BUG', 'debt': 'DEBT', 'chore': 'CHORE'}
 
-# Ensure index exists — reindex silently if missing
-INDEX="${SC_STATE_BASE}/project-index.json"
-if [ ! -f "$INDEX" ]; then
-  python3 "${_sc_hooks}/sc-artifact-impl.py" reindex \
-    "$SC_PROJECT_ROOT" "$SC_PRODUCT_BASE" "$SC_STATE_BASE" > /dev/null 2>&1
-fi
+def read_index():
+    raw = INDEX_PATH.read_text(encoding='utf-8')
+    parts = raw.split('---', 2)
+    return yaml.safe_load(parts[1]) or {}, parts[2]
+
+def write_index(fm, body):
+    content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---{body}"
+    INDEX_PATH.write_text(content, encoding='utf-8')
+
+def read_story_file(path):
+    raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
+    parts = raw.split('---', 2)
+    fm = yaml.safe_load(parts[1]) or {}
+    body = parts[2] if len(parts) > 2 else ''
+    return fm, body
+
+def write_story_file(path, fm, body):
+    content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
+    pathlib.Path(path).write_text(content, encoding='utf-8')
+
+def find_story_by_id(story_id):
+    for p in BACKLOG_BASE.rglob('*.md'):
+        if p.name in ('INDEX.md', 'MIGRATION-MAP.md'):
+            continue
+        stem = p.stem
+        if stem == story_id or stem.startswith(story_id + '-'):
+            return p
+    return None
+
+def make_slug(title):
+    return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', title.lower())).strip('-')
+
+def assign_new_id(typ):
+    index_fm, index_body = read_index()
+    counters = index_fm.setdefault('counters', {'story': 0, 'bug': 0, 'debt': 0, 'chore': 0})
+    counters[typ] = counters.get(typ, 0) + 1
+    index_fm['updated'] = datetime.date.today().isoformat()
+    write_index(index_fm, index_body)
+    return f"{TYPE_PREFIX[typ]}-{counters[typ]:03d}"
+
+def all_story_files():
+    return [
+        p for p in BACKLOG_BASE.rglob('*.md')
+        if p.name not in ('INDEX.md', 'MIGRATION-MAP.md')
+    ]
 ```
 
 # Project Issues
@@ -33,7 +75,7 @@ If `mode` is `shape_up` AND operation is `create` (not `pitch`, `list`, or `upda
 
 Ask: "Is this issue derived from an approved pitch?"
 
-- **Yes** → Ask for pitch ID (e.g., `PITCH-001`). Link it by including `pitch_id: {PITCH-XXX}` in the artifact. Proceed with create.
+- **Yes** → Ask for pitch ID (e.g., `PITCH-001`). Include `pitch_id: {PITCH-XXX}` in the frontmatter. Proceed with create.
 - **No / I don't have a pitch** → Output and stop:
   > "In Shape Up mode, all issues must come from an approved pitch. The betting table has already decided what's worth building — issues outside approved pitches expand scope without an appetite trade-off.
   >
@@ -49,49 +91,54 @@ Parse the first word of `$ARGUMENTS` to determine the operation.
 
 | First word | Operation |
 |---|---|
-| (empty) | → **List** all non-cancelled issues |
-| `list` | → **List** all non-cancelled issues |
+| (empty) | → **List** all non-done issues |
+| `list` | → **List** all non-done issues |
 | `backlog` | → **Backlog** (issues not yet in a sprint) |
 | `view <ID>` | → **View** single issue |
 | `new` | → **Create** new issue interactively |
 | `update <ID>` | → **Update** existing issue |
-| `close <ID>` | → **Close** issue (status → done) |
-| `reopen <ID>` | → **Reopen** issue (status → backlog) |
+| `close <ID>` | → **Close** issue (status → done, move to done/) |
+| `reopen <ID>` | → **Reopen** issue (status → new) |
 
 ---
 
 ## List
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_list issue
+```python
+files = all_story_files()
+stories = []
+for p in files:
+    fm, _ = read_story_file(p)
+    if fm.get('status') not in ('done', 'abandoned'):
+        stories.append(fm)
+
+# Sort: priority order, then by id
+PRIORITY_ORDER = {'now': 1, 'soon': 2, 'later': 3, 'someday': 4, None: 5}
+stories.sort(key=lambda fm: (PRIORITY_ORDER.get(fm.get('priority'), 5), fm.get('id', '')))
 ```
 
-Present as a compact table. Sort by: done/cancelled last, then by priority order (next → sooner → soon → later → someday), then by ID.
-
-Priority sort order: next=1, sooner=2, soon=3, later=4, someday=5, null=6.
+Present as a compact table. Sort: done/abandoned last, then by priority, then by ID.
 
 ```
-ID       Type    Status      Pri       Eff  Title
-──────────────────────────────────────────────────────────────────
-I-001    spike   done        later     m    Agentic Skills spike
-I-025    story   backlog     soon      m    CLI UX Improvements
+ID         Type    Status      Pri       Eff  Title
+STORY-001  story   new         soon      m    Add OAuth login
+BUG-001    bug     active      now       s    Crash on empty input
 ...
 ```
 
-After the table: `{N} issues  ({done} done, {backlog} backlog, {in_progress} in progress)`
+After the table: `{N} issues  ({done} done, {active} active, {new} new)`
 
 ---
 
 ## Backlog
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_query issue sprint_id= status=backlog
+Show items with no sprint assignment and status not in done/abandoned:
+
+```python
+backlog = [fm for fm in stories if not fm.get('sprint') and fm.get('status') not in ('done', 'abandoned', 'deferred')]
 ```
 
-Present same table format as List, sorted by priority. Add header:
-`Backlog — {N} unscheduled issues`
+Present same table format as List, sorted by priority. Header: `Backlog — {N} unscheduled issues`
 
 After table: suggest `project-sprints` to schedule issues into a sprint, or `project-backlog-triage` if more than 10 issues have no effort estimate.
 
@@ -99,37 +146,35 @@ After table: suggest `project-sprints` to schedule issues into a sprint, or `pro
 
 ## View
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_read <ID>
+```python
+path = find_story_by_id('<ID>')
+if not path:
+    print(f"Issue `<ID>` not found.")
+else:
+    fm, body = read_story_file(path)
 ```
 
-Replace `<ID>` with the ID from `$ARGUMENTS` (e.g. `I-025`).
-
-If the result is `{}`, say: "Issue `<ID>` not found."
-
-Otherwise present as:
+Present as:
 
 ```
-I-025 — CLI UX Improvements
-─────────────────────────────────────────
-Type:      story          Status:   backlog
+STORY-001 — Add OAuth login
+Type:      story          Status:   new
 Priority:  soon           Effort:   m
 Epic:      (none)         Sprint:   (none)
-Source:    manual
+Origin:    manual
 
 Description
-  SweetClaude skill output is plain text. Improve the CLI experience...
+  ...
 
-Acceptance criteria
+Acceptance Criteria
   (if present)
 
-Sprint history
-  (if present — list each sprint and outcome)
+Sprint History
+  (if present)
 ```
 
-If the issue has `sprint_history` with 2+ `carried_over` entries, add a warning:
-`⚠ Adrift: carried over {N} sprints without completion.`
+If the issue has been in 2+ sprints without completing, add a warning:
+`Adrift: carried over {N} sprints without completion.`
 
 ---
 
@@ -138,96 +183,127 @@ If the issue has `sprint_history` with 2+ `carried_over` entries, add a warning:
 Ask one question at a time. Do not present a form.
 
 1. **Title** — "What's the issue? One line."
-2. **Type** — "story / bug / chore / spike?" (default: story)
-3. **Description** — For stories: "As a [who], they want [what] so that [why]?" For bugs: "Steps to reproduce?" For chores: "What needs to be done?" For spikes: "What question needs answering?"
+2. **Type** — "story / bug / debt / chore?" (default: story)
+3. **Description** — For stories: "As a [who], they want [what] so that [why]?" For bugs: "Steps to reproduce?" For debt: "What's the structural problem?" For chores: "What needs to be done?"
 4. **Acceptance criteria** (story/bug only) — "What conditions make this done? List them one per line, or say none."
-5. **Priority** — "next / sooner / soon / later / someday?" (default: soon)
-6. **Effort** — "xs / s / m / l / xl / xxl?" (default: m)
+5. **Priority** — "now / soon / later / someday?" (default: soon)
+6. **Effort** — "s / m / l / xl?" (default: m)
 7. **Epic** — "Does this belong to an epic?" List available epics first, or say none.
 
 Once all answers collected:
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_create issue '{
-  "title": "<title>",
-  "type": "<type>",
-  "description": "<description>",
-  "acceptance_criteria": "<ac as JSON array or empty>",
-  "priority": "<priority>",
-  "effort": "<effort>",
-  "epic_id": "<epic_id or null>",
-  "status": "backlog",
-  "source": "manual"
-}'
+```python
+today = datetime.date.today().isoformat()
+typ = '<type>'  # story, bug, debt, or chore
+new_id = assign_new_id(typ)
+slug = make_slug('<title>')
+fm = {
+    'id': new_id,
+    'type': typ,
+    'title': '<title>',
+    'status': 'new',
+    'priority': '<priority>',
+    'effort': '<effort>',
+    'epic': '<epic_id or null>',
+    'milestone': None,
+    'sprint': None,
+    'tags': [],
+    'origin': 'manual',
+    'created': today,
+    'updated': today,
+    'closed_date': None,
+}
+dest = BACKLOG_BASE / TYPE_DIRS[typ] / f"{new_id}-{slug}.md"
+body = f"\n## Description\n\n<description>\n\n## Acceptance Criteria\n\n<ac>\n"
+write_story_file(dest, fm, body)
 ```
 
-Confirm: `Created <ID> — <title>`
+Confirm: `Created {new_id} — {title}`
 
 ---
 
 ## Update
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_read <ID>
+```python
+path = find_story_by_id('<ID>')
+fm, body = read_story_file(path)
 ```
 
 Show the current values. Ask: "What would you like to change?" Accept natural language or field=value pairs.
 
 Map the user's intent to fields:
-- "move to sprint SP-003" → `sprint_id: SP-003`, `status: ready`
-- "set priority to sooner" → `priority: sooner`
-- "mark in progress" → `status: in_progress`
-- "assign to epic EP-001" → `epic_id: EP-001`
-- "remove from sprint" → `sprint_id: null`
-- "add acceptance criteria" → append to `acceptance_criteria`
+- "move to sprint SP-003" → `sprint: SP-003`, `status: active`
+- "set priority to soon" → `priority: soon`
+- "assign to epic EP-001" → `epic: EP-001`
+- "remove from sprint" → `sprint: null`
+- "add acceptance criteria" → append to body Acceptance Criteria section
 
 Then:
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_write <ID> '<json of only changed fields>'
+```python
+fm['updated'] = datetime.date.today().isoformat()
+# apply changed fields
+write_story_file(path, fm, body)
 ```
 
-Confirm: `Updated <ID> — <list of changed fields>`
-
-If the user moves an issue into a sprint, also append to `sprint_history`:
-`{sprint_id: <SP-NNN>, added_date: <today>, outcome: null}`
+Confirm: `Updated {ID} — {list of changed fields}`
 
 ---
 
 ## Close
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_write <ID> '{"status": "done"}'
+Set status to done, move file to the `done/` subdirectory, and set `closed_date`.
+
+```python
+path = find_story_by_id('<ID>')
+fm, body = read_story_file(path)
+today = datetime.date.today().isoformat()
+fm['status'] = 'done'
+fm['closed_date'] = today
+fm['updated'] = today
+
+typ = fm.get('type', 'story')
+done_dir = BACKLOG_BASE / TYPE_DIRS.get(typ, 'stories') / 'done'
+done_dir.mkdir(parents=True, exist_ok=True)
+new_path = done_dir / path.name
+write_story_file(path, fm, body)  # write first
+shutil.move(str(path), str(new_path))  # then move
 ```
 
-If the issue has a sprint, append to its sprint_history:
-`{sprint_id: <sprint_id>, removed_date: <today>, outcome: "completed"}`
-
-Confirm: `Closed <ID> — <title>`
+Confirm: `Closed {ID} — {title}`
 
 If the issue was the last open issue in an epic, surface:
-`All issues in <EP-NNN> are now done. Run project-epics to close the epic.`
+`All issues in {EP-NNN} are now done. Run project-epics to close the epic.`
 
 ---
 
 ## Reopen
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_write <ID> '{"status": "backlog", "sprint_id": null}'
+```python
+path = find_story_by_id('<ID>')
+fm, body = read_story_file(path)
+today = datetime.date.today().isoformat()
+fm['status'] = 'new'
+fm['sprint'] = None
+fm['closed_date'] = None
+fm['updated'] = today
+
+typ = fm.get('type', 'story')
+active_dir = BACKLOG_BASE / TYPE_DIRS.get(typ, 'stories')
+new_path = active_dir / path.name
+write_story_file(path, fm, body)
+if '/done/' in str(path):
+    shutil.move(str(path), str(new_path))
 ```
 
-Confirm: `Reopened <ID> — returned to backlog`
+Confirm: `Reopened {ID} — returned to backlog`
 
 ---
 
 ## Rules
 
-- Never delete an issue — use `close` (status=done) or `sc_artifact_delete` (status=cancelled) for items that won't be done.
-- Sprint assignment always goes through `update`, not direct write, so sprint_history is maintained.
-- If `$ARGUMENTS` contains an ID that doesn't start with `I-`, say: "That doesn't look like an issue ID. Issue IDs start with `I-` (e.g. `I-025`)."
-- If the index is stale (query returns 0 results when files exist), run reindex silently before presenting results.
+- Never delete an issue — use `close` (status=done, moved to done/) or set status=abandoned for items that won't be done.
+- Closing a story moves the file from `<type>s/<ID>-<slug>.md` to `<type>s/done/<ID>-<slug>.md`. The file is never deleted.
+- Sprint assignment always goes through `update`, not direct write, so sprint history in the body is maintained.
+- If `$ARGUMENTS` contains an ID that doesn't look like a v4 ID (`STORY-NNN`, `BUG-NNN`, `DEBT-NNN`, `CHORE-NNN`), say: "That doesn't look like a v4 issue ID. IDs take the form STORY-NNN, BUG-NNN, DEBT-NNN, or CHORE-NNN."
+- All reads and writes go directly to `docs/product/backlog/<type>s/<ID>-<slug>.md` files. Never touch `.sweetclaude/product/backlog/`.
