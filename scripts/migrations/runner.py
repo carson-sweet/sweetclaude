@@ -93,6 +93,7 @@ class FilePlan:
     on_disk_version: int | None
     target_version: int
     needs_migration: bool
+    entry_type: str = "file"   # "file" or "directory"
     steps: list[PlannedStep] = field(default_factory=list)
     missing_handlers: list[str] = field(default_factory=list)
 
@@ -110,6 +111,12 @@ class MigrationRunner:
     """
 
     DEFAULT_STATE_SUBDIR = ".sweetclaude/state"
+    DEFAULT_BASE_PATHS = {
+        "product_base": ".sweetclaude/product",
+        "strategy_base": ".sweetclaude/strategy",
+        "technical_base": ".sweetclaude/technical",
+        "design_base": ".sweetclaude/design",
+    }
 
     def __init__(
         self,
@@ -128,6 +135,7 @@ class MigrationRunner:
             Path(migrations_dir) if migrations_dir else Path(__file__).resolve().parent
         )
         self.registry = self._load_registry()
+        self._base_paths = self._load_base_paths()
 
     # -- internals ---------------------------------------------------------
 
@@ -137,6 +145,35 @@ class MigrationRunner:
                 f"Migration registry not found: {self.registry_path}"
             )
         return yaml.safe_load(self.registry_path.read_text()) or {}
+
+    def _load_base_paths(self) -> dict[str, str]:
+        """Resolve {product_base}/{strategy_base}/{technical_base}/{design_base}
+        from <project_dir>/.sweetclaude/artifact-privacy.yaml. Fall back to
+        SweetClaude defaults if the file is absent or a category is missing.
+        """
+        resolved = dict(self.DEFAULT_BASE_PATHS)
+        privacy_path = self.project_dir / ".sweetclaude" / "artifact-privacy.yaml"
+        if not privacy_path.exists():
+            return resolved
+        try:
+            data = yaml.safe_load(privacy_path.read_text()) or {}
+        except yaml.YAMLError:
+            return resolved
+        categories = data.get("categories") or {}
+        for cat_name, entry in categories.items():
+            if not isinstance(entry, dict):
+                continue
+            base_path = entry.get("base_path")
+            if base_path:
+                resolved[f"{cat_name}_base"] = base_path
+        return resolved
+
+    def _resolve_path_template(self, template: str) -> Path:
+        """Substitute {product_base}-style placeholders, resolve under project_dir."""
+        resolved = template
+        for var, value in self._base_paths.items():
+            resolved = resolved.replace(f"{{{var}}}", value)
+        return (self.project_dir / resolved).resolve()
 
     def _state_file_path(self, file_key: str) -> Path:
         return self.project_dir / self.DEFAULT_STATE_SUBDIR / file_key
@@ -216,10 +253,22 @@ class MigrationRunner:
             entry = state_files.get(file_key)
             if entry is None:
                 continue
-            file_path = self._state_file_path(file_key)
-            on_disk = self._detect_version(file_path)
+
+            entry_type = entry.get("type", "file")
             target = int(entry.get("current_version", 1))
             migrations = entry.get("migrations") or []
+
+            # Resolve the location depending on entry type.
+            if entry_type == "directory":
+                path_template = entry.get("path_template", "")
+                file_path = self._resolve_path_template(path_template) if path_template else self.project_dir
+                # For directories, on_disk_version comes from the registered
+                # handler's detect_version() — we pick the first migration whose
+                # handler can answer. If none can, on_disk is None.
+                on_disk = self._detect_directory_version(file_path, migrations)
+            else:
+                file_path = self._state_file_path(file_key)
+                on_disk = self._detect_version(file_path)
 
             steps: list[PlannedStep] = []
             missing: list[str] = []
@@ -232,6 +281,7 @@ class MigrationRunner:
                         on_disk_version=on_disk,
                         target_version=target,
                         needs_migration=False,
+                        entry_type=entry_type,
                     )
                 )
                 continue
@@ -271,11 +321,41 @@ class MigrationRunner:
                     on_disk_version=on_disk,
                     target_version=target,
                     needs_migration=True,
+                    entry_type=entry_type,
                     steps=steps,
                     missing_handlers=missing,
                 )
             )
         return plans
+
+    def _detect_directory_version(self, dir_path: Path, migrations: list[dict]) -> int | None:
+        """For directory entries: ask each registered migration's handler to
+        report the on-disk version via its `detect_version()` function. The
+        first handler that returns a non-None answer wins.
+
+        Pattern inference per Gap #4 (locked) — handlers observe the actual
+        files in the directory rather than relying on a persisted version
+        marker.
+        """
+        if not dir_path.exists():
+            return None
+        for m in migrations:
+            handler_name = m.get("handler")
+            if not handler_name:
+                continue
+            module = self._load_handler(handler_name)
+            if module is None:
+                continue
+            detect_fn = getattr(module, "detect_version", None)
+            if not callable(detect_fn):
+                continue
+            try:
+                v = detect_fn(dir_path)
+            except Exception:  # noqa: BLE001 — detector errors mean "I don't know"
+                continue
+            if v is not None:
+                return int(v)
+        return None
 
     def run(
         self,
@@ -314,6 +394,11 @@ class MigrationRunner:
                 f"missing handler(s): {', '.join(plan.missing_handlers)}"
             )
             return result
+
+        # Directory entries take a different execution path entirely — handlers
+        # operate on the directory in-place rather than transforming a YAML dict.
+        if plan.entry_type == "directory":
+            return self._run_directory(plan, file_params)
 
         # Read source data once at start.
         if not plan.file_path.exists():
@@ -438,6 +523,135 @@ class MigrationRunner:
 
         result.on_disk_version_after = data.get("schema_version", plan.target_version)
         return result
+
+    def _run_directory(self, plan: FilePlan, file_params: dict) -> FileResult:
+        """Execute a directory migration. Handlers operate on the directory
+        in-place; runner aggregates mapping data and writes MIGRATION-MAP.md.
+
+        Handler interface for directories:
+            detect_version(directory: Path) -> int | None
+            up(directory: Path, params: dict, dry_run: bool = False) -> dict
+            down(directory: Path, params: dict, dry_run: bool = False) -> dict
+
+        Handler `up()` return dict (informational; runner consumes these keys):
+            {
+                "mapping": [
+                    {"v_from_id": str, "v_to_id": str, "title": str, "type": str},
+                    ...
+                ],
+                "warnings": [str, ...],
+                "files_in": int,
+                "files_out": int,
+            }
+        """
+        result = FileResult(
+            file_key=plan.file_key,
+            on_disk_version_before=plan.on_disk_version,
+            on_disk_version_after=plan.on_disk_version,
+            target_version=plan.target_version,
+            success=True,
+        )
+
+        if not plan.file_path.exists():
+            result.success = False
+            result.failure_mode = FAILURE_FILE_MISSING
+            result.failure_details = str(plan.file_path)
+            return result
+
+        aggregated_mapping: list[dict] = []
+        aggregated_warnings: list[str] = []
+
+        for step in plan.steps:
+            step_result = StepResult(
+                from_version=step.from_version,
+                to_version=step.to_version,
+                handler_module=step.handler_module,
+                success=True,
+            )
+
+            module = self._load_handler(step.handler_module)
+            if module is None:
+                step_result.success = False
+                step_result.failure_mode = FAILURE_CHAIN_BROKEN
+                step_result.failure_details = f"could not load handler {step.handler_module}"
+                result.steps.append(step_result)
+                result.success = False
+                result.failure_mode = FAILURE_CHAIN_BROKEN
+                result.failure_details = step_result.failure_details
+                return result
+
+            up_fn = getattr(module, "up", None)
+            if not callable(up_fn):
+                step_result.success = False
+                step_result.failure_mode = FAILURE_CHAIN_BROKEN
+                step_result.failure_details = (
+                    f"directory handler {step.handler_module} has no callable up()"
+                )
+                result.steps.append(step_result)
+                result.success = False
+                result.failure_mode = FAILURE_CHAIN_BROKEN
+                result.failure_details = step_result.failure_details
+                return result
+
+            try:
+                step_output = up_fn(plan.file_path, file_params) or {}
+            except KeyError as e:
+                step_result.success = False
+                step_result.failure_mode = FAILURE_REQUIRED_FIELD_MISSING
+                step_result.failure_details = f"handler raised KeyError({e!s})"
+                result.steps.append(step_result)
+                result.success = False
+                result.failure_mode = FAILURE_REQUIRED_FIELD_MISSING
+                result.failure_details = step_result.failure_details
+                return result
+            except Exception as e:  # noqa: BLE001
+                step_result.success = False
+                step_result.failure_mode = FAILURE_HANDLER_RAISED
+                step_result.failure_details = f"{type(e).__name__}: {e!s}"
+                result.steps.append(step_result)
+                result.success = False
+                result.failure_mode = FAILURE_HANDLER_RAISED
+                result.failure_details = step_result.failure_details
+                return result
+
+            if isinstance(step_output, dict):
+                aggregated_mapping.extend(step_output.get("mapping") or [])
+                aggregated_warnings.extend(step_output.get("warnings") or [])
+
+            result.steps.append(step_result)
+
+        # All steps succeeded — write MIGRATION-MAP.md if any rows were produced.
+        if aggregated_mapping:
+            try:
+                self._write_migration_map(plan.file_path, aggregated_mapping)
+            except OSError as e:
+                result.success = False
+                result.failure_mode = FAILURE_WRITE_FAILED
+                result.failure_details = f"writing MIGRATION-MAP.md: {e!s}"
+                return result
+
+        result.on_disk_version_after = plan.target_version
+        return result
+
+    def _write_migration_map(self, directory: Path, mapping: list[dict]) -> None:
+        """Write the standardized MIGRATION-MAP.md to the artifact directory."""
+        from datetime import date
+        lines = [
+            "# v_from → v_to ID Migration Map",
+            f"**Migrated:** {date.today().isoformat()}",
+            "",
+            "| From ID | To ID | Title | Type |",
+            "|---|---|---|---|",
+        ]
+        for row in sorted(mapping, key=lambda r: r.get("v_from_id", "")):
+            lines.append(
+                f"| {row.get('v_from_id', '')} "
+                f"| {row.get('v_to_id', '')} "
+                f"| {row.get('title', '')} "
+                f"| {row.get('type', '')} |"
+            )
+        content = "\n".join(lines) + "\n"
+        self._atomic_write(directory / "MIGRATION-MAP.md", content)
 
 
 # ---------------------------------------------------------------------------
