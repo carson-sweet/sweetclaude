@@ -191,6 +191,40 @@ If no removed skills have live artifacts, continue silently to Step 4.
 
 ---
 
+## Step 3c: Major version gate (v3 → v4)
+
+After determining the installed version and the incoming version, check for a v3→v4 major upgrade:
+
+```python
+import re
+
+def major_version(v):
+    m = re.match(r'^(\d+)', str(v or ''))
+    return int(m.group(1)) if m else 0
+
+current_major = major_version(installed_version)   # from Step 1
+incoming_major = major_version(new_version)         # from Step 3 source package.json
+```
+
+If `current_major == 3` and `incoming_major >= 4`:
+
+Present AskUserQuestion with this body block before any sync:
+
+> **SweetClaude v4 is available — this is a major release.**
+>
+> Stories move from `.sweetclaude/` to `docs/product/` in a new per-type directory structure with new IDs. Each project migrates independently the first time you open it after updating.
+>
+> Migration creates a safety backup and can be rolled back. Active and future stories must migrate. Done stories are optional.
+
+- **Options:** `Yes, update`, `Not now`
+- On `Not now`:
+  - Write `framework.update.declined: true` to `.sweetclaude/state/sweetclaude.yaml` (if it exists in the current project).
+  - **Do NOT re-offer** in subsequent bootstrap runs until the user explicitly runs `/sweetclaude:update` again.
+  - Clean up temp dir if used. Stop.
+- On `Yes, update`: proceed to Step 4.
+
+If it is not a v3→v4 transition (e.g. minor/patch updates), skip this step and proceed directly to Step 4.
+
 ## Step 4: Sync
 
 Copy from SOURCE_DIR to installed locations. Use `rsync --delete` to remove files that no longer exist in the source.

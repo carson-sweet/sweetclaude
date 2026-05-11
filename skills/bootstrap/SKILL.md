@@ -72,6 +72,34 @@ Read `framework.setup_complete`.
 If `false`:
 - Invoke `sweetclaude:setup`. Stop.
 
+## Step 5b: v4 hard stop — v3 artifacts present
+
+After confirming setup is complete, check for v3 backlog files in a v4 install:
+
+```bash
+INSTALLED_V=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
+print(d.get('framework', {}).get('installed_version', ''))
+")
+V3_FILES=$(find .sweetclaude/product/backlog -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
+case "$INSTALLED_V" in
+  4.*)
+    if [ "$V3_FILES" -gt 0 ]; then
+      echo "This project has $V3_FILES v3 stories that need to migrate before SweetClaude v4 can run."
+      echo ""
+      echo "Migration creates a safety backup and copies stories to docs/product/. Your current"
+      echo "work is not affected. A clean git working tree is not required to migrate."
+      echo ""
+      echo "Run: /sweetclaude:migrate"
+      exit 1
+    fi
+    ;;
+esac
+```
+
+If the hard stop fires: print the message above and exit. No further skill execution.
+
 ## Step 6: Drift and update offers
 
 Read `framework.consistency.status`.
