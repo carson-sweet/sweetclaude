@@ -166,7 +166,7 @@ Execution-layer tracking. These skills manage the work that delivers the product
 | **Project Scope** | `/sweetclaude:project-scope` | Singleton scope document — one statement, in-scope list, minimum three out-of-scope items. Cascade review on update flags conflicting open roadmap items and issues. |
 | **Project Goals** | `/sweetclaude:project-goals` | Binary business goals — achieved or not. Criteria must be evaluable as true/false. `list`, `view`, `new`, `achieved`, `missed`. |
 | **Project Mode** | `/sweetclaude:project-mode` | Assess and shift project modes: flow → kanban → shape_up → agile. Snapshots state before every shift. Detects upshift/downshift signals from artifact counts. Each mode compiles `effective-gates.yaml` with its enforcement rules. |
-| **GitHub Import Issues** | `/sweetclaude:project-gh-import-issues` | Pull open GitHub Issues into the local issue store as I-NNN artifacts. Idempotent — issues already imported by GitHub number are skipped. Maps size/effort labels to effort field. |
+| **GitHub Import Issues** | `/sweetclaude:project-gh-import-issues` | Pull open GitHub Issues into `docs/product/backlog/stories/` as v4 story files with `origin: imported`. Idempotent — issues already imported by GitHub number are skipped. Maps size/effort labels to effort field. |
 | **GitHub Sync Issues** | `/sweetclaude:project-gh-sync-issues` | Bidirectional status sync. Pass 1: GH closed → local done. Pass 2: local done → `gh issue close`. Reports counts for each direction. |
 
 ---
