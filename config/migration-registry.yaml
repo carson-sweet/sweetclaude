@@ -37,6 +37,20 @@ state_files:
           required_fields: [schema_version]
           required_version: 2
 
+  sweetclaude.yaml:
+    description: "Unified project state — framework metadata, project metadata, work state, features, drift findings"
+    current_version: 2
+    backup_required: true
+    migrations:
+      - from: 1
+        to: 2
+        description: "Decline-state amnesty + stale discovery cleanup. Clears legacy boolean declined to null, clears stale update.available if older than installed_version, clears stale update.check_error."
+        handler: sweetclaude_yaml_v1_to_v2
+        implemented_in: "scripts/migrations/sweetclaude_yaml_v1_to_v2.py"
+        validation:
+          required_fields: [schema_version]
+          required_version: 2
+
   project.yaml:
     description: "Language, framework, test runner, build commands"
     current_version: 1

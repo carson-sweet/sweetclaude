@@ -30,9 +30,11 @@ Invoke `sweetclaude:fix-sweetclaude`. Stop.
 ## Step 2: Schema version check
 
 Read `schema_version` from pre-loaded state.
-If `schema_version` is not `1`:
+If `schema_version` is not in `{1, 2}`:
 - Invoke `sweetclaude:_migrate --schema-upgrade`
 - Stop (migration tells user to re-run)
+
+If `schema_version` is `1`, the registry-driven runner will pick up the v1→v2 migration during the Step 5b drift scan. Bootstrap continues — it does not need to short-circuit here.
 
 ## Step 3: Check migration status
 
