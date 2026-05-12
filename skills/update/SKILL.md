@@ -14,6 +14,34 @@ Fetch the latest SweetClaude and sync it to all installed locations.
 
 ---
 
+## Step 0: Clear decline (Gap #8 manual reset)
+
+Running `/sweetclaude:update` directly is interpreted as "I want updates again." Clear `framework.update.declined` before doing anything else. If the project doesn't have a `sweetclaude.yaml` (run from outside a SweetClaude project), this is a silent no-op.
+
+```bash
+if [ -f .sweetclaude/state/sweetclaude.yaml ]; then
+  python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
+import sys, yaml, tempfile, os
+path = sys.argv[1]
+try:
+    with open(path) as f: d = yaml.safe_load(f) or {}
+except Exception:
+    sys.exit(0)
+upd = d.setdefault('framework',{}).setdefault('update',{})
+if upd.get('declined') not in (None, False):
+    upd['declined'] = None
+    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+        yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        tmp_name = tmp.name
+    os.replace(tmp_name, path)
+PY
+fi
+```
+
+If the user picks "Not now" later in this update flow, `declined` will be re-set to the specific version they declined (per Gap #1's version-aware decline rule). This Step 0 is the explicit-re-engagement reset.
+
+---
+
 ## Step 1: Read current install state
 
 Read `~/.claude/plugins/installed_plugins.json` and find the `sweetclaude@sweetclaude` entry. Extract:
@@ -368,12 +396,17 @@ fi
 
 ---
 
-## Step 8: Migrate existing project state
+## Step 8: (removed)
 
-Read [project-migration.md](project-migration.md) and execute it in full.
+Project-state migration is **not** part of the update flow. Update only syncs the framework. The current project (and any other v3 project the user opens) is migrated by `sweetclaude:bootstrap` on next session start, via the drift-detection scan now built into the runner.
 
-It detects `.sweetclaude/` state, creates a pre-migration backup, patches the CLAUDE.md auto-fire instruction if missing, and migrates `phase.yaml` and `skills.yaml` from schema v1 to v2 if needed.
+Rationale (locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md`, Gap #7):
 
+- Update success and project-migration success are independent — a failed migration no longer makes update look failed.
+- Every v3 project migrates by the same mechanism: bootstrap detects drift, demands "Migrate now" or "Remove SweetClaude from this project."
+- No "update the framework, defer migration" path — see Gap #7 hard demand rule.
+
+If you want to migrate the current project immediately after this update completes, close this session and reopen it. Bootstrap will detect drift on entry and present the demand.
 
 ---
 

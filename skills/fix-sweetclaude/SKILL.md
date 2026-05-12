@@ -116,9 +116,19 @@ Read the project's CLAUDE.md. Check:
    - Try running the test command to see if it works
 
 3. **SweetClaude section** — is it present and correct?
-   - Should reference `.sweetclaude/state/phase.yaml`
-   - Should have the pre-flight invocation instruction
-   - Should NOT reference a "working repo"
+   - Should reference `.sweetclaude/state/sweetclaude.yaml` (the unified state file post-v3.18).
+   - Should have the pre-flight / auto-fire invocation instruction (see 3a below).
+   - Should NOT reference a "working repo".
+
+   **3a. Auto-fire instruction patch** (relocated from the deleted `update/project-migration.md` Step 8c).
+
+   Check whether the `## SweetClaude` section contains the text `invoke \`sweetclaude:status\` automatically at session start`. If missing, find the line that reads `Read .sweetclaude/state/sweetclaude.yaml` (or `Read .sweetclaude/state/phase.yaml` on pre-3.18 projects) and replace with:
+
+   ```
+   - Read `.sweetclaude/state/sweetclaude.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist. If `.sweetclaude/state/sweetclaude.yaml` exists and `.sweetclaude/disabled` does not exist, invoke `sweetclaude:status` automatically at session start.
+   ```
+
+   Propose the patch via AskUserQuestion; apply only on user approval. Report whether the patch was applied or already up to date.
 
 4. **Project description** — is it still accurate?
 
@@ -226,11 +236,25 @@ For each data-owning skill, check whether it is present in `skills.yaml`. Use th
 
 If `skills.yaml` is missing entirely: propose creating it (schema v2) with entries inferred from the above.
 If entries are missing from an existing `skills.yaml`: propose adding them with the inferred state.
-If `skills.yaml` is schema v1: propose migrating to v2 (same mapping as the update skill's 8e migration step).
 
-> "skills.yaml is missing / has gaps / is schema v1. Based on artifacts on disk: backlog=active, milestones=uninitialized, … Write/migrate it?"
+If `skills.yaml` exists with `schema_version: 1`: do **not** re-implement the migration here. Invoke the registry-driven migration runner (BL-065 refactor):
 
-On user approval: write or update `skills.yaml` using atomic write (temp file → rename). Use v2 schema:
+```bash
+RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
+if [ -n "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --file skills.yaml
+else
+  echo "Migration runner not found. Run /sweetclaude:update to install the framework."
+fi
+```
+
+The runner's registered handler (`scripts/migrations/skills_yaml_v1_to_v2.py`) is the single source of truth for the v1→v2 mapping. Same algorithm that previously lived inline here.
+
+After the runner finishes, re-read `skills.yaml` and proceed to the bootstrap-of-missing-entries logic below.
+
+> "skills.yaml is missing / has gaps. Based on artifacts on disk: backlog=active, milestones=uninitialized, … Write the missing entries?"
+
+On user approval: write the missing entries using atomic write (temp file → rename). Use v2 schema:
 - Data file exists → `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
 - Data file missing → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
 Do not remove or modify entries that are already present and consistent.
