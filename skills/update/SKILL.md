@@ -14,28 +14,32 @@ Fetch the latest SweetClaude and sync it to all installed locations.
 
 ---
 
-## Step 0: Clear decline (Gap #8 manual reset)
+## Step -1: Self-heal versionless framework path (transitional)
 
-Running `/sweetclaude:update` directly is interpreted as "I want updates again." Clear `framework.update.declined` before doing anything else. If the project doesn't have a `sweetclaude.yaml` (run from outside a SweetClaude project), this is a silent no-op.
+Idempotent backfill. If `~/.claude/scripts/sweetclaude/` is missing (user upgraded from a release whose update logic didn't populate it), copy from the plugin-cache install. No-op after the first run. Step 0 below depends on this path existing.
 
 ```bash
-if [ -f .sweetclaude/state/sweetclaude.yaml ]; then
-  python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
-import sys, yaml, tempfile, os
-path = sys.argv[1]
-try:
-    with open(path) as f: d = yaml.safe_load(f) or {}
-except Exception:
-    sys.exit(0)
-upd = d.setdefault('framework',{}).setdefault('update',{})
-if upd.get('declined') not in (None, False):
-    upd['declined'] = None
-    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
-        yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
-        tmp_name = tmp.name
-    os.replace(tmp_name, path)
-PY
+if [ ! -d ~/.claude/scripts/sweetclaude ]; then
+  IP=$(python3 -c "import json, os; d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json'))); print(d['plugins'].get('sweetclaude@sweetclaude', [{}])[0].get('installPath', ''))" 2>/dev/null)
+  if [ -n "$IP" ] && [ -d "$IP/scripts" ]; then
+    mkdir -p ~/.claude/scripts/sweetclaude
+    cp -R "$IP/scripts/"* ~/.claude/scripts/sweetclaude/
+  fi
 fi
+```
+
+Transitional — once v3.68.0 has been widely adopted, this block can be removed. Same block also exists at the top of `bootstrap/SKILL.md`.
+
+---
+
+## Step 0: Clear decline (Gap #8 manual reset)
+
+Running `/sweetclaude:update` directly is interpreted as "I want updates again." Clear `framework.update.declined` before doing anything else.
+
+The Step 0 logic lives in a helper script shipped with the framework — `scripts/maintenance/clear-decline.py`. The SKILL invokes it by absolute path (deterministic via `installed_plugins.json`, not `find`). The helper is a no-op if the current directory is not a SweetClaude project.
+
+```bash
+python3 ~/.claude/scripts/sweetclaude/maintenance/clear-decline.py .
 ```
 
 If the user picks "Not now" later in this update flow, `declined` will be re-set to the specific version they declined (per Gap #1's version-aware decline rule). This Step 0 is the explicit-re-engagement reset.
@@ -133,7 +137,7 @@ git -C $SOURCE_DIR log --oneline -5
 cat $SOURCE_DIR/package.json
 ```
 
-If EFFECTIVE_SHA matches the installed `gitCommitSha`: "Already up to date." Clean up temp dir if used. Stop.
+If EFFECTIVE_SHA matches the installed `gitCommitSha`: "Already up to date." Clean up temp dir if used. **Then jump to Step 6b** — even when the framework is up to date, the current project may still have pending schema migrations from a previous update that wasn't completed (e.g., user updated in another project, then opened this one without restarting bootstrap). Do not stop.
 
 Otherwise, show what changed since the installed version:
 
@@ -243,9 +247,12 @@ if [ -d "$HOME/.claude/skills/sweetclaude" ]; then
   rsync -a --delete $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/
 fi
 
-# Scripts → plugin cache (contains migration scripts and other utilities)
+# Scripts → plugin cache AND versionless ~/.claude/scripts/sweetclaude/.
+# The versionless path is what skills reference (no installPath lookup needed).
 if [ -d "$SOURCE_DIR/scripts" ]; then
   rsync -a --delete $SOURCE_DIR/scripts/ {installPath}/scripts/
+  mkdir -p ~/.claude/scripts/sweetclaude
+  rsync -a --delete $SOURCE_DIR/scripts/ ~/.claude/scripts/sweetclaude/
 fi
 
 # Framework dirs → ~/.claude/
@@ -303,6 +310,60 @@ SweetClaude updated.
 → New Claude Code sessions in any project will use the updated version.
   Current sessions keep the old version until restarted.
 ```
+
+---
+
+## Step 6b: Project-state drift detection and migration
+
+Only run if `.sweetclaude/state/sweetclaude.yaml` exists in the current project directory — skip silently otherwise. (Update can be run from any directory; this step only applies when run from inside a SweetClaude project.)
+
+After the framework sync, the registry on disk may declare schema versions newer than what this project's state files are at. Surface that immediately — don't make the user bounce sessions to discover it.
+
+Use the **runner's `--report-drift-for-skill` flag** for this — it prints exactly the lines the SKILL parses (`DRIFT_COUNT=N` and `FINDING|...` lines). Do not roll your own heredoc — past attempts at inline python heredocs inside `if/fi` got mangled by agents re-typing the bash and silently failed.
+
+The runner ships into the versionless framework path `~/.claude/scripts/sweetclaude/migrations/runner.py` (Step 4 above syncs it there). No `installed_plugins.json` lookup, no `find` — just a fixed path:
+
+```bash
+if [ -f .sweetclaude/state/sweetclaude.yaml ]; then
+  python3 ~/.claude/scripts/sweetclaude/migrations/runner.py --project-dir . --report-drift-for-skill
+fi
+```
+
+Output format the SKILL parses:
+
+```
+DRIFT_COUNT=N
+FINDING|<file_key>|v<from>-><to>|chain=<ok|broken>
+FINDING|...                       # one per finding that needs migration
+```
+
+If `DRIFT_COUNT` is 0 or no runner found: continue silently to Step 7.
+
+If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past the project's state. Present the same binary hard demand as bootstrap Step 5b. Migrate or remove — no "Not now," no silent proceed. This is the locked Gap #7 rule.
+
+**Case A — all findings in window (chain=ok for everything):** present via **AskUserQuestion** (single-select, no "Something else"):
+
+> "Framework updated to v{new_version}. This project's state files need migration to match (see findings above). Migrate now to finish the update."
+>
+> Options:
+> - **Migrate now** — invoke `sweetclaude:_migrate` to bring this project up to current.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
+
+**Case B — at least one finding has `chain=broken`:** present via **AskUserQuestion** (single-select):
+
+> "Framework updated to v{new_version}, but this project's state is too old for automatic migration — at least one required handler is no longer shipped (3-major support window per Gap #8)."
+>
+> Options:
+> - **Re-onboard from scratch** — move existing SweetClaude content to `.sweetclaude.legacy/<timestamp>/` and run `/sweetclaude:adopt` against a fresh state.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
+
+If the user picks **Migrate now**: invoke `sweetclaude:_migrate`. When it returns, continue to Step 7.
+
+If the user picks **Re-onboard from scratch**: execute the legacy-move block from bootstrap Step 5b's "Re-onboarding flow" section, then invoke `sweetclaude:adopt`. Stop (adopt drives the next session itself).
+
+If the user picks **Remove SweetClaude**: invoke `sweetclaude:purge`. Stop.
+
+No third option. The framework is updated; the project must catch up or opt out before the next session.
 
 ---
 
@@ -371,42 +432,23 @@ Use **AskUserQuestion** (single-select):
 
 Only run if `.sweetclaude/` exists in the current project directory — skip silently otherwise.
 
-Ensure the plan directory exists and `plansDirectory` is set in both project settings files:
+Ensure the plan directory exists and `plansDirectory` is set in both project settings files. Logic lives in a helper script (same reason as Step 0's `clear-decline.py` — no nested heredocs):
 
 ```bash
-if [ -d ".sweetclaude" ]; then
-  mkdir -p .sweetclaude/plans
-  python3 - << 'PY'
-import json, os, tempfile
-os.makedirs('.claude', exist_ok=True)
-for path in ['.claude/settings.json', '.claude/settings.local.json']:
-    try:
-        d = json.load(open(path))
-    except:
-        d = {}
-    if d.get('plansDirectory') != '.sweetclaude/plans':
-        d['plansDirectory'] = '.sweetclaude/plans'
-        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
-            json.dump(d, tmp, indent=2)
-            tmp_name = tmp.name
-        os.replace(tmp_name, path)
-PY
-fi
+python3 ~/.claude/scripts/sweetclaude/maintenance/configure-plan-dir.py .
 ```
 
 ---
 
-## Step 8: (removed)
+## Step 8: Project-state migration is run inline (see Step 6b)
 
-Project-state migration is **not** part of the update flow. Update only syncs the framework. The current project (and any other v3 project the user opens) is migrated by `sweetclaude:bootstrap` on next session start, via the drift-detection scan now built into the runner.
+The current project is migrated inline by Step 6b right after the framework sync — no session bounce required. Other projects the user opens will hit the same hard demand via `bootstrap` Step 5b on their next entry.
 
-Rationale (locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md`, Gap #7):
+Rationale (Gap #7, locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md`):
 
-- Update success and project-migration success are independent — a failed migration no longer makes update look failed.
-- Every v3 project migrates by the same mechanism: bootstrap detects drift, demands "Migrate now" or "Remove SweetClaude from this project."
-- No "update the framework, defer migration" path — see Gap #7 hard demand rule.
-
-If you want to migrate the current project immediately after this update completes, close this session and reopen it. Bootstrap will detect drift on entry and present the demand.
+- Framework sync and project-state migration remain logically independent — if migration fails, the framework sync stays successful (the user can still open other projects on the new framework).
+- Every project migrates by the same mechanism — Step 6b here, Step 5b in bootstrap — both routing through `_migrate`.
+- No "update the framework, defer migration" path. Migrate or remove.
 
 ---
 

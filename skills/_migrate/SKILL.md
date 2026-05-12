@@ -16,9 +16,9 @@ Internal skill. Called by `bootstrap` Step 5b when the registry-driven drift sca
 ## Step 0: Detect state and route
 
 ```bash
-RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
-if [ -z "$RUNNER" ]; then
-  echo "ERROR: migration runner not found. Run /sweetclaude:update to install the latest framework."
+RUNNER=~/.claude/scripts/sweetclaude/migrations/runner.py
+if [ ! -f "$RUNNER" ]; then
+  echo "ERROR: migration runner not found at $RUNNER. Run /sweetclaude:update to install the latest framework."
   exit 1
 fi
 
@@ -199,9 +199,9 @@ try:
 except: print('unknown')
 " 2>/dev/null)
 
-SCRIPT=$(find ~/.claude -name "migrate-to-sweetclaude-yaml.py" 2>/dev/null | head -1)
-if [ -z "$SCRIPT" ]; then
-  echo "Consolidation script not found. Run /sweetclaude:update."
+SCRIPT=~/.claude/scripts/sweetclaude/migrate-to-sweetclaude-yaml.py
+if [ ! -f "$SCRIPT" ]; then
+  echo "Consolidation script not found at $SCRIPT. Run /sweetclaude:update."
   exit 1
 fi
 

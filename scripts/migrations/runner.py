@@ -249,12 +249,20 @@ class MigrationRunner:
         migrations_dir: Path | str | None = None,
     ):
         self.project_dir = Path(project_dir).resolve()
-        # Migration registry ships with the framework; default to discovering
-        # it relative to this runner module.
+        # Migration registry ships with the framework. Try, in order:
+        #   1. Explicit registry_path argument (caller-provided)
+        #   2. <runner_root>/config/migration-registry.yaml (dev clone + plugin-cache install layout)
+        #   3. ~/.claude/config/sweetclaude/migration-registry.yaml (versionless install layout)
+        # The runner can live at either ~/.claude/plugins/cache/.../scripts/migrations/runner.py
+        # OR ~/.claude/scripts/sweetclaude/migrations/runner.py — the latter has no
+        # colocated config/, so the versionless fallback is required.
         repo_root = Path(__file__).resolve().parent.parent.parent
-        self.registry_path = (
-            Path(registry_path) if registry_path else repo_root / "config" / "migration-registry.yaml"
-        )
+        if registry_path:
+            self.registry_path = Path(registry_path)
+        else:
+            colocated = repo_root / "config" / "migration-registry.yaml"
+            versionless = Path.home() / ".claude" / "config" / "sweetclaude" / "migration-registry.yaml"
+            self.registry_path = colocated if colocated.exists() else versionless
         self.migrations_dir = (
             Path(migrations_dir) if migrations_dir else Path(__file__).resolve().parent
         )
@@ -1176,6 +1184,15 @@ def main(argv: list[str] | None = None) -> int:
         help="With --scan-drift: also persist findings to .sweetclaude/state/sweetclaude.yaml framework.drift.*",
     )
     parser.add_argument(
+        "--report-drift-for-skill",
+        action="store_true",
+        help=(
+            "Skill-friendly drift report. Runs scan-drift --persist and prints "
+            "exactly: DRIFT_COUNT=N and FINDING|<file_key>|v<from>-><to>|chain=<ok|broken> "
+            "lines for findings with needs_migration=True. Returns 0 even with drift."
+        ),
+    )
+    parser.add_argument(
         "--param",
         action="append",
         default=[],
@@ -1198,6 +1215,17 @@ def main(argv: list[str] | None = None) -> int:
         file_key, kv = p.split(":", 1)
         k, v = kv.split("=", 1)
         params.setdefault(file_key, {})[k] = v
+
+    if args.report_drift_for_skill:
+        scan = runner.scan_drift(args.files, persist=True)
+        needs = [f for f in scan["findings"] if f.get("needs_migration")]
+        print(f"DRIFT_COUNT={len(needs)}")
+        for f in needs:
+            chain = "ok" if f.get("chain_valid") else "broken"
+            print(
+                f"FINDING|{f['file_key']}|v{f['on_disk_version']}->v{f['target_version']}|chain={chain}"
+            )
+        return 0
 
     if args.scan_drift:
         scan = runner.scan_drift(args.files, persist=args.persist)
