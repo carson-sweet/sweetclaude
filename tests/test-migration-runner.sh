@@ -560,6 +560,82 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Test 12: sweetclaude.yaml v1 → v2 migration (BL-071 — v3.67.0 payload)
+# ---------------------------------------------------------------------------
+
+echo "[12] sweetclaude.yaml v1 → v2"
+
+SC_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR $SCAN_TMPDIR $REC_TMPDIR $SNAP_TMPDIR $SC_TMPDIR" EXIT
+
+mkdir -p "$SC_TMPDIR/.sweetclaude/state"
+
+# 12a. declined: true (legacy boolean) → declined: <installed_version>
+cat > "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 1
+framework:
+  installed_version: 3.66.0
+  update:
+    available: 3.66.0
+    declined: true
+    last_checked: "2026-05-12T00:00:00Z"
+project:
+  name: test
+YAML
+
+python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --file sweetclaude.yaml >/dev/null 2>&1
+
+python3 - "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'PY' \
+  && pass "declined: true → declined: <installed_version>; schema_version 2" \
+  || fail "declined: true migration"
+import sys, yaml
+d = yaml.safe_load(open(sys.argv[1]))
+assert d["schema_version"] == 2, f"schema_version: {d['schema_version']!r}"
+assert d["framework"]["update"]["declined"] == "3.66.0", \
+    f"declined: {d['framework']['update']['declined']!r}"
+assert d["project"]["name"] == "test", "project.name should be unchanged"
+sys.exit(0)
+PY
+
+# 12b. declined: false → declined: null
+cat > "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 1
+framework:
+  installed_version: 3.66.0
+  update:
+    declined: false
+YAML
+
+python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --file sweetclaude.yaml >/dev/null 2>&1
+
+python3 - "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'PY' \
+  && pass "declined: false → declined: null" \
+  || fail "declined: false migration"
+import sys, yaml
+d = yaml.safe_load(open(sys.argv[1]))
+assert d["schema_version"] == 2
+assert d["framework"]["update"]["declined"] is None
+sys.exit(0)
+PY
+
+# 12c. already v2: idempotent
+cat > "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 2
+framework:
+  installed_version: 3.67.0
+  update:
+    declined: "3.67.0"
+YAML
+
+OUT=$(python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --file sweetclaude.yaml 2>&1)
+echo "$OUT" | grep -q "idempotent" \
+  && pass "v2 sweetclaude.yaml is idempotent on re-run" \
+  || fail "v2 re-run: $OUT"
+
+# ---------------------------------------------------------------------------
 
 echo
 if [ "$FAILED" -eq 0 ]; then

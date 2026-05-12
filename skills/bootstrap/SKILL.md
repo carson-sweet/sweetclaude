@@ -30,9 +30,9 @@ Invoke `sweetclaude:fix-sweetclaude`. Stop.
 ## Step 2: Schema version check
 
 Read `schema_version` from pre-loaded state.
-If `schema_version` is not `1`:
-- Invoke `sweetclaude:_migrate --schema-upgrade`
-- Stop (migration tells user to re-run)
+
+- `schema_version` in `{1, 2}` → continue. (`1` will be flagged by Step 5b's drift scan and routed through the runner; `2` is current and proceeds normally.)
+- Anything else → invoke `sweetclaude:_migrate --schema-upgrade` and stop. The supported schema range is bumped each release; values outside it require operator intervention.
 
 ## Step 3: Check migration status
 
@@ -265,13 +265,17 @@ with open(sc_path) as f:
 p = d.get('project', {})
 w = d.get('work', {})
 h = d.get('work_history', [])
+fw = d.get('framework', {})
 
 name   = p.get('name') or 'this project'
 stage  = p.get('version_stage', '')
+framework_v = fw.get('installed_version', '')
 active = w.get('active', {}) or {}
 last3  = h[:3]
 
 print(f"**{name}** · {stage}")
+if framework_v:
+    print(f"SweetClaude: v{framework_v}")
 if active.get('title'):
     print(f"Active: {active['title']} [{active.get('phase','')}]")
 elif last3:
