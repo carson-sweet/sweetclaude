@@ -14,6 +14,34 @@ Fetch the latest SweetClaude and sync it to all installed locations.
 
 ---
 
+## Step 0: Clear decline (Gap #8 manual reset)
+
+Running `/sweetclaude:update` directly is interpreted as "I want updates again." Clear `framework.update.declined` before doing anything else. If the project doesn't have a `sweetclaude.yaml` (run from outside a SweetClaude project), this is a silent no-op.
+
+```bash
+if [ -f .sweetclaude/state/sweetclaude.yaml ]; then
+  python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
+import sys, yaml, tempfile, os
+path = sys.argv[1]
+try:
+    with open(path) as f: d = yaml.safe_load(f) or {}
+except Exception:
+    sys.exit(0)
+upd = d.setdefault('framework',{}).setdefault('update',{})
+if upd.get('declined') not in (None, False):
+    upd['declined'] = None
+    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+        yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        tmp_name = tmp.name
+    os.replace(tmp_name, path)
+PY
+fi
+```
+
+If the user picks "Not now" later in this update flow, `declined` will be re-set to the specific version they declined (per Gap #1's version-aware decline rule). This Step 0 is the explicit-re-engagement reset.
+
+---
+
 ## Step 1: Read current install state
 
 Read `~/.claude/plugins/installed_plugins.json` and find the `sweetclaude@sweetclaude` entry. Extract:
