@@ -93,6 +93,15 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/plan-tracker.sh"
     },
     {
+      "file": "migration-decision-reminder.sh",
+      "event": "UserPromptSubmit",
+      "matcher": null,
+      "required": true,
+      "scope": "project",
+      "purpose": "Reminds the user of a pending migration Accept/Rollback decision; hard-blocks at turn 10. Silent when no marker file is present.",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/migration-decision-reminder.sh"
+    },
+    {
       "file": "git-checkpoint.sh",
       "event": null,
       "matcher": null,
