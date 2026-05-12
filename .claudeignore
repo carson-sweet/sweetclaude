@@ -1,5 +1,0 @@
-install.sh
-scripts/bump-version.sh
-tests/
-scratch/
-docs/internal/
