@@ -48,6 +48,34 @@ PY
 # Always stamp hook_last_ran
 update_yaml_field "framework.hook_last_ran" "$NOW_ISO"
 
+# Always reconcile framework.installed_version with the plugin manifest.
+# Without this, sweetclaude.yaml's installed_version stays at whatever value
+# was written during the initial _migrate consolidation — it never advances
+# when the installed plugin updates. Idempotent: only writes when values differ.
+python3 - "$SC_YAML" << 'PY' 2>/dev/null
+import sys, yaml, json, os, tempfile
+sc_path = sys.argv[1]
+try:
+    with open(sc_path) as f:
+        d = yaml.safe_load(f) or {}
+except Exception:
+    sys.exit(0)
+recorded = (d.get('framework') or {}).get('installed_version')
+actual = None
+try:
+    p = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+    entries = [v for k, v in (p.get('plugins') or {}).items() if 'sweetclaude' in k.lower()]
+    actual = entries[0][0].get('version') if entries and entries[0] else None
+except Exception:
+    pass
+if actual and actual != recorded:
+    d.setdefault('framework', {})['installed_version'] = actual
+    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(sc_path), suffix='.tmp', delete=False) as tmp:
+        yaml.safe_dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        tmp_name = tmp.name
+    os.replace(tmp_name, sc_path)
+PY
+
 # Read timestamps
 LAST_CONSISTENCY=$(python3 -c "
 import yaml
