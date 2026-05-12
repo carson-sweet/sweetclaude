@@ -52,14 +52,6 @@ Once install is complete, run:
 /sweetclaude:help
 ```
 
-If you want to do a manual install:
-
-```bash
-git clone https://github.com/carson-sweet/sweetclaude.git
-cd sweetclaude && ./install.sh
-```
-
-
 
 ## Basic Usage
 

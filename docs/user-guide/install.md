@@ -13,50 +13,6 @@ All skills are immediately available. Then go to your project and run `/sweetcla
 
 ---
 
-## Manual Install
-
-Preferred if you want the `--strategy-skills-only` variant (explained below).
-
-### Prerequisites
-
-| Dependency | Check | Install |
-|---|---|---|
-| [Claude Code](https://claude.ai/code) | `claude --version` | [Install guide](https://docs.anthropic.com/en/docs/claude-code/getting-started) |
-| Git | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
-| [GitHub CLI](https://cli.github.com/) | `gh --version` | `brew install gh` or [cli.github.com](https://cli.github.com/) |
-| Node.js (for RAG) | `node --version` | [nodejs.org](https://nodejs.org/) — optional, needed only for corpus management and semantic search |
-
-```bash
-git clone https://github.com/carson-sweet/sweetclaude.git
-cd sweetclaude
-./install.sh
-```
-
-The installer:
-- Checks prerequisites (Claude Code, Git, GitHub CLI)
-- Backs up your existing `~/.claude/` configuration
-- Scans for conflicting plugins and offers to clean them up
-- Copies skills, hooks, agents, rules, and config to `~/.claude/`
-- Wires TDD enforcement hooks into `settings.json`
-- Generates `uninstall.sh` and `restore-config.sh` for clean removal
-
-### Strategy Skills Only
-
-SweetClaude has two layers: a **strategy and product layer** (discovery, product briefs, PRDs, personas, roadmaps, corpus management) and a **code and TDD layer** (phase gates, test-first enforcement, multi-agent review, implementation workflows). The full install includes both. The strategy-only install includes just the first layer.
-
-Use `--strategy-skills-only` if:
-- You are a founder, PM, or non-engineer who wants product and strategy workflows without the coding scaffolding
-- You are evaluating SweetClaude's product thinking capabilities before committing to the full install
-- You want to run SweetClaude on a project that does not involve Claude Code-assisted coding
-
-```bash
-./install.sh --strategy-skills-only
-```
-
-This installs the discovery, brief, PRD, persona, roadmap, corpus, and project management skills. It does not install TDD hooks, subagents, or code-phase skills. Upgrade to the full install at any time by running `./install.sh` with no flags.
-
----
-
 ## Updating
 
 ```bash
@@ -120,12 +76,6 @@ Without RAG installed, the corpus pipeline still works through the Promote step 
 ---
 
 ## Uninstalling
-
-```bash
-./uninstall.sh
-```
-
-Run from the repository directory. The installer generated this script during install. It restores your pre-install `~/.claude/` configuration from the backup.
 
 To suspend SweetClaude for one project without uninstalling globally:
 
