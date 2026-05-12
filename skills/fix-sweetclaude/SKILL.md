@@ -226,11 +226,25 @@ For each data-owning skill, check whether it is present in `skills.yaml`. Use th
 
 If `skills.yaml` is missing entirely: propose creating it (schema v2) with entries inferred from the above.
 If entries are missing from an existing `skills.yaml`: propose adding them with the inferred state.
-If `skills.yaml` is schema v1: propose migrating to v2 (same mapping as the update skill's 8e migration step).
 
-> "skills.yaml is missing / has gaps / is schema v1. Based on artifacts on disk: backlog=active, milestones=uninitialized, … Write/migrate it?"
+If `skills.yaml` exists with `schema_version: 1`: do **not** re-implement the migration here. Invoke the registry-driven migration runner (BL-065 refactor):
 
-On user approval: write or update `skills.yaml` using atomic write (temp file → rename). Use v2 schema:
+```bash
+RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
+if [ -n "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --file skills.yaml
+else
+  echo "Migration runner not found. Run /sweetclaude:update to install the framework."
+fi
+```
+
+The runner's registered handler (`scripts/migrations/skills_yaml_v1_to_v2.py`) is the single source of truth for the v1→v2 mapping. Same algorithm that previously lived inline here.
+
+After the runner finishes, re-read `skills.yaml` and proceed to the bootstrap-of-missing-entries logic below.
+
+> "skills.yaml is missing / has gaps. Based on artifacts on disk: backlog=active, milestones=uninitialized, … Write the missing entries?"
+
+On user approval: write the missing entries using atomic write (temp file → rename). Use v2 schema:
 - Data file exists → `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
 - Data file missing → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
 Do not remove or modify entries that are already present and consistent.
