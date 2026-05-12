@@ -50,12 +50,21 @@ def main(argv: list[str]) -> int:
 
     upd["declined"] = None
     parent = os.path.dirname(path)
-    with tempfile.NamedTemporaryFile(
-        "w", dir=parent, suffix=".tmp", delete=False
-    ) as tmp:
-        yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
-        tmp_name = tmp.name
-    os.replace(tmp_name, path)
+    tmp_name = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w", dir=parent, suffix=".tmp", delete=False
+        ) as tmp:
+            yaml.safe_dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+        tmp_name = None
+    finally:
+        if tmp_name:
+            try:
+                os.unlink(tmp_name)
+            except OSError:
+                pass
     print(f"clear-decline: cleared declined={current!r} → null")
     return 0
 

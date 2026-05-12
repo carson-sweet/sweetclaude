@@ -273,7 +273,7 @@ else
   SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 
   if [ -f "$SETTINGS_FILE" ]; then
-    if grep -q "sweetclaude/test-guardian" "$SETTINGS_FILE" 2>/dev/null; then
+    if grep -q "drift-gate" "$SETTINGS_FILE" 2>/dev/null; then
       echo "  Hooks already configured in settings.json."
     else
       python3 - "$SETTINGS_FILE" "$CLAUDE_DIR/hooks/sweetclaude" << 'PYMERGE'
@@ -283,7 +283,12 @@ settings_path = sys.argv[1]
 hooks_dir = sys.argv[2]
 
 new_hooks = {
+    "SessionStart": [
+        {"matcher": "startup", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"}]},
+        {"matcher": "startup", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/drift-gate.sh"}]},
+    ],
     "PreToolUse": [
+        {"matcher": "Skill", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/master-preflight.sh"}]},
         {"matcher": "", "hooks": [{"type": "command", "command": f"{hooks_dir}/preflight-guard.sh"}]},
         {"matcher": "Write|Edit", "hooks": [{"type": "command", "command": f"{hooks_dir}/test-guardian.sh"}]},
     ],
@@ -317,7 +322,36 @@ PYMERGE
     cat > "$SETTINGS_FILE" << 'SETTINGS'
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/drift-gate.sh"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/master-preflight.sh"
+          }
+        ]
+      },
       {
         "matcher": "",
         "hooks": [

@@ -14,35 +14,36 @@ Fetch the latest SweetClaude and sync it to all installed locations.
 
 ---
 
-## Step -1: Self-heal versionless framework path (transitional)
+## Step -1: Pre-flight
 
-Idempotent backfill. If `~/.claude/scripts/sweetclaude/` is missing (user upgraded from a release whose update logic didn't populate it), copy from the plugin-cache install. No-op after the first run. Step 0 below depends on this path existing.
+Ensure the versionless framework path is populated, clear any previous update decline (running `/sweetclaude:update` is explicit re-engagement), and emit the runner path for later steps.
 
 ```bash
-if [ ! -d ~/.claude/scripts/sweetclaude ]; then
-  IP=$(python3 -c "import json, os; d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json'))); print(d['plugins'].get('sweetclaude@sweetclaude', [{}])[0].get('installPath', ''))" 2>/dev/null)
+if [ ! -f ~/.claude/scripts/sweetclaude/preflight.sh ]; then
+  IP=$(python3 -c "
+import json, os
+try:
+    d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+    entries = [e for versions in d.get('plugins', {}).values()
+               for e in versions if e.get('scope') == 'user']
+    entries.sort(key=lambda e: e.get('lastUpdated', ''), reverse=True)
+    for e in entries:
+        ip = e.get('installPath', '')
+        if ip and os.path.isdir(os.path.join(ip, 'scripts')):
+            print(ip)
+            break
+except Exception:
+    pass
+" 2>/dev/null)
   if [ -n "$IP" ] && [ -d "$IP/scripts" ]; then
     mkdir -p ~/.claude/scripts/sweetclaude
-    cp -R "$IP/scripts/"* ~/.claude/scripts/sweetclaude/
+    rsync -a "$IP/scripts/" ~/.claude/scripts/sweetclaude/ 2>/dev/null || true
   fi
 fi
+eval "$(bash ~/.claude/scripts/sweetclaude/preflight.sh --from-update 2>/dev/null)"
 ```
 
-Transitional — once v3.68.0 has been widely adopted, this block can be removed. Same block also exists at the top of `bootstrap/SKILL.md`.
-
----
-
-## Step 0: Clear decline (Gap #8 manual reset)
-
-Running `/sweetclaude:update` directly is interpreted as "I want updates again." Clear `framework.update.declined` before doing anything else.
-
-The Step 0 logic lives in a helper script shipped with the framework — `scripts/maintenance/clear-decline.py`. The SKILL invokes it by absolute path (deterministic via `installed_plugins.json`, not `find`). The helper is a no-op if the current directory is not a SweetClaude project.
-
-```bash
-python3 ~/.claude/scripts/sweetclaude/maintenance/clear-decline.py .
-```
-
-If the user picks "Not now" later in this update flow, `declined` will be re-set to the specific version they declined (per Gap #1's version-aware decline rule). This Step 0 is the explicit-re-engagement reset.
+`DECLINE_CLEARED=true` if the project's `framework.update.declined` was cleared. `RUNNER` is set for use in Step 6b. If the user picks "Not now" later, `declined` will be re-set to the specific version declined (per Gap #1's version-aware decline rule).
 
 ---
 
@@ -270,6 +271,16 @@ ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNIN
 
 ---
 
+## Step 4b: Ensure required global hooks are registered
+
+After syncing, register any required global hooks that were added in this version but aren't yet in `~/.claude/settings.json`. Handles the upgrade path from older versions — idempotent if already registered.
+
+```bash
+python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
+```
+
+---
+
 ## Step 5: Update plugin metadata
 
 Update `~/.claude/plugins/installed_plugins.json`:
@@ -317,49 +328,64 @@ SweetClaude updated.
 
 Only run if `.sweetclaude/state/sweetclaude.yaml` exists in the current project directory — skip silently otherwise. (Update can be run from any directory; this step only applies when run from inside a SweetClaude project.)
 
-After the framework sync, the registry on disk may declare schema versions newer than what this project's state files are at. Surface that immediately — don't make the user bounce sessions to discover it.
+After the framework sync, the registry on disk may declare schema versions newer than this project's state files. Surface it immediately — don't make the user bounce sessions.
 
-Use the **runner's `--report-drift-for-skill` flag** for this — it prints exactly the lines the SKILL parses (`DRIFT_COUNT=N` and `FINDING|...` lines). Do not roll your own heredoc — past attempts at inline python heredocs inside `if/fi` got mangled by agents re-typing the bash and silently failed.
-
-The runner ships into the versionless framework path `~/.claude/scripts/sweetclaude/migrations/runner.py` (Step 4 above syncs it there). No `installed_plugins.json` lookup, no `find` — just a fixed path:
+The runner was just synced to the versionless path in Step 4. Run it with `--report-drift-for-skill` to write the marker, then read the marker.
 
 ```bash
-if [ -f .sweetclaude/state/sweetclaude.yaml ]; then
-  python3 ~/.claude/scripts/sweetclaude/migrations/runner.py --project-dir . --report-drift-for-skill
+if [ -f .sweetclaude/state/sweetclaude.yaml ] && [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --report-drift-for-skill >/dev/null 2>&1 || true
 fi
+DRIFT_MARKER=".sweetclaude/state/pending-drift-decision.yaml"
+python3 -c "
+import yaml, sys
+try:
+    d = yaml.safe_load(open(sys.argv[1])) or {}
+    print('CASE=' + d.get('case', 'A'))
+    print('DRIFT_COUNT=' + str(d.get('drift_count', 0)))
+except FileNotFoundError:
+    print('DRIFT_COUNT=0')
+except Exception:
+    print('DRIFT_COUNT=0')
+" "$DRIFT_MARKER" 2>/dev/null
 ```
 
-Output format the SKILL parses:
+If `DRIFT_COUNT` is 0: continue silently to Step 7.
 
-```
-DRIFT_COUNT=N
-FINDING|<file_key>|v<from>-><to>|chain=<ok|broken>
-FINDING|...                       # one per finding that needs migration
-```
+If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past the project's state. Migrate or remove — no "Not now," no silent proceed. This is the locked Gap #7 rule.
 
-If `DRIFT_COUNT` is 0 or no runner found: continue silently to Step 7.
+**Case A (CASE=A — all chains ok):** present via **AskUserQuestion** (single-select, no "Something else"):
 
-If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past the project's state. Present the same binary hard demand as bootstrap Step 5b. Migrate or remove — no "Not now," no silent proceed. This is the locked Gap #7 rule.
-
-**Case A — all findings in window (chain=ok for everything):** present via **AskUserQuestion** (single-select, no "Something else"):
-
-> "Framework updated to v{new_version}. This project's state files need migration to match (see findings above). Migrate now to finish the update."
+> "Framework updated to v{new_version}. This project's state files need migration to match. Migrate now to finish the update."
 >
 > Options:
 > - **Migrate now** — invoke `sweetclaude:_migrate` to bring this project up to current.
 > - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
-**Case B — at least one finding has `chain=broken`:** present via **AskUserQuestion** (single-select):
+**Case B (CASE=B — at least one chain broken):** present via **AskUserQuestion** (single-select):
 
-> "Framework updated to v{new_version}, but this project's state is too old for automatic migration — at least one required handler is no longer shipped (3-major support window per Gap #8)."
+> "Framework updated to v{new_version}, but this project's state is too old for automatic migration — at least one required handler is no longer shipped (3-major support window)."
 >
 > Options:
-> - **Re-onboard from scratch** — move existing SweetClaude content to `.sweetclaude.legacy/<timestamp>/` and run `/sweetclaude:adopt` against a fresh state.
+> - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:adopt` against a fresh state.
 > - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
 If the user picks **Migrate now**: invoke `sweetclaude:_migrate`. When it returns, continue to Step 7.
 
-If the user picks **Re-onboard from scratch**: execute the legacy-move block from bootstrap Step 5b's "Re-onboarding flow" section, then invoke `sweetclaude:adopt`. Stop (adopt drives the next session itself).
+If the user picks **Re-onboard from scratch**:
+
+```bash
+TS=$(date -u +%Y%m%d-%H%M%S)
+LEGACY=".sweetclaude.legacy/$TS"
+mkdir -p ".sweetclaude.legacy"
+if [ -d .sweetclaude ]; then
+  mv .sweetclaude "$LEGACY"
+fi
+python3 ~/.claude/scripts/sweetclaude/maintenance/archive-sweetclaude-dir.py "$LEGACY"
+echo "Moved existing SweetClaude content to $LEGACY/ — adopt will use it as reference, not auto-migrate."
+```
+
+Then invoke `sweetclaude:adopt`. Stop (adopt drives the next session itself).
 
 If the user picks **Remove SweetClaude**: invoke `sweetclaude:purge`. Stop.
 

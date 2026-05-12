@@ -40,46 +40,16 @@ fi
 ## Step 1: Create pre-migration snapshot
 
 ```bash
-python3 - "$RUNNER" << 'PY'
-import sys, json
-sys.path.insert(0, sys.argv[1].rsplit('/', 1)[0])
-from runner import MigrationRunner
-runner = MigrationRunner(project_dir=".")
-try:
-    snap = runner.create_snapshot()
-except RuntimeError as e:
-    print(f"SNAPSHOT_FAILED|{e}")
-    sys.exit(1)
-print(f"SNAPSHOT_OK|{json.dumps(snap.to_dict())}")
-PY
+SNAPSHOT_OUT=$(python3 ~/.claude/scripts/sweetclaude/migrations/run_snapshot.py "$RUNNER" .)
 ```
 
 - `SNAPSHOT_FAILED|<reason>` → abort. Report to user: `"Cannot create pre-migration safety snapshot: <reason>. Migration not started. Resolve the issue (commonly: free disk space, git repo state) and re-run."` Stop.
-- `SNAPSHOT_OK|<json>` → save the SnapshotInfo JSON for use in Steps 3/4. Continue.
+- `SNAPSHOT_OK|<json>` → parse `SNAPSHOT_OUT` to extract the JSON portion (everything after the first `|`); save as `SNAPSHOT_JSON` for use in Steps 3/4. Continue.
 
 ## Step 2: Run the migration
 
 ```bash
-python3 - "$RUNNER" << 'PY'
-import sys, json
-sys.path.insert(0, sys.argv[1].rsplit('/', 1)[0])
-from runner import MigrationRunner
-runner = MigrationRunner(project_dir=".")
-results = runner.run()
-out = []
-for r in results:
-    out.append({
-        "file_key": r.file_key,
-        "success": r.success,
-        "failure_mode": r.failure_mode,
-        "failure_details": r.failure_details,
-        "on_disk_version_before": r.on_disk_version_before,
-        "on_disk_version_after": r.on_disk_version_after,
-        "target_version": r.target_version,
-        "recovery_menu": r.recovery_menu,
-    })
-print(json.dumps(out))
-PY
+MIGRATE_OUT=$(python3 ~/.claude/scripts/sweetclaude/migrations/run_migrate.py "$RUNNER" .)
 ```
 
 Parse the JSON results. For each result:
@@ -163,16 +133,7 @@ Prompt:
 Wait for the user to type exactly `rollback`. Then:
 
 ```bash
-python3 - "$RUNNER" "$SNAPSHOT_JSON" << 'PY'
-import sys, json
-sys.path.insert(0, sys.argv[1].rsplit('/', 1)[0])
-from runner import MigrationRunner, SnapshotInfo
-snap_data = json.loads(sys.argv[2])
-snap = SnapshotInfo(**snap_data)
-runner = MigrationRunner(project_dir=".")
-ok, reason = runner.rollback(snap)
-print(f"ROLLBACK_{'OK' if ok else 'FAIL'}|{reason or ''}")
-PY
+ROLLBACK_OUT=$(python3 ~/.claude/scripts/sweetclaude/migrations/run_rollback.py "$RUNNER" "$SNAPSHOT_JSON" .)
 ```
 
 Report success or failure. Clear the pending-decision marker.
@@ -191,12 +152,19 @@ This path uses the one-shot consolidation script that has shipped since v3.18 �
 
 ```bash
 INSTALLED=$(python3 -c "
-import json
+import json, os
 try:
-    d = json.load(open('$HOME/.claude/plugins/installed_plugins.json'))
-    e = [v for k,v in d.get('plugins',{}).items() if 'sweetclaude' in k.lower()]
-    print(e[0][0].get('version','unknown') if e and e[0] else 'unknown')
-except: print('unknown')
+    path = os.path.join(os.path.expanduser('~'), '.claude', 'plugins', 'installed_plugins.json')
+    d = json.load(open(path))
+    entries = []
+    for k, v in d.get('plugins', {}).items():
+        if k.lower() == 'sweetclaude':
+            entries.extend(v if isinstance(v, list) else [v])
+    user_entries = [e for e in entries if e.get('scope') == 'user']
+    user_entries.sort(key=lambda e: e.get('lastUpdated', ''), reverse=True)
+    print(user_entries[0].get('version', 'unknown') if user_entries else 'unknown')
+except Exception:
+    print('unknown')
 " 2>/dev/null)
 
 SCRIPT=~/.claude/scripts/sweetclaude/migrate-to-sweetclaude-yaml.py

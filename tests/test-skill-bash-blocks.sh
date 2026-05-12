@@ -149,13 +149,70 @@ if [ "$FIND_VIOLATIONS" -eq 0 ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Note: a fourth test ("user-invocable skills must reference bootstrap")
-# was prototyped here and removed. The caucus's structural recommendation
-# is a PreToolUse hook on sweetclaude:* invocations that enforces pre-flight
-# at the harness layer — not a convention each SKILL.md must opt into.
-# After Phase 2.3 of the rebuild ships that hook, a new test will assert
-# the hook is registered + behaves correctly. That test lives elsewhere
-# (it's a hook-config test, not a SKILL.md-content test).
+# Test 4: hooks.json and hooks-manifest.json declare drift-gate.sh and
+# master-preflight.sh with the correct events, matchers, and scope.
+# ---------------------------------------------------------------------------
+
+echo "[4] hook-config: drift-gate.sh and master-preflight.sh declared correctly"
+
+HOOKS_JSON="$REPO_ROOT/hooks/hooks.json"
+MANIFEST="$REPO_ROOT/hooks/hooks-manifest.json"
+
+HOOK_CFG_RESULT=$(python3 - "$HOOKS_JSON" "$MANIFEST" << 'PY'
+import sys, json
+errors = []
+
+with open(sys.argv[1]) as f:
+    hooks = json.load(f)
+with open(sys.argv[2]) as f:
+    manifest = json.load(f)
+
+session_cmds = [
+    h.get("command", "")
+    for entry in hooks.get("hooks", {}).get("SessionStart", [])
+    for h in entry.get("hooks", [])
+]
+pre_entries = [
+    (entry.get("matcher", ""), h.get("command", ""))
+    for entry in hooks.get("hooks", {}).get("PreToolUse", [])
+    for h in entry.get("hooks", [])
+]
+
+if not any("drift-gate.sh" in c for c in session_cmds):
+    errors.append("hooks.json: drift-gate.sh not in SessionStart")
+if not any("master-preflight.sh" in c and m == "Skill" for m, c in pre_entries):
+    errors.append("hooks.json: master-preflight.sh not in PreToolUse matcher=Skill")
+
+m_hooks = {h["file"]: h for h in manifest.get("hooks", []) if "file" in h}
+for name, want_event, want_scope in [
+    ("drift-gate.sh", "SessionStart", "global"),
+    ("master-preflight.sh", "PreToolUse", "global"),
+]:
+    if name not in m_hooks:
+        errors.append("hooks-manifest.json: " + name + " missing")
+        continue
+    h = m_hooks[name]
+    if not h.get("required"):
+        errors.append("hooks-manifest.json: " + name + " not marked required")
+    if h.get("scope") != want_scope:
+        errors.append("hooks-manifest.json: " + name + " scope=" + repr(h.get("scope")) + " want " + repr(want_scope))
+    if h.get("event") != want_event:
+        errors.append("hooks-manifest.json: " + name + " event=" + repr(h.get("event")) + " want " + repr(want_event))
+
+print("COUNT=" + str(len(errors)))
+for e in errors:
+    print(e)
+PY
+)
+
+HOOK_CFG_COUNT=$(printf '%s\n' "$HOOK_CFG_RESULT" | grep '^COUNT=' | cut -d= -f2)
+if [ "${HOOK_CFG_COUNT:-0}" -eq 0 ]; then
+  pass "drift-gate.sh and master-preflight.sh correctly declared in hooks.json + manifest"
+else
+  printf '%s\n' "$HOOK_CFG_RESULT" | grep -v '^COUNT=' | while read -r line; do
+    fail "$line"
+  done
+fi
 
 echo
 if [ "$FAILED" -eq 0 ]; then

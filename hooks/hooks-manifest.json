@@ -12,6 +12,24 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"
     },
     {
+      "file": "drift-gate.sh",
+      "event": "SessionStart",
+      "matcher": "startup",
+      "required": true,
+      "scope": "global",
+      "purpose": "Detects artifact-format drift at session start; writes pending-drift-decision.yaml and emits AskUserQuestion instruction if drift found",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/drift-gate.sh"
+    },
+    {
+      "file": "master-preflight.sh",
+      "event": "PreToolUse",
+      "matcher": "Skill",
+      "required": true,
+      "scope": "global",
+      "purpose": "Blocks sweetclaude:* skill invocations until bootstrap has run this session and any pending drift decision is resolved",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/master-preflight.sh"
+    },
+    {
       "file": "preflight-guard.sh",
       "event": "PreToolUse",
       "matcher": ".*",

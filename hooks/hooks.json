@@ -9,9 +9,27 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/drift-gate.sh"
+          }
+        ]
       }
     ],
     "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/master-preflight.sh"
+          }
+        ]
+      },
       {
         "matcher": "",
         "hooks": [
