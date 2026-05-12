@@ -118,3 +118,35 @@ git config core.hooksPath .githooks
 5. Open a PR with: what you changed, why, and what you tested
 
 PRs that include test results from a real session are much more likely to be merged quickly.
+
+---
+
+## Cutting a release
+
+Version bumping is operator-driven, not automated. There is no commit hook that bumps `package.json` automatically.
+
+To cut a release:
+
+```bash
+# Compute the next version from package.json:
+scripts/bump-version.sh patch
+scripts/bump-version.sh minor
+scripts/bump-version.sh major
+
+# Or set an explicit version:
+scripts/bump-version.sh 3.66.0
+```
+
+The script:
+
+- Refuses to run on a dirty working tree or off `main` (use `--force` to override).
+- Writes the new version into `package.json` and `.claude-plugin/plugin.json`.
+- Creates a single `chore(release): vX.Y.Z` commit and a matching `vX.Y.Z` annotated tag.
+- Does **not** push. Review the commit and tag, then push when ready:
+
+```bash
+git push origin main
+git push origin vX.Y.Z
+```
+
+Add additional version-stamped files to `scripts/version-files.txt` (one per line) if any are introduced; the script will pick them up automatically.

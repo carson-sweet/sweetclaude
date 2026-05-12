@@ -75,15 +75,6 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/state-regenerator.sh"
     },
     {
-      "file": "version-bump.sh",
-      "event": "PostToolUse",
-      "matcher": "Bash",
-      "required": true,
-      "scope": "project",
-      "purpose": "Bumps package.json patch version after successful skill file writes",
-      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/version-bump.sh"
-    },
-    {
       "file": "skill-tracker.sh",
       "event": "PostToolUse",
       "matcher": "Skill",
