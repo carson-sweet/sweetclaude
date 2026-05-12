@@ -116,9 +116,19 @@ Read the project's CLAUDE.md. Check:
    - Try running the test command to see if it works
 
 3. **SweetClaude section** — is it present and correct?
-   - Should reference `.sweetclaude/state/phase.yaml`
-   - Should have the pre-flight invocation instruction
-   - Should NOT reference a "working repo"
+   - Should reference `.sweetclaude/state/sweetclaude.yaml` (the unified state file post-v3.18).
+   - Should have the pre-flight / auto-fire invocation instruction (see 3a below).
+   - Should NOT reference a "working repo".
+
+   **3a. Auto-fire instruction patch** (relocated from the deleted `update/project-migration.md` Step 8c).
+
+   Check whether the `## SweetClaude` section contains the text `invoke \`sweetclaude:status\` automatically at session start`. If missing, find the line that reads `Read .sweetclaude/state/sweetclaude.yaml` (or `Read .sweetclaude/state/phase.yaml` on pre-3.18 projects) and replace with:
+
+   ```
+   - Read `.sweetclaude/state/sweetclaude.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist. If `.sweetclaude/state/sweetclaude.yaml` exists and `.sweetclaude/disabled` does not exist, invoke `sweetclaude:status` automatically at session start.
+   ```
+
+   Propose the patch via AskUserQuestion; apply only on user approval. Report whether the patch was applied or already up to date.
 
 4. **Project description** — is it still accurate?
 
