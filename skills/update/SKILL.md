@@ -368,12 +368,17 @@ fi
 
 ---
 
-## Step 8: Migrate existing project state
+## Step 8: (removed)
 
-Read [project-migration.md](project-migration.md) and execute it in full.
+Project-state migration is **not** part of the update flow. Update only syncs the framework. The current project (and any other v3 project the user opens) is migrated by `sweetclaude:bootstrap` on next session start, via the drift-detection scan now built into the runner.
 
-It detects `.sweetclaude/` state, creates a pre-migration backup, patches the CLAUDE.md auto-fire instruction if missing, and migrates `phase.yaml` and `skills.yaml` from schema v1 to v2 if needed.
+Rationale (locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md`, Gap #7):
 
+- Update success and project-migration success are independent — a failed migration no longer makes update look failed.
+- Every v3 project migrates by the same mechanism: bootstrap detects drift, demands "Migrate now" or "Remove SweetClaude from this project."
+- No "update the framework, defer migration" path — see Gap #7 hard demand rule.
+
+If you want to migrate the current project immediately after this update completes, close this session and reopen it. Bootstrap will detect drift on entry and present the demand.
 
 ---
 
