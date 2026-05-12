@@ -129,6 +129,72 @@ bash -n "$REPO_ROOT/hooks/sweetclaude-health-check.sh" \
   || fail "sweetclaude-health-check.sh has syntax error"
 
 # ---------------------------------------------------------------------------
+# Test 4: update skill Step 0 — clear declined (Gap #8 manual reset)
+# ---------------------------------------------------------------------------
+
+echo "[4] update Step 0 — clear declined"
+
+RESET_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_HOME $RESET_TMPDIR" EXIT
+
+mkdir -p "$RESET_TMPDIR/.sweetclaude/state"
+cat > "$RESET_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 1
+framework:
+  installed_version: 3.65.0
+  update:
+    available: 3.66.0
+    declined: 3.65.0
+YAML
+
+# Same Python snippet the update skill embeds as Step 0.
+(
+  cd "$RESET_TMPDIR"
+  python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
+import sys, yaml, tempfile, os
+path = sys.argv[1]
+try:
+    with open(path) as f: d = yaml.safe_load(f) or {}
+except Exception:
+    sys.exit(0)
+upd = d.setdefault('framework',{}).setdefault('update',{})
+if upd.get('declined') not in (None, False):
+    upd['declined'] = None
+    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+        yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        tmp_name = tmp.name
+    os.replace(tmp_name, path)
+PY
+)
+
+DECLINED=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('$RESET_TMPDIR/.sweetclaude/state/sweetclaude.yaml')) or {}
+print(repr((d.get('framework') or {}).get('update', {}).get('declined')))
+")
+if [ "$DECLINED" = "None" ]; then
+  pass "declined cleared to None after manual reset"
+else
+  fail "declined not cleared: got $DECLINED"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 5: runner exposes FAILURE_OUT_OF_SUPPORT_WINDOW (Gap #8)
+# ---------------------------------------------------------------------------
+
+echo "[5] runner exposes FAILURE_OUT_OF_SUPPORT_WINDOW"
+python3 - "$REPO_ROOT/scripts/migrations" << 'PY' \
+  && pass "FAILURE_OUT_OF_SUPPORT_WINDOW importable, equals 'out_of_support_window'" \
+  || fail "FAILURE_OUT_OF_SUPPORT_WINDOW constant missing or wrong"
+import sys
+sys.path.insert(0, sys.argv[1])
+import runner
+assert hasattr(runner, "FAILURE_OUT_OF_SUPPORT_WINDOW"), "constant missing"
+assert runner.FAILURE_OUT_OF_SUPPORT_WINDOW == "out_of_support_window", f"value: {runner.FAILURE_OUT_OF_SUPPORT_WINDOW!r}"
+sys.exit(0)
+PY
+
+# ---------------------------------------------------------------------------
 
 echo
 if [ "$FAILED" -eq 0 ]; then

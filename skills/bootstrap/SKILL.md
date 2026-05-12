@@ -100,7 +100,9 @@ if count:
 
 If `DRIFT_COUNT` is 0: continue to Step 6.
 
-If `DRIFT_COUNT > 0`: present the hard binary via **AskUserQuestion** (single-select, no "Something else"):
+If `DRIFT_COUNT > 0`: the binary prompt depends on whether any finding has `chain=broken`.
+
+**Case A — all findings in window (chain=ok for everything):** present via **AskUserQuestion** (single-select, no "Something else"):
 
 > "This project has artifacts behind the framework version (see findings above). SweetClaude cannot run until you decide."
 >
@@ -108,11 +110,60 @@ If `DRIFT_COUNT > 0`: present the hard binary via **AskUserQuestion** (single-se
 > - **Migrate now** — invoke `sweetclaude:_migrate` to bring artifacts up to current.
 > - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
-If any finding shows `chain=broken`: append a note to the prompt — *"Some migrations are missing handlers — Migrate now may fail or route to re-onboarding (Gap #8)."*
+**Case B — at least one finding has `chain=broken` (out of 3-major support window per Gap #8):** present via **AskUserQuestion** (single-select):
 
-There is no "Not now" option. No third path. Stop after the user picks.
+> "This project's artifacts are too old for automatic migration — at least one required handler is no longer shipped (3-major support window per Gap #8). SweetClaude cannot run until you decide."
+>
+> Options:
+> - **Re-onboard from scratch** — move existing SweetClaude content to `.sweetclaude.legacy/<timestamp>/` and run `/sweetclaude:adopt` against a fresh state. Your old files stay as reference; adopt does not auto-import them.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
-Locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md` Gap #7.
+### Re-onboarding flow (Case B → Re-onboard from scratch)
+
+Execute this block before invoking adopt:
+
+```bash
+TS=$(date -u +%Y%m%d-%H%M%S)
+LEGACY=".sweetclaude.legacy/$TS"
+mkdir -p ".sweetclaude.legacy"
+
+# 1) Move .sweetclaude/ aside.
+if [ -d .sweetclaude ]; then
+  mv .sweetclaude "$LEGACY"
+fi
+
+# 2) Mirror artifact base_paths outside .sweetclaude/ into the legacy tree
+#    so adopt can reference them without auto-migrating.
+python3 - "$LEGACY" << 'PY'
+import os, sys, shutil, yaml
+legacy = sys.argv[1]
+# Read base_paths from the legacy artifact-privacy.yaml that was just moved aside.
+privacy = os.path.join(legacy, "artifact-privacy.yaml")
+if not os.path.exists(privacy):
+    sys.exit(0)
+try:
+    d = yaml.safe_load(open(privacy)) or {}
+except Exception:
+    sys.exit(0)
+for cat, entry in (d.get("categories") or {}).items():
+    if not isinstance(entry, dict): continue
+    base = entry.get("base_path", "")
+    if not base or base.startswith(".sweetclaude"):
+        continue
+    if os.path.exists(base):
+        target = os.path.join(legacy, base)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        shutil.move(base, target)
+PY
+
+echo "Moved existing SweetClaude content to $LEGACY/ — adopt will use it as reference, not auto-migrate."
+```
+
+Then invoke `sweetclaude:adopt`. Adopt runs against the now-empty project. The legacy tree at `.sweetclaude.legacy/<timestamp>/` is visible to the user during onboarding so they can manually port content as needed.
+
+There is no "Not now" option in either case. No third path. Stop after the user picks.
+
+Locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md` Gaps #7 and #8.
 
 ## Step 6: Drift and update offers
 

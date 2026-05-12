@@ -49,6 +49,12 @@ FAILURE_CHAIN_BROKEN = "chain_broken"
 FAILURE_FILE_MISSING = "file_missing"
 FAILURE_PARSE_FAILED = "parse_failed"
 FAILURE_RECOVERABLE = "recoverable"  # handler raised a recoverable error with a user-facing menu
+# Gap #8: distinct symbol for "this migration was intentionally deleted because
+# its from-version predates the 3-major support window." Runtime detection
+# currently emits chain_broken for any missing handler; this constant lets
+# handlers signal "too old" explicitly and lets bootstrap recognize it when
+# routing to re-onboarding.
+FAILURE_OUT_OF_SUPPORT_WINDOW = "out_of_support_window"
 
 
 # ---------------------------------------------------------------------------
