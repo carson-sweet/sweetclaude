@@ -560,6 +560,99 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Test 12: sweetclaude.yaml v1 -> v2 (decline amnesty + stale cleanup)
+# ---------------------------------------------------------------------------
+
+echo "[12] sweetclaude.yaml v1->v2"
+
+SC_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR $SCAN_TMPDIR $REC_TMPDIR $SNAP_TMPDIR $SC_TMPDIR" EXIT
+
+mkdir -p "$SC_TMPDIR/.sweetclaude/state"
+
+# 12a. declined: true (legacy boolean) gets cleared to null.
+cat > "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 1
+framework:
+  installed_version: 3.66.0
+  update:
+    available: 3.67.0
+    declined: true
+    check_error: "transient gh api 502"
+YAML
+
+python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --file sweetclaude.yaml >/dev/null 2>&1
+
+python3 - "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'PY' \
+  && pass "declined: true -> null; check_error cleared; schema_version bumped" \
+  || fail "amnesty case failed"
+import sys, yaml
+data = yaml.safe_load(open(sys.argv[1]).read()) or {}
+assert data.get("schema_version") == 2, f"schema_version: {data.get('schema_version')!r}"
+upd = (data.get("framework") or {}).get("update") or {}
+assert upd.get("declined") is None, f"declined: {upd.get('declined')!r}"
+assert upd.get("check_error") is None, f"check_error: {upd.get('check_error')!r}"
+assert upd.get("available") == "3.67.0", f"available preserved: {upd.get('available')!r}"
+sys.exit(0)
+PY
+
+# 12b. Stale available (older than installed) gets cleared.
+cat > "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 1
+framework:
+  installed_version: 3.66.0
+  update:
+    available: 3.65.0
+    declined: 3.65.0
+YAML
+
+python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --file sweetclaude.yaml >/dev/null 2>&1
+
+python3 - "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'PY' \
+  && pass "stale available cleared; version-string declined preserved" \
+  || fail "stale available case failed"
+import sys, yaml
+data = yaml.safe_load(open(sys.argv[1]).read()) or {}
+upd = (data.get("framework") or {}).get("update") or {}
+assert upd.get("available") is None, f"stale available: {upd.get('available')!r}"
+assert upd.get("declined") == "3.65.0", f"declined preserved: {upd.get('declined')!r}"
+sys.exit(0)
+PY
+
+# 12c. Real pending update (available > installed) survives unchanged.
+cat > "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 1
+framework:
+  installed_version: 3.66.0
+  update:
+    available: 3.67.0
+    declined: null
+YAML
+
+python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --file sweetclaude.yaml >/dev/null 2>&1
+
+python3 - "$SC_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'PY' \
+  && pass "real pending update preserved" \
+  || fail "pending update preservation failed"
+import sys, yaml
+data = yaml.safe_load(open(sys.argv[1]).read()) or {}
+upd = (data.get("framework") or {}).get("update") or {}
+assert upd.get("available") == "3.67.0", f"available: {upd.get('available')!r}"
+assert upd.get("declined") is None
+sys.exit(0)
+PY
+
+# 12d. Idempotency: re-run is a no-op once at v2.
+RERUN_SC=$(python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --file sweetclaude.yaml 2>&1)
+echo "$RERUN_SC" | grep -q "sweetclaude.yaml: idempotent" \
+  && pass "sweetclaude.yaml is no-op on re-run at v2" \
+  || fail "sweetclaude.yaml re-run: $RERUN_SC"
+
+# ---------------------------------------------------------------------------
 
 echo
 if [ "$FAILED" -eq 0 ]; then
