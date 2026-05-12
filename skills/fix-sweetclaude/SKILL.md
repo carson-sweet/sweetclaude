@@ -240,11 +240,11 @@ If entries are missing from an existing `skills.yaml`: propose adding them with 
 If `skills.yaml` exists with `schema_version: 1`: do **not** re-implement the migration here. Invoke the registry-driven migration runner (BL-065 refactor):
 
 ```bash
-RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
-if [ -n "$RUNNER" ]; then
+RUNNER=~/.claude/scripts/sweetclaude/migrations/runner.py
+if [ -f "$RUNNER" ]; then
   python3 "$RUNNER" --project-dir . --file skills.yaml
 else
-  echo "Migration runner not found. Run /sweetclaude:update to install the framework."
+  echo "Migration runner not found at $RUNNER. Run /sweetclaude:update to install the framework."
 fi
 ```
 

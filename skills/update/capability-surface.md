@@ -33,12 +33,12 @@ Read `.sweetclaude/state/skills.yaml` if it exists.
 **Step 1 — schema migration:** If `skills.yaml` exists with `schema_version: 1`, invoke the registry-driven migration runner (BL-066 refactor):
 
 ```bash
-RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
-if [ -n "$RUNNER" ]; then
+RUNNER=~/.claude/scripts/sweetclaude/migrations/runner.py
+if [ -f "$RUNNER" ]; then
   python3 "$RUNNER" --project-dir . --file skills.yaml
   echo "Migrated skills.yaml to schema v2."
 else
-  echo "Migration runner not found in installed plugin. Run /sweetclaude:update."
+  echo "Migration runner not found at $RUNNER. Run /sweetclaude:update."
 fi
 ```
 

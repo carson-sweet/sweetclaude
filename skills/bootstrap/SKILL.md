@@ -12,6 +12,24 @@ State pre-loaded above. One read. Make a decision. Delegate.
 
 ---
 
+## Step 0: Self-heal versionless framework path (transitional)
+
+Idempotent backfill. If `~/.claude/scripts/sweetclaude/` is missing (user upgraded from a release whose update logic didn't populate it), copy from the plugin-cache install. No-op after the first run.
+
+```bash
+if [ ! -d ~/.claude/scripts/sweetclaude ]; then
+  IP=$(python3 -c "import json, os; d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json'))); print(d['plugins'].get('sweetclaude@sweetclaude', [{}])[0].get('installPath', ''))" 2>/dev/null)
+  if [ -n "$IP" ] && [ -d "$IP/scripts" ]; then
+    mkdir -p ~/.claude/scripts/sweetclaude
+    cp -R "$IP/scripts/"* ~/.claude/scripts/sweetclaude/
+  fi
+fi
+```
+
+Transitional — once v3.68.0 has been widely adopted, this block can be removed. Until then, every entry point that calls `~/.claude/scripts/sweetclaude/<...>` must run it (or run after bootstrap has run it). Same block also exists at the top of `/sweetclaude:update`.
+
+---
+
 ## Step 1: Handle missing or unparseable file
 
 If the pre-loaded content is `SC_YAML_NOT_FOUND`:
@@ -79,25 +97,15 @@ If `false`:
 Before any other offers, run the registry-driven drift scan. If artifacts are behind the framework version, the user gets a hard binary — there is no defer, no silent proceed.
 
 ```bash
-# Run the scan and persist the result. The runner ships with the framework.
-RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
-if [ -n "$RUNNER" ]; then
-  python3 "$RUNNER" --project-dir . --scan-drift --persist >/dev/null 2>&1 || true
+# The runner ships at a versionless framework path. Use its
+# --report-drift-for-skill flag, which both persists findings and prints
+# the exact DRIFT_COUNT / FINDING lines parsed below. No heredoc — past
+# attempts at inline python heredocs inside `if/fi` got mangled by agents
+# re-typing the bash and silently failed.
+RUNNER=~/.claude/scripts/sweetclaude/migrations/runner.py
+if [ -f "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --report-drift-for-skill
 fi
-
-# Read the persisted findings.
-python3 -c "
-import yaml
-d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
-drift = (d.get('framework') or {}).get('drift') or {}
-count = drift.get('drift_count', 0)
-print(f'DRIFT_COUNT={count}')
-if count:
-    for f in drift.get('findings', []):
-        if f.get('needs_migration'):
-            chain = 'broken' if not f.get('chain_valid') else 'ok'
-            print(f\"FINDING|{f.get('file_key')}|v{f.get('on_disk_version')}->v{f.get('target_version')}|chain={chain}\")
-" 2>/dev/null
 ```
 
 If `DRIFT_COUNT` is 0: continue to Step 6.

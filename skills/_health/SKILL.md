@@ -12,8 +12,8 @@ Run the health check script inline. Called when `hook_last_ran` is stale — cov
 
 ```bash
 PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
-SCRIPT=$(find ~/.claude -name "sweetclaude-health-check.sh" 2>/dev/null | head -1)
-if [ -z "$SCRIPT" ]; then
+SCRIPT=~/.claude/hooks/sweetclaude/sweetclaude-health-check.sh
+if [ ! -f "$SCRIPT" ]; then
   echo "HEALTH_CHECK_SCRIPT_MISSING"
 else
   PROJECT_DIR="$PROJECT_DIR" bash "$SCRIPT" 2>/dev/null \

@@ -230,6 +230,7 @@ fi
 mkdir -p "$CLAUDE_DIR/skills/sweetclaude"
 mkdir -p "$CLAUDE_DIR/rules/sweetclaude"
 mkdir -p "$CLAUDE_DIR/config/sweetclaude/templates"
+mkdir -p "$CLAUDE_DIR/scripts/sweetclaude"
 
 if [ "$STRATEGY_ONLY" = true ]; then
   SKILL_COUNT=0
@@ -257,6 +258,10 @@ fi
 
 cp -r "$SCRIPT_DIR/rules/"* "$CLAUDE_DIR/rules/sweetclaude/"
 cp -r "$SCRIPT_DIR/config/"* "$CLAUDE_DIR/config/sweetclaude/"
+
+if [ -d "$SCRIPT_DIR/scripts" ]; then
+  cp -r "$SCRIPT_DIR/scripts/"* "$CLAUDE_DIR/scripts/sweetclaude/"
+fi
 
 echo "  Framework files installed."
 
@@ -510,6 +515,7 @@ rm -rf "$CLAUDE_DIR/hooks/sweetclaude"
 rm -rf "$CLAUDE_DIR/agents/sweetclaude"
 rm -rf "$CLAUDE_DIR/rules/sweetclaude"
 rm -rf "$CLAUDE_DIR/config/sweetclaude"
+rm -rf "$CLAUDE_DIR/scripts/sweetclaude"
 echo "  Framework files removed."
 
 # Always strip the SweetClaude section from CLAUDE.md — it references
