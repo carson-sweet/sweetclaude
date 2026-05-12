@@ -72,6 +72,48 @@ Read `framework.setup_complete`.
 If `false`:
 - Invoke `sweetclaude:setup`. Stop.
 
+## Step 5b: Artifact-format drift check (hard demand)
+
+Before any other offers, run the registry-driven drift scan. If artifacts are behind the framework version, the user gets a hard binary — there is no defer, no silent proceed.
+
+```bash
+# Run the scan and persist the result. The runner ships with the framework.
+RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
+if [ -n "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --scan-drift --persist >/dev/null 2>&1 || true
+fi
+
+# Read the persisted findings.
+python3 -c "
+import yaml
+d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
+drift = (d.get('framework') or {}).get('drift') or {}
+count = drift.get('drift_count', 0)
+print(f'DRIFT_COUNT={count}')
+if count:
+    for f in drift.get('findings', []):
+        if f.get('needs_migration'):
+            chain = 'broken' if not f.get('chain_valid') else 'ok'
+            print(f\"FINDING|{f.get('file_key')}|v{f.get('on_disk_version')}->v{f.get('target_version')}|chain={chain}\")
+" 2>/dev/null
+```
+
+If `DRIFT_COUNT` is 0: continue to Step 6.
+
+If `DRIFT_COUNT > 0`: present the hard binary via **AskUserQuestion** (single-select, no "Something else"):
+
+> "This project has artifacts behind the framework version (see findings above). SweetClaude cannot run until you decide."
+>
+> Options:
+> - **Migrate now** — invoke `sweetclaude:_migrate` to bring artifacts up to current.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
+
+If any finding shows `chain=broken`: append a note to the prompt — *"Some migrations are missing handlers — Migrate now may fail or route to re-onboarding (Gap #8)."*
+
+There is no "Not now" option. No third path. Stop after the user picks.
+
+Locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md` Gap #7.
+
 ## Step 6: Drift and update offers
 
 Read `framework.consistency.status`.
