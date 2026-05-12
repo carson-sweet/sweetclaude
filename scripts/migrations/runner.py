@@ -48,6 +48,57 @@ FAILURE_WRITE_FAILED = "write_failed"
 FAILURE_CHAIN_BROKEN = "chain_broken"
 FAILURE_FILE_MISSING = "file_missing"
 FAILURE_PARSE_FAILED = "parse_failed"
+FAILURE_RECOVERABLE = "recoverable"  # handler raised a recoverable error with a user-facing menu
+
+
+# ---------------------------------------------------------------------------
+# Recoverable error protocol (Gap #5)
+# ---------------------------------------------------------------------------
+
+
+class RecoverableMigrationError(Exception):
+    """Raised by a handler to signal a problem that the user can resolve.
+
+    The handler provides:
+        message: short user-facing description of what's wrong.
+        options: list of {label, action, ...} dicts describing handler-specific
+                 remediation choices. Each option's `action` is an opaque string
+                 the handler understands when re-invoked (e.g., "set_type=story",
+                 "open_for_manual_edit").
+
+    The runner appends two universal options to every menu before surfacing it:
+        - {"label": "Skip this file", "action": "skip"}
+        - {"label": "Initiate rollback", "action": "rollback"}
+
+    "Initiate rollback" routes to Gap #6's confirmation flow when wired into
+    the calling skill; it never fires automatically from this exception.
+
+    Optional fields:
+        current_file: Path of the specific file the handler was processing
+                      when the error occurred. Used by Skip semantics when
+                      the runner re-invokes the handler.
+        current_id:   String ID (e.g., "BL-007") of the offending item.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        options: list[dict] | None = None,
+        current_file: Path | str | None = None,
+        current_id: str | None = None,
+    ):
+        super().__init__(message)
+        self.message = message
+        self.options = options or []
+        self.current_file = Path(current_file) if current_file else None
+        self.current_id = current_id
+
+
+# Universal options the runner appends to every recoverable-error menu.
+UNIVERSAL_RECOVERY_OPTIONS = [
+    {"label": "Skip this file", "action": "skip"},
+    {"label": "Initiate rollback", "action": "rollback"},
+]
 
 
 # ---------------------------------------------------------------------------
@@ -75,6 +126,17 @@ class FileResult:
     failure_mode: str | None = None
     failure_details: str | None = None
     steps: list[StepResult] = field(default_factory=list)
+    # When failure_mode == FAILURE_RECOVERABLE, recovery_menu is populated.
+    # Shape:
+    #   {
+    #       "message": str,
+    #       "current_file": str | None,
+    #       "current_id": str | None,
+    #       "options": [{"label": str, "action": str, ...}, ...]
+    #   }
+    # options always includes the handler's choices plus the universal
+    # Skip/Rollback entries appended by the runner.
+    recovery_menu: dict | None = None
 
 
 @dataclass
@@ -223,7 +285,13 @@ class MigrationRunner:
         return self.migrations_dir / f"{handler_name}.py"
 
     def _load_handler(self, handler_name: str) -> Any:
-        """Dynamically import a handler module."""
+        """Dynamically import a handler module.
+
+        Injects the RecoverableMigrationError class into the module's namespace
+        BEFORE executing it, so handlers can `raise RecoverableMigrationError(...)`
+        without importing the runner (handlers are loaded by absolute path and
+        don't have the runner on their import path).
+        """
         path = self._handler_module_path(handler_name)
         if not path.exists():
             return None
@@ -233,6 +301,8 @@ class MigrationRunner:
         if spec is None or spec.loader is None:
             return None
         module = importlib.util.module_from_spec(spec)
+        # Inject before exec so handler code can reference it at module scope.
+        module.RecoverableMigrationError = RecoverableMigrationError
         spec.loader.exec_module(module)
         return module
 
@@ -245,6 +315,31 @@ class MigrationRunner:
             tmp.write(content)
             tmp_name = tmp.name
         os.replace(tmp_name, str(path))
+
+    def _build_recovery_menu(self, exc: "RecoverableMigrationError") -> dict:
+        """Combine the handler's options with the universal Skip/Rollback entries.
+
+        Output shape:
+            {
+                "message": str,
+                "current_file": str | None,
+                "current_id": str | None,
+                "options": [{"label": str, "action": str, ...}, ...],
+            }
+        """
+        # Deduplicate by `action` — if the handler already provides a "skip"
+        # or "rollback" option, the universal version is suppressed.
+        handler_actions = {opt.get("action") for opt in exc.options}
+        combined = list(exc.options)
+        for opt in UNIVERSAL_RECOVERY_OPTIONS:
+            if opt["action"] not in handler_actions:
+                combined.append(opt)
+        return {
+            "message": exc.message,
+            "current_file": str(exc.current_file) if exc.current_file else None,
+            "current_id": exc.current_id,
+            "options": combined,
+        }
 
     def _validate(self, data: dict, validation: dict | None) -> tuple[bool, str | None]:
         """Apply a registry validation block to a data dict.
@@ -577,6 +672,16 @@ class MigrationRunner:
 
             try:
                 data = up_fn(data, file_params)
+            except RecoverableMigrationError as e:
+                step_result.success = False
+                step_result.failure_mode = FAILURE_RECOVERABLE
+                step_result.failure_details = e.message
+                result.steps.append(step_result)
+                result.success = False
+                result.failure_mode = FAILURE_RECOVERABLE
+                result.failure_details = e.message
+                result.recovery_menu = self._build_recovery_menu(e)
+                return result
             except KeyError as e:
                 step_result.success = False
                 step_result.failure_mode = FAILURE_REQUIRED_FIELD_MISSING
@@ -697,6 +802,16 @@ class MigrationRunner:
 
             try:
                 step_output = up_fn(plan.file_path, file_params) or {}
+            except RecoverableMigrationError as e:
+                step_result.success = False
+                step_result.failure_mode = FAILURE_RECOVERABLE
+                step_result.failure_details = e.message
+                result.steps.append(step_result)
+                result.success = False
+                result.failure_mode = FAILURE_RECOVERABLE
+                result.failure_details = e.message
+                result.recovery_menu = self._build_recovery_menu(e)
+                return result
             except KeyError as e:
                 step_result.success = False
                 step_result.failure_mode = FAILURE_REQUIRED_FIELD_MISSING

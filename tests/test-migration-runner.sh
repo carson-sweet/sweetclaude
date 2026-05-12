@@ -418,6 +418,64 @@ echo "$SCAN3" | grep -q "chain_broken" \
   || fail "broken scan: $SCAN3"
 
 # ---------------------------------------------------------------------------
+# Test 10: recoverable migration error (Gap #5)
+# ---------------------------------------------------------------------------
+
+echo "[10] recoverable migration error"
+
+REC_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR $SCAN_TMPDIR $REC_TMPDIR" EXIT
+
+mkdir -p "$REC_TMPDIR/.sweetclaude/product/recoverable"
+
+REC_REGISTRY="$REC_TMPDIR/registry.yaml"
+cat > "$REC_REGISTRY" << 'YAML'
+schema_version: 1
+state_files:
+  recoverable:
+    type: directory
+    description: "Fixture that always raises a recoverable error"
+    path_template: "{product_base}/recoverable"
+    current_version: 2
+    backup_required: false
+    migrations:
+      - from: 1
+        to: 2
+        handler: recoverable_v1_to_v2
+YAML
+
+REC_HANDLER_DIR="$REPO_ROOT/tests/fixtures/migration-runner"
+
+# Library-level test (the CLI doesn't surface recovery_menu in plain-text output).
+python3 - "$REC_TMPDIR" "$REC_REGISTRY" "$REC_HANDLER_DIR" \
+  "$REPO_ROOT/scripts/migrations" << 'PY' \
+  && pass "recoverable error caught; recovery_menu populated with handler + universal options" \
+  || fail "recoverable error path broken"
+import sys
+sys.path.insert(0, sys.argv[4])
+from runner import MigrationRunner, FAILURE_RECOVERABLE
+
+project_dir, registry, handler_dir, _ = sys.argv[1:]
+runner = MigrationRunner(project_dir=project_dir, registry_path=registry, migrations_dir=handler_dir)
+results = runner.run()
+assert len(results) == 1, f"expected 1 result, got {len(results)}"
+r = results[0]
+assert r.failure_mode == FAILURE_RECOVERABLE, f"failure_mode: {r.failure_mode!r}"
+assert r.recovery_menu is not None, "recovery_menu not populated"
+menu = r.recovery_menu
+assert menu["message"].startswith("ITEM-007"), f"message: {menu['message']!r}"
+assert menu["current_id"] == "ITEM-007", f"current_id: {menu['current_id']!r}"
+labels = [o["label"] for o in menu["options"]]
+assert len(menu["options"]) == 5, f"expected 5 options, got {len(menu['options'])}: {labels}"
+actions = [o["action"] for o in menu["options"]]
+assert "skip" in actions, f"missing skip in actions: {actions}"
+assert "rollback" in actions, f"missing rollback in actions: {actions}"
+assert "set_type" in actions
+assert "open_for_manual_edit" in actions
+sys.exit(0)
+PY
+
+# ---------------------------------------------------------------------------
 
 echo
 if [ "$FAILED" -eq 0 ]; then
