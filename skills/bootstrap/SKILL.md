@@ -221,11 +221,19 @@ if declined in (None, False):
 declined_maj = inst_maj if declined is True else major(str(declined))
 if declined_maj is None or avail_maj > declined_maj:
     print("DECISION=prompt"); sys.exit()
-print("DECISION=silent")
+# Silenced by decline. Emit the installed major so the caller can compose
+# the user-facing message ("all 3.x.x updates will be skipped").
+print(f"DECISION=silent_declined|{inst_maj}")
 PY
 ```
 
-- **DECISION=silent** → continue past this section.
+- **DECISION=silent** → no update available; continue silently past this section.
+- **DECISION=silent_declined|<major>** → user previously declined a minor in this major. Surface a brief informational message so the user is not silently kept in the dark, then continue past this section. The message MUST use the major from the decision output (parameterized — it is not always `3`):
+
+  > "Minor updates were previously declined by the user, so all <major>.x.x updates will be skipped. Run `/sweetclaude:update` to manually update at any time."
+
+  Show this message ONCE per session, then continue to Step 7. Do not pause for input — the user is being informed, not prompted.
+
 - **DECISION=prompt** → present:
   > "SweetClaude [available] is out. Update now? (Yes / Not now)"
   - Yes → invoke `sweetclaude:update`. Stop.
