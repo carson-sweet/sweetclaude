@@ -476,6 +476,90 @@ sys.exit(0)
 PY
 
 # ---------------------------------------------------------------------------
+# Test 11: snapshot + rollback round-trip (Gap #6)
+# ---------------------------------------------------------------------------
+
+echo "[11] snapshot + rollback"
+
+SNAP_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR $SCAN_TMPDIR $REC_TMPDIR $SNAP_TMPDIR" EXIT
+
+(
+  cd "$SNAP_TMPDIR"
+  git init -q -b main 2>/dev/null
+  git config user.email "test@example.com"
+  git config user.name "Test"
+  mkdir -p .sweetclaude/state
+  cat > .sweetclaude/state/phase.yaml << 'YAML'
+schema_version: 1
+phase: IMPLEMENT
+deference_level: collaborative
+project_type: existing-code
+safety_snapshot: ""
+YAML
+  echo "initial" > README.md
+  git add README.md
+  git -c commit.gpgsign=false commit -q -m "initial" 2>/dev/null
+) || { fail "git init/commit failed"; }
+
+python3 - "$SNAP_TMPDIR" "$REPO_ROOT/scripts/migrations" << 'PY' \
+  && pass "snapshot + rollback round-trip" \
+  || fail "snapshot/rollback round-trip broken"
+import sys, os, yaml
+sys.path.insert(0, sys.argv[2])
+from runner import MigrationRunner
+
+project_dir, _ = sys.argv[1:]
+phase_path = os.path.join(project_dir, ".sweetclaude/state/phase.yaml")
+
+# Minimal empty registry — snapshot/rollback don't read it for state files.
+reg_path = os.path.join(project_dir, "registry.yaml")
+with open(reg_path, "w") as f:
+    f.write("schema_version: 1\nstate_files: {}\n")
+runner = MigrationRunner(project_dir=project_dir, registry_path=reg_path)
+
+snap = runner.create_snapshot()
+assert snap.tarball_verified, "tarball not verified"
+assert snap.git_tag_created, "git tag not created"
+assert os.path.exists(snap.tarball_path), f"tarball missing: {snap.tarball_path}"
+assert ".sweetclaude" in snap.paths_in_tarball, f"paths: {snap.paths_in_tarball}"
+
+# Mutate.
+with open(phase_path, "w") as f:
+    f.write("schema_version: 99\nphase: BROKEN\n")
+
+ok, reason = runner.verify_snapshot(snap)
+assert ok, f"verify failed: {reason}"
+
+ok, reason = runner.rollback(snap)
+assert ok, f"rollback failed: {reason}"
+
+restored = yaml.safe_load(open(phase_path).read())
+assert restored["schema_version"] == 1, f"post-rollback: {restored}"
+assert restored["phase"] == "IMPLEMENT", f"post-rollback: {restored}"
+
+sys.exit(0)
+PY
+
+# Retention: create more snapshots, expect 5 retained.
+for i in 1 2 3 4 5 6; do
+  sleep 1
+  python3 -c "
+import sys
+sys.path.insert(0, '$REPO_ROOT/scripts/migrations')
+from runner import MigrationRunner
+runner = MigrationRunner(project_dir='$SNAP_TMPDIR', registry_path='$SNAP_TMPDIR/registry.yaml')
+runner.create_snapshot()
+" 2>/dev/null
+done
+RETAINED=$(ls "$SNAP_TMPDIR/.sweetclaude/state/backups/pre-migration-"*.tar.gz 2>/dev/null | wc -l | tr -d ' ')
+if [ "$RETAINED" = "5" ]; then
+  pass "snapshot retention: 5 kept after multiple creations"
+else
+  fail "retention: expected 5, got $RETAINED"
+fi
+
+# ---------------------------------------------------------------------------
 
 echo
 if [ "$FAILED" -eq 0 ]; then

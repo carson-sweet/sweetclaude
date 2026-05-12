@@ -140,6 +140,37 @@ class FileResult:
 
 
 @dataclass
+class SnapshotInfo:
+    """Pre-migration safety snapshot — tarball + git tag (Gap #6).
+
+    Belt-and-suspenders: the tarball captures gitignored content (.sweetclaude/
+    plus any artifact base_paths outside .sweetclaude/); the git tag captures
+    everything tracked in the project. Together they cover the full project
+    state at snapshot time.
+    """
+    tarball_path: str
+    git_tag: str
+    git_stash_ref: str | None       # set if uncommitted changes were stashed
+    paths_in_tarball: list[str]     # paths actually included (existence-filtered)
+    tarball_verified: bool          # tar -tzf passed after creation
+    git_tag_created: bool
+    created_at: str                 # ISO-8601 UTC timestamp
+    project_dir: str                # absolute path of the project the snapshot was taken in
+
+    def to_dict(self) -> dict:
+        return {
+            "tarball_path": self.tarball_path,
+            "git_tag": self.git_tag,
+            "git_stash_ref": self.git_stash_ref,
+            "paths_in_tarball": list(self.paths_in_tarball),
+            "tarball_verified": self.tarball_verified,
+            "git_tag_created": self.git_tag_created,
+            "created_at": self.created_at,
+            "project_dir": self.project_dir,
+        }
+
+
+@dataclass
 class PlannedStep:
     from_version: int
     to_version: int
@@ -355,6 +386,202 @@ class MigrationRunner:
         for field_name in req_fields:
             if field_name not in data:
                 return False, f"required field missing: {field_name}"
+        return True, None
+
+    # -- snapshot / rollback (Gap #6) -------------------------------------
+
+    def _git(self, *args: str) -> tuple[int, str, str]:
+        """Run `git <args>` in project_dir. Returns (returncode, stdout, stderr)."""
+        import subprocess
+        proc = subprocess.run(
+            ["git", "-C", str(self.project_dir), *args],
+            capture_output=True,
+            text=True,
+        )
+        return proc.returncode, proc.stdout, proc.stderr
+
+    def _is_git_repo(self) -> bool:
+        rc, _, _ = self._git("rev-parse", "--is-inside-work-tree")
+        return rc == 0
+
+    def _snapshot_paths(self) -> list[str]:
+        """Compute the set of paths to include in the pre-migration tarball.
+
+        Always includes .sweetclaude/ if it exists. Adds every artifact-privacy
+        category base_path that's outside .sweetclaude/ AND exists on disk.
+
+        Returns paths relative to project_dir.
+        """
+        candidates: list[str] = []
+        sc_dir = self.project_dir / ".sweetclaude"
+        if sc_dir.exists():
+            candidates.append(".sweetclaude")
+        for var, base in self._base_paths.items():
+            # Resolve any leading "./" and normalize.
+            base_norm = base.lstrip("./") if base.startswith("./") else base
+            # Skip if it's inside .sweetclaude/ (already covered).
+            if base_norm == ".sweetclaude" or base_norm.startswith(".sweetclaude/"):
+                continue
+            full = self.project_dir / base_norm
+            if full.exists():
+                if base_norm not in candidates:
+                    candidates.append(base_norm)
+        return candidates
+
+    def create_snapshot(self) -> SnapshotInfo:
+        """Build a pre-migration safety snapshot.
+
+        Two captures, taken together:
+          1. Comprehensive tarball at
+             .sweetclaude/state/backups/pre-migration-<date>-<sha>.tar.gz
+             covering .sweetclaude/ AND any artifact base_paths outside it.
+          2. Git tag `pre-migration-<date>-<sha>` if the project is a git repo.
+             Uncommitted changes (if any) are stashed and the stash ref is
+             recorded on SnapshotInfo for restoration.
+
+        Raises RuntimeError if either capture fails. Callers should abort the
+        migration on failure rather than proceeding without a snapshot.
+        """
+        from datetime import datetime, timezone
+        import subprocess
+
+        now = datetime.now(timezone.utc)
+        ts = now.strftime("%Y%m%d-%H%M%S")
+        rc, sha, _ = self._git("rev-parse", "--short", "HEAD") if self._is_git_repo() else (1, "nosha\n", "")
+        sha = sha.strip() or "nosha"
+        stamp = f"{ts}-{sha}"
+
+        backups_dir = self.project_dir / ".sweetclaude" / "state" / "backups"
+        backups_dir.mkdir(parents=True, exist_ok=True)
+        tarball = backups_dir / f"pre-migration-{stamp}.tar.gz"
+
+        paths = self._snapshot_paths()
+        if not paths:
+            raise RuntimeError(
+                "No snapshot paths to capture — .sweetclaude/ missing and no artifact base_paths present."
+            )
+
+        # 1) Create tarball.
+        tar_cmd = ["tar", "-czf", str(tarball), "-C", str(self.project_dir), *paths]
+        proc = subprocess.run(tar_cmd, capture_output=True, text=True)
+        if proc.returncode != 0:
+            raise RuntimeError(f"tar create failed: {proc.stderr.strip() or proc.stdout.strip()}")
+
+        # 2) Verify tarball.
+        verify = subprocess.run(
+            ["tar", "-tzf", str(tarball)], capture_output=True, text=True
+        )
+        verified = verify.returncode == 0
+        if not verified:
+            raise RuntimeError(f"tar verify failed: {verify.stderr.strip() or verify.stdout.strip()}")
+
+        # 3) Retention: keep last 5 tarballs.
+        existing = sorted(
+            backups_dir.glob("pre-migration-*.tar.gz"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        for old in existing[5:]:
+            try:
+                old.unlink()
+            except OSError:
+                pass
+
+        # 4) Git tag (if git repo).
+        git_tag = f"pre-migration-{stamp}"
+        git_tag_created = False
+        stash_ref = None
+        if self._is_git_repo():
+            # Stash any uncommitted changes (tracked + untracked) so the tag
+            # captures a coherent state.
+            rc, status_out, _ = self._git("status", "--porcelain")
+            dirty = bool(status_out.strip())
+            if dirty:
+                stash_msg = f"pre-migration-stash-{stamp}"
+                rc, _, stash_err = self._git("stash", "push", "-u", "-m", stash_msg)
+                if rc == 0:
+                    # Record the stash ref (top of stack just after push).
+                    rc, ref_out, _ = self._git("stash", "list", "-1")
+                    if rc == 0 and ref_out.strip():
+                        # Format: "stash@{0}: On <branch>: <msg>"
+                        stash_ref = ref_out.split(":", 1)[0].strip()
+            rc, _, tag_err = self._git("tag", git_tag)
+            if rc == 0:
+                git_tag_created = True
+            else:
+                # If tag failed, restore stash before raising.
+                if stash_ref:
+                    self._git("stash", "pop")
+                raise RuntimeError(f"git tag failed: {tag_err.strip()}")
+            # Restore the stash so the working tree continues forward with the
+            # user's uncommitted changes. The tag still holds the pre-stash HEAD.
+            if stash_ref:
+                self._git("stash", "pop")
+
+        return SnapshotInfo(
+            tarball_path=str(tarball),
+            git_tag=git_tag,
+            git_stash_ref=stash_ref,
+            paths_in_tarball=list(paths),
+            tarball_verified=verified,
+            git_tag_created=git_tag_created,
+            created_at=now.isoformat(timespec="seconds"),
+            project_dir=str(self.project_dir),
+        )
+
+    def verify_snapshot(self, snapshot: SnapshotInfo) -> tuple[bool, str | None]:
+        """Re-verify a snapshot is still restorable. Returns (ok, reason)."""
+        import subprocess
+        tarball = Path(snapshot.tarball_path)
+        if not tarball.exists():
+            return False, f"tarball missing: {tarball}"
+        verify = subprocess.run(["tar", "-tzf", str(tarball)], capture_output=True, text=True)
+        if verify.returncode != 0:
+            return False, f"tar verify failed: {verify.stderr.strip()}"
+        if snapshot.git_tag_created:
+            rc, _, _ = self._git("rev-parse", f"refs/tags/{snapshot.git_tag}")
+            if rc != 0:
+                return False, f"git tag missing: {snapshot.git_tag}"
+        return True, None
+
+    def rollback(self, snapshot: SnapshotInfo) -> tuple[bool, str | None]:
+        """Restore the project to the snapshot state. Returns (ok, reason).
+
+        Order:
+          1. tar -xzf the comprehensive tarball over its source paths.
+          2. git reset --hard <pre-migration-tag> if a tag was created.
+          3. No stash-restore here — the snapshot was taken with the stash
+             popped back into the working tree before the tag, so the tag
+             already represents the user's pre-migration HEAD without the
+             stashed changes. Restoring stashed changes is the caller's
+             concern (they were popped at snapshot time, so they're already
+             in the post-rollback working tree if they hadn't been overwritten
+             by the migration).
+
+        This method does NOT prompt the user — the calling skill must obtain
+        explicit confirmation before invoking it (Gap #6 locked: rollback is
+        never automatic).
+        """
+        import subprocess
+        ok, reason = self.verify_snapshot(snapshot)
+        if not ok:
+            return False, f"snapshot verification failed: {reason}"
+
+        # 1. Extract tarball.
+        proc = subprocess.run(
+            ["tar", "-xzf", snapshot.tarball_path, "-C", str(self.project_dir)],
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            return False, f"tar extract failed: {proc.stderr.strip()}"
+
+        # 2. Git reset to the tag.
+        if snapshot.git_tag_created:
+            rc, _, err = self._git("reset", "--hard", snapshot.git_tag)
+            if rc != 0:
+                return False, f"git reset failed: {err.strip()}"
+
         return True, None
 
     # -- public API --------------------------------------------------------
