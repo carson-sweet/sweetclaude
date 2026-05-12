@@ -12,6 +12,39 @@ State pre-loaded above. One read. Make a decision. Delegate.
 
 ---
 
+## Step 0: Pre-flight
+
+Ensure the versionless framework path is populated, then run the pre-flight helper.
+
+```bash
+if [ ! -f ~/.claude/scripts/sweetclaude/preflight.sh ]; then
+  IP=$(python3 -c "
+import json, os
+try:
+    d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+    entries = [e for versions in d.get('plugins', {}).values()
+               for e in versions if e.get('scope') == 'user']
+    entries.sort(key=lambda e: e.get('lastUpdated', ''), reverse=True)
+    for e in entries:
+        ip = e.get('installPath', '')
+        if ip and os.path.isdir(os.path.join(ip, 'scripts')):
+            print(ip)
+            break
+except Exception:
+    pass
+" 2>/dev/null)
+  if [ -n "$IP" ] && [ -d "$IP/scripts" ]; then
+    mkdir -p ~/.claude/scripts/sweetclaude
+    rsync -a "$IP/scripts/" ~/.claude/scripts/sweetclaude/ 2>/dev/null || true
+  fi
+fi
+eval "$(bash ~/.claude/scripts/sweetclaude/preflight.sh 2>/dev/null)"
+```
+
+`RUNNER` is now set (empty if not found). `SELF_HEAL=true` if the versionless path was just populated.
+
+---
+
 ## Step 1: Handle missing or unparseable file
 
 If the pre-loaded content is `SC_YAML_NOT_FOUND`:
@@ -76,88 +109,56 @@ If `false`:
 
 ## Step 5b: Artifact-format drift check (hard demand)
 
-Before any other offers, run the registry-driven drift scan. If artifacts are behind the framework version, the user gets a hard binary — there is no defer, no silent proceed.
+The drift-gate.sh SessionStart hook has already scanned for drift and written the marker if any was found. Bootstrap reads the marker — no inline scan needed. If the session-start hook missed it (versionless path was just self-healed in Step 0), a catch-up scan runs.
 
 ```bash
-# Run the scan and persist the result. The runner ships with the framework.
-RUNNER=$(find ~/.claude -name "runner.py" -path "*/migrations/*" 2>/dev/null | head -1)
-if [ -n "$RUNNER" ]; then
-  python3 "$RUNNER" --project-dir . --scan-drift --persist >/dev/null 2>&1 || true
+DRIFT_MARKER=".sweetclaude/state/pending-drift-decision.yaml"
+if [ ! -f "$DRIFT_MARKER" ] && [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --report-drift-for-skill >/dev/null 2>&1 || true
 fi
-
-# Read the persisted findings.
 python3 -c "
-import yaml
-d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
-drift = (d.get('framework') or {}).get('drift') or {}
-count = drift.get('drift_count', 0)
-print(f'DRIFT_COUNT={count}')
-if count:
-    for f in drift.get('findings', []):
-        if f.get('needs_migration'):
-            chain = 'broken' if not f.get('chain_valid') else 'ok'
-            print(f\"FINDING|{f.get('file_key')}|v{f.get('on_disk_version')}->v{f.get('target_version')}|chain={chain}\")
-" 2>/dev/null
+import yaml, sys
+try:
+    d = yaml.safe_load(open(sys.argv[1])) or {}
+    print('CASE=' + d.get('case', 'A'))
+    print('DRIFT_COUNT=' + str(d.get('drift_count', 0)))
+except FileNotFoundError:
+    print('DRIFT_COUNT=0')
+except Exception:
+    print('DRIFT_COUNT=0')
+" "$DRIFT_MARKER" 2>/dev/null
 ```
 
 If `DRIFT_COUNT` is 0: continue to Step 6.
 
-If `DRIFT_COUNT > 0`: the binary prompt depends on whether any finding has `chain=broken`.
+If `DRIFT_COUNT > 0`: the binary prompt depends on `CASE`.
 
-**Case A — all findings in window (chain=ok for everything):** present via **AskUserQuestion** (single-select, no "Something else"):
+**Case A (CASE=A — all chains ok):** present via **AskUserQuestion** (single-select, no "Something else"):
 
-> "This project has artifacts behind the framework version (see findings above). SweetClaude cannot run until you decide."
+> "This project has artifacts behind the framework version. SweetClaude cannot run until you decide."
 >
 > Options:
 > - **Migrate now** — invoke `sweetclaude:_migrate` to bring artifacts up to current.
 > - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
-**Case B — at least one finding has `chain=broken` (out of 3-major support window per Gap #8):** present via **AskUserQuestion** (single-select):
+**Case B (CASE=B — at least one chain broken, out of 3-major support window):** present via **AskUserQuestion** (single-select):
 
-> "This project's artifacts are too old for automatic migration — at least one required handler is no longer shipped (3-major support window per Gap #8). SweetClaude cannot run until you decide."
+> "This project's artifacts are too old for automatic migration — at least one required handler is no longer shipped (3-major support window). SweetClaude cannot run until you decide."
 >
 > Options:
-> - **Re-onboard from scratch** — move existing SweetClaude content to `.sweetclaude.legacy/<timestamp>/` and run `/sweetclaude:adopt` against a fresh state. Your old files stay as reference; adopt does not auto-import them.
+> - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:adopt` against a fresh state. Your old files stay as reference; adopt does not auto-import them.
 > - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
 ### Re-onboarding flow (Case B → Re-onboard from scratch)
-
-Execute this block before invoking adopt:
 
 ```bash
 TS=$(date -u +%Y%m%d-%H%M%S)
 LEGACY=".sweetclaude.legacy/$TS"
 mkdir -p ".sweetclaude.legacy"
-
-# 1) Move .sweetclaude/ aside.
 if [ -d .sweetclaude ]; then
   mv .sweetclaude "$LEGACY"
 fi
-
-# 2) Mirror artifact base_paths outside .sweetclaude/ into the legacy tree
-#    so adopt can reference them without auto-migrating.
-python3 - "$LEGACY" << 'PY'
-import os, sys, shutil, yaml
-legacy = sys.argv[1]
-# Read base_paths from the legacy artifact-privacy.yaml that was just moved aside.
-privacy = os.path.join(legacy, "artifact-privacy.yaml")
-if not os.path.exists(privacy):
-    sys.exit(0)
-try:
-    d = yaml.safe_load(open(privacy)) or {}
-except Exception:
-    sys.exit(0)
-for cat, entry in (d.get("categories") or {}).items():
-    if not isinstance(entry, dict): continue
-    base = entry.get("base_path", "")
-    if not base or base.startswith(".sweetclaude"):
-        continue
-    if os.path.exists(base):
-        target = os.path.join(legacy, base)
-        os.makedirs(os.path.dirname(target), exist_ok=True)
-        shutil.move(base, target)
-PY
-
+python3 ~/.claude/scripts/sweetclaude/maintenance/archive-sweetclaude-dir.py "$LEGACY"
 echo "Moved existing SweetClaude content to $LEGACY/ — adopt will use it as reference, not auto-migrate."
 ```
 
@@ -242,17 +243,7 @@ PY
   - Not now → write `declined: <available>` (the specific version declined), continue:
 
 ```bash
-python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
-import sys, yaml, tempfile, os
-path = sys.argv[1]
-with open(path) as f: d = yaml.safe_load(f)
-available = (d.get("framework") or {}).get("update", {}).get("available")
-d.setdefault('framework',{}).setdefault('update',{})['declined'] = available
-with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
-    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
-    tmp_name = tmp.name
-os.replace(tmp_name, path)
-PY
+python3 ~/.claude/scripts/sweetclaude/maintenance/write-decline.py .
 ```
 
 ## Step 7: Route on args
@@ -262,6 +253,15 @@ If `$ARGUMENTS` is present and non-empty:
 Stop.
 
 ## Step 8: All-clear status surface
+
+Set the bootstrap-ran session flag so the master-preflight hook knows bootstrap has completed this session:
+
+```bash
+_SC_PROJ=$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")
+_SC_HASH=$(printf '%s' "$_SC_PROJ" | md5 2>/dev/null \
+  || printf '%s' "$_SC_PROJ" | md5sum 2>/dev/null | cut -d' ' -f1)
+touch "/tmp/.sweetclaude-bootstrap-ran-${_SC_HASH}"
+```
 
 Read from pre-loaded state:
 

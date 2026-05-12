@@ -193,6 +193,7 @@ class FilePlan:
     target_version: int
     needs_migration: bool
     entry_type: str = "file"   # "file" or "directory"
+    file_missing: bool = False  # True when the file doesn't exist on disk
     steps: list[PlannedStep] = field(default_factory=list)
     missing_handlers: list[str] = field(default_factory=list)
 
@@ -208,6 +209,7 @@ class DriftFinding:
     needs_migration: bool
     chain_valid: bool
     missing_handlers: list[str] = field(default_factory=list)
+    file_missing: bool = False  # True when the file doesn't exist on disk
 
     def to_dict(self) -> dict:
         return {
@@ -219,6 +221,7 @@ class DriftFinding:
             "needs_migration": self.needs_migration,
             "chain_valid": self.chain_valid,
             "missing_handlers": list(self.missing_handlers),
+            "file_missing": self.file_missing,
         }
 
 
@@ -249,12 +252,32 @@ class MigrationRunner:
         migrations_dir: Path | str | None = None,
     ):
         self.project_dir = Path(project_dir).resolve()
-        # Migration registry ships with the framework; default to discovering
-        # it relative to this runner module.
+        # Migration registry ships with the framework. Try, in order:
+        #   1. Explicit registry_path argument (caller-provided)
+        #   2. <runner_root>/config/migration-registry.yaml (dev clone + plugin-cache install layout)
+        #   3. ~/.claude/config/sweetclaude/migration-registry.yaml (versionless install layout)
+        # The runner can live at either ~/.claude/plugins/cache/.../scripts/migrations/runner.py
+        # OR ~/.claude/scripts/sweetclaude/migrations/runner.py — the latter has no
+        # colocated config/, so the versionless fallback is required.
         repo_root = Path(__file__).resolve().parent.parent.parent
-        self.registry_path = (
-            Path(registry_path) if registry_path else repo_root / "config" / "migration-registry.yaml"
-        )
+        if registry_path:
+            self.registry_path = Path(registry_path)
+        else:
+            colocated = repo_root / "config" / "migration-registry.yaml"
+            versionless = Path.home() / ".claude" / "config" / "sweetclaude" / "migration-registry.yaml"
+            if versionless.exists() and colocated.exists():
+                # Prefer whichever was written more recently — versionless wins when
+                # freshly synced by an update that the plugin cache hasn't seen yet.
+                self.registry_path = (
+                    versionless if versionless.stat().st_mtime >= colocated.stat().st_mtime
+                    else colocated
+                )
+            elif versionless.exists():
+                self.registry_path = versionless
+            elif colocated.exists():
+                self.registry_path = colocated
+            else:
+                self.registry_path = versionless  # will raise FileNotFoundError at load
         self.migrations_dir = (
             Path(migrations_dir) if migrations_dir else Path(__file__).resolve().parent
         )
@@ -288,7 +311,7 @@ class MigrationRunner:
             if not isinstance(entry, dict):
                 continue
             base_path = entry.get("base_path")
-            if base_path:
+            if base_path and ".." not in Path(base_path).parts:
                 resolved[f"{cat_name}_base"] = base_path
         return resolved
 
@@ -346,12 +369,21 @@ class MigrationRunner:
     def _atomic_write(self, path: Path, content: str) -> None:
         """Write file via temp + os.replace for atomicity."""
         path.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(
-            "w", dir=str(path.parent), suffix=".tmp", delete=False
-        ) as tmp:
-            tmp.write(content)
-            tmp_name = tmp.name
-        os.replace(tmp_name, str(path))
+        tmp_name = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                "w", dir=str(path.parent), suffix=".tmp", delete=False
+            ) as tmp:
+                tmp.write(content)
+                tmp_name = tmp.name
+            os.replace(tmp_name, str(path))
+            tmp_name = None
+        finally:
+            if tmp_name:
+                try:
+                    os.unlink(tmp_name)
+                except OSError:
+                    pass
 
     def _build_recovery_menu(self, exc: "RecoverableMigrationError") -> dict:
         """Combine the handler's options with the universal Skip/Rollback entries.
@@ -481,10 +513,10 @@ class MigrationRunner:
         if not verified:
             raise RuntimeError(f"tar verify failed: {verify.stderr.strip() or verify.stdout.strip()}")
 
-        # 3) Retention: keep last 5 tarballs.
+        # 3) Retention: keep last 5 tarballs (name as tiebreaker for stable sort).
         existing = sorted(
             backups_dir.glob("pre-migration-*.tar.gz"),
-            key=lambda p: p.stat().st_mtime,
+            key=lambda p: (p.stat().st_mtime, p.name),
             reverse=True,
         )
         for old in existing[5:]:
@@ -493,36 +525,17 @@ class MigrationRunner:
             except OSError:
                 pass
 
-        # 4) Git tag (if git repo).
+        # 4) Git tag (if git repo). Tag captures HEAD; tarball captures working-tree
+        #    content including gitignored files. Together they cover full rollback state.
         git_tag = f"pre-migration-{stamp}"
         git_tag_created = False
         stash_ref = None
         if self._is_git_repo():
-            # Stash any uncommitted changes (tracked + untracked) so the tag
-            # captures a coherent state.
-            rc, status_out, _ = self._git("status", "--porcelain")
-            dirty = bool(status_out.strip())
-            if dirty:
-                stash_msg = f"pre-migration-stash-{stamp}"
-                rc, _, stash_err = self._git("stash", "push", "-u", "-m", stash_msg)
-                if rc == 0:
-                    # Record the stash ref (top of stack just after push).
-                    rc, ref_out, _ = self._git("stash", "list", "-1")
-                    if rc == 0 and ref_out.strip():
-                        # Format: "stash@{0}: On <branch>: <msg>"
-                        stash_ref = ref_out.split(":", 1)[0].strip()
             rc, _, tag_err = self._git("tag", git_tag)
             if rc == 0:
                 git_tag_created = True
             else:
-                # If tag failed, restore stash before raising.
-                if stash_ref:
-                    self._git("stash", "pop")
                 raise RuntimeError(f"git tag failed: {tag_err.strip()}")
-            # Restore the stash so the working tree continues forward with the
-            # user's uncommitted changes. The tag still holds the pre-stash HEAD.
-            if stash_ref:
-                self._git("stash", "pop")
 
         return SnapshotInfo(
             tarball_path=str(tarball),
@@ -573,7 +586,22 @@ class MigrationRunner:
         if not ok:
             return False, f"snapshot verification failed: {reason}"
 
-        # 1. Extract tarball.
+        # 1. Git reset to the tag first — restores tracked content to pre-migration
+        #    HEAD before the tarball overwrites working-tree content on top.
+        if snapshot.git_tag_created:
+            rc, _, err = self._git("reset", "--hard", snapshot.git_tag)
+            if rc != 0:
+                return False, f"git reset failed: {err.strip()}"
+            # Verify HEAD matches the tag to confirm reset succeeded.
+            rc_h, head_sha, _ = self._git("rev-parse", "HEAD")
+            rc_t, tag_sha, _ = self._git("rev-parse", snapshot.git_tag)
+            if rc_h != 0 or rc_t != 0 or head_sha.strip() != tag_sha.strip():
+                return False, (
+                    f"git reset verification failed: "
+                    f"HEAD={head_sha.strip()!r} tag={tag_sha.strip()!r}"
+                )
+
+        # 2. Extract tarball (restores gitignored content and any .sweetclaude/ state).
         proc = subprocess.run(
             ["tar", "-xzf", snapshot.tarball_path, "-C", str(self.project_dir)],
             capture_output=True,
@@ -581,12 +609,6 @@ class MigrationRunner:
         )
         if proc.returncode != 0:
             return False, f"tar extract failed: {proc.stderr.strip()}"
-
-        # 2. Git reset to the tag.
-        if snapshot.git_tag_created:
-            rc, _, err = self._git("reset", "--hard", snapshot.git_tag)
-            if rc != 0:
-                return False, f"git reset failed: {err.strip()}"
 
         return True, None
 
@@ -626,7 +648,23 @@ class MigrationRunner:
             steps: list[PlannedStep] = []
             missing: list[str] = []
 
-            if on_disk is None or on_disk >= target:
+            if on_disk is None:
+                # File doesn't exist. Flag as file_missing if migrations are defined
+                # (the file was expected to be present). Can't migrate without source data.
+                plans.append(
+                    FilePlan(
+                        file_key=file_key,
+                        file_path=file_path,
+                        on_disk_version=None,
+                        target_version=target,
+                        needs_migration=bool(migrations),
+                        file_missing=True,
+                        entry_type=entry_type,
+                    )
+                )
+                continue
+
+            if on_disk >= target:
                 plans.append(
                     FilePlan(
                         file_key=file_key,
@@ -744,6 +782,7 @@ class MigrationRunner:
                     needs_migration=p.needs_migration,
                     chain_valid=chain_valid,
                     missing_handlers=list(p.missing_handlers),
+                    file_missing=p.file_missing,
                 )
             )
 
@@ -757,7 +796,10 @@ class MigrationRunner:
         }
 
         if persist:
-            self._persist_drift(result)
+            try:
+                self._persist_drift(result)
+            except OSError:
+                pass  # read-only project — drift findings still returned to caller
 
         return result
 
@@ -1176,6 +1218,15 @@ def main(argv: list[str] | None = None) -> int:
         help="With --scan-drift: also persist findings to .sweetclaude/state/sweetclaude.yaml framework.drift.*",
     )
     parser.add_argument(
+        "--report-drift-for-skill",
+        action="store_true",
+        help=(
+            "Skill-friendly drift report. Runs scan-drift --persist and prints "
+            "exactly: DRIFT_COUNT=N and FINDING|<file_key>|v<from>-><to>|chain=<ok|broken> "
+            "lines for findings with needs_migration=True. Returns 0 even with drift."
+        ),
+    )
+    parser.add_argument(
         "--param",
         action="append",
         default=[],
@@ -1198,6 +1249,20 @@ def main(argv: list[str] | None = None) -> int:
         file_key, kv = p.split(":", 1)
         k, v = kv.split("=", 1)
         params.setdefault(file_key, {})[k] = v
+
+    if args.report_drift_for_skill:
+        scan = runner.scan_drift(args.files, persist=args.persist)
+        needs = [f for f in scan["findings"] if f.get("needs_migration")]
+        print(f"DRIFT_COUNT={len(needs)}")
+        for f in needs:
+            if f.get("file_missing"):
+                print(f"MISSING|{f['file_key']}")
+            else:
+                chain = "ok" if f.get("chain_valid") else "broken"
+                print(
+                    f"FINDING|{f['file_key']}|v{f['on_disk_version']}->v{f['target_version']}|chain={chain}"
+                )
+        return 0
 
     if args.scan_drift:
         scan = runner.scan_drift(args.files, persist=args.persist)

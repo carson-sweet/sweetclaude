@@ -230,6 +230,7 @@ fi
 mkdir -p "$CLAUDE_DIR/skills/sweetclaude"
 mkdir -p "$CLAUDE_DIR/rules/sweetclaude"
 mkdir -p "$CLAUDE_DIR/config/sweetclaude/templates"
+mkdir -p "$CLAUDE_DIR/scripts/sweetclaude"
 
 if [ "$STRATEGY_ONLY" = true ]; then
   SKILL_COUNT=0
@@ -258,6 +259,10 @@ fi
 cp -r "$SCRIPT_DIR/rules/"* "$CLAUDE_DIR/rules/sweetclaude/"
 cp -r "$SCRIPT_DIR/config/"* "$CLAUDE_DIR/config/sweetclaude/"
 
+if [ -d "$SCRIPT_DIR/scripts" ]; then
+  cp -r "$SCRIPT_DIR/scripts/"* "$CLAUDE_DIR/scripts/sweetclaude/"
+fi
+
 echo "  Framework files installed."
 
 # --- Hook Wiring (full install only) ---
@@ -268,7 +273,7 @@ else
   SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 
   if [ -f "$SETTINGS_FILE" ]; then
-    if grep -q "sweetclaude/test-guardian" "$SETTINGS_FILE" 2>/dev/null; then
+    if grep -q "drift-gate" "$SETTINGS_FILE" 2>/dev/null; then
       echo "  Hooks already configured in settings.json."
     else
       python3 - "$SETTINGS_FILE" "$CLAUDE_DIR/hooks/sweetclaude" << 'PYMERGE'
@@ -278,7 +283,12 @@ settings_path = sys.argv[1]
 hooks_dir = sys.argv[2]
 
 new_hooks = {
+    "SessionStart": [
+        {"matcher": "startup", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"}]},
+        {"matcher": "startup", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/drift-gate.sh"}]},
+    ],
     "PreToolUse": [
+        {"matcher": "Skill", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/master-preflight.sh"}]},
         {"matcher": "", "hooks": [{"type": "command", "command": f"{hooks_dir}/preflight-guard.sh"}]},
         {"matcher": "Write|Edit", "hooks": [{"type": "command", "command": f"{hooks_dir}/test-guardian.sh"}]},
     ],
@@ -312,7 +322,36 @@ PYMERGE
     cat > "$SETTINGS_FILE" << 'SETTINGS'
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/drift-gate.sh"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/master-preflight.sh"
+          }
+        ]
+      },
       {
         "matcher": "",
         "hooks": [
@@ -510,6 +549,7 @@ rm -rf "$CLAUDE_DIR/hooks/sweetclaude"
 rm -rf "$CLAUDE_DIR/agents/sweetclaude"
 rm -rf "$CLAUDE_DIR/rules/sweetclaude"
 rm -rf "$CLAUDE_DIR/config/sweetclaude"
+rm -rf "$CLAUDE_DIR/scripts/sweetclaude"
 echo "  Framework files removed."
 
 # Always strip the SweetClaude section from CLAUDE.md — it references
