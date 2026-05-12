@@ -312,6 +312,112 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Test 9: drift scan (Gap #4)
+# ---------------------------------------------------------------------------
+
+echo "[9] drift scan"
+
+SCAN_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR $SCAN_TMPDIR" EXIT
+
+mkdir -p "$SCAN_TMPDIR/.sweetclaude/state"
+cat > "$SCAN_TMPDIR/.sweetclaude/state/phase.yaml" << 'YAML'
+schema_version: 1
+phase: IMPLEMENT
+work_type: enhancement
+deference_level: collaborative
+project_type: existing-code
+safety_snapshot: ""
+YAML
+cat > "$SCAN_TMPDIR/.sweetclaude/state/skills.yaml" << 'YAML'
+schema_version: 1
+product-milestones:
+  enabled: true
+  onboarded_at: "2026-04-01"
+YAML
+
+# 9a. Bare scan (no persist) reports drift.
+SCAN1=$(python3 "$RUNNER" --project-dir "$SCAN_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --scan-drift 2>&1)
+echo "$SCAN1" | grep -qE "drift_count|2 finding" \
+  && pass "scan reports findings count" \
+  || true
+echo "$SCAN1" | grep -q "\[DRIFT\] phase.yaml" \
+  && pass "scan flags phase.yaml as DRIFT" \
+  || fail "scan output: $SCAN1"
+echo "$SCAN1" | grep -q "\[DRIFT\] skills.yaml" \
+  && pass "scan flags skills.yaml as DRIFT" \
+  || fail "scan output: $SCAN1"
+
+# 9b. --persist writes to sweetclaude.yaml.
+python3 "$RUNNER" --project-dir "$SCAN_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --scan-drift --persist >/dev/null 2>&1
+
+if [ -f "$SCAN_TMPDIR/.sweetclaude/state/sweetclaude.yaml" ]; then
+  pass "sweetclaude.yaml created on --persist"
+else
+  fail "sweetclaude.yaml not created"
+fi
+
+python3 - "$SCAN_TMPDIR/.sweetclaude/state/sweetclaude.yaml" << 'PY' \
+  && pass "persisted drift block has expected shape" \
+  || fail "persisted drift shape wrong"
+import sys, yaml
+data = yaml.safe_load(open(sys.argv[1]).read()) or {}
+drift = (data.get("framework") or {}).get("drift") or {}
+assert "last_checked" in drift, f"no last_checked: {drift}"
+assert drift.get("drift_count", 0) >= 2, f"drift_count: {drift.get('drift_count')!r}"
+findings = drift.get("findings") or []
+keys = {f.get("file_key") for f in findings}
+assert "phase.yaml" in keys and "skills.yaml" in keys, f"missing keys: {keys}"
+for f in findings:
+    if f.get("file_key") in {"phase.yaml", "skills.yaml"}:
+        assert f.get("needs_migration") is True
+        assert f.get("chain_valid") is True
+sys.exit(0)
+PY
+
+# 9c. After migration runs, re-scan reports zero drift for those files.
+python3 "$RUNNER" --project-dir "$SCAN_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" \
+  --param "phase.yaml:version_stage=BETA" >/dev/null 2>&1
+
+SCAN2=$(python3 "$RUNNER" --project-dir "$SCAN_TMPDIR" --registry "$REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --scan-drift 2>&1)
+echo "$SCAN2" | grep -q "\[DRIFT\] phase.yaml" \
+  && fail "scan still flags phase.yaml after migration: $SCAN2" \
+  || pass "post-migration scan: phase.yaml no longer DRIFT"
+
+# 9d. Scan against a missing-handler registry → chain_broken (chain_valid=false).
+BROKEN_REGISTRY="$SCAN_TMPDIR/broken.yaml"
+cat > "$BROKEN_REGISTRY" << 'YAML'
+schema_version: 1
+state_files:
+  phase.yaml:
+    current_version: 2
+    backup_required: false
+    migrations:
+      - from: 1
+        to: 2
+        handler: phase_yaml_v1_to_v999
+YAML
+# Reset phase.yaml to v1.
+cat > "$SCAN_TMPDIR/.sweetclaude/state/phase.yaml" << 'YAML'
+schema_version: 1
+phase: DISCOVER
+work_type: net-new
+deference_level: collaborative
+project_type: new
+safety_snapshot: ""
+YAML
+
+SCAN3=$(python3 "$RUNNER" --project-dir "$SCAN_TMPDIR" --registry "$BROKEN_REGISTRY" \
+  --migrations-dir "$MIGRATIONS_DIR" --scan-drift --file phase.yaml 2>&1)
+echo "$SCAN3" | grep -q "chain_broken" \
+  && pass "scan surfaces chain_broken when handler missing" \
+  || fail "broken scan: $SCAN3"
+
+# ---------------------------------------------------------------------------
 
 echo
 if [ "$FAILED" -eq 0 ]; then

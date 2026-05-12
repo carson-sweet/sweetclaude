@@ -98,6 +98,31 @@ class FilePlan:
     missing_handlers: list[str] = field(default_factory=list)
 
 
+@dataclass
+class DriftFinding:
+    """One result row from scan_drift(). Same shape regardless of file/dir."""
+    file_key: str
+    file_path: str
+    entry_type: str
+    on_disk_version: int | None
+    target_version: int
+    needs_migration: bool
+    chain_valid: bool
+    missing_handlers: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "file_key": self.file_key,
+            "file_path": self.file_path,
+            "entry_type": self.entry_type,
+            "on_disk_version": self.on_disk_version,
+            "target_version": self.target_version,
+            "needs_migration": self.needs_migration,
+            "chain_valid": self.chain_valid,
+            "missing_handlers": list(self.missing_handlers),
+        }
+
+
 # ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
@@ -356,6 +381,83 @@ class MigrationRunner:
             if v is not None:
                 return int(v)
         return None
+
+    def scan_drift(self, file_keys: list[str] | None = None, persist: bool = False) -> dict:
+        """Registry-driven drift scan (Gap #4).
+
+        Walks the migration registry, detects on-disk versions, and returns
+        structured findings for any state file or artifact directory whose
+        on-disk version is behind the registry's `current_version`.
+
+        Output shape is uniform across file and directory entries:
+            {
+                "scanned_at": ISO-8601 UTC timestamp,
+                "drift_count": int (count of findings with needs_migration=True),
+                "findings": [DriftFinding-as-dict, ...],
+            }
+
+        If persist=True, also writes a `framework.drift` block to
+        .sweetclaude/state/sweetclaude.yaml so callers (bootstrap,
+        fix-sweetclaude) can read the most recent scan without re-running it.
+        """
+        from datetime import datetime, timezone
+
+        plans = self.plan(file_keys)
+        findings: list[DriftFinding] = []
+        for p in plans:
+            chain_valid = not p.missing_handlers
+            findings.append(
+                DriftFinding(
+                    file_key=p.file_key,
+                    file_path=str(p.file_path),
+                    entry_type=p.entry_type,
+                    on_disk_version=p.on_disk_version,
+                    target_version=p.target_version,
+                    needs_migration=p.needs_migration,
+                    chain_valid=chain_valid,
+                    missing_handlers=list(p.missing_handlers),
+                )
+            )
+
+        scanned_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        drift_count = sum(1 for f in findings if f.needs_migration)
+
+        result = {
+            "scanned_at": scanned_at,
+            "drift_count": drift_count,
+            "findings": [f.to_dict() for f in findings],
+        }
+
+        if persist:
+            self._persist_drift(result)
+
+        return result
+
+    def _persist_drift(self, scan_result: dict) -> None:
+        """Write the drift block into .sweetclaude/state/sweetclaude.yaml.
+
+        Preserves all other keys in the file (merges into existing structure).
+        Creates the file if it doesn't exist (with minimal scaffold).
+        """
+        sc_yaml = self.project_dir / self.DEFAULT_STATE_SUBDIR / "sweetclaude.yaml"
+        data: dict
+        if sc_yaml.exists():
+            try:
+                data = yaml.safe_load(sc_yaml.read_text()) or {}
+            except yaml.YAMLError:
+                data = {}
+        else:
+            data = {}
+        framework = data.setdefault("framework", {})
+        framework["drift"] = {
+            "last_checked": scan_result["scanned_at"],
+            "drift_count": scan_result["drift_count"],
+            "findings": scan_result["findings"],
+        }
+        content = yaml.safe_dump(
+            data, default_flow_style=False, allow_unicode=True, sort_keys=False
+        )
+        self._atomic_write(sc_yaml, content)
 
     def run(
         self,
@@ -716,6 +818,16 @@ def main(argv: list[str] | None = None) -> int:
         "--dry-run", action="store_true", help="Print the migration plan and exit without executing."
     )
     parser.add_argument(
+        "--scan-drift",
+        action="store_true",
+        help="Run drift scan only — registry-walk + version detection. Prints structured findings. Does not migrate.",
+    )
+    parser.add_argument(
+        "--persist",
+        action="store_true",
+        help="With --scan-drift: also persist findings to .sweetclaude/state/sweetclaude.yaml framework.drift.*",
+    )
+    parser.add_argument(
         "--param",
         action="append",
         default=[],
@@ -738,6 +850,19 @@ def main(argv: list[str] | None = None) -> int:
         file_key, kv = p.split(":", 1)
         k, v = kv.split("=", 1)
         params.setdefault(file_key, {})[k] = v
+
+    if args.scan_drift:
+        scan = runner.scan_drift(args.files, persist=args.persist)
+        print(f"Drift scan ({scan['scanned_at']}): {scan['drift_count']} finding(s)")
+        for f in scan["findings"]:
+            mark = "DRIFT" if f["needs_migration"] else "ok   "
+            chain = "" if f["chain_valid"] else f" [chain_broken: {','.join(f['missing_handlers'])}]"
+            print(
+                f"  [{mark}] {f['file_key']}: on_disk=v{f['on_disk_version']} target=v{f['target_version']} type={f['entry_type']}{chain}"
+            )
+        if args.persist:
+            print("Drift findings persisted to .sweetclaude/state/sweetclaude.yaml")
+        return 0
 
     if args.dry_run:
         plans = runner.plan(args.files)
