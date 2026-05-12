@@ -131,18 +131,62 @@ print(', '.join(drift) if drift else 'configuration drift detected')
 - Yes → invoke `sweetclaude:fix-sweetclaude`. Stop.
 - No → continue.
 
-Read `framework.update.available` and `framework.update.declined`.
-If `available` is not null AND `declined` is false:
-> "SweetClaude [available version] is out. Update now? (Yes / Not now)"
-- Yes → invoke `sweetclaude:update`. Stop.
-- Not now → write `declined: true` to file, continue:
+Read `framework.update.available`, `framework.update.declined`, and `framework.installed_version` from pre-loaded state. Apply the version-aware decline rule (Gap #1 #8, locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md`):
+
+- `available` is null → no offer.
+- `available` is non-null:
+  - Compute `is_major_bump = major(available) > major(installed_version)`.
+  - If `is_major_bump` is true → **always prompt**, regardless of `declined`.
+  - Else (minor/patch within installed major):
+    - `declined` is null/missing/false → prompt.
+    - `declined` is the boolean `true` (legacy) → treat as if user declined the installed major (silence until next major).
+    - `declined` is a version string → prompt only if `major(available) > major(declined)`. Otherwise silent.
+
+```bash
+python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
+import sys, yaml, re
+path = sys.argv[1]
+with open(path) as f: d = yaml.safe_load(f) or {}
+fw = d.get("framework") or {}
+installed = (fw.get("installed_version") or "").lstrip("v")
+upd = fw.get("update") or {}
+available = upd.get("available")
+declined = upd.get("declined")
+
+def major(v):
+    if not isinstance(v, str): return None
+    m = re.match(r"^(\d+)\.", v.lstrip("v"))
+    return int(m.group(1)) if m else None
+
+if not available:
+    print("DECISION=silent"); sys.exit()
+inst_maj, avail_maj = major(installed), major(available)
+if inst_maj is None or avail_maj is None:
+    print("DECISION=prompt"); sys.exit()
+if avail_maj > inst_maj:
+    print("DECISION=prompt"); sys.exit()
+if declined in (None, False):
+    print("DECISION=prompt"); sys.exit()
+declined_maj = inst_maj if declined is True else major(str(declined))
+if declined_maj is None or avail_maj > declined_maj:
+    print("DECISION=prompt"); sys.exit()
+print("DECISION=silent")
+PY
+```
+
+- **DECISION=silent** → continue past this section.
+- **DECISION=prompt** → present:
+  > "SweetClaude [available] is out. Update now? (Yes / Not now)"
+  - Yes → invoke `sweetclaude:update`. Stop.
+  - Not now → write `declined: <available>` (the specific version declined), continue:
 
 ```bash
 python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
 import sys, yaml, tempfile, os
 path = sys.argv[1]
 with open(path) as f: d = yaml.safe_load(f)
-d.setdefault('framework',{}).setdefault('update',{})['declined'] = True
+available = (d.get("framework") or {}).get("update", {}).get("available")
+d.setdefault('framework',{}).setdefault('update',{})['declined'] = available
 with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
     yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
     tmp_name = tmp.name
