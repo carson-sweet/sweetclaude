@@ -6,20 +6,16 @@ SweetClaude is not just a coding tool. Even on an existing project, the strategi
 
 ## Before You Start
 
-1. Install SweetClaude (if you have not already):
-   ```bash
-   git clone https://github.com/carson-sweet/sweetclaude.git
-   cd sweetclaude
-   ./install.sh                      # full install
-   ./install.sh --strategy-skills-only  # or strategy/product skills only
+1. Install SweetClaude (if you have not already) — inside Claude Code run:
+   ```
+   /plugin marketplace add https://github.com/carson-sweet/sweetclaude
+   /plugin install sweetclaude@sweetclaude
    ```
 2. Open Claude Code in your project folder
 3. Run:
    ```
    /sweetclaude
    ```
-
-> **Quick try without installing:** `claude --plugin-dir /path/to/sweetclaude` loads all skills for a single session.
 
 ## What Happens Next
 

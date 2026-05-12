@@ -24,33 +24,14 @@ If `gh` is not authenticated yet, run `gh auth login` once.
 
 ## Install
 
-```bash
-git clone https://github.com/carson-sweet/sweetclaude.git
-cd sweetclaude
-./install.sh
-```
+Inside Claude Code, run:
 
-The installer backs up your existing `~/.claude/` configuration, copies skills, hooks, agents, rules, and config files, wires TDD enforcement hooks into Claude Code's `settings.json`, and writes an `uninstall.sh` and `restore-config.sh` so you can roll back cleanly.
+```
+/plugin marketplace add https://github.com/carson-sweet/sweetclaude
+/plugin install sweetclaude@sweetclaude
+```
 
 After install, every Claude Code session — in any project folder — has over 100 SweetClaude skills available as `/sweetclaude:something` commands.
-
-If you only want the strategy and product skills (no TDD hooks, no subagent infrastructure), install the lighter variant:
-
-```bash
-./install.sh --strategy-skills-only
-```
-
-You can upgrade to the full install later by running `./install.sh` again.
-
-### Just want to try it?
-
-Skip the install. Load SweetClaude as a single-session plugin:
-
-```bash
-claude --plugin-dir /path/to/sweetclaude
-```
-
-All skills load. TDD enforcement hooks and global config do not. Good for kicking the tires.
 
 ---
 
