@@ -271,13 +271,23 @@ ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNIN
 
 ---
 
-## Step 4b: Ensure required global hooks are registered
+## Step 4b: Reconcile SweetClaude hook entries in settings.json
 
-After syncing, register any required global hooks that were added in this version but aren't yet in `~/.claude/settings.json`. Handles the upgrade path from older versions — idempotent if already registered.
+Strip broken `${CLAUDE_PLUGIN_ROOT}` literals (from pre-3.68.2 installs) and stale plugin-version paths from `~/.claude/settings.json`. The three preflight hooks themselves are plugin-native (auto-loaded from `hooks/hooks.json`) and need no settings.json entry.
 
 ```bash
-python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
+HOOK_RECONCILE_LOG=$(mktemp -t sc-hook-reconcile.XXXXXX) || HOOK_RECONCILE_LOG=/tmp/sc-hook-reconcile.log
+if ! python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py >"$HOOK_RECONCILE_LOG" 2>&1; then
+  echo "warning: hook reconciliation failed — see $HOOK_RECONCILE_LOG"
+fi
+cat "$HOOK_RECONCILE_LOG"
 ```
+
+Read `$HOOK_RECONCILE_LOG`. If it contains any `cleaned:` line, sum the counts across buckets and include `✓ Hooks: reconciled N stale/broken entries in ~/.claude/settings.json` in the Step 6 report (where N is the total). Also add this line to the report's tail:
+
+> → Restart Claude Code to stop the in-session `${CLAUDE_PLUGIN_ROOT}` error from old settings.json entries. The hooks themselves load from the plugin's hooks.json and are unaffected.
+
+If `$HOOK_RECONCILE_LOG` contains only `ok: hooks already up to date`, omit both lines entirely.
 
 ---
 
@@ -317,6 +327,7 @@ SweetClaude updated.
 ✓ Version:    {old_version} → {new_version}  (or same if unchanged)
 ✓ Commit:     {old_sha_short} → {new_sha_short}
 ✓ Files:      {total count} synced across skills, rules, hooks, config, agents
+✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
 
 → New Claude Code sessions in any project will use the updated version.
   Current sessions keep the old version until restarted.

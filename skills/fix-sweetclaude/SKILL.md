@@ -351,79 +351,28 @@ Determine the current project version:
 - If `.sweetclaude/state/phase.yaml` exists: v1
 - Otherwise: unknown
 
-**7a: Check global hooks (all versions)**
+**7a: Reconcile SweetClaude hook entries in settings.json**
 
-Filter manifest for entries where `required=true` and `scope="global"`. Verify each file is referenced in `~/.claude/settings.json`.
+After v3.68.2 the three preflight hooks (session-preflight, drift-gate, master-preflight) are plugin-native — Claude Code loads them from `hooks/hooks.json` automatically. The maintenance script's job is to keep `~/.claude/settings.json` clean of broken `${CLAUDE_PLUGIN_ROOT}` literals and stale plugin-version paths left over from earlier versions.
 
-```bash
-python3 -c "
-import json, os
-_sc_root = os.environ.get('CLAUDE_PLUGIN_ROOT','')
-manifest_path = (os.path.join(_sc_root, 'hooks', 'hooks-manifest.json') if _sc_root
-                 else os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', 'hooks-manifest.json'))
-manifest = json.load(open(manifest_path))
-try:
-    settings = json.load(open(os.path.expanduser('~/.claude/settings.json')))
-except:
-    settings = {}
-all_cmds = ' '.join(
-    h.get('command', '')
-    for event_hooks in settings.get('hooks', {}).values()
-    for entry in event_hooks
-    for h in entry.get('hooks', [])
-)
-missing = [h for h in manifest['hooks']
-           if h.get('required') and h.get('scope') == 'global' and h.get('event') and h['file'] not in all_cmds]
-print('\n'.join(f\"{h['file']} ({h['event']})\" for h in missing) if missing else 'OK')
-" 2>/dev/null
-```
-
-If any required global hooks are missing:
-> "These required global hooks are not registered in ~/.claude/settings.json: {list}. Add them?"
-
-If user says yes, add the missing entries to `~/.claude/settings.json` under `hooks.{event}`. For hooks with a non-empty `matcher` (other than `"startup"`), include the matcher field. Write atomically (temp file → rename). Do not remove or modify existing entries. Then say:
-> "Global hooks registered in ~/.claude/settings.json. **You need to start a new Claude Code session for these hooks to take effect.** Close this session and open a new one."
+The script lives at `~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py` after a `sweetclaude:update` has run. Plugin-marketplace installs that have never run update only have it under the plugin cache — try both.
 
 ```bash
-python3 - << 'PY'
-import json, os, tempfile
-settings_path = os.path.expanduser('~/.claude/settings.json')
-_sc_root = os.environ.get('CLAUDE_PLUGIN_ROOT','')
-manifest_path = (os.path.join(_sc_root, 'hooks', 'hooks-manifest.json') if _sc_root
-                 else os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', 'hooks-manifest.json'))
-
-with open(settings_path) as f:
-    settings = json.load(f)
-with open(manifest_path) as f:
-    manifest = json.load(f)
-
-all_cmds = ' '.join(
-    h.get('command', '')
-    for event_hooks in settings.get('hooks', {}).values()
-    for entry in event_hooks
-    for h in entry.get('hooks', [])
-)
-
-hooks_section = settings.setdefault('hooks', {})
-for h in manifest['hooks']:
-    if not h.get('required') or h.get('scope') != 'global' or not h.get('event') or h['file'] in all_cmds:
-        continue
-    event = h['event']
-    cmd = h.get('command_path') or os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', h['file'])
-    entry = {'hooks': [{'type': 'command', 'command': cmd}]}
-    matcher = h.get('matcher', '')
-    if matcher and matcher != 'startup':
-        entry['matcher'] = matcher
-    hooks_section.setdefault(event, []).append(entry)
-
-with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(settings_path),
-                                  suffix='.tmp', delete=False) as tmp:
-    json.dump(settings, tmp, indent=2)
-    tmp_name = tmp.name
-os.replace(tmp_name, settings_path)
-print('OK')
-PY
+SCRIPT=~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
+if [ ! -f "$SCRIPT" ]; then
+  SCRIPT=$(find ~/.claude/plugins/cache/sweetclaude -type f -name 'ensure-global-hooks.py' 2>/dev/null | head -1)
+fi
+if [ -z "$SCRIPT" ] || [ ! -f "$SCRIPT" ]; then
+  echo "warning: ensure-global-hooks.py not found; skipping hook reconciliation" >&2
+elif ! python3 "$SCRIPT"; then
+  echo "warning: hook reconciliation failed — see error above" >&2
+fi
 ```
+
+Surface the script's output to the user. If it printed `cleaned:` lines (broken or stale entries removed), follow up with:
+> "Cleaned up stale entries in ~/.claude/settings.json. **Restart Claude Code for these changes to take effect** — settings.json is read at session start. The hooks themselves are registered via the plugin's hooks.json and continue working."
+
+If it printed `ok: hooks already up to date`, no further action needed.
 
 **7b: Check project hooks (v2 only)**
 
