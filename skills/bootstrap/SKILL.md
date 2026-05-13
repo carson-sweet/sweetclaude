@@ -74,28 +74,68 @@ If `false`:
 
 ## Step 5b: v4 hard stop — v3 artifacts present
 
-After confirming setup is complete, check for v3 backlog files in a v4 install:
+After confirming setup is complete, check for v3 backlog files. The trigger is a v4 plugin running
+against a project that hasn't migrated yet — detected by comparing the plugin version (from
+`installed_plugins.json`) against the project's own `installed_version`.
 
 ```bash
-INSTALLED_V=$(python3 -c "
+# Resolve product_base from artifact-privacy.yaml; fall back to .sweetclaude/product
+PRODUCT_BASE=$(python3 -c "
+import yaml, pathlib
+p = pathlib.Path('.sweetclaude/state/artifact-privacy.yaml')
+if p.exists():
+    d = yaml.safe_load(p.read_text()) or {}
+    base = d.get('categories', {}).get('product', {}).get('base_path', '')
+    if base:
+        print(base.rstrip('/'))
+        exit()
+print('.sweetclaude/product')
+" 2>/dev/null || echo '.sweetclaude/product')
+
+# Detect v4 plugin: plugin version ≥ 4.x, project installed_version < 4.x
+PLUGIN_V=$(python3 -c "
+import json, os, re
+try:
+    d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+    entries = [e for versions in d.get('plugins', {}).values()
+               for e in versions if e.get('scope') == 'user']
+    for e in sorted(entries, key=lambda x: x.get('lastUpdated',''), reverse=True):
+        v = e.get('version','')
+        if re.match(r'^4\.', v) and 'sweetclaude' in str(e.get('installPath','')).lower():
+            print(v)
+            break
+except Exception:
+    pass
+" 2>/dev/null)
+
+PROJECT_V=$(python3 -c "
 import yaml
 d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
 print(d.get('framework', {}).get('installed_version', ''))
-")
-V3_FILES=$(find .sweetclaude/product/backlog -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
-case "$INSTALLED_V" in
-  4.*)
-    if [ "$V3_FILES" -gt 0 ]; then
-      echo "This project has $V3_FILES v3 stories that need to migrate before SweetClaude v4 can run."
-      echo ""
-      echo "Migration creates a safety backup and copies stories to docs/product/. Your current"
-      echo "work is not affected. A clean git working tree is not required to migrate."
-      echo ""
-      echo "Run: /sweetclaude:migrate"
-      exit 1
-    fi
-    ;;
-esac
+" 2>/dev/null)
+
+V3_FILES=$(find "${PRODUCT_BASE}/backlog" -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
+
+# Fire if: plugin is v4 AND (project is not yet v4 OR v3 BL files exist)
+PLUGIN_IS_V4=false
+case "$PLUGIN_V" in 4.*) PLUGIN_IS_V4=true ;; esac
+
+PROJECT_NOT_V4=false
+case "$PROJECT_V" in 4.*) ;; *) PROJECT_NOT_V4=true ;; esac
+
+if $PLUGIN_IS_V4 && ( $PROJECT_NOT_V4 || [ "$V3_FILES" -gt 0 ] ); then
+  echo "SweetClaude v4 is installed but this project hasn't migrated yet."
+  echo ""
+  if [ "$V3_FILES" -gt 0 ]; then
+    echo "Found $V3_FILES v3 stories at ${PRODUCT_BASE}/backlog/."
+  fi
+  echo ""
+  echo "Migration creates a safety backup and moves stories to docs/product/. Your"
+  echo "current work is not affected. A clean git working tree is not required."
+  echo ""
+  echo "Run: /sweetclaude:migrate"
+  exit 1
+fi
 ```
 
 If the hard stop fires: print the message above and exit. No further skill execution.

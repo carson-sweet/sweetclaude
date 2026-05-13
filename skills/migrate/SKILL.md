@@ -5,7 +5,22 @@ description: Migrate v3 BL-NNN stories to v4 docs/product/backlog/ layout. User-
 
 ## Step 1: Lock & backup
 
+Read `product_base` from `artifact-privacy.yaml`. This value is used by every subsequent step.
+
 ```bash
+PRODUCT_BASE=$(python3 -c "
+import yaml, pathlib
+p = pathlib.Path('.sweetclaude/state/artifact-privacy.yaml')
+if p.exists():
+    d = yaml.safe_load(p.read_text()) or {}
+    base = d.get('categories', {}).get('product', {}).get('base_path', '')
+    if base:
+        print(base.rstrip('/'))
+        exit()
+print('.sweetclaude/product')
+" 2>/dev/null || echo '.sweetclaude/product')
+V3_BACKLOG="${PRODUCT_BASE}/backlog"
+
 LOCK_FILE=".sweetclaude/state/migration.lock"
 if [ -f "$LOCK_FILE" ]; then
   echo "ERROR: $LOCK_FILE exists. Previous migration may have crashed."
@@ -20,7 +35,15 @@ mkdir -p "$BACKUP_DIR"
 BACKUP_DATE=$(date +%Y%m%d-%H%M%S)
 BACKUP_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "nosha")
 BACKUP_FILE="$BACKUP_DIR/pre-v4-${BACKUP_DATE}-${BACKUP_SHA}.tar.gz"
-tar -czf "$BACKUP_FILE" .sweetclaude/
+
+# Include v3 source files in backup. For .sweetclaude/product users they're already
+# inside .sweetclaude/. For docs/product users they're outside it — add them explicitly.
+if [ "$PRODUCT_BASE" = ".sweetclaude/product" ]; then
+  tar -czf "$BACKUP_FILE" .sweetclaude/
+else
+  tar -czf "$BACKUP_FILE" .sweetclaude/ "$V3_BACKLOG"/BL-*.md 2>/dev/null || \
+    tar -czf "$BACKUP_FILE" .sweetclaude/
+fi
 tar -tzf "$BACKUP_FILE" > /dev/null || { echo "ERROR: backup verification failed"; exit 1; }
 
 # Retain last 5 — BSD-portable (no xargs -r):
@@ -32,12 +55,15 @@ done
 
 ## Step 2: Validation manifest
 
-Scan every `.sweetclaude/product/backlog/BL-*.md` file. Abort before any write if failures are found.
+Scan every `{V3_BACKLOG}/BL-*.md` file (where `V3_BACKLOG` was resolved from `artifact-privacy.yaml` in Step 1). Abort before any write if failures are found.
 
 ```python
 import pathlib, yaml, sys
 
-backlog_path = pathlib.Path('.sweetclaude/product/backlog')
+# product_base is passed from the shell context set in Step 1
+import os
+product_base = os.environ.get('PRODUCT_BASE', '.sweetclaude/product')
+backlog_path = pathlib.Path(product_base) / 'backlog'
 files = sorted(backlog_path.glob('BL-*.md'), key=lambda p: p.name)
 
 V3_VALID_STATUSES = {'backlog', 'in_progress', 'done', 'cancelled', 'blocked', 'abandoned'}
@@ -391,10 +417,13 @@ Execute in order. Each sub-step must succeed before proceeding to the next.
 
 4. **Re-verify backup and offer delete:**
    - Run `tar -tzf $BACKUP_FILE`. If pass: present AskUserQuestion:
-     - Question: `Delete old .sweetclaude/product/backlog/? (Backup at $BACKUP_FILE is valid.)`
+     - Question: `Delete old v3 BL-*.md files from ${V3_BACKLOG}/? (Backup at $BACKUP_FILE is valid.)`
      - Options: `Yes, delete`, `No, keep`
-     - On Yes: `rm -rf .sweetclaude/product/backlog/`
-     - On No: leave it in place.
+     - On Yes: delete **only** the original `BL-*.md` files that were migrated (not the directory). Do not touch any v4 output:
+       ```bash
+       find "$V3_BACKLOG" -maxdepth 1 -name 'BL-*.md' -delete
+       ```
+     - On No: leave them in place.
    - If `tar -tzf` fails: print warning, skip delete offer. Do not delete.
 
 5. **Print summary:**

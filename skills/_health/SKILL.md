@@ -108,9 +108,16 @@ if BACKLOG_BASE.exists():
             sc_version = sc_d.get('framework', {}).get('installed_version', '')
         except Exception:
             pass
-    v3_files = list(pathlib.Path('.sweetclaude/product/backlog').glob('BL-*.md')) if pathlib.Path('.sweetclaude/product/backlog').exists() else []
+    privacy_path = pathlib.Path('.sweetclaude/state/artifact-privacy.yaml')
+    if privacy_path.exists():
+        priv = yaml.safe_load(privacy_path.read_text()) or {}
+        product_base = pathlib.Path(priv.get('categories', {}).get('product', {}).get('base_path', '.sweetclaude/product'))
+    else:
+        product_base = pathlib.Path('.sweetclaude/product')
+    v3_backlog = product_base / 'backlog'
+    v3_files = list(v3_backlog.glob('BL-*.md')) if v3_backlog.exists() else []
     if v3_files and sc_version.startswith('4.'):
-        lint_findings.append(f"v3-files-present:{len(v3_files)} BL-NNN files remain under .sweetclaude/product/backlog/. Run /sweetclaude:migrate.")
+        lint_findings.append(f"v3-files-present:{len(v3_files)} BL-NNN files remain under {v3_backlog}/. Run /sweetclaude:migrate.")
 
     # Rule 5: done/ ↔ status invariant
     for typ, dir_name in TYPE_DIRS.items():

@@ -4,6 +4,32 @@ user-invocable: true
 description: "Structured backlog grooming session."
 ---
 
+## MIGRATION GUARD
+
+Before any other work, check for unmigrated v3 BL files:
+
+```bash
+PRODUCT_BASE=$(python3 -c "
+import yaml, pathlib
+p = pathlib.Path('.sweetclaude/state/artifact-privacy.yaml')
+if p.exists():
+    d = yaml.safe_load(p.read_text()) or {}
+    base = d.get('categories', {}).get('product', {}).get('base_path', '')
+    if base:
+        print(base.rstrip('/'))
+        exit()
+print('.sweetclaude/product')
+" 2>/dev/null || echo '.sweetclaude/product')
+V3_FILES=$(find "${PRODUCT_BASE}/backlog" -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
+if [ "$V3_FILES" -gt 0 ]; then
+  echo "This project has $V3_FILES v3 stories that need to be migrated first."
+  echo "Run: /sweetclaude:migrate"
+  exit 1
+fi
+```
+
+If the guard fires: print the message and stop. Do not proceed.
+
 ```python
 import pathlib, yaml, re, datetime
 

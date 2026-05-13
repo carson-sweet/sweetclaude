@@ -124,7 +124,7 @@ fi
 # No YAML parsing — grep for specific field values only.
 
 if [ "$EXPECTED_SC_VERSION" = "v2" ]; then
-  if ! grep -qm1 "^schema_version:[[:space:]]*1" "$SC_YAML" 2>/dev/null; then
+  if ! grep -qm1 "^schema_version:[[:space:]]*2" "$SC_YAML" 2>/dev/null; then
     _SC_SCHEMA_V=$(grep -m1 "^schema_version:" "$SC_YAML" 2>/dev/null | awk '{print $2}')
     emit_heal "unsupported schema version ($_SC_SCHEMA_V)"
     exit 0
