@@ -304,7 +304,7 @@ Update `~/.claude/plugins/installed_plugins.json`:
 
 ---
 
-## Step 6: Clean up and report
+## Step 6: Clean up
 
 If a temp directory was used, remove it:
 ```bash
@@ -318,20 +318,7 @@ diff -rq $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/ 2>/dev/null
 diff -rq $SOURCE_DIR/scripts/ {installPath}/scripts/ 2>/dev/null
 ```
 
-Report:
-
-```
-SweetClaude updated.
-═══════════════════
-
-✓ Version:    {old_version} → {new_version}  (or same if unchanged)
-✓ Commit:     {old_sha_short} → {new_sha_short}
-✓ Files:      {total count} synced across skills, rules, hooks, config, agents
-✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
-
-→ New Claude Code sessions in any project will use the updated version.
-  Current sessions keep the old version until restarted.
-```
+Continue to Step 6b. The user-facing success report is deferred until Step 6b confirms project state is coherent — reporting "updated" before the drift verdict is what caused BUG-002.
 
 ---
 
@@ -341,27 +328,31 @@ Only run if `.sweetclaude/state/sweetclaude.yaml` exists in the current project 
 
 After the framework sync, the registry on disk may declare schema versions newer than this project's state files. Surface it immediately — don't make the user bounce sessions.
 
-The runner was just synced to the versionless path in Step 4. Run it with `--report-drift-for-skill` to write the marker, then read the marker.
+Parse the runner's stdout directly. Do NOT read `pending-drift-decision.yaml` — that marker is written by `drift-gate.sh` at session start and represents pre-update state. The fresh stdout from the just-synced runner is authoritative for this step.
 
 ```bash
-if [ -f .sweetclaude/state/sweetclaude.yaml ] && [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
-  python3 "$RUNNER" --project-dir . --report-drift-for-skill >/dev/null 2>&1 || true
-fi
+DRIFT_COUNT=0
+CASE=A
 DRIFT_MARKER=".sweetclaude/state/pending-drift-decision.yaml"
-python3 -c "
-import yaml, sys
-try:
-    d = yaml.safe_load(open(sys.argv[1])) or {}
-    print('CASE=' + d.get('case', 'A'))
-    print('DRIFT_COUNT=' + str(d.get('drift_count', 0)))
-except FileNotFoundError:
-    print('DRIFT_COUNT=0')
-except Exception:
-    print('DRIFT_COUNT=0')
-" "$DRIFT_MARKER" 2>/dev/null
+if [ -f .sweetclaude/state/sweetclaude.yaml ] && [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
+  DRIFT_OUTPUT=$(python3 "$RUNNER" --project-dir . --report-drift-for-skill 2>/dev/null)
+  DRIFT_COUNT=$(printf '%s\n' "$DRIFT_OUTPUT" | grep '^DRIFT_COUNT=' | cut -d= -f2)
+  [ -z "$DRIFT_COUNT" ] && DRIFT_COUNT=0
+  if printf '%s\n' "$DRIFT_OUTPUT" | grep -q '|chain=broken'; then
+    CASE=B
+  fi
+fi
+echo "CASE=$CASE"
+echo "DRIFT_COUNT=$DRIFT_COUNT"
 ```
 
-If `DRIFT_COUNT` is 0: continue silently to Step 7.
+If `DRIFT_COUNT` is 0: remove any stale marker left over from this session's earlier drift-gate scan, print the success report (Step 6c template below) with `✓ Project: clean` line, then continue to Step 7.
+
+```bash
+if [ "$DRIFT_COUNT" = "0" ]; then
+  rm -f "$DRIFT_MARKER" 2>/dev/null || true
+fi
+```
 
 If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past the project's state. Migrate or remove — no "Not now," no silent proceed. This is the locked Gap #7 rule.
 
@@ -381,7 +372,64 @@ If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past th
 > - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:adopt` against a fresh state.
 > - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
-If the user picks **Migrate now**: invoke `sweetclaude:_migrate`. When it returns, continue to Step 7.
+If the user picks **Migrate now**: invoke `sweetclaude:_migrate`. When it returns, re-run the drift check:
+
+```bash
+POST_MIGRATE_COUNT=0
+if [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
+  POST_OUTPUT=$(python3 "$RUNNER" --project-dir . --report-drift-for-skill 2>/dev/null)
+  POST_MIGRATE_COUNT=$(printf '%s\n' "$POST_OUTPUT" | grep '^DRIFT_COUNT=' | cut -d= -f2)
+  [ -z "$POST_MIGRATE_COUNT" ] && POST_MIGRATE_COUNT=0
+fi
+echo "POST_MIGRATE_COUNT=$POST_MIGRATE_COUNT"
+```
+
+If `POST_MIGRATE_COUNT` is 0: clean state. Print the success report (Step 6c template below) with `✓ Project: clean (verified post-migrate)` line, then continue to Step 7.
+
+If `POST_MIGRATE_COUNT > 0`: do NOT print the success report. The framework files were synced, but the project is not in a coherent post-update state. Print the halt diagnostic instead:
+
+```
+SweetClaude update PARTIAL.
+═══════════════════════════
+
+✓ Version:    {old_version} → {new_version}  (framework synced)
+✗ Project:    {POST_MIGRATE_COUNT} file(s) still drifted after _migrate
+
+This usually means:
+  (a) user picked Rollback or Leave-as-is in _migrate
+  (b) a registered migration is missing its handler (chain broken)
+  (c) a handler ran but didn't bump versions correctly
+
+Files still drifted:
+  {Print the FINDING lines from $POST_OUTPUT}
+
+→ The framework is at v{new_version}. Project state is incomplete.
+  The next session's drift-gate will surface this with full diagnostics.
+```
+
+Stop. Do NOT continue to Step 7.
+
+---
+
+## Step 6c: Success report (only reached when project state is verified clean)
+
+```
+SweetClaude updated.
+═══════════════════
+
+✓ Version:    {old_version} → {new_version}  (or same if unchanged)
+✓ Commit:     {old_sha_short} → {new_sha_short}
+✓ Files:      {total count} synced across skills, rules, hooks, config, agents
+✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
+✓ Project:    clean  OR  clean (verified post-migrate)
+
+→ New Claude Code sessions in any project will use the updated version.
+  Current sessions keep the old version until restarted.
+```
+
+The `✓ Project:` line wording depends on which Step 6b exit path was taken:
+- DRIFT_COUNT=0 on first check → `clean`
+- _migrate ran and POST_MIGRATE_COUNT=0 → `clean (verified post-migrate)`
 
 If the user picks **Re-onboard from scratch**:
 

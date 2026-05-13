@@ -122,7 +122,14 @@ Present via **AskUserQuestion**.
 
 ### Step 4a: Accept
 
-Clear the pending-migration-decision marker if it exists. Done.
+Clear both pending markers — the migration-decision marker (BL-068) AND the drift-decision marker (so the next session's drift-gate scans fresh against the migrated state instead of re-surfacing the pre-migration prompt):
+
+```bash
+rm -f .sweetclaude/state/pending-migration-decision.yaml \
+       .sweetclaude/state/pending-drift-decision.yaml 2>/dev/null || true
+```
+
+Done.
 
 ### Step 4b: Initiate rollback
 
@@ -136,7 +143,11 @@ Wait for the user to type exactly `rollback`. Then:
 ROLLBACK_OUT=$(python3 ~/.claude/scripts/sweetclaude/migrations/run_rollback.py "$RUNNER" "$SNAPSHOT_JSON" .)
 ```
 
-Report success or failure. Clear the pending-decision marker.
+Report success or failure. Clear the pending-migration-decision marker, but PRESERVE `pending-drift-decision.yaml` — rollback restored the pre-migration state which still has drift, so drift-gate must re-surface it next session.
+
+```bash
+rm -f .sweetclaude/state/pending-migration-decision.yaml 2>/dev/null || true
+```
 
 ### Step 4c: Defer decision
 

@@ -109,24 +109,35 @@ If `false`:
 
 ## Step 5b: Artifact-format drift check (hard demand)
 
-The drift-gate.sh SessionStart hook has already scanned for drift and written the marker if any was found. Bootstrap reads the marker — no inline scan needed. If the session-start hook missed it (versionless path was just self-healed in Step 0), a catch-up scan runs.
+The drift-gate.sh SessionStart hook has already scanned for drift and written the marker if any was found. Read the marker first; if it exists, use it as the source of truth (drift-gate's scan is authoritative for the session). If the marker is absent (drift-gate didn't run, e.g. versionless path was just self-healed in Step 0), run the runner inline and parse its stdout directly — do NOT rely on the runner writing the marker (it only writes to stdout via `--report-drift-for-skill`).
 
 ```bash
 DRIFT_MARKER=".sweetclaude/state/pending-drift-decision.yaml"
-if [ ! -f "$DRIFT_MARKER" ] && [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
-  python3 "$RUNNER" --project-dir . --report-drift-for-skill >/dev/null 2>&1 || true
-fi
-python3 -c "
+DRIFT_COUNT=0
+CASE=A
+if [ -f "$DRIFT_MARKER" ]; then
+  EXISTING=$(python3 -c "
 import yaml, sys
 try:
     d = yaml.safe_load(open(sys.argv[1])) or {}
-    print('CASE=' + d.get('case', 'A'))
-    print('DRIFT_COUNT=' + str(d.get('drift_count', 0)))
-except FileNotFoundError:
-    print('DRIFT_COUNT=0')
+    print(d.get('case', 'A'))
+    print(d.get('drift_count', 0))
 except Exception:
-    print('DRIFT_COUNT=0')
-" "$DRIFT_MARKER" 2>/dev/null
+    print('A')
+    print(0)
+" "$DRIFT_MARKER" 2>/dev/null)
+  CASE=$(printf '%s\n' "$EXISTING" | sed -n '1p')
+  DRIFT_COUNT=$(printf '%s\n' "$EXISTING" | sed -n '2p')
+elif [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
+  DRIFT_OUTPUT=$(python3 "$RUNNER" --project-dir . --report-drift-for-skill 2>/dev/null)
+  DRIFT_COUNT=$(printf '%s\n' "$DRIFT_OUTPUT" | grep '^DRIFT_COUNT=' | cut -d= -f2)
+  [ -z "$DRIFT_COUNT" ] && DRIFT_COUNT=0
+  if printf '%s\n' "$DRIFT_OUTPUT" | grep -q '|chain=broken'; then
+    CASE=B
+  fi
+fi
+echo "CASE=$CASE"
+echo "DRIFT_COUNT=$DRIFT_COUNT"
 ```
 
 If `DRIFT_COUNT` is 0: continue to Step 6.
