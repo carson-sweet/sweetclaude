@@ -283,7 +283,7 @@ fi
 cat "$HOOK_RECONCILE_LOG"
 ```
 
-Read `$HOOK_RECONCILE_LOG`. If it contains any `cleaned:` line, sum the counts across buckets and include `✓ Hooks: reconciled N stale/broken entries in ~/.claude/settings.json` in the Step 6 report (where N is the total). Also add this line to the report's tail:
+Read `$HOOK_RECONCILE_LOG`. If it contains any `cleaned:` line, sum the counts across buckets and include `✓ Hooks: reconciled N stale/broken entries in ~/.claude/settings.json` in the Step 6c success report (where N is the total). Also add this line to the report's tail:
 
 > → Restart Claude Code to stop the in-session `${CLAUDE_PLUGIN_ROOT}` error from old settings.json entries. The hooks themselves load from the plugin's hooks.json and are unaffected.
 
@@ -372,7 +372,24 @@ If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past th
 > - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:adopt` against a fresh state.
 > - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
 
-If the user picks **Migrate now**: invoke `sweetclaude:_migrate`. When it returns, re-run the drift check:
+If the user picks **Re-onboard from scratch** (Case B only):
+
+```bash
+TS=$(date -u +%Y%m%d-%H%M%S)
+LEGACY=".sweetclaude.legacy/$TS"
+mkdir -p ".sweetclaude.legacy"
+if [ -d .sweetclaude ]; then
+  mv .sweetclaude "$LEGACY"
+fi
+python3 ~/.claude/scripts/sweetclaude/maintenance/archive-sweetclaude-dir.py "$LEGACY"
+echo "Moved existing SweetClaude content to $LEGACY/ — adopt will use it as reference, not auto-migrate."
+```
+
+Then invoke `sweetclaude:adopt`. Stop (adopt drives the next session itself). Do NOT continue to Step 6c — adopt owns the next session entirely.
+
+If the user picks **Remove SweetClaude** (either case): invoke `sweetclaude:purge`. Stop. Do NOT continue to Step 6c.
+
+If the user picks **Migrate now** (Case A only): invoke `sweetclaude:_migrate`. When it returns, re-run the drift check:
 
 ```bash
 POST_MIGRATE_COUNT=0
@@ -421,7 +438,7 @@ SweetClaude updated.
 ✓ Commit:     {old_sha_short} → {new_sha_short}
 ✓ Files:      {total count} synced across skills, rules, hooks, config, agents
 ✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
-✓ Project:    clean  OR  clean (verified post-migrate)
+✓ Project:    {clean | clean (verified post-migrate)}
 
 → New Claude Code sessions in any project will use the updated version.
   Current sessions keep the old version until restarted.
@@ -431,24 +448,7 @@ The `✓ Project:` line wording depends on which Step 6b exit path was taken:
 - DRIFT_COUNT=0 on first check → `clean`
 - _migrate ran and POST_MIGRATE_COUNT=0 → `clean (verified post-migrate)`
 
-If the user picks **Re-onboard from scratch**:
-
-```bash
-TS=$(date -u +%Y%m%d-%H%M%S)
-LEGACY=".sweetclaude.legacy/$TS"
-mkdir -p ".sweetclaude.legacy"
-if [ -d .sweetclaude ]; then
-  mv .sweetclaude "$LEGACY"
-fi
-python3 ~/.claude/scripts/sweetclaude/maintenance/archive-sweetclaude-dir.py "$LEGACY"
-echo "Moved existing SweetClaude content to $LEGACY/ — adopt will use it as reference, not auto-migrate."
-```
-
-Then invoke `sweetclaude:adopt`. Stop (adopt drives the next session itself).
-
-If the user picks **Remove SweetClaude**: invoke `sweetclaude:purge`. Stop.
-
-No third option. The framework is updated; the project must catch up or opt out before the next session.
+Print exactly one of those two; do not print the literal text `clean OR clean (verified post-migrate)`. After printing the template, continue to Step 7.
 
 ---
 
