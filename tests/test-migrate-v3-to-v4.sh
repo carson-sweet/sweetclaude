@@ -229,12 +229,70 @@ print(d.get('categories', {}).get('product', {}).get('base_path', ''))
     rm -rf "$tmp"
 }
 
+# ── skip-done scenario: terminal items left in v3, not migrated ─────────────
+
+run_skip_done_scenario() {
+    echo ""
+    echo "=== Scenario: skip-done flow (no --include-done flag) ==="
+    local tmp
+    tmp=$(prep_fixture "$REPO_ROOT/tests/fixtures/migrate-smoke" "skip-done")
+
+    # Fixture has 5 BL files: 3 backlog (active) + 1 done + 1 cancelled (both terminal).
+    # Without --include-done, terminal items should be SKIPPED, not migrated.
+
+    local plan_out plan_items skipped
+    plan_out=$(python3 "$SCRIPT" plan --project-dir "$tmp")
+    plan_items=$(echo "$plan_out" | python3 -c "import sys, json; print(len(json.load(sys.stdin).get('plan_items', [])))")
+    skipped=$(echo "$plan_out" | python3 -c "import sys, json; print(json.load(sys.stdin).get('skipped_done', 0))")
+
+    if [ "$plan_items" = "3" ]; then
+        pass "skip-done plan: 3 items (3 active, terminal items excluded)"
+    else
+        fail "skip-done plan: $plan_items items (expected 3)"
+    fi
+    if [ "$skipped" = "2" ]; then
+        pass "skip-done plan: skipped_done=2 (1 done + 1 cancelled)"
+    else
+        fail "skip-done plan: skipped_done=$skipped (expected 2)"
+    fi
+
+    # Execute (without --include-done)
+    local exec_out created done_files
+    exec_out=$(python3 "$SCRIPT" execute --project-dir "$tmp")
+    created=$(echo "$exec_out" | python3 -c "import sys, json; print(len(json.load(sys.stdin).get('created_paths', [])))")
+    if [ "$created" = "3" ]; then
+        pass "skip-done execute: 3 files written"
+    else
+        fail "skip-done execute: $created files written (expected 3)"
+    fi
+
+    # Verify NO files landed in done/ subdirs
+    done_files=$(find "$tmp/docs/product/backlog" -type d -name done -exec find {} -type f \; 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$done_files" = "0" ]; then
+        pass "skip-done: 0 files in any done/ subdir (terminal items not migrated)"
+    else
+        fail "skip-done: $done_files files in done/ subdirs (expected 0)"
+    fi
+
+    # The 2 skipped v3 BL files should still be on disk (they weren't migrated)
+    local v3_remaining
+    v3_remaining=$(find "$tmp/.sweetclaude/product/backlog" -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$v3_remaining" = "5" ]; then
+        pass "skip-done: all 5 v3 BL files still present (3 migrated were copied, 2 skipped untouched)"
+    else
+        fail "skip-done: $v3_remaining v3 BL files remaining (expected 5 — original source preserved by execute)"
+    fi
+
+    rm -rf "$tmp"
+}
+
 # ── run scenarios ───────────────────────────────────────────────────────────
 
 echo "=== B2/C smoke test: v3 -> v4 migration ==="
 
 run_scenario "$REPO_ROOT/tests/fixtures/migrate-smoke"      ".sweetclaude/product variant"  ".sweetclaude/product"
 run_scenario "$REPO_ROOT/tests/fixtures/migrate-smoke-docs" "docs/product variant"          "docs/product"
+run_skip_done_scenario
 
 echo ""
 if [ "$FAILED" -gt 0 ]; then
