@@ -50,7 +50,7 @@ try:
 except: print('unknown')
 " 2>/dev/null)
 
-SCRIPT=$(find ~/.claude -name "sweetclaude-yaml-template.py" 2>/dev/null | head -1)
+SCRIPT=~/.claude/scripts/sweetclaude/sweetclaude-yaml-template.py
 python3 "$SCRIPT" \
   --name "USER_PROVIDED_NAME" \
   --type "new" \

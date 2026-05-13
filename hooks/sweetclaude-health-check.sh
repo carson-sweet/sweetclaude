@@ -48,6 +48,34 @@ PY
 # Always stamp hook_last_ran
 update_yaml_field "framework.hook_last_ran" "$NOW_ISO"
 
+# Always reconcile framework.installed_version with the plugin manifest.
+# Without this, sweetclaude.yaml's installed_version stays at whatever value
+# was written during the initial _migrate consolidation — it never advances
+# when the installed plugin updates. Idempotent: only writes when values differ.
+python3 - "$SC_YAML" << 'PY' 2>/dev/null
+import sys, yaml, json, os, tempfile
+sc_path = sys.argv[1]
+try:
+    with open(sc_path) as f:
+        d = yaml.safe_load(f) or {}
+except Exception:
+    sys.exit(0)
+recorded = (d.get('framework') or {}).get('installed_version')
+actual = None
+try:
+    p = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+    entries = [v for k, v in (p.get('plugins') or {}).items() if 'sweetclaude' in k.lower()]
+    actual = entries[0][0].get('version') if entries and entries[0] else None
+except Exception:
+    pass
+if actual and actual != recorded:
+    d.setdefault('framework', {})['installed_version'] = actual
+    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(sc_path), suffix='.tmp', delete=False) as tmp:
+        yaml.safe_dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        tmp_name = tmp.name
+    os.replace(tmp_name, sc_path)
+PY
+
 # Read timestamps
 LAST_CONSISTENCY=$(python3 -c "
 import yaml
@@ -145,11 +173,103 @@ try:
 except: print('unknown')
 " 2>/dev/null)
 
-    REPO_VERSION=$(python3 -c "
-import json
-try: print(json.load(open('$HOME/dev/sweetclaude/package.json')).get('version',''))
-except: print('')
-" 2>/dev/null)
+    # Gap #1 — hybrid discovery:
+    #   1. Local dev clone (per ~/.claude/sweetclaude-install.json repo_path)
+    #   2. gh api releases/latest (if gh installed and authenticated)
+    #   3. git ls-remote --tags <url> (universal fallback)
+    # All network calls are wrapped in a 5-second timeout. Failures are
+    # silent in user-facing surface; the result is recorded to
+    # framework.update.check_error so fix-sweetclaude can surface it.
+    REPO_VERSION=$(python3 - "$HOME" << 'PY' 2>/dev/null
+import json, os, re, subprocess, sys
+HOME = sys.argv[1]
+
+def run(cmd, timeout=5):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return r.returncode, r.stdout, r.stderr
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return 1, "", ""
+
+def repo_url_from_plugin():
+    """Read repository URL from installed plugin manifest. Returns owner/repo str or None."""
+    try:
+        d = json.load(open(os.path.join(HOME, ".claude/plugins/installed_plugins.json")))
+        entries = [v for k, v in (d.get("plugins") or {}).items() if "sweetclaude" in k.lower()]
+        if not entries or not entries[0]:
+            return None, None
+        install_path = entries[0][0].get("installPath", "")
+    except Exception:
+        return None, None
+    if not install_path:
+        return None, None
+    try:
+        m = json.load(open(os.path.join(install_path, ".claude-plugin/plugin.json")))
+        url = m.get("repository") or "https://github.com/carson-sweet/sweetclaude"
+    except Exception:
+        url = "https://github.com/carson-sweet/sweetclaude"
+    # Parse owner/repo from URL.
+    mo = re.search(r"github\.com[/:]([^/]+)/([^/.]+)", url)
+    if not mo:
+        return url, None
+    return url, f"{mo.group(1)}/{mo.group(2)}"
+
+def normalize_semver(tag):
+    """Strip leading 'v' and trailing newline. Reject non-semver-shaped tags."""
+    t = tag.strip().lstrip("v")
+    return t if re.match(r"^\d+\.\d+\.\d+", t) else None
+
+def semver_key(v):
+    """Tuple for max() comparison."""
+    parts = re.match(r"^(\d+)\.(\d+)\.(\d+)", v)
+    return tuple(int(p) for p in parts.groups()) if parts else (0, 0, 0)
+
+# Path 1: local dev clone.
+install_json = os.path.join(HOME, ".claude/sweetclaude-install.json")
+if os.path.exists(install_json):
+    try:
+        d = json.load(open(install_json))
+        repo_path = d.get("repo_path", "")
+        if repo_path and os.path.exists(os.path.join(repo_path, "package.json")):
+            pkg = json.load(open(os.path.join(repo_path, "package.json")))
+            v = pkg.get("version", "")
+            if v:
+                print(v); sys.exit()
+    except Exception:
+        pass
+
+# Path 2/3: GitHub. Need the URL.
+url, owner_repo = repo_url_from_plugin()
+
+# Path 2: gh api (if available and auth'd).
+if owner_repo:
+    rc, out, _ = run(["gh", "api", f"repos/{owner_repo}/releases/latest", "-q", ".tag_name"])
+    if rc == 0:
+        v = normalize_semver(out)
+        if v:
+            print(v); sys.exit()
+
+# Path 3: git ls-remote --tags.
+if url:
+    rc, out, _ = run(["git", "ls-remote", "--tags", url])
+    if rc == 0:
+        versions = []
+        for line in out.splitlines():
+            # Format: "<sha>\trefs/tags/<tag>" (optionally with ^{})
+            if "\trefs/tags/" not in line:
+                continue
+            tag = line.split("\trefs/tags/", 1)[1].split("^{}")[0]
+            v = normalize_semver(tag)
+            if v:
+                versions.append(v)
+        if versions:
+            best = max(versions, key=semver_key)
+            print(best); sys.exit()
+
+# All paths failed.
+print("")
+PY
+)
 
     if [ -n "$REPO_VERSION" ] && [ "$REPO_VERSION" != "$INSTALLED" ] && [ "$REPO_VERSION" != "unknown" ] && [ "$INSTALLED" != "unknown" ]; then
       python3 - "$SC_YAML" "$REPO_VERSION" << 'PY'

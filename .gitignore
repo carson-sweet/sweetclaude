@@ -7,7 +7,6 @@ restore-config.sh
 
 # SweetClaude dogfood artifacts (internal work, not framework source)
 .sweetclaude/*
-!.sweetclaude/version-bump.yaml
 /strategy/
 /corpus/
 
@@ -27,6 +26,10 @@ restore-config.sh
 
 # Claude Code agent worktrees and local settings (machine-specific)
 /.claude/
+
+# Dev-only maintainer scripts (not part of the plugin distribution)
+install.sh
+scripts/bump-version.sh
 
 # Generated script output
 scripts/migration-report.md

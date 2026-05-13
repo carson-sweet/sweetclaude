@@ -116,9 +116,19 @@ Read the project's CLAUDE.md. Check:
    - Try running the test command to see if it works
 
 3. **SweetClaude section** — is it present and correct?
-   - Should reference `.sweetclaude/state/phase.yaml`
-   - Should have the pre-flight invocation instruction
-   - Should NOT reference a "working repo"
+   - Should reference `.sweetclaude/state/sweetclaude.yaml` (the unified state file post-v3.18).
+   - Should have the pre-flight / auto-fire invocation instruction (see 3a below).
+   - Should NOT reference a "working repo".
+
+   **3a. Auto-fire instruction patch** (relocated from the deleted `update/project-migration.md` Step 8c).
+
+   Check whether the `## SweetClaude` section contains the text `invoke \`sweetclaude:status\` automatically at session start`. If missing, find the line that reads `Read .sweetclaude/state/sweetclaude.yaml` (or `Read .sweetclaude/state/phase.yaml` on pre-3.18 projects) and replace with:
+
+   ```
+   - Read `.sweetclaude/state/sweetclaude.yaml` and `.sweetclaude/state/improvement-register.md` at session start if they exist. If `.sweetclaude/state/sweetclaude.yaml` exists and `.sweetclaude/disabled` does not exist, invoke `sweetclaude:status` automatically at session start.
+   ```
+
+   Propose the patch via AskUserQuestion; apply only on user approval. Report whether the patch was applied or already up to date.
 
 4. **Project description** — is it still accurate?
 
@@ -226,11 +236,25 @@ For each data-owning skill, check whether it is present in `skills.yaml`. Use th
 
 If `skills.yaml` is missing entirely: propose creating it (schema v2) with entries inferred from the above.
 If entries are missing from an existing `skills.yaml`: propose adding them with the inferred state.
-If `skills.yaml` is schema v1: propose migrating to v2 (same mapping as the update skill's 8e migration step).
 
-> "skills.yaml is missing / has gaps / is schema v1. Based on artifacts on disk: backlog=active, milestones=uninitialized, … Write/migrate it?"
+If `skills.yaml` exists with `schema_version: 1`: do **not** re-implement the migration here. Invoke the registry-driven migration runner (BL-065 refactor):
 
-On user approval: write or update `skills.yaml` using atomic write (temp file → rename). Use v2 schema:
+```bash
+RUNNER=~/.claude/scripts/sweetclaude/migrations/runner.py
+if [ -f "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --file skills.yaml
+else
+  echo "Migration runner not found at $RUNNER. Run /sweetclaude:update to install the framework."
+fi
+```
+
+The runner's registered handler (`scripts/migrations/skills_yaml_v1_to_v2.py`) is the single source of truth for the v1→v2 mapping. Same algorithm that previously lived inline here.
+
+After the runner finishes, re-read `skills.yaml` and proceed to the bootstrap-of-missing-entries logic below.
+
+> "skills.yaml is missing / has gaps. Based on artifacts on disk: backlog=active, milestones=uninitialized, … Write the missing entries?"
+
+On user approval: write the missing entries using atomic write (temp file → rename). Use v2 schema:
 - Data file exists → `status: active`, `last_changed_at: {today}`, `last_changed_by: migrated`
 - Data file missing → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
 Do not remove or modify entries that are already present and consistent.
@@ -327,79 +351,28 @@ Determine the current project version:
 - If `.sweetclaude/state/phase.yaml` exists: v1
 - Otherwise: unknown
 
-**7a: Check global hooks (all versions)**
+**7a: Reconcile SweetClaude hook entries in settings.json**
 
-Filter manifest for entries where `required=true` and `scope="global"`. Verify each file is referenced in `~/.claude/settings.json`.
+After v3.68.2 the three preflight hooks (session-preflight, drift-gate, master-preflight) are plugin-native — Claude Code loads them from `hooks/hooks.json` automatically. The maintenance script's job is to keep `~/.claude/settings.json` clean of broken `${CLAUDE_PLUGIN_ROOT}` literals and stale plugin-version paths left over from earlier versions.
 
-```bash
-python3 -c "
-import json, os
-_sc_root = os.environ.get('CLAUDE_PLUGIN_ROOT','')
-manifest_path = (os.path.join(_sc_root, 'hooks', 'hooks-manifest.json') if _sc_root
-                 else os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', 'hooks-manifest.json'))
-manifest = json.load(open(manifest_path))
-try:
-    settings = json.load(open(os.path.expanduser('~/.claude/settings.json')))
-except:
-    settings = {}
-all_cmds = ' '.join(
-    h.get('command', '')
-    for event_hooks in settings.get('hooks', {}).values()
-    for entry in event_hooks
-    for h in entry.get('hooks', [])
-)
-missing = [h for h in manifest['hooks']
-           if h.get('required') and h.get('scope') == 'global' and h.get('event') and h['file'] not in all_cmds]
-print('\n'.join(f\"{h['file']} ({h['event']})\" for h in missing) if missing else 'OK')
-" 2>/dev/null
-```
-
-If any required global hooks are missing:
-> "These required global hooks are not registered in ~/.claude/settings.json: {list}. Add them?"
-
-If user says yes, add the missing entries to `~/.claude/settings.json` under `hooks.{event}`. For hooks with a non-empty `matcher` (other than `"startup"`), include the matcher field. Write atomically (temp file → rename). Do not remove or modify existing entries. Then say:
-> "Global hooks registered in ~/.claude/settings.json. **You need to start a new Claude Code session for these hooks to take effect.** Close this session and open a new one."
+The script lives at `~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py` after a `sweetclaude:update` has run. Plugin-marketplace installs that have never run update only have it under the plugin cache — try both.
 
 ```bash
-python3 - << 'PY'
-import json, os, tempfile
-settings_path = os.path.expanduser('~/.claude/settings.json')
-_sc_root = os.environ.get('CLAUDE_PLUGIN_ROOT','')
-manifest_path = (os.path.join(_sc_root, 'hooks', 'hooks-manifest.json') if _sc_root
-                 else os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', 'hooks-manifest.json'))
-
-with open(settings_path) as f:
-    settings = json.load(f)
-with open(manifest_path) as f:
-    manifest = json.load(f)
-
-all_cmds = ' '.join(
-    h.get('command', '')
-    for event_hooks in settings.get('hooks', {}).values()
-    for entry in event_hooks
-    for h in entry.get('hooks', [])
-)
-
-hooks_section = settings.setdefault('hooks', {})
-for h in manifest['hooks']:
-    if not h.get('required') or h.get('scope') != 'global' or not h.get('event') or h['file'] in all_cmds:
-        continue
-    event = h['event']
-    cmd = h.get('command_path') or os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', h['file'])
-    entry = {'hooks': [{'type': 'command', 'command': cmd}]}
-    matcher = h.get('matcher', '')
-    if matcher and matcher != 'startup':
-        entry['matcher'] = matcher
-    hooks_section.setdefault(event, []).append(entry)
-
-with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(settings_path),
-                                  suffix='.tmp', delete=False) as tmp:
-    json.dump(settings, tmp, indent=2)
-    tmp_name = tmp.name
-os.replace(tmp_name, settings_path)
-print('OK')
-PY
+SCRIPT=~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
+if [ ! -f "$SCRIPT" ]; then
+  SCRIPT=$(find ~/.claude/plugins/cache/sweetclaude -type f -name 'ensure-global-hooks.py' 2>/dev/null | head -1)
+fi
+if [ -z "$SCRIPT" ] || [ ! -f "$SCRIPT" ]; then
+  echo "warning: ensure-global-hooks.py not found; skipping hook reconciliation" >&2
+elif ! python3 "$SCRIPT"; then
+  echo "warning: hook reconciliation failed — see error above" >&2
+fi
 ```
+
+Surface the script's output to the user. If it printed `cleaned:` lines (broken or stale entries removed), follow up with:
+> "Cleaned up stale entries in ~/.claude/settings.json. **Restart Claude Code for these changes to take effect** — settings.json is read at session start. The hooks themselves are registered via the plugin's hooks.json and continue working."
+
+If it printed `ok: hooks already up to date`, no further action needed.
 
 **7b: Check project hooks (v2 only)**
 
@@ -481,15 +454,120 @@ print('OK')
 PY
 ```
 
-> "Project hooks registered in .claude/settings.local.json. **You need to start a new Claude Code session for these hooks to take effect.** Close this session and open a new one."
+> "Project hooks registered in .claude/settings.local.json. New event-time hooks (SessionStart) require a new session to take effect; PreToolUse / PostToolUse / UserPromptSubmit hooks become active on next event in this session."
 
-Also check for hooks referencing SweetClaude scripts (paths containing `hooks/sweetclaude/` or `${CLAUDE_PLUGIN_ROOT}/hooks/`) in `~/.claude/settings.json` that have no corresponding `file` entry in `hooks-manifest.json` (unrecognized hooks):
-> "settings.json has SweetClaude hook entries not in the manifest: {list}. These may be from a prior install or manually added. Review?"
+**7c: Strip stale hook registrations**
 
-Only flag — do not remove.
+Hooks present in `settings.json` or `.claude/settings.local.json` that no longer appear in `hooks-manifest.json` are STALE — typically because the hook was removed in a framework version bump (e.g., `version-bump.sh` was removed in v3.66.0 but its registration lingers in old projects).
+
+Scan both files for hook commands matching SweetClaude paths (`hooks/sweetclaude/` or `${CLAUDE_PLUGIN_ROOT}/hooks/`). For each, extract the hook script's basename and check whether `hooks-manifest.json` lists it as a `file` entry. If not present in the manifest → stale.
+
+```bash
+python3 - << 'PY'
+import json, os, tempfile, re
+_sc_root = os.environ.get('CLAUDE_PLUGIN_ROOT','')
+manifest_path = (os.path.join(_sc_root, 'hooks', 'hooks-manifest.json') if _sc_root
+                 else os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', 'hooks-manifest.json'))
+try:
+    manifest = json.load(open(manifest_path))
+except:
+    print('MANIFEST_MISSING')
+    raise SystemExit
+
+known_files = {h.get('file') for h in manifest.get('hooks', [])}
+
+def find_stale(settings_path):
+    try:
+        d = json.load(open(settings_path))
+    except:
+        return []
+    stale = []
+    for event, entries in (d.get('hooks') or {}).items():
+        for entry in entries:
+            for h in entry.get('hooks', []):
+                cmd = h.get('command', '') or ''
+                if 'hooks/sweetclaude/' not in cmd and '${CLAUDE_PLUGIN_ROOT}/hooks/' not in cmd:
+                    continue
+                base = cmd.rsplit('/', 1)[-1]
+                if base and base not in known_files:
+                    stale.append((event, base, cmd))
+    return stale
+
+for sp in [os.path.expanduser('~/.claude/settings.json'),
+           os.path.join(os.getcwd(), '.claude/settings.local.json')]:
+    if not os.path.exists(sp):
+        continue
+    s = find_stale(sp)
+    for event, base, cmd in s:
+        print(f"STALE|{sp}|{event}|{base}")
+PY
+```
+
+For each STALE entry: propose removal via AskUserQuestion (one entry at a time, or batched per settings file). On user approval, rewrite the settings file with the stale entries removed (atomic temp+rename).
+
+```bash
+python3 - << 'PY'
+import json, os, tempfile, sys
+# Args: settings_path event base (one stale entry to remove)
+settings_path, event, base = sys.argv[1:4]
+with open(settings_path) as f:
+    d = json.load(f)
+new_entries = []
+for entry in (d.get('hooks') or {}).get(event, []):
+    kept_hooks = [h for h in entry.get('hooks', []) if not h.get('command','').rsplit('/',1)[-1] == base]
+    if kept_hooks:
+        entry['hooks'] = kept_hooks
+        new_entries.append(entry)
+if new_entries:
+    d['hooks'][event] = new_entries
+else:
+    d['hooks'].pop(event, None)
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(settings_path), suffix='.tmp', delete=False) as tmp:
+    json.dump(d, tmp, indent=2)
+    tmp_name = tmp.name
+os.replace(tmp_name, settings_path)
+print('OK')
+PY
+```
 
 If `hooks-manifest.json` does not exist:
 > "hooks-manifest.json is missing from the hooks directory. This file should have been installed with SweetClaude. Run `install.sh` from the SweetClaude repo to restore it."
+
+**7d: Reconcile `framework.installed_version` with reality**
+
+`sweetclaude.yaml`'s `framework.installed_version` is written once during the `_migrate` consolidation and is not auto-updated thereafter. The authoritative source for the actually-installed plugin version is `~/.claude/plugins/installed_plugins.json`. If the two differ, the state file is stale.
+
+```bash
+python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
+import sys, yaml, json, os, tempfile
+sc_path = sys.argv[1]
+with open(sc_path) as f:
+    d = yaml.safe_load(f) or {}
+fw = d.get('framework', {})
+recorded = fw.get('installed_version')
+try:
+    p = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+    entries = [v for k, v in (p.get('plugins') or {}).items() if 'sweetclaude' in k.lower()]
+    actual = entries[0][0].get('version') if entries and entries[0] else None
+except Exception:
+    actual = None
+if actual and actual != recorded:
+    print(f'VERSION_DRIFT|recorded={recorded}|actual={actual}')
+    d.setdefault('framework', {})['installed_version'] = actual
+    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(sc_path), suffix='.tmp', delete=False) as tmp:
+        yaml.safe_dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        tmp_name = tmp.name
+    os.replace(tmp_name, sc_path)
+    print('UPDATED')
+else:
+    print('OK')
+PY
+```
+
+If output starts with `VERSION_DRIFT`, report:
+> "framework.installed_version was {recorded} but installed_plugins.json says {actual}. Updated sweetclaude.yaml to match reality."
+
+If `OK`, silent.
 
 ---
 
@@ -701,6 +779,21 @@ Do not modify or delete v3 files.
 No auto-fix. Report only.
 
 > "ID {id} appears in both the backlog and roadmap. This is a data integrity issue — resolve it manually by renaming one of the files."
+
+---
+
+## Step 14: Continue to bootstrap (no session restart required)
+
+When `session-preflight.sh` fires `emit_heal`, it instructs Claude NOT to invoke `sweetclaude:bootstrap` in this session. That instruction is meant to prevent bootstrap from running against a broken config. Once `fix-sweetclaude` has resolved the issues that triggered the heal (including any v4 storage lint repairs from Step 13), that instruction is stale.
+
+After completing the repair sequence above:
+
+1. Announce briefly: `"Configuration repaired. Continuing to bootstrap so drift detection and any pending state work can run in this session — no session restart required."`
+2. Invoke `sweetclaude:bootstrap` via the Skill tool.
+
+Bootstrap will run Steps 1–8 in this same session. Step 5b runs the v4 hard-stop check; Step 5c runs the registry-driven drift scan via the runner and presents the hard-demand prompt if drift is found. The user does NOT need to start a new Claude Code session for the new system to engage. The earlier "new session required" advice (Step 7b) applies only to hooks that fire on events ALREADY consumed earlier in this session (specifically `SessionStart`); UserPromptSubmit / PreToolUse / PostToolUse hooks that were added or removed by Step 7b/7c will pick up on their next event in this session without restart.
+
+Override the prior heal-context instruction: explicitly state that bootstrap is being invoked deliberately as a post-fix continuation.
 
 ---
 

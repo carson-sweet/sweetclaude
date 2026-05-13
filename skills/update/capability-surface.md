@@ -30,13 +30,19 @@ Only run if `.sweetclaude/` exists in the current project directory.
 
 Read `.sweetclaude/state/skills.yaml` if it exists.
 
-**Step 1 — schema migration:** If `skills.yaml` exists with `schema_version: 1`, migrate to v2 now:
-- `enabled: true` → `status: active`, `last_changed_at: {onboarded_at or today}`, `last_changed_by: migrated`
-- `enabled: false` with `onboarded_at` set → `status: paused`, `last_changed_at: {offboarded_at or onboarded_at or today}`, `last_changed_by: migrated`
-- `enabled: false` with `onboarded_at: ~` → `status: uninitialized`, `last_changed_at: ~`, `last_changed_by: ~`
-- Drop `onboarded_at` and `offboarded_at` fields; update `schema_version: 2`
-- Write atomically: write to `.sweetclaude/state/.skills.yaml.tmp`, then `mv .sweetclaude/state/.skills.yaml.tmp .sweetclaude/state/skills.yaml`
-- Report: "Migrated skills.yaml to schema v2."
+**Step 1 — schema migration:** If `skills.yaml` exists with `schema_version: 1`, invoke the registry-driven migration runner (BL-066 refactor):
+
+```bash
+RUNNER=~/.claude/scripts/sweetclaude/migrations/runner.py
+if [ -f "$RUNNER" ]; then
+  python3 "$RUNNER" --project-dir . --file skills.yaml
+  echo "Migrated skills.yaml to schema v2."
+else
+  echo "Migration runner not found at $RUNNER. Run /sweetclaude:update."
+fi
+```
+
+The registered handler `scripts/migrations/skills_yaml_v1_to_v2.py` owns the v1→v2 mapping. Same algorithm that previously lived inline here.
 
 **Step 2 — fill missing entries:** For `base_path`: read `.sweetclaude/artifact-privacy.yaml` → `categories.product.base_path`. If absent, use `.sweetclaude/artifacts/product`.
 

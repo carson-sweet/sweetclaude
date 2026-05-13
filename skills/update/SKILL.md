@@ -14,6 +14,39 @@ Fetch the latest SweetClaude and sync it to all installed locations.
 
 ---
 
+## Step -1: Pre-flight
+
+Ensure the versionless framework path is populated, clear any previous update decline (running `/sweetclaude:update` is explicit re-engagement), and emit the runner path for later steps.
+
+```bash
+if [ ! -f ~/.claude/scripts/sweetclaude/preflight.sh ]; then
+  IP=$(python3 -c "
+import json, os
+try:
+    d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
+    entries = [e for versions in d.get('plugins', {}).values()
+               for e in versions if e.get('scope') == 'user']
+    entries.sort(key=lambda e: e.get('lastUpdated', ''), reverse=True)
+    for e in entries:
+        ip = e.get('installPath', '')
+        if ip and os.path.isdir(os.path.join(ip, 'scripts')):
+            print(ip)
+            break
+except Exception:
+    pass
+" 2>/dev/null)
+  if [ -n "$IP" ] && [ -d "$IP/scripts" ]; then
+    mkdir -p ~/.claude/scripts/sweetclaude
+    rsync -a "$IP/scripts/" ~/.claude/scripts/sweetclaude/ 2>/dev/null || true
+  fi
+fi
+eval "$(bash ~/.claude/scripts/sweetclaude/preflight.sh --from-update 2>/dev/null)"
+```
+
+`DECLINE_CLEARED=true` if the project's `framework.update.declined` was cleared. `RUNNER` is set for use in Step 6b. If the user picks "Not now" later, `declined` will be re-set to the specific version declined (per Gap #1's version-aware decline rule).
+
+---
+
 ## Step 1: Read current install state
 
 Read `~/.claude/plugins/installed_plugins.json` and find the `sweetclaude@sweetclaude` entry. Extract:
@@ -105,7 +138,7 @@ git -C $SOURCE_DIR log --oneline -5
 cat $SOURCE_DIR/package.json
 ```
 
-If EFFECTIVE_SHA matches the installed `gitCommitSha`: "Already up to date." Clean up temp dir if used. Stop.
+If EFFECTIVE_SHA matches the installed `gitCommitSha`: "Already up to date." Clean up temp dir if used. **Then jump to Step 6b** — even when the framework is up to date, the current project may still have pending schema migrations from a previous update that wasn't completed (e.g., user updated in another project, then opened this one without restarting bootstrap). Do not stop.
 
 Otherwise, show what changed since the installed version:
 
@@ -249,9 +282,12 @@ if [ -d "$HOME/.claude/skills/sweetclaude" ]; then
   rsync -a --delete $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/
 fi
 
-# Scripts → plugin cache (contains migration scripts and other utilities)
+# Scripts → plugin cache AND versionless ~/.claude/scripts/sweetclaude/.
+# The versionless path is what skills reference (no installPath lookup needed).
 if [ -d "$SOURCE_DIR/scripts" ]; then
   rsync -a --delete $SOURCE_DIR/scripts/ {installPath}/scripts/
+  mkdir -p ~/.claude/scripts/sweetclaude
+  rsync -a --delete $SOURCE_DIR/scripts/ ~/.claude/scripts/sweetclaude/
 fi
 
 # Framework dirs → ~/.claude/
@@ -269,6 +305,26 @@ ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNIN
 
 ---
 
+## Step 4b: Reconcile SweetClaude hook entries in settings.json
+
+Strip broken `${CLAUDE_PLUGIN_ROOT}` literals (from pre-3.68.2 installs) and stale plugin-version paths from `~/.claude/settings.json`. The three preflight hooks themselves are plugin-native (auto-loaded from `hooks/hooks.json`) and need no settings.json entry.
+
+```bash
+HOOK_RECONCILE_LOG=$(mktemp -t sc-hook-reconcile.XXXXXX) || HOOK_RECONCILE_LOG=/tmp/sc-hook-reconcile.log
+if ! python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py >"$HOOK_RECONCILE_LOG" 2>&1; then
+  echo "warning: hook reconciliation failed — see $HOOK_RECONCILE_LOG"
+fi
+cat "$HOOK_RECONCILE_LOG"
+```
+
+Read `$HOOK_RECONCILE_LOG`. If it contains any `cleaned:` line, sum the counts across buckets and include `✓ Hooks: reconciled N stale/broken entries in ~/.claude/settings.json` in the Step 6c success report (where N is the total). Also add this line to the report's tail:
+
+> → Restart Claude Code to stop the in-session `${CLAUDE_PLUGIN_ROOT}` error from old settings.json entries. The hooks themselves load from the plugin's hooks.json and are unaffected.
+
+If `$HOOK_RECONCILE_LOG` contains only `ok: hooks already up to date`, omit both lines entirely.
+
+---
+
 ## Step 5: Update plugin metadata
 
 Update `~/.claude/plugins/installed_plugins.json`:
@@ -282,7 +338,7 @@ Update `~/.claude/plugins/installed_plugins.json`:
 
 ---
 
-## Step 6: Clean up and report
+## Step 6: Clean up
 
 If a temp directory was used, remove it:
 ```bash
@@ -296,7 +352,117 @@ diff -rq $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/ 2>/dev/null
 diff -rq $SOURCE_DIR/scripts/ {installPath}/scripts/ 2>/dev/null
 ```
 
-Report:
+Continue to Step 6b. The user-facing success report is deferred until Step 6b confirms project state is coherent — reporting "updated" before the drift verdict is what caused BUG-002.
+
+---
+
+## Step 6b: Project-state drift detection and migration
+
+Only run if `.sweetclaude/state/sweetclaude.yaml` exists in the current project directory — skip silently otherwise. (Update can be run from any directory; this step only applies when run from inside a SweetClaude project.)
+
+After the framework sync, the registry on disk may declare schema versions newer than this project's state files. Surface it immediately — don't make the user bounce sessions.
+
+Parse the runner's stdout directly. Do NOT read `pending-drift-decision.yaml` — that marker is written by `drift-gate.sh` at session start and represents pre-update state. The fresh stdout from the just-synced runner is authoritative for this step.
+
+```bash
+DRIFT_COUNT=0
+CASE=A
+DRIFT_MARKER=".sweetclaude/state/pending-drift-decision.yaml"
+if [ -f .sweetclaude/state/sweetclaude.yaml ] && [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
+  DRIFT_OUTPUT=$(python3 "$RUNNER" --project-dir . --report-drift-for-skill 2>/dev/null)
+  DRIFT_COUNT=$(printf '%s\n' "$DRIFT_OUTPUT" | grep '^DRIFT_COUNT=' | cut -d= -f2)
+  [ -z "$DRIFT_COUNT" ] && DRIFT_COUNT=0
+  if printf '%s\n' "$DRIFT_OUTPUT" | grep -q '|chain=broken'; then
+    CASE=B
+  fi
+fi
+echo "CASE=$CASE"
+echo "DRIFT_COUNT=$DRIFT_COUNT"
+```
+
+If `DRIFT_COUNT` is 0: remove any stale marker left over from this session's earlier drift-gate scan, print the success report (Step 6c template below) with `✓ Project: clean` line, then continue to Step 7.
+
+```bash
+if [ "$DRIFT_COUNT" = "0" ]; then
+  rm -f "$DRIFT_MARKER" 2>/dev/null || true
+fi
+```
+
+If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past the project's state. Migrate or remove — no "Not now," no silent proceed. This is the locked Gap #7 rule.
+
+**Case A (CASE=A — all chains ok):** present via **AskUserQuestion** (single-select, no "Something else"):
+
+> "Framework updated to v{new_version}. {DRIFT_COUNT} SweetClaude state file(s) in this project need migration before SweetClaude can continue. Would you like to do this now?"
+>
+> Options:
+> - **Migrate now** — invoke `sweetclaude:_migrate` to bring this project up to current.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
+
+**Case B (CASE=B — at least one chain broken):** present via **AskUserQuestion** (single-select):
+
+> "Framework updated to v{new_version}, but this project's SweetClaude state files are too old for automatic migration (out of framework support window). How would you like to proceed?"
+>
+> Options:
+> - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:adopt` against a fresh state.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
+
+If the user picks **Re-onboard from scratch** (Case B only):
+
+```bash
+TS=$(date -u +%Y%m%d-%H%M%S)
+LEGACY=".sweetclaude.legacy/$TS"
+mkdir -p ".sweetclaude.legacy"
+if [ -d .sweetclaude ]; then
+  mv .sweetclaude "$LEGACY"
+fi
+python3 ~/.claude/scripts/sweetclaude/maintenance/archive-sweetclaude-dir.py "$LEGACY"
+echo "Moved existing SweetClaude content to $LEGACY/ — adopt will use it as reference, not auto-migrate."
+```
+
+Then invoke `sweetclaude:adopt`. Stop (adopt drives the next session itself). Do NOT continue to Step 6c — adopt owns the next session entirely.
+
+If the user picks **Remove SweetClaude** (either case): invoke `sweetclaude:purge`. Stop. Do NOT continue to Step 6c.
+
+If the user picks **Migrate now** (Case A only): invoke `sweetclaude:_migrate`. When it returns, re-run the drift check:
+
+```bash
+POST_MIGRATE_COUNT=0
+if [ -n "$RUNNER" ] && [ -f "$RUNNER" ]; then
+  POST_OUTPUT=$(python3 "$RUNNER" --project-dir . --report-drift-for-skill 2>/dev/null)
+  POST_MIGRATE_COUNT=$(printf '%s\n' "$POST_OUTPUT" | grep '^DRIFT_COUNT=' | cut -d= -f2)
+  [ -z "$POST_MIGRATE_COUNT" ] && POST_MIGRATE_COUNT=0
+fi
+echo "POST_MIGRATE_COUNT=$POST_MIGRATE_COUNT"
+```
+
+If `POST_MIGRATE_COUNT` is 0: clean state. Print the success report (Step 6c template below) with `✓ Project: clean (verified post-migrate)` line, then continue to Step 7.
+
+If `POST_MIGRATE_COUNT > 0`: do NOT print the success report. The framework files were synced, but the project is not in a coherent post-update state. Print the halt diagnostic instead:
+
+```
+SweetClaude update PARTIAL.
+═══════════════════════════
+
+✓ Version:    {old_version} → {new_version}  (framework synced)
+✗ Project:    {POST_MIGRATE_COUNT} file(s) still drifted after _migrate
+
+This usually means:
+  (a) user picked Rollback or Leave-as-is in _migrate
+  (b) a registered migration is missing its handler (chain broken)
+  (c) a handler ran but didn't bump versions correctly
+
+Files still drifted:
+  {Print the FINDING lines from $POST_OUTPUT}
+
+→ The framework is at v{new_version}. Project state is incomplete.
+  The next session's drift-gate will surface this with full diagnostics.
+```
+
+Stop. Do NOT continue to Step 7.
+
+---
+
+## Step 6c: Success report (only reached when project state is verified clean)
 
 ```
 SweetClaude updated.
@@ -305,10 +471,18 @@ SweetClaude updated.
 ✓ Version:    {old_version} → {new_version}  (or same if unchanged)
 ✓ Commit:     {old_sha_short} → {new_sha_short}
 ✓ Files:      {total count} synced across skills, rules, hooks, config, agents
+✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
+✓ Project:    {clean | clean (verified post-migrate)}
 
 → New Claude Code sessions in any project will use the updated version.
   Current sessions keep the old version until restarted.
 ```
+
+The `✓ Project:` line wording depends on which Step 6b exit path was taken:
+- DRIFT_COUNT=0 on first check → `clean`
+- _migrate ran and POST_MIGRATE_COUNT=0 → `clean (verified post-migrate)`
+
+Print exactly one of those two; do not print the literal text `clean OR clean (verified post-migrate)`. After printing the template, continue to Step 7.
 
 ---
 
@@ -377,37 +551,23 @@ Use **AskUserQuestion** (single-select):
 
 Only run if `.sweetclaude/` exists in the current project directory — skip silently otherwise.
 
-Ensure the plan directory exists and `plansDirectory` is set in both project settings files:
+Ensure the plan directory exists and `plansDirectory` is set in both project settings files. Logic lives in a helper script (same reason as Step 0's `clear-decline.py` — no nested heredocs):
 
 ```bash
-if [ -d ".sweetclaude" ]; then
-  mkdir -p .sweetclaude/plans
-  python3 - << 'PY'
-import json, os, tempfile
-os.makedirs('.claude', exist_ok=True)
-for path in ['.claude/settings.json', '.claude/settings.local.json']:
-    try:
-        d = json.load(open(path))
-    except:
-        d = {}
-    if d.get('plansDirectory') != '.sweetclaude/plans':
-        d['plansDirectory'] = '.sweetclaude/plans'
-        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
-            json.dump(d, tmp, indent=2)
-            tmp_name = tmp.name
-        os.replace(tmp_name, path)
-PY
-fi
+python3 ~/.claude/scripts/sweetclaude/maintenance/configure-plan-dir.py .
 ```
 
 ---
 
-## Step 8: Migrate existing project state
+## Step 8: Project-state migration is run inline (see Step 6b)
 
-Read [project-migration.md](project-migration.md) and execute it in full.
+The current project is migrated inline by Step 6b right after the framework sync — no session bounce required. Other projects the user opens will hit the same hard demand via `bootstrap` Step 5b on their next entry.
 
-It detects `.sweetclaude/` state, creates a pre-migration backup, patches the CLAUDE.md auto-fire instruction if missing, and migrates `phase.yaml` and `skills.yaml` from schema v1 to v2 if needed.
+Rationale (Gap #7, locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md`):
 
+- Framework sync and project-state migration remain logically independent — if migration fails, the framework sync stays successful (the user can still open other projects on the new framework).
+- Every project migrates by the same mechanism — Step 6b here, Step 5b in bootstrap — both routing through `_migrate`.
+- No "update the framework, defer migration" path. Migrate or remove.
 
 ---
 

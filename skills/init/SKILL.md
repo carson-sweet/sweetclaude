@@ -262,7 +262,7 @@ If no conflicts are found, proceed immediately. If FATAL conflicts are found, re
 ## Step 8: Run generate-session-state
 
 ```bash
-bash ~/.claude/plugins/cache/sweetclaude/sweetclaude/1.0.0/hooks/generate-session-state.sh 2>/dev/null || \
+bash ~/.claude/hooks/sweetclaude/generate-session-state.sh 2>/dev/null || \
 bash "$(git rev-parse --show-toplevel 2>/dev/null)/hooks/generate-session-state.sh" 2>/dev/null || \
 echo "SESSION_STATE_SKIPPED"
 ```
