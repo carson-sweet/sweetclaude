@@ -11,6 +11,15 @@ state_files:
     description: "Active phase, work item, version stage, deference level"
     current_version: 2
     backup_required: true
+    # Consolidation metadata — read by runner.py scan_drift().
+    # When phase.yaml is absent AND the file named by expected_absent_when.target_file_exists
+    # is present, the runner treats this entry as intentionally absent (needs_migration=False)
+    # instead of as drift. Eliminates the false-positive drift loop on unified-state projects
+    # where phase.yaml was consolidated into sweetclaude.yaml in v3.18+. (BUG-004.)
+    # The legacy migration handler stays registered for any project still on v1 with phase.yaml on disk.
+    consolidated_into: sweetclaude.yaml
+    expected_absent_when:
+      target_file_exists: sweetclaude.yaml
     migrations:
       - from: 1
         to: 2

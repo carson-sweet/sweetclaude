@@ -651,13 +651,27 @@ class MigrationRunner:
             if on_disk is None:
                 # File doesn't exist. Flag as file_missing if migrations are defined
                 # (the file was expected to be present). Can't migrate without source data.
+                #
+                # Consolidation check (BUG-004): if this entry is marked consolidated_into
+                # another file AND that file exists on disk, the absence is intentional
+                # (the file was absorbed into the target in an earlier framework version).
+                # Treat as needs_migration=False so it doesn't surface as drift on every
+                # session of every healthy unified-state project.
+                needs = bool(migrations)
+                if needs:
+                    consolidated_target = entry.get("consolidated_into")
+                    expected_absent = entry.get("expected_absent_when") or {}
+                    target_file_key = expected_absent.get("target_file_exists")
+                    if consolidated_target and target_file_key:
+                        if self._state_file_path(target_file_key).exists():
+                            needs = False
                 plans.append(
                     FilePlan(
                         file_key=file_key,
                         file_path=file_path,
                         on_disk_version=None,
                         target_version=target,
-                        needs_migration=bool(migrations),
+                        needs_migration=needs,
                         file_missing=True,
                         entry_type=entry_type,
                     )
