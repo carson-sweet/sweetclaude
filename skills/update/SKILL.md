@@ -124,11 +124,8 @@ Before comparing versions for the standard stable update, check if any prereleas
 
 ```bash
 INSTALLED_VERSION=$(python3 -c "
-import yaml, os
+import json, os
 try:
-    d = yaml.safe_load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json'))) or {}
-    # Note: installed_plugins.json is JSON, not YAML. Use json module:
-    import json
     d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
     for plugin_key, versions in d.get('plugins', {}).items():
         if 'sweetclaude' in plugin_key.lower():
@@ -175,9 +172,16 @@ Options:
 
 On **Install the prerelease**:
 ```bash
-# Re-fetch source at the prerelease tag specifically (overrides Step 2a/2b result)
+# Ensure TMPDIR is set — Step 2a (local repo path) doesn't create one, so we
+# need a fresh tempdir here regardless of which Step 2 path ran.
+TMPDIR="${TMPDIR:-$(mktemp -d)}"
+mkdir -p "$TMPDIR"
 rm -rf "$TMPDIR/sweetclaude"
+
+# Resolve the repo URL: prefer the source dir's remote, fall back to canonical GitHub URL.
 REPO_URL=$(git -C "$SOURCE_DIR" config --get remote.origin.url 2>/dev/null || echo "https://github.com/carson-sweet/sweetclaude.git")
+
+# Re-fetch source at the prerelease tag specifically (overrides Step 2a/2b result).
 git clone --branch "$PRERELEASE_TAG" --depth 1 "$REPO_URL" "$TMPDIR/sweetclaude"
 SOURCE_DIR="$TMPDIR/sweetclaude"
 PRERELEASE_INSTALL=true
