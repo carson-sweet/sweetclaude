@@ -271,15 +271,19 @@ ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNIN
 
 ---
 
-## Step 4b: Reconcile required global hooks
+## Step 4b: Reconcile SweetClaude hook entries in settings.json
 
-After syncing, reconcile required global hooks in `~/.claude/settings.json`. The script strips broken `${CLAUDE_PLUGIN_ROOT}` literals (from pre-3.68.2 installs) and stale plugin-version paths, then re-registers required globals with absolute paths from the new install. Idempotent if already correct.
+Strip broken `${CLAUDE_PLUGIN_ROOT}` literals (from pre-3.68.2 installs) and stale plugin-version paths from `~/.claude/settings.json`. The three preflight hooks themselves are plugin-native (auto-loaded from `hooks/hooks.json`) and need no settings.json entry.
 
 ```bash
-python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
+HOOK_RECONCILE_LOG=$(mktemp -t sc-hook-reconcile.XXXXXX) || HOOK_RECONCILE_LOG=/tmp/sc-hook-reconcile.log
+if ! python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py >"$HOOK_RECONCILE_LOG" 2>&1; then
+  echo "warning: hook reconciliation failed — see $HOOK_RECONCILE_LOG"
+fi
+cat "$HOOK_RECONCILE_LOG"
 ```
 
-Capture stdout. If the output contains `cleaned:` or `registered:` lines, surface a summary in the Step 6 report (e.g. `Hooks: reconciled N entries in ~/.claude/settings.json`). If the output is `ok: hooks already up to date`, no surface needed.
+Read `$HOOK_RECONCILE_LOG`. If it contains a `cleaned:` line, include `✓ Hooks: reconciled N stale/broken entries in ~/.claude/settings.json` in the Step 6 report (where N is the total count). If it contains only `ok: hooks already up to date`, omit the line entirely.
 
 ---
 
@@ -319,6 +323,7 @@ SweetClaude updated.
 ✓ Version:    {old_version} → {new_version}  (or same if unchanged)
 ✓ Commit:     {old_sha_short} → {new_sha_short}
 ✓ Files:      {total count} synced across skills, rules, hooks, config, agents
+✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
 
 → New Claude Code sessions in any project will use the updated version.
   Current sessions keep the old version until restarted.

@@ -1,13 +1,13 @@
 {
   "schema_version": 2,
-  "description": "Declares every hook script and whether it must be registered in settings.json. Used by session-preflight.sh to detect missing or extra registrations. scope: global = registered in ~/.claude/settings.json; scope: project = registered in .claude/settings.local.json via sweetclaude:on. command_path: the ${CLAUDE_PLUGIN_ROOT}-rooted path used when registering this hook in settings.json.",
+  "description": "Declares every hook script and how it is registered. scope: plugin-native = declared in hooks/hooks.json and auto-loaded by Claude Code's plugin system (the variable ${CLAUDE_PLUGIN_ROOT} resolves there); scope: project = registered in .claude/settings.local.json via sweetclaude:on; scope: global = registered in ~/.claude/settings.json (rare — only for hooks that cannot be plugin-native). command_path: the ${CLAUDE_PLUGIN_ROOT}-rooted path used when registering this hook.",
   "hooks": [
     {
       "file": "session-preflight.sh",
       "event": "SessionStart",
       "matcher": "startup",
       "required": true,
-      "scope": "global",
+      "scope": "plugin-native",
       "purpose": "Loads session state, validates hook registrations, generates session-state.yaml",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"
     },
@@ -16,7 +16,7 @@
       "event": "SessionStart",
       "matcher": "startup",
       "required": true,
-      "scope": "global",
+      "scope": "plugin-native",
       "purpose": "Detects artifact-format drift at session start; writes pending-drift-decision.yaml and emits AskUserQuestion instruction if drift found",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/drift-gate.sh"
     },
@@ -25,7 +25,7 @@
       "event": "PreToolUse",
       "matcher": "Skill",
       "required": true,
-      "scope": "global",
+      "scope": "plugin-native",
       "purpose": "Blocks sweetclaude:* skill invocations until bootstrap has run this session and any pending drift decision is resolved",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/master-preflight.sh"
     },

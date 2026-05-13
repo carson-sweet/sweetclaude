@@ -351,16 +351,26 @@ Determine the current project version:
 - If `.sweetclaude/state/phase.yaml` exists: v1
 - Otherwise: unknown
 
-**7a: Reconcile required global hooks**
+**7a: Reconcile SweetClaude hook entries in settings.json**
 
-Delegate to the maintenance script — it scopes cleanup to SweetClaude-owned commands, strips broken `${CLAUDE_PLUGIN_ROOT}` literals and stale plugin-version paths, and re-registers required globals with absolute paths from the current install.
+After v3.68.2 the three preflight hooks (session-preflight, drift-gate, master-preflight) are plugin-native — Claude Code loads them from `hooks/hooks.json` automatically. The maintenance script's job is to keep `~/.claude/settings.json` clean of broken `${CLAUDE_PLUGIN_ROOT}` literals and stale plugin-version paths left over from earlier versions.
+
+The script lives at `~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py` after a `sweetclaude:update` has run. Plugin-marketplace installs that have never run update only have it under the plugin cache — try both.
 
 ```bash
-python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
+SCRIPT=~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
+if [ ! -f "$SCRIPT" ]; then
+  SCRIPT=$(find ~/.claude/plugins/cache/sweetclaude -type f -name 'ensure-global-hooks.py' 2>/dev/null | head -1)
+fi
+if [ -z "$SCRIPT" ] || [ ! -f "$SCRIPT" ]; then
+  echo "warning: ensure-global-hooks.py not found; skipping hook reconciliation" >&2
+elif ! python3 "$SCRIPT"; then
+  echo "warning: hook reconciliation failed — see error above" >&2
+fi
 ```
 
-Surface the script's output to the user. If it printed `cleaned:` or `registered:` lines, follow up with:
-> "Global hooks reconciled in ~/.claude/settings.json. **You need to start a new Claude Code session for these changes to take effect.** Close this session and open a new one."
+Surface the script's output to the user. If it printed `cleaned:` lines (broken or stale entries removed), follow up with:
+> "Cleaned up stale entries in ~/.claude/settings.json. **Restart Claude Code for these changes to take effect** — settings.json is read at session start. The hooks themselves are registered via the plugin's hooks.json and continue working."
 
 If it printed `ok: hooks already up to date`, no further action needed.
 
