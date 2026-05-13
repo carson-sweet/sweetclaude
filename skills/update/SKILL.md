@@ -283,7 +283,11 @@ fi
 cat "$HOOK_RECONCILE_LOG"
 ```
 
-Read `$HOOK_RECONCILE_LOG`. If it contains a `cleaned:` line, include `✓ Hooks: reconciled N stale/broken entries in ~/.claude/settings.json` in the Step 6 report (where N is the total count). If it contains only `ok: hooks already up to date`, omit the line entirely.
+Read `$HOOK_RECONCILE_LOG`. If it contains any `cleaned:` line, sum the counts across buckets and include `✓ Hooks: reconciled N stale/broken entries in ~/.claude/settings.json` in the Step 6 report (where N is the total). Also add this line to the report's tail:
+
+> → Restart Claude Code to stop the in-session `${CLAUDE_PLUGIN_ROOT}` error from old settings.json entries. The hooks themselves load from the plugin's hooks.json and are unaffected.
+
+If `$HOOK_RECONCILE_LOG` contains only `ok: hooks already up to date`, omit both lines entirely.
 
 ---
 
