@@ -271,13 +271,15 @@ ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNIN
 
 ---
 
-## Step 4b: Ensure required global hooks are registered
+## Step 4b: Reconcile required global hooks
 
-After syncing, register any required global hooks that were added in this version but aren't yet in `~/.claude/settings.json`. Handles the upgrade path from older versions — idempotent if already registered.
+After syncing, reconcile required global hooks in `~/.claude/settings.json`. The script strips broken `${CLAUDE_PLUGIN_ROOT}` literals (from pre-3.68.2 installs) and stale plugin-version paths, then re-registers required globals with absolute paths from the new install. Idempotent if already correct.
 
 ```bash
 python3 ~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
 ```
+
+Capture stdout. If the output contains `cleaned:` or `registered:` lines, surface a summary in the Step 6 report (e.g. `Hooks: reconciled N entries in ~/.claude/settings.json`). If the output is `ok: hooks already up to date`, no surface needed.
 
 ---
 
