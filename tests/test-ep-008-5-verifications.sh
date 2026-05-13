@@ -67,7 +67,7 @@ open(p, 'w').write(yaml.safe_dump(d, default_flow_style=False, sort_keys=False))
     output=$(cd "$tmp" && bash -c '
 PRODUCT_BASE=$(python3 -c "
 import yaml, pathlib
-p = pathlib.Path(\".sweetclaude/state/artifact-privacy.yaml\")
+p = pathlib.Path(\".sweetclaude/artifact-privacy.yaml\")
 if p.exists():
     d = yaml.safe_load(p.read_text()) or {}
     base = d.get(\"categories\", {}).get(\"product\", {}).get(\"base_path\", \"\")
@@ -144,7 +144,7 @@ scenario_b_bootstrap_hardstop_silent() {
     output=$(cd "$tmp" && bash -c '
 PRODUCT_BASE=$(python3 -c "
 import yaml, pathlib
-p = pathlib.Path(\".sweetclaude/state/artifact-privacy.yaml\")
+p = pathlib.Path(\".sweetclaude/artifact-privacy.yaml\")
 if p.exists():
     d = yaml.safe_load(p.read_text()) or {}
     base = d.get(\"categories\", {}).get(\"product\", {}).get(\"base_path\", \"\")
@@ -286,7 +286,7 @@ scenario_d_migration_guards_fire() {
     output=$(cd "$tmp" && bash -c '
 PRODUCT_BASE=$(python3 -c "
 import yaml, pathlib
-p = pathlib.Path(\".sweetclaude/state/artifact-privacy.yaml\")
+p = pathlib.Path(\".sweetclaude/artifact-privacy.yaml\")
 if p.exists():
     d = yaml.safe_load(p.read_text()) or {}
     base = d.get(\"categories\", {}).get(\"product\", {}).get(\"base_path\", \"\")
@@ -337,7 +337,7 @@ scenario_e_migration_guards_silent() {
     output=$(cd "$tmp" && bash -c '
 PRODUCT_BASE=$(python3 -c "
 import yaml, pathlib
-p = pathlib.Path(\".sweetclaude/state/artifact-privacy.yaml\")
+p = pathlib.Path(\".sweetclaude/artifact-privacy.yaml\")
 if p.exists():
     d = yaml.safe_load(p.read_text()) or {}
     base = d.get(\"categories\", {}).get(\"product\", {}).get(\"base_path\", \"\")
@@ -371,8 +371,7 @@ echo "GUARD_NOT_FIRED"
 # ── Run scenarios ───────────────────────────────────────────────────────────
 
 echo "=== EP-008.5 verifications ==="
-echo "(Bootstrap hard-stop, counter recovery, migration guards in 3 skills.)"
-echo "(SKIPPED — see BUG-006: project-gh-import-issues, project-gh-sync-issues lack guards.)"
+echo "(Bootstrap hard-stop, counter recovery, migration guards across 5 skills.)"
 echo "(NOT TESTABLE HERE — interactive AskUserQuestion paths in migrate skill.)"
 
 scenario_a_bootstrap_hardstop_fires
@@ -380,6 +379,27 @@ scenario_b_bootstrap_hardstop_silent
 scenario_c_counter_drift_repair
 scenario_d_migration_guards_fire
 scenario_e_migration_guards_silent
+
+# Scenario F: confirm all 5 skills that should have migration guards do.
+# The guard text is identical across skills (verified by source-of-truth diff).
+echo ""
+echo "=== Scenario F: All 5 skills with migration guards have the canonical block ==="
+for skill_path in \
+    "$REPO_ROOT/skills/project-backlog/SKILL.md" \
+    "$REPO_ROOT/skills/project-issues/SKILL.md" \
+    "$REPO_ROOT/skills/project-backlog-triage/SKILL.md" \
+    "$REPO_ROOT/skills/project-gh-import-issues/SKILL.md" \
+    "$REPO_ROOT/skills/project-gh-sync-issues/SKILL.md"; do
+    skill_name=$(basename "$(dirname "$skill_path")")
+    # Guard block presence: must mention MIGRATION GUARD and the canonical V3_FILES check
+    if grep -q "^## MIGRATION GUARD" "$skill_path" && \
+       grep -q "V3_FILES=.*find.*BL-\*\.md" "$skill_path" && \
+       grep -q "Run: /sweetclaude:migrate" "$skill_path"; then
+        pass "$skill_name has canonical MIGRATION GUARD block"
+    else
+        fail "$skill_name missing or has incomplete MIGRATION GUARD"
+    fi
+done
 
 echo ""
 if [ "$FAILED" -gt 0 ]; then

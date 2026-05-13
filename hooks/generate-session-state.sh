@@ -3,6 +3,16 @@
 # SweetClaude Session State Generator
 # Builds .sweetclaude/state/session-state.yaml from constituent state files.
 # Called by: session-preflight.sh (sync at startup), state-regenerator.sh (background after writes)
+#
+# ── paths.product_base contract (DEBT-002) ────────────────────────────────
+# Authoritative source: .sweetclaude/artifact-privacy.yaml → categories.product.base_path
+# Derived snapshot:     .sweetclaude/state/session-state.yaml → paths.product_base
+#
+# This script READS from artifact-privacy.yaml and WRITES to session-state.yaml.
+# NEVER write back to artifact-privacy.yaml from here — that file is the source
+# of truth and is mutated only by sweetclaude:setup, sweetclaude:migrate, and
+# explicit user action. session-state.yaml is regenerated every session and any
+# divergence between the two is a bug (caught by _health Step 3a).
 
 PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
 if [ -z "$PROJECT_DIR" ]; then exit 0; fi

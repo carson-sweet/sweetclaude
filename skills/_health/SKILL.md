@@ -145,3 +145,34 @@ else:
 ```
 
 Surface any findings to the caller. If invoked from `big-picture` or `project-backlog-triage`, print findings before the skill's normal output.
+
+## Step 3a: product_base source-of-truth drift check (DEBT-002)
+
+`paths.product_base` is recorded in two places: `.sweetclaude/artifact-privacy.yaml` (authoritative) and `.sweetclaude/state/session-state.yaml` (derived snapshot). They MUST match. If they diverge, a skill made a decision based on stale session-state — surface it.
+
+```python
+import pathlib, yaml
+
+privacy_path = pathlib.Path('.sweetclaude/artifact-privacy.yaml')
+session_path = pathlib.Path('.sweetclaude/state/session-state.yaml')
+mismatch = None
+
+if privacy_path.exists() and session_path.exists():
+    try:
+        privacy = yaml.safe_load(privacy_path.read_text()) or {}
+        session = yaml.safe_load(session_path.read_text()) or {}
+        authoritative = (privacy.get('categories') or {}).get('product', {}).get('base_path')
+        snapshot = (session.get('paths') or {}).get('product_base')
+        if authoritative and snapshot and authoritative.rstrip('/') != snapshot.rstrip('/'):
+            mismatch = (authoritative, snapshot)
+    except yaml.YAMLError:
+        pass
+
+if mismatch:
+    print(f"## product_base divergence")
+    print(f"- artifact-privacy.yaml (authoritative): {mismatch[0]}")
+    print(f"- session-state.yaml (snapshot):        {mismatch[1]}")
+    print(f"- Fix: re-run the session-state regen hook (or open a new session).")
+```
+
+Surface the divergence inline if present. Non-blocking — informational.

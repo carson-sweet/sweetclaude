@@ -119,7 +119,7 @@ schema drift after that point.
 # Resolve product_base from artifact-privacy.yaml; fall back to .sweetclaude/product
 PRODUCT_BASE=$(python3 -c "
 import yaml, pathlib
-p = pathlib.Path('.sweetclaude/state/artifact-privacy.yaml')
+p = pathlib.Path('.sweetclaude/artifact-privacy.yaml')
 if p.exists():
     d = yaml.safe_load(p.read_text()) or {}
     base = d.get('categories', {}).get('product', {}).get('base_path', '')

@@ -48,7 +48,7 @@ STATUS_REMAP = {
 
 def resolve_product_base(project_dir: pathlib.Path) -> pathlib.Path:
     """Read artifact-privacy.yaml; fall back to .sweetclaude/product."""
-    privacy = project_dir / ".sweetclaude" / "state" / "artifact-privacy.yaml"
+    privacy = project_dir / ".sweetclaude" / "artifact-privacy.yaml"
     if privacy.exists():
         try:
             d = yaml.safe_load(privacy.read_text()) or {}
@@ -216,8 +216,57 @@ def _build_body(body: str, fm: dict) -> str:
     return body_text
 
 
+def _check_already_migrated(project_dir: pathlib.Path) -> dict | None:
+    """Idempotency guard (BUG-005): refuse to overwrite a populated v4 state.
+
+    If installed_version is already 4.x AND docs/product/backlog/INDEX.md has
+    non-zero counters, re-running execute would clobber the INDEX with a
+    new empty one (because counters start at 0 each run). That's the
+    half-state recovery hazard. Refuse and direct the user to the right tool.
+    """
+    sc_path = project_dir / ".sweetclaude" / "state" / "sweetclaude.yaml"
+    if not sc_path.exists():
+        return None
+    try:
+        sc = yaml.safe_load(sc_path.read_text()) or {}
+    except yaml.YAMLError:
+        return None
+    installed = str((sc.get("framework") or {}).get("installed_version", ""))
+    if not installed.startswith("4."):
+        return None
+    index_path = project_dir / "docs" / "product" / "backlog" / "INDEX.md"
+    if not index_path.exists():
+        return None
+    raw = index_path.read_text()
+    if "---" not in raw:
+        return None
+    try:
+        fm = yaml.safe_load(raw.split("---", 2)[1]) or {}
+    except yaml.YAMLError:
+        return None
+    counters = fm.get("counters") or {}
+    total = sum(v for v in counters.values() if isinstance(v, int))
+    if total <= 0:
+        return None
+    return {
+        "error": "already-migrated",
+        "installed_version": installed,
+        "index_counter_sum": total,
+        "message": (
+            f"Project is already at installed_version={installed} with a populated "
+            f"INDEX.md ({total} entries). Re-running execute would overwrite the "
+            f"existing INDEX with empty counters. If a previous migration was "
+            f"interrupted and you need to clean up residual v3 BL files, run "
+            f"`migrate-v3-to-v4.py cleanup-v3-files` instead."
+        ),
+    }
+
+
 def execute(project_dir: pathlib.Path, include_done: bool) -> dict:
     """Write all migrated files. Return {created_paths, migration_map, counters}."""
+    guard = _check_already_migrated(project_dir)
+    if guard:
+        return guard
     plan = build_plan(project_dir, include_done)
     today = datetime.date.today().isoformat()
 
@@ -367,19 +416,32 @@ def verify(project_dir: pathlib.Path, created_paths: list[str]) -> dict:
 
 
 def finalize(project_dir: pathlib.Path) -> dict:
-    """Step 8 (non-interactive parts) — bump artifact-privacy.yaml and installed_version."""
-    privacy_path = project_dir / ".sweetclaude" / "state" / "artifact-privacy.yaml"
+    """Step 8 (non-interactive parts) — bump installed_version and product_base.
+
+    BUG-005 reordering: write sweetclaude.yaml FIRST, then artifact-privacy.yaml.
+    If a crash interrupts between the two writes, the half-state is:
+      - installed_version: 4.0.0 (project is "v4")
+      - product_base:      still old (pre-migration)
+    Bootstrap then sees PLUGIN_IS_V4 && !PROJECT_NOT_V4 — no hard-stop fires.
+    The user can re-run cleanup-v3-files to finish. This is strictly safer
+    than the previous order, where a crash between writes produced
+    privacy=new + installed_version=old → bootstrap hard-stop loop that
+    a re-run would not detect (V3_FILES at new product_base = 0).
+    """
+    # 1. sweetclaude.yaml first — the authoritative "what version is this project"
+    sc_path = project_dir / ".sweetclaude" / "state" / "sweetclaude.yaml"
+    sc = yaml.safe_load(sc_path.read_text()) or {}
+    sc.setdefault("framework", {})["installed_version"] = "4.0.0"
+    sc_path.write_text(yaml.safe_dump(sc, default_flow_style=False, sort_keys=False))
+
+    # 2. artifact-privacy.yaml second — the layout switch
+    privacy_path = project_dir / ".sweetclaude" / "artifact-privacy.yaml"
     if privacy_path.exists():
         d = yaml.safe_load(privacy_path.read_text()) or {}
     else:
         d = {}
     d.setdefault("categories", {}).setdefault("product", {})["base_path"] = "docs/product"
     privacy_path.write_text(yaml.safe_dump(d, default_flow_style=False, sort_keys=False))
-
-    sc_path = project_dir / ".sweetclaude" / "state" / "sweetclaude.yaml"
-    sc = yaml.safe_load(sc_path.read_text()) or {}
-    sc.setdefault("framework", {})["installed_version"] = "4.0.0"
-    sc_path.write_text(yaml.safe_dump(sc, default_flow_style=False, sort_keys=False))
 
     return {
         "artifact_privacy_base_path": "docs/product",
@@ -451,7 +513,10 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "plan":
         _emit(build_plan(project_dir, args.include_done))
     elif args.cmd == "execute":
-        _emit(execute(project_dir, args.include_done))
+        result = execute(project_dir, args.include_done)
+        _emit(result)
+        if result.get("error"):
+            return 1
     elif args.cmd == "verify":
         paths = json.loads(args.created_paths_file.read_text())
         _emit(verify(project_dir, paths))
