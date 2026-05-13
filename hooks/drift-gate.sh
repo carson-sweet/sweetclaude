@@ -11,6 +11,20 @@
 #
 # Pending-marker re-use: if the marker already exists from a prior session,
 # the hook re-surfaces the decision without re-running the drift scan.
+#
+# ── pending-drift-decision.yaml contract ─────────────────────────────────────
+# Writer:   drift-gate.sh (this file) — atomic write after drift scan.
+# Readers:  master-preflight.sh (blocks skills while marker exists),
+#           bootstrap/SKILL.md Step 5b (reads marker; only re-scans if absent),
+#           update/SKILL.md Step 6b (post-update verify — parses runner stdout
+#           directly, does NOT read this marker; treats marker as pre-update
+#           state and removes it on clean post-update drift check).
+# Deleters: _migrate Step 4a (Accept path) clears marker after successful
+#           migration so this hook doesn't re-surface in the next session;
+#           update Step 6b clears marker when its post-sync drift check is 0.
+# Note:     The migration runner (--report-drift-for-skill) emits drift info
+#           to stdout ONLY — it does not write this marker. Consumers that
+#           want a fresh check should parse stdout, not re-read the marker.
 
 PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -z "$PROJECT_DIR" ] && exit 0
