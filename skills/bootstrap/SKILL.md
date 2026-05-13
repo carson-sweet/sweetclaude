@@ -146,7 +146,7 @@ If `DRIFT_COUNT > 0`: the binary prompt depends on `CASE`.
 
 **Case A (CASE=A — all chains ok):** present via **AskUserQuestion** (single-select, no "Something else"):
 
-> "This project has artifacts behind the framework version. SweetClaude cannot run until you decide."
+> "{DRIFT_COUNT} SweetClaude state file(s) in this project need migration before SweetClaude can continue. Would you like to do this now?"
 >
 > Options:
 > - **Migrate now** — invoke `sweetclaude:_migrate` to bring artifacts up to current.
@@ -154,7 +154,7 @@ If `DRIFT_COUNT > 0`: the binary prompt depends on `CASE`.
 
 **Case B (CASE=B — at least one chain broken, out of 3-major support window):** present via **AskUserQuestion** (single-select):
 
-> "This project's artifacts are too old for automatic migration — at least one required handler is no longer shipped (3-major support window). SweetClaude cannot run until you decide."
+> "This project's SweetClaude state files are too old for automatic migration (out of framework support window). How would you like to proceed?"
 >
 > Options:
 > - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:adopt` against a fresh state. Your old files stay as reference; adopt does not auto-import them.
