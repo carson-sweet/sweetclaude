@@ -43,16 +43,30 @@ def main():
     except Exception:
         settings = {}
 
+    # Remove any entries with literal ${CLAUDE_PLUGIN_ROOT} — these error at runtime
+    # because settings.json hooks don't get plugin environment variables.
+    hooks_section = settings.setdefault("hooks", {})
+    cleaned = False
+    for event in list(hooks_section.keys()):
+        new_entries = []
+        for entry in hooks_section[event]:
+            new_hooks = [h for h in entry.get("hooks", [])
+                         if "${CLAUDE_PLUGIN_ROOT}" not in h.get("command", "")]
+            if len(new_hooks) != len(entry.get("hooks", [])):
+                cleaned = True
+            if new_hooks:
+                entry["hooks"] = new_hooks
+                new_entries.append(entry)
+        hooks_section[event] = new_entries
+
     all_cmd_list = [
         h.get("command", "")
-        for event_hooks in settings.get("hooks", {}).values()
+        for event_hooks in hooks_section.values()
         for entry in event_hooks
         for h in entry.get("hooks", [])
     ]
 
-    hooks_section = settings.setdefault("hooks", {})
     added = []
-
     for h in manifest.get("hooks", []):
         if not h.get("required") or h.get("scope") != "global":
             continue
@@ -61,16 +75,16 @@ def main():
         if not event or not cmd_path:
             continue
         resolved = cmd_path.replace("${CLAUDE_PLUGIN_ROOT}", plugin_root)
-        if any(cmd_path in cmd or resolved in cmd for cmd in all_cmd_list):
+        if any(resolved in cmd for cmd in all_cmd_list):
             continue
-        entry = {"hooks": [{"type": "command", "command": cmd_path}]}
+        entry = {"hooks": [{"type": "command", "command": resolved}]}
         matcher = h.get("matcher", "")
         if matcher and matcher != ".*":
             entry["matcher"] = matcher
         hooks_section.setdefault(event, []).append(entry)
-        added.append(cmd_path)
+        added.append(resolved)
 
-    if added:
+    if added or cleaned:
         with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(settings_path),
                                          suffix=".tmp", delete=False) as tmp:
             json.dump(settings, tmp, indent=2)
@@ -78,6 +92,8 @@ def main():
         os.replace(tmp_name, settings_path)
         for a in added:
             print(f"registered: {a}")
+        if cleaned:
+            print("cleaned: removed unresolved ${CLAUDE_PLUGIN_ROOT} entries from settings.json")
 
 
 if __name__ == "__main__":
