@@ -358,7 +358,7 @@ If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past th
 
 **Case A (CASE=A — all chains ok):** present via **AskUserQuestion** (single-select, no "Something else"):
 
-> "Framework updated to v{new_version}. This project's state files need migration to match. Migrate now to finish the update."
+> "Framework updated to v{new_version}. {DRIFT_COUNT} SweetClaude state file(s) in this project need migration before SweetClaude can continue. Would you like to do this now?"
 >
 > Options:
 > - **Migrate now** — invoke `sweetclaude:_migrate` to bring this project up to current.
@@ -366,7 +366,7 @@ If `DRIFT_COUNT > 0`: the framework update just bumped registry versions past th
 
 **Case B (CASE=B — at least one chain broken):** present via **AskUserQuestion** (single-select):
 
-> "Framework updated to v{new_version}, but this project's state is too old for automatic migration — at least one required handler is no longer shipped (3-major support window)."
+> "Framework updated to v{new_version}, but this project's SweetClaude state files are too old for automatic migration (out of framework support window). How would you like to proceed?"
 >
 > Options:
 > - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:adopt` against a fresh state.
