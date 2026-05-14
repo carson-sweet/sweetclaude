@@ -84,40 +84,12 @@ If non-empty, ask:
 
 For each skill the user enables, invoke it with argument `onboard`. Complete each onboard flow before starting the next. If the user says "none", continue.
 
-**Then immediately continue to 7b. Do not stop here.**
-
-## 7b: Full skill catalog
-
-**This section always runs regardless of what 7a found.**
-
-Read all skill directories from `$SOURCE_DIR/skills/`. For each, extract the `description` and `category` fields from `SKILL.md` frontmatter. Group by category. Infer category from directory name prefix if `category` is absent (`code-*` → Code, `design-*` → Design, `product-*` → Product, `documents-*` → Documents, `corpus-*` → Documents, everything else → Framework).
-
-Present immediately after the 7a output:
+After the onboarding prompt (or immediately if no uninitialized skills), add:
 
 ```
-All installed skills (v{new_version}):
-═══════════════════════════════════════
-
-PRODUCT
-  /sweetclaude:product-parking-lot     — {description, truncated to ~80 chars}
-  /sweetclaude:product-milestones      — ...
-  ...
-
-CODE
-  /sweetclaude:code-feature            — ...
-  ...
-
-DESIGN
-  /sweetclaude:design-architecture     — ...
-  ...
-
-DOCUMENTS
-  /sweetclaude:document-corpus         — ...
-  /sweetclaude:corpus-status           — ...
-  ...
-
-FRAMEWORK
-  /sweetclaude:go                      — ...
-  /sweetclaude:status                  — ...
-  ...
+You don't need to learn the skill list — SweetClaude routes you automatically.
+Just describe what you want to do and /sweetclaude:go will handle the rest.
+Type /sweetclaude:skills to see all available skills at any time.
 ```
+
+Do not print the full skill catalog. Do not continue to any further step.

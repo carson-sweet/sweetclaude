@@ -518,8 +518,6 @@ After printing the template (and the new-skills block if applicable), continue t
 
 Read [capability-surface.md](capability-surface.md) and execute it in full.
 
-It has two parts (7a and 7b) — both must run. 7a presents new items in this update, then runs a `skills.yaml` schema migration and an onboarding prompt for data-owning skills. 7b prints the full skill catalog grouped by category. Do not stop between 7a and 7b.
-
 
 ---
 
