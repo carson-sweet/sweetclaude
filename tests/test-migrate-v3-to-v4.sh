@@ -400,6 +400,62 @@ print(sum(v for v in (fm.get('counters') or {}).values() if isinstance(v, int)))
     rm -rf "$tmp"
 }
 
+# ── frontmatter-not-a-dict regression (BUG-007) ────────────────────────────
+
+run_frontmatter_not_dict_scenario() {
+    echo ""
+    echo "=== Scenario: frontmatter-not-a-dict — scalar YAML block does not crash validate ==="
+    local tmp
+    tmp=$(mktemp -d)
+
+    mkdir -p "$tmp/.sweetclaude/state" "$tmp/.sweetclaude/product/backlog"
+    cp "$REPO_ROOT/tests/fixtures/migrate-smoke/.sweetclaude/state/sweetclaude.yaml" \
+        "$tmp/.sweetclaude/state/sweetclaude.yaml"
+
+    # A BL file whose YAML block is a bare scalar (not a dict).
+    # yaml.safe_load returns an int here — the bug caused AttributeError on .get().
+    cat > "$tmp/.sweetclaude/product/backlog/BL-001.md" << 'MDEOF'
+---
+42
+---
+body text
+MDEOF
+
+    local validate_out validate_exit
+    validate_exit=0
+    validate_out=$(python3 "$SCRIPT" validate --project-dir "$tmp" 2>&1) || validate_exit=$?
+
+    if [ "$validate_exit" = "0" ]; then
+        pass "frontmatter-not-a-dict: validate exits 0 (does not crash)"
+    else
+        fail "frontmatter-not-a-dict: validate crashed with exit $validate_exit"
+        echo "$validate_out"
+        rm -rf "$tmp"
+        return
+    fi
+
+    local failure_count problem
+    failure_count=$(echo "$validate_out" | python3 -c "import sys, json; print(len(json.load(sys.stdin).get('failures', [])))")
+    problem=$(echo "$validate_out" | python3 -c "import sys, json; print(json.load(sys.stdin)['failures'][0]['problem'])" 2>/dev/null)
+
+    if [ "$failure_count" = "1" ]; then
+        pass "frontmatter-not-a-dict: 1 failure reported"
+    else
+        fail "frontmatter-not-a-dict: expected 1 failure, got $failure_count"
+    fi
+
+    case "$problem" in
+        frontmatter-not-a-dict:*)
+            pass "frontmatter-not-a-dict: problem key is '$problem'"
+            ;;
+        *)
+            fail "frontmatter-not-a-dict: unexpected problem '$problem' (expected frontmatter-not-a-dict:*)"
+            ;;
+    esac
+
+    rm -rf "$tmp"
+}
+
 # ── run scenarios ───────────────────────────────────────────────────────────
 
 echo "=== B2/C smoke test: v3 -> v4 migration ==="
@@ -409,6 +465,7 @@ run_scenario "$REPO_ROOT/tests/fixtures/migrate-smoke-docs" "docs/product varian
 run_skip_done_scenario
 run_bug_005_reorder
 run_bug_005_idempotency
+run_frontmatter_not_dict_scenario
 
 echo ""
 if [ "$FAILED" -gt 0 ]; then
