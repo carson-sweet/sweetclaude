@@ -66,7 +66,53 @@ except Exception:
   fi
 fi
 
-# 2. Resolve runner path.
+# 2. Version-dir repair: if installPath exists but the version-named sibling dir
+#    does not, create it and update installed_plugins.json to point there.
+#    This fixes the one-time mismatch that occurs when the old update skill (pre-4.0.7)
+#    synced files to the old dir name without creating a version-aligned directory.
+_HEAL_OUT=$(python3 - << 'PY' 2>/dev/null
+import json, os, subprocess, tempfile
+
+path = os.path.expanduser('~/.claude/plugins/installed_plugins.json')
+try:
+    with open(path) as f: d = json.load(f)
+except Exception:
+    raise SystemExit(0)
+
+for k, versions in d.get('plugins', {}).items():
+    if 'sweetclaude' not in k.lower():
+        continue
+    for entry in versions:
+        if entry.get('scope') != 'user':
+            continue
+        install_path = entry.get('installPath', '').rstrip('/')
+        version     = entry.get('version', '')
+        if not install_path or not version or not os.path.isdir(install_path):
+            continue
+        parent      = os.path.dirname(install_path)
+        version_dir = os.path.join(parent, version)
+        if version_dir == install_path or os.path.isdir(version_dir):
+            raise SystemExit(0)
+        # Version-named dir is missing — create it from the existing installPath.
+        os.makedirs(version_dir, exist_ok=True)
+        ret = subprocess.run(['rsync', '-a', install_path + '/', version_dir + '/'],
+                             capture_output=True)
+        if ret.returncode != 0:
+            raise SystemExit(1)
+        entry['installPath'] = version_dir
+        tmp = tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path),
+                                         suffix='.tmp', delete=False)
+        json.dump(d, tmp, indent=2)
+        tmp.close()
+        os.replace(tmp.name, path)
+        print('healed')
+        raise SystemExit(0)
+PY
+)
+VERSION_DIR_HEALED=false
+[ "$_HEAL_OUT" = "healed" ] && VERSION_DIR_HEALED=true
+
+# 3. Resolve runner path.
 RUNNER=""
 if [ -f "$VERSIONLESS/migrations/runner.py" ]; then
   RUNNER="$VERSIONLESS/migrations/runner.py"
@@ -82,8 +128,9 @@ if [ "$FROM_UPDATE" = "true" ] && [ -n "$PROJECT_DIR" ] && \
   fi
 fi
 
-# 4. Emit KEY=VALUE.
-printf 'VERSIONLESS_PATH=%s\n' "$VERSIONLESS"
-printf 'SELF_HEAL=%s\n'        "$SELF_HEAL"
-printf 'DECLINE_CLEARED=%s\n'  "$DECLINE_CLEARED"
-printf 'RUNNER=%s\n'           "$RUNNER"
+# 5. Emit KEY=VALUE.
+printf 'VERSIONLESS_PATH=%s\n'   "$VERSIONLESS"
+printf 'SELF_HEAL=%s\n'          "$SELF_HEAL"
+printf 'VERSION_DIR_HEALED=%s\n' "$VERSION_DIR_HEALED"
+printf 'DECLINE_CLEARED=%s\n'    "$DECLINE_CLEARED"
+printf 'RUNNER=%s\n'             "$RUNNER"

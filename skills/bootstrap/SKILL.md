@@ -41,7 +41,19 @@ fi
 eval "$(bash ~/.claude/scripts/sweetclaude/preflight.sh 2>/dev/null)"
 ```
 
-`RUNNER` is now set (empty if not found). `SELF_HEAL=true` if the versionless path was just populated.
+`RUNNER` is now set (empty if not found). `SELF_HEAL=true` if the versionless path was just populated. `VERSION_DIR_HEALED=true` if the install directory was just repaired to a version-named path.
+
+If `VERSION_DIR_HEALED=true`, print exactly this before continuing:
+
+```
+SweetClaude install repaired.
+─────────────────────────────
+Your plugin directory was misaligned with the installed version. It has been
+corrected automatically. Please restart Claude Code — your full skill set will
+be available in the next session.
+```
+
+Then stop. Do not continue past Step 0 in this session — the restart is required for the repair to take effect.
 
 ---
 
