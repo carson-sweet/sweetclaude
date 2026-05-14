@@ -75,9 +75,11 @@ def _read_v3_file(path: pathlib.Path) -> tuple[dict, str] | tuple[None, str]:
     if len(parts) < 3:
         return None, "no-frontmatter-delimiter"
     try:
-        fm = yaml.safe_load(parts[1]) or {}
+        fm = yaml.safe_load(parts[1])
     except yaml.YAMLError as e:
         return None, f"frontmatter-parse-error:{e}"
+    if not isinstance(fm, dict):
+        return None, f"frontmatter-not-a-dict:{type(fm).__name__}"
     return fm, parts[2]
 
 
@@ -91,7 +93,6 @@ def validate(project_dir: pathlib.Path) -> dict:
     ids: dict[str, list[str]] = {}
 
     for path in files:
-        result, info = _read_v3_file(path) if False else (None, None)
         fm_or_err = _read_v3_file(path)
         if fm_or_err[0] is None:
             failures.append({"file": str(path), "problem": fm_or_err[1]})
