@@ -21,7 +21,7 @@ Implement GitHub issue $ARGUMENTS using the SweetClaude pipeline.
    git branch --show-current
    ```
 
-   If already on a branch matching a story ID prefix (e.g., `issue-42/...`, `BL-046/...`) — skip.
+   If already on a branch matching a story ID prefix (e.g., `issue-42/...`, `STORY-046/...`, `BUG-012/...`) — skip.
 
    Otherwise, derive the branch name: ID = `issue-{number}` from `$ARGUMENTS`; slug = issue title lowercased, non-alphanumeric → hyphens, collapsed + truncated to 40 chars. Branch name: `{ID}/{slug}`.
 

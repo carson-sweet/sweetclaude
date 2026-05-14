@@ -422,13 +422,41 @@ def execute(project_dir: pathlib.Path, include_done: bool) -> dict:
     # Regenerate INDEX.md and MIGRATION-MAP.md
     _write_index_and_map(project_dir, plan["counters"], migration_map, created_paths, today)
 
+    # Rewrite BL-NNN references in milestone files
+    rewritten_milestones = _rewrite_milestone_references(project_dir, migration_map)
+
     return {
         "product_base": plan["product_base"],
         "counters": plan["counters"],
         "skipped_done": plan["skipped_done"],
         "created_paths": created_paths,
         "migration_map": migration_map,
+        "rewritten_milestones": rewritten_milestones,
     }
+
+
+def _rewrite_milestone_references(
+    project_dir: pathlib.Path,
+    migration_map: list[dict],
+) -> list[str]:
+    """Replace BL-NNN references in milestone files with their v4 IDs."""
+    if not migration_map:
+        return []
+    bl_to_v4: dict[str, str] = {e["v3_id"]: e["v4_id"] for e in migration_map}
+    bl_pattern = re.compile(r"\b(BL-\d+)\b")
+
+    milestones_dir = project_dir / "docs" / "product" / "milestones"
+    if not milestones_dir.exists():
+        return []
+
+    rewrote: list[str] = []
+    for ms_file in sorted(milestones_dir.glob("MS-*.md")):
+        original = ms_file.read_text(encoding="utf-8")
+        updated = bl_pattern.sub(lambda m: bl_to_v4.get(m.group(1), m.group(1)), original)
+        if updated != original:
+            ms_file.write_text(updated, encoding="utf-8")
+            rewrote.append(str(ms_file))
+    return rewrote
 
 
 def _make_table(items: list[dict]) -> str:
