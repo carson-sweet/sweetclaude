@@ -318,6 +318,23 @@ chmod +x "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/hooks/sweetclaude}/"*.sh 2>/dev/nu
 
 # Verify registry file synced correctly
 ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNING: skills-registry.yaml not found after sync"
+
+# Claude Code may load skills from a version-named directory (e.g. 4.0.6-beta/)
+# rather than installPath (e.g. 3.52.14/) when they differ. Sync to both.
+# Derive the version-named dir from the new package.json version.
+NEW_VER=$(python3 -c "import json; print(json.load(open('$SOURCE_DIR/package.json'))['version'])" 2>/dev/null)
+PLUGIN_CACHE_PARENT=$(dirname {installPath})
+VERSION_DIR="$PLUGIN_CACHE_PARENT/$NEW_VER"
+if [ -n "$NEW_VER" ] && [ "$VERSION_DIR" != "{installPath}" ]; then
+  mkdir -p "$VERSION_DIR/skills" "$VERSION_DIR/hooks"
+  rsync -a --delete $SOURCE_DIR/skills/ "$VERSION_DIR/skills/"
+  rsync -a --delete $SOURCE_DIR/hooks/ "$VERSION_DIR/hooks/"
+  rsync -a $SOURCE_DIR/.claude-plugin/ "$VERSION_DIR/.claude-plugin/"
+  for f in CLAUDE.md package.json LICENSE; do
+    [ -f "$SOURCE_DIR/$f" ] && cp "$SOURCE_DIR/$f" "$VERSION_DIR/"
+  done
+  echo "Synced to version-named dir: $VERSION_DIR"
+fi
 ```
 
 ---
@@ -352,6 +369,7 @@ Update `~/.claude/plugins/installed_plugins.json`:
    - `lastUpdated` → current ISO timestamp
    - `gitCommitSha` → HEAD SHA
    - `version` → package.json version
+   - `installPath` → the version-named directory synced in Step 4 (`$VERSION_DIR`) if it was created; otherwise leave unchanged. This ensures Claude Code loads skills from the same directory that was just synced.
 
 ---
 
