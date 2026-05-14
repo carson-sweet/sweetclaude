@@ -34,6 +34,7 @@ state_files:
     description: "Onboarding state for the six data-owning skills"
     current_version: 2
     backup_required: false
+    optional: true
     migrations:
       - from: 1
         to: 2

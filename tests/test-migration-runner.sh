@@ -54,7 +54,9 @@ YAML
 
 echo "[1] dry-run plan"
 PLAN_OUTPUT=$(python3 "$RUNNER" --project-dir "$TEST_TMPDIR" --registry "$REGISTRY" \
-  --migrations-dir "$MIGRATIONS_DIR" --dry-run 2>&1)
+  --migrations-dir "$MIGRATIONS_DIR" \
+  --file phase.yaml --file skills.yaml \
+  --dry-run 2>&1)
 
 echo "$PLAN_OUTPUT" | grep -q "phase.yaml: on_disk=v1 target=v2" \
   && pass "phase.yaml plan detected v1→v2" \
@@ -75,6 +77,7 @@ echo "$PLAN_OUTPUT" | grep -q "phase_yaml_v1_to_v2" \
 echo "[2] execute migration"
 RUN_OUTPUT=$(python3 "$RUNNER" --project-dir "$TEST_TMPDIR" --registry "$REGISTRY" \
   --migrations-dir "$MIGRATIONS_DIR" \
+  --file phase.yaml --file skills.yaml \
   --param "phase.yaml:version_stage=BETA" 2>&1)
 
 echo "$RUN_OUTPUT" | grep -q "phase.yaml: OK v1->v2\|phase.yaml: OK v1→v2" \
@@ -142,7 +145,8 @@ PY
 
 echo "[5] idempotency"
 RERUN_OUTPUT=$(python3 "$RUNNER" --project-dir "$TEST_TMPDIR" --registry "$REGISTRY" \
-  --migrations-dir "$MIGRATIONS_DIR" 2>&1)
+  --migrations-dir "$MIGRATIONS_DIR" \
+  --file phase.yaml --file skills.yaml 2>&1)
 echo "$RERUN_OUTPUT" | grep -q "phase.yaml: idempotent" \
   && pass "phase.yaml is no-op on re-run" \
   || fail "phase.yaml re-run: $RERUN_OUTPUT"
@@ -380,6 +384,7 @@ PY
 # 9c. After migration runs, re-scan reports zero drift for those files.
 python3 "$RUNNER" --project-dir "$SCAN_TMPDIR" --registry "$REGISTRY" \
   --migrations-dir "$MIGRATIONS_DIR" \
+  --file phase.yaml --file skills.yaml \
   --param "phase.yaml:version_stage=BETA" >/dev/null 2>&1
 
 SCAN2=$(python3 "$RUNNER" --project-dir "$SCAN_TMPDIR" --registry "$REGISTRY" \
@@ -651,6 +656,76 @@ RERUN_SC=$(python3 "$RUNNER" --project-dir "$SC_TMPDIR" --registry "$REGISTRY" \
 echo "$RERUN_SC" | grep -q "sweetclaude.yaml: idempotent" \
   && pass "sweetclaude.yaml is no-op on re-run at v2" \
   || fail "sweetclaude.yaml re-run: $RERUN_SC"
+
+# ---------------------------------------------------------------------------
+# Test 13: optional: true — missing optional file is not flagged as drift
+# Regression for BUG-008: skills.yaml absent in projects that never activated
+# the data-owning skills caused file_missing → Step 3c failure in _migrate.
+# ---------------------------------------------------------------------------
+
+echo "[13] optional file absent → no drift, no failure"
+
+OPT_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR $SCAN_TMPDIR $REC_TMPDIR $SNAP_TMPDIR $SC_TMPDIR $OPT_TMPDIR" EXIT
+
+mkdir -p "$OPT_TMPDIR/.sweetclaude/state"
+
+# Registry with one required and one optional file, both absent.
+OPT_REGISTRY="$OPT_TMPDIR/registry.yaml"
+cat > "$OPT_REGISTRY" << 'YAML'
+schema_version: 1
+state_files:
+  required.yaml:
+    description: "A required file"
+    current_version: 2
+    backup_required: false
+    migrations:
+      - from: 1
+        to: 2
+        handler: phase_yaml_v1_to_v2
+  optional.yaml:
+    description: "An optional file"
+    current_version: 2
+    backup_required: false
+    optional: true
+    migrations:
+      - from: 1
+        to: 2
+        handler: phase_yaml_v1_to_v2
+YAML
+
+python3 - "$OPT_TMPDIR" "$OPT_REGISTRY" "$MIGRATIONS_DIR" << 'PY' \
+  && pass "optional: absent optional file not in drift_count" \
+  || fail "optional: absent optional file wrongly flagged as drift"
+import sys
+sys.path.insert(0, sys.argv[3])
+from runner import MigrationRunner
+runner = MigrationRunner(project_dir=sys.argv[1], registry_path=sys.argv[2], migrations_dir=sys.argv[3])
+result = runner.scan_drift()
+# required.yaml missing → flagged; optional.yaml missing → not flagged
+findings = {f["file_key"]: f for f in result["findings"]}
+assert findings.get("optional.yaml", {}).get("needs_migration") is False, \
+    f"optional.yaml should not need migration: {findings.get('optional.yaml')}"
+assert findings.get("required.yaml", {}).get("needs_migration") is True, \
+    f"required.yaml should need migration: {findings.get('required.yaml')}"
+assert result["drift_count"] == 1, f"drift_count should be 1, got {result['drift_count']}"
+sys.exit(0)
+PY
+
+python3 - "$OPT_TMPDIR" "$OPT_REGISTRY" "$MIGRATIONS_DIR" << 'PY' \
+  && pass "optional: run() on absent optional file returns success (not file_missing)" \
+  || fail "optional: run() returned unexpected failure for absent optional file"
+import sys
+sys.path.insert(0, sys.argv[3])
+from runner import MigrationRunner, FAILURE_FILE_MISSING
+runner = MigrationRunner(project_dir=sys.argv[1], registry_path=sys.argv[2], migrations_dir=sys.argv[3])
+results = {r.file_key: r for r in runner.run(["optional.yaml"])}
+r = results.get("optional.yaml")
+assert r is not None, "no result for optional.yaml"
+assert r.success is True, f"expected success, got failure_mode={r.failure_mode!r}"
+assert r.failure_mode != FAILURE_FILE_MISSING, f"unexpected file_missing on optional file"
+sys.exit(0)
+PY
 
 # ---------------------------------------------------------------------------
 

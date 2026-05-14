@@ -652,12 +652,17 @@ class MigrationRunner:
                 # File doesn't exist. Flag as file_missing if migrations are defined
                 # (the file was expected to be present). Can't migrate without source data.
                 #
+                # Optional files (optional: true in registry) are never flagged — their
+                # absence is intentional (e.g. skills.yaml is only created when the user
+                # activates the relevant features; projects that never did have no file
+                # to migrate and should not be blocked).
+                #
                 # Consolidation check (BUG-004): if this entry is marked consolidated_into
                 # another file AND that file exists on disk, the absence is intentional
                 # (the file was absorbed into the target in an earlier framework version).
                 # Treat as needs_migration=False so it doesn't surface as drift on every
                 # session of every healthy unified-state project.
-                needs = bool(migrations)
+                needs = bool(migrations) and not entry.get("optional", False)
                 if needs:
                     consolidated_target = entry.get("consolidated_into")
                     expected_absent = entry.get("expected_absent_when") or {}
