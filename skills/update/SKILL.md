@@ -382,9 +382,10 @@ rm -rf "$TMPDIR"
 
 Run a final diff to confirm sync:
 ```bash
-diff -rq $SOURCE_DIR/skills/ {installPath}/skills/ 2>/dev/null
+SYNC_TARGET="${VERSION_DIR:-{installPath}}"
+diff -rq $SOURCE_DIR/skills/ "$SYNC_TARGET/skills/" 2>/dev/null
 diff -rq $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/ 2>/dev/null
-diff -rq $SOURCE_DIR/scripts/ {installPath}/scripts/ 2>/dev/null
+diff -rq $SOURCE_DIR/scripts/ "$SYNC_TARGET/scripts/" 2>/dev/null
 ```
 
 Continue to Step 6b. The user-facing success report is deferred until Step 6b confirms project state is coherent — reporting "updated" before the drift verdict is what caused BUG-002.
