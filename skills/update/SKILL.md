@@ -260,6 +260,23 @@ If it is not a v3→v4 transition (e.g. minor/patch updates), skip this step and
 
 ## Step 4: Sync
 
+Before syncing, capture which skills are new (present in source, absent in the currently installed path). Claude Code loads skills at session start, so new skills added during this update will not be available until the user restarts.
+
+```bash
+NEW_SKILLS=""
+if [ -d "{installPath}/skills" ]; then
+  for skill_dir in "$SOURCE_DIR/skills"/*/; do
+    skill_name=$(basename "$skill_dir")
+    if [ ! -d "{installPath}/skills/$skill_name" ]; then
+      NEW_SKILLS="${NEW_SKILLS:+$NEW_SKILLS }$skill_name"
+    fi
+  done
+fi
+echo "NEW_SKILLS=${NEW_SKILLS}"
+```
+
+Save the value of `NEW_SKILLS` — it is used in the Step 6c success report.
+
 Copy from SOURCE_DIR to installed locations. Use `rsync --delete` to remove files that no longer exist in the source.
 
 ```bash
@@ -474,15 +491,26 @@ SweetClaude updated.
 ✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
 ✓ Project:    {clean | clean (verified post-migrate)}
 
-→ New Claude Code sessions in any project will use the updated version.
-  Current sessions keep the old version until restarted.
+→ Restart Claude Code to use this update — skills are loaded at session start
+  and are not updated in the current session.
 ```
 
 The `✓ Project:` line wording depends on which Step 6b exit path was taken:
 - DRIFT_COUNT=0 on first check → `clean`
 - _migrate ran and POST_MIGRATE_COUNT=0 → `clean (verified post-migrate)`
 
-Print exactly one of those two; do not print the literal text `clean OR clean (verified post-migrate)`. After printing the template, continue to Step 7.
+Print exactly one of those two; do not print the literal text `clean OR clean (verified post-migrate)`.
+
+If `NEW_SKILLS` (from Step 4) is non-empty, append this block after the success report — one line per new skill:
+
+```
+New skills added (not available until restart):
+  {list each name from NEW_SKILLS, one per line, prefixed with /sweetclaude:}
+```
+
+Do not mention any `/sweetclaude:` command as something the user can run now. Do not ask "Want to run it?" or offer to invoke any skill. The current session does not have the updated skill set.
+
+After printing the template (and the new-skills block if applicable), continue to Step 7.
 
 ---
 
