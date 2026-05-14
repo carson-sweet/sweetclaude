@@ -31,10 +31,12 @@ def find_plugin_root():
         return ""
     entries = []
     for plugin_key, versions in d.get("plugins", {}).items():
-        if "sweetclaude" not in plugin_key.lower():
+        if not isinstance(plugin_key, str) or "sweetclaude" not in plugin_key.lower():
+            continue
+        if not isinstance(versions, list):
             continue
         for v in versions:
-            if v.get("scope") == "user":
+            if isinstance(v, dict) and v.get("scope") == "user":
                 entries.append(v)
     entries.sort(key=lambda e: e.get("lastUpdated", ""), reverse=True)
     for e in entries:

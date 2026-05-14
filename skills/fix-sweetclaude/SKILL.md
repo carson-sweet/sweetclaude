@@ -684,16 +684,114 @@ PY
 
 ---
 
-## Step 13: Continue to bootstrap (no session restart required)
+## Step 13: v4 storage lint repairs
 
-When `session-preflight.sh` fires `emit_heal`, it instructs Claude NOT to invoke `sweetclaude:bootstrap` in this session. That instruction is meant to prevent bootstrap from running against a broken config. Once `fix-sweetclaude` has resolved the issues that triggered the heal, that instruction is stale.
+Run the v4 lint rules from `sweetclaude:_health` Step 3 inline. For each finding, present the repair recipe below and wait for user confirmation before applying.
+
+### Repair recipes
+
+**`counter-drift:<type>` (stored counter < highest ID seen)**
+
+Auto-repair: set counter to max(observed, current).
+
+```python
+import pathlib, yaml, re
+
+BACKLOG_BASE = pathlib.Path('docs/product/backlog')
+INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
+raw = INDEX_PATH.read_text(encoding='utf-8')
+parts = raw.split('---', 2)
+index_fm = yaml.safe_load(parts[1]) or {}
+counters = index_fm.setdefault('counters', {})
+
+TYPE_PREFIX = {'story': 'STORY', 'bug': 'BUG', 'debt': 'DEBT', 'chore': 'CHORE'}
+TYPE_DIRS = {'story': 'stories', 'bug': 'bugs', 'debt': 'debt', 'chore': 'chores'}
+
+for typ, dir_name in TYPE_DIRS.items():
+    prefix = TYPE_PREFIX[typ]
+    max_seen = 0
+    for p in (BACKLOG_BASE / dir_name).rglob('*.md'):
+        m = re.match(rf'^{prefix}-(\d+)-', p.name)
+        if m:
+            max_seen = max(max_seen, int(m.group(1)))
+    counters[typ] = max(counters.get(typ, 0), max_seen)
+
+import datetime
+index_fm['updated'] = datetime.date.today().isoformat()
+INDEX_PATH.write_text(
+    f"---\n{yaml.safe_dump(index_fm, default_flow_style=False, sort_keys=False).rstrip()}\n---{parts[2]}",
+    encoding='utf-8'
+)
+```
+
+> "Counter drift repaired. Counters set to max(observed, stored) for each type."
+
+---
+
+**`done-status-mismatch:<filename> is in done/ but has status=<status>`**
+
+File is in `done/` but has an active status. Proposal: move the file back to the active directory.
+
+Require user confirmation before moving. Do NOT auto-apply.
+
+```python
+import shutil, pathlib
+
+# path = the file in done/
+# active_dir = path.parent.parent  (e.g. docs/product/backlog/stories/)
+active_dir = path.parent.parent
+new_path = active_dir / path.name
+shutil.move(str(path), str(new_path))
+```
+
+---
+
+**`done-status-mismatch:<filename> has status=done/abandoned but is not in done/`**
+
+File has a terminal status but is in the active directory. Proposal: move the file to `done/`.
+
+Require user confirmation before moving. Do NOT auto-apply.
+
+```python
+import shutil, pathlib, datetime
+
+fm['closed_date'] = fm.get('closed_date') or datetime.date.today().isoformat()
+# write updated fm, then move
+done_dir = path.parent / 'done'
+done_dir.mkdir(exist_ok=True)
+shutil.move(str(path), str(done_dir / path.name))
+```
+
+---
+
+**`v3-files-present:<N> BL-NNN files remain`**
+
+No auto-fix. Proposal: run `/sweetclaude:migrate`.
+
+> "v3 story files found. Run `/sweetclaude:migrate` to migrate them to v4 storage. Migration creates a safety backup."
+
+Do not modify or delete v3 files.
+
+---
+
+**`cross-location-duplicate-id:<id>`**
+
+No auto-fix. Report only.
+
+> "ID {id} appears in both the backlog and roadmap. This is a data integrity issue — resolve it manually by renaming one of the files."
+
+---
+
+## Step 14: Continue to bootstrap (no session restart required)
+
+When `session-preflight.sh` fires `emit_heal`, it instructs Claude NOT to invoke `sweetclaude:bootstrap` in this session. That instruction is meant to prevent bootstrap from running against a broken config. Once `fix-sweetclaude` has resolved the issues that triggered the heal (including any v4 storage lint repairs from Step 13), that instruction is stale.
 
 After completing the repair sequence above:
 
 1. Announce briefly: `"Configuration repaired. Continuing to bootstrap so drift detection and any pending state work can run in this session — no session restart required."`
 2. Invoke `sweetclaude:bootstrap` via the Skill tool.
 
-Bootstrap will run Steps 1–8 in this same session. Step 5b runs the registry-driven drift scan via the runner and presents the hard-demand prompt if drift is found. The user does NOT need to start a new Claude Code session for the new system to engage. The earlier "new session required" advice (Step 7b) applies only to hooks that fire on events ALREADY consumed earlier in this session (specifically `SessionStart`); UserPromptSubmit / PreToolUse / PostToolUse hooks that were added or removed by Step 7b/7c will pick up on their next event in this session without restart.
+Bootstrap will run Steps 1–8 in this same session. Step 5b runs the v4 hard-stop check; Step 5c runs the registry-driven drift scan via the runner and presents the hard-demand prompt if drift is found. The user does NOT need to start a new Claude Code session for the new system to engage. The earlier "new session required" advice (Step 7b) applies only to hooks that fire on events ALREADY consumed earlier in this session (specifically `SessionStart`); UserPromptSubmit / PreToolUse / PostToolUse hooks that were added or removed by Step 7b/7c will pick up on their next event in this session without restart.
 
 Override the prior heal-context instruction: explicitly state that bootstrap is being invoked deliberately as a post-fix continuation.
 
@@ -705,3 +803,4 @@ Override the prior heal-context instruction: explicitly state that bootstrap is 
 - **Do not move project files without asking.** The user may have reasons for current locations.
 - **Retroactive register entries are drafts.** Mark them `[retroactive]` so the user knows they were not captured in real-time.
 - **Do not judge the project.** This skill fixes SweetClaude configuration, not project quality.
+- **v4 repairs apply only to `docs/product/backlog/`.** Never touch `.sweetclaude/product/backlog/`.

@@ -1,0 +1,8 @@
+schema_version: 1
+project:
+  name: smoke-test-project
+  type: existing-code
+  version_stage: BETA
+framework:
+  installed_version: 3.52.12
+  setup_complete: true

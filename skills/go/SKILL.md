@@ -23,34 +23,56 @@ git log --oneline -5
 git status --short
 tail -25 .sweetclaude/state/checkpoint.md 2>/dev/null || echo "NO_CHECKPOINT"
 ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -3
-product_base=$(cat .sweetclaude/state/session-state.yaml 2>/dev/null | python3 -c "import yaml,sys; d=yaml.safe_load(sys.stdin); print(d.get('paths',{}).get('product_base','.sweetclaude/product'))" 2>/dev/null || echo "MANIFEST_MISSING")
-if [ "$product_base" != "MANIFEST_MISSING" ]; then
-  ls ${product_base}/milestones/MS-*.md 2>/dev/null | head -10
-  grep -rh "\*\*Status:\*\*" ${product_base}/milestones/ 2>/dev/null | head -10
-  python3 -c "
-import glob, re, os
-base = '${product_base}'
-HORIZON_ORDER = {'next':1,'sooner':2,'soon':3,'later':4,'someday':5,'unscheduled':6}
-rows = []
-for f in sorted(glob.glob(os.path.join(base,'backlog','BL-*.md'))):
-    c = open(f).read()
-    m = re.search(r'\*\*Horizon:\*\*\s*(\S+)', c)
-    h = (m.group(1).lower() if m else 'unscheduled')
-    rows.append((HORIZON_ORDER.get(h, 6), os.path.basename(f)))
-rows.sort()
-for _, fn in rows[:60]:
-    print(fn)
-" 2>/dev/null
-  echo "--- DONE ITEMS (exclude from proposals) ---"
-  grep -irl "\*\*Status:\*\*.*done\|\*\*Status:\*\*.*deferred\|^status:.*done\|^status:.*deferred\|^completed:" ${product_base}/backlog/BL-*.md 2>/dev/null | sed 's|.*/||' | sort
-  echo "--- RECENT COMMITS (cross-check item IDs) ---"
-  git log --oneline -20 2>/dev/null | grep -iE "BL-[0-9]+"
-else
-  echo "ARTIFACT_PRIVACY_NOT_CONFIGURED — milestone and backlog paths unknown"
-fi
 ```
 
-Do not call `gh`. Do not read backlog file contents for routing — filenames plus the DONE ITEMS list above are enough. **Skip any file whose basename appears in the DONE ITEMS list when evaluating Priority 4.** Also skip any item whose ID appears in the RECENT COMMITS list. If state is `STATE_NOT_FOUND`, note it but continue.
+Then read the v4 backlog from `docs/product/backlog/INDEX.md` (v4 storage) if it exists, otherwise fall back to legacy:
+
+```python
+import pathlib, yaml, re, os
+
+BACKLOG_INDEX = pathlib.Path('docs/product/backlog/INDEX.md')
+
+if BACKLOG_INDEX.exists():
+    # v4 storage: read active story files sorted by priority
+    BACKLOG_BASE = pathlib.Path('docs/product/backlog')
+    PRIORITY_ORDER = {'now': 1, 'soon': 2, 'later': 3, 'someday': 4, None: 5}
+    active_items = []
+    done_ids = set()
+    for p in BACKLOG_BASE.rglob('*.md'):
+        if p.name in ('INDEX.md', 'MIGRATION-MAP.md'):
+            continue
+        try:
+            raw = p.read_bytes().decode('utf-8').replace('\r\n', '\n')
+            parts = raw.split('---', 2)
+            fm = yaml.safe_load(parts[1]) or {}
+        except Exception:
+            continue
+        status = fm.get('status', 'new')
+        if status in ('done', 'abandoned'):
+            done_ids.add(fm.get('id', ''))
+        elif status != 'deferred' and '/done/' not in str(p):
+            active_items.append(fm)
+    active_items.sort(key=lambda fm: (PRIORITY_ORDER.get(fm.get('priority'), 5), fm.get('id', '')))
+    print("--- V4 BACKLOG (priority order) ---")
+    for fm in active_items[:60]:
+        print(f"{fm.get('id', '?')}  {fm.get('type', 'story')}  {fm.get('priority', '—')}  {fm.get('title', '')[:60]}")
+    print("--- DONE ITEMS ---")
+    for id_ in sorted(done_ids):
+        print(id_)
+    print("--- RECENT COMMITS (cross-check item IDs) ---")
+    import subprocess
+    result = subprocess.run(['git', 'log', '--oneline', '-20'], capture_output=True, text=True)
+    for line in result.stdout.splitlines():
+        if re.search(r'(STORY|BUG|DEBT|CHORE)-\d+', line):
+            print(line)
+else:
+    # Legacy fallback — should not occur on v4 installs
+    print("BACKLOG_INDEX_NOT_FOUND — run /sweetclaude:migrate to upgrade to v4 storage")
+```
+
+Do not call `gh`. Do not read backlog file contents for routing — the ID+priority+title list above is enough. **Skip any item whose ID appears in the DONE ITEMS list when evaluating Priority 4.** Also skip any item whose ID appears in the RECENT COMMITS list. If state is `STATE_NOT_FOUND`, note it but continue.
+
+Roadmap routing (milestones, MS-*.md) remains untouched — Phase 2 work.
 
 ## Step 2: Apply improvement register
 

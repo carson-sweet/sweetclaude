@@ -25,7 +25,7 @@ Session navigation and automatic routing. Most of these fire without being invok
 
 | Skill | Invocation | What it does |
 |---|---|---|
-| **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, checks phase exit criteria, routes to the right skill. Pass plain-English arguments to describe what you want. |
+| **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, reads v4 backlog from `docs/product/backlog/INDEX.md`, checks phase exit criteria, routes to the right skill. Pass plain-English arguments to describe what you want. |
 | **Recap** | `/sweetclaude:recap` | One-screen orientation: current phase, active work item, last 3 commits, checkpoint state. Run after a break or context switch. Auto-triggers a checkpoint check-in at session start when unfinished work exists. |
 | **Status** | `/sweetclaude:status` | Project status dashboard. Active work item, phase, roadmap, backlog, recent commits. |
 | **Find Skill** | _(internal)_ | Classifies plain-English input, confirms routing, updates state, and starts the right skill. Invoked automatically by `/sweetclaude:go` when arguments are present. |
@@ -46,7 +46,9 @@ Framework management — setup, teardown, updates, audits, and guards. Always av
 | **Setup** | _(internal)_ | Activate on any project — new idea or existing codebase. Detects context, walks through setup, writes `sweetclaude.yaml`. Invoked automatically by `/sweetclaude` when no state file exists. |
 | **Init** | `/sweetclaude:init` | Bootstrap SweetClaude infrastructure only (no product discovery). Detects project type, creates `.sweetclaude/`, generates CLAUDE.md stub. For existing codebases with real history, use `/sweetclaude` (which routes to setup) instead. |
 | **Off** | `/sweetclaude:off` | Suspend SweetClaude for this project. Preserves all artifacts. Reactivate with `/sweetclaude:go`. |
-| **Update** | `/sweetclaude:update` | Fetch the latest version from GitHub and sync to all installed locations. Shows what changed. Migrates `phase.yaml`/`skills.yaml` from v2.x to `sweetclaude.yaml` format. |
+| **Update** | `/sweetclaude:update` | Fetch the latest version from GitHub and sync to all installed locations. Shows what changed. Migrates `phase.yaml`/`skills.yaml` from v2.x to `sweetclaude.yaml` format. On a v3→v4 upgrade, shows a major version warning before installing. |
+| **Migrate** | `/sweetclaude:migrate` | Migrate v3 `BL-NNN` stories to the v4 `docs/product/backlog/` layout. Creates a safety backup, validates all files, shows a preview, executes the transform, verifies output, and offers to delete the old location. Run once per project after updating to v4. |
+| **Migrate Diagnose** | _(internal)_ | Diagnoses v3 `BL-NNN` file problems before migration — missing fields, unknown statuses, duplicate IDs. Called by `sweetclaude:migrate` on failure and by bootstrap when v3 files are detected in a v4 install. Not user-invocable directly. |
 | **Fix SweetClaude** | `/sweetclaude:fix-sweetclaude` | Audit and repair configuration. Checks CLAUDE.md accuracy, phase state, file locations, `sweetclaude.yaml` consistency, empty registers, hook registrations. If `sweetclaude.yaml` is unparseable, offers repair options. Proposes fixes — does not change anything without asking. |
 | **Purge** | `/sweetclaude:purge` | Delete all SweetClaude artifacts. Recommends a backup branch first. Requires typed confirmation. |
 | **Assess Mode** | `/sweetclaude:project-assess-shape` | Five-question interview to recommend and configure a project mode (Flow, Kanban, Shape Up, or Agile). Writes mode to `sweetclaude.yaml` and compiles `effective-gates.yaml`. Runs automatically at init; available on demand to re-assess. |
@@ -155,19 +157,19 @@ Execution-layer tracking. These skills manage the work that delivers the product
 
 | Skill | Invocation | What it does |
 |---|---|---|
-| **Project Issues** | `/sweetclaude:project-issues` | Create, view, update, and close issues. Maintains sprint history per issue. Warns on adrift issues (carried over 2+ sprints). Supports `list`, `backlog`, `view`, `new`, `update`, `close`, `reopen`. |
+| **Project Issues** | `/sweetclaude:project-issues` | Create, view, update, and close issues. Reads and writes v4 story files under `docs/product/backlog/`. Closing a story moves the file to `done/` and sets `closed_date`. Supports `list`, `backlog`, `view`, `new`, `update`, `close`, `reopen`. |
 | **Project Epics** | `/sweetclaude:project-epics` | Optional goal lens that groups stories by functional area. A classification attribute — tracks progress toward a named goal across multiple sprints, not a delivery container. Cancel an epic and its stories return to the backlog. Warns if an epic exceeds 20 stories. |
 | **Epic Design** | `/sweetclaude:epic-design [EP-NNN\|new <title>]` | Produce a complete, ordered story list for an epic. Design-first sequence: no implementation stories are written until design stories are complete and their outputs are on disk. Accepts an existing epic or creates a new one. |
 | **Project Sprints** | `/sweetclaude:project-sprints` | Full sprint lifecycle: plan, start, board, update, close, retrospective. Each sprint anchors to a milestone (`milestone_id`). Velocity calculated on close. Sprint history maintained per issue. Enforces single active sprint. |
 | **Project Themes** | `/sweetclaude:project-themes` | Optional domain-grouping labels on stories — classification attributes, not delivery containers. For large multi-service projects (50+ stories) where epics alone leave the inventory unnavigable. Tag stories with a theme; themes carry no delivery commitment and have no definition of done. |
-| **Project Backlog** | `/sweetclaude:project-backlog` | Backlog view grouped by priority bucket (NEXT/SOONER/SOON/LATER/SOMEDAY/UNESTIMATED). Promote issues to a sprint. Surface inferred issues from Flow mode inference. |
-| **Project Backlog Triage** | `/sweetclaude:project-backlog-triage` | Structured grooming session. Works through ungroomed issues one at a time using INVEST criteria. Recommend priority + effort, accept/override/skip/split/cancel. Sets status to `ready` when groomed. |
+| **Project Backlog** | `/sweetclaude:project-backlog` | Backlog view grouped by priority bucket (NOW/SOON/LATER/SOMEDAY/UNESTIMATED). Reads from `docs/product/backlog/INDEX.md`. Promote issues to a sprint. Review imported issues. |
+| **Project Backlog Triage** | `/sweetclaude:project-backlog-triage` | Structured grooming session. Sources rows from `docs/product/backlog/INDEX.md`. Works through ungroomed issues one at a time using INVEST criteria. Writes back to individual story files and INDEX. Sets status to `ready` when groomed. |
 | **Product Roadmap** | `/sweetclaude:product-roadmap` | Priority-stacked roadmap with force-ranked items. Create, activate (routes to correct downstream workflow by type), defer, complete, cancel. Create and view releases. |
 | **Project Scope** | `/sweetclaude:project-scope` | Singleton scope document — one statement, in-scope list, minimum three out-of-scope items. Cascade review on update flags conflicting open roadmap items and issues. |
 | **Project Goals** | `/sweetclaude:project-goals` | Binary business goals — achieved or not. Criteria must be evaluable as true/false. `list`, `view`, `new`, `achieved`, `missed`. |
 | **Project Mode** | `/sweetclaude:project-mode` | Assess and shift project modes: flow → kanban → shape_up → agile. Snapshots state before every shift. Detects upshift/downshift signals from artifact counts. Each mode compiles `effective-gates.yaml` with its enforcement rules. |
-| **GitHub Import Issues** | `/sweetclaude:project-gh-import-issues` | Pull open GitHub Issues into the local issue store as I-NNN artifacts. Idempotent — issues already imported by GitHub number are skipped. Maps size/effort labels to effort field. |
-| **GitHub Sync Issues** | `/sweetclaude:project-gh-sync-issues` | Bidirectional status sync. Pass 1: GH closed → local done. Pass 2: local done → `gh issue close`. Reports counts for each direction. |
+| **GitHub Import Issues** | `/sweetclaude:project-gh-import-issues` | Pull open GitHub Issues into `docs/product/backlog/stories/` as v4 story files with `origin: imported`. Idempotent — issues already imported by GitHub number are skipped. Maps size/effort labels to effort field. |
+| **GitHub Sync Issues** | `/sweetclaude:project-gh-sync-issues` | Bidirectional status sync against `docs/product/backlog/` story files only (roadmap sync is Phase 2). Pass 1: GH closed → local done (moves file to `done/`). Pass 2: local done → `gh issue close`. Reports counts for each direction. |
 
 ---
 

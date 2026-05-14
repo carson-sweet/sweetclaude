@@ -1,18 +1,90 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Bidirectional status sync between local I-NNN issues and GitHub Issues."
+description: "Bidirectional status sync between local v4 story files and GitHub Issues."
 ---
 
-!`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
+## MIGRATION GUARD
+
+Before any other work, check for unmigrated v3 BL files:
 
 ```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
+PRODUCT_BASE=$(python3 -c "
+import yaml, pathlib
+p = pathlib.Path('.sweetclaude/artifact-privacy.yaml')
+if p.exists():
+    d = yaml.safe_load(p.read_text()) or {}
+    base = d.get('categories', {}).get('product', {}).get('base_path', '')
+    if base:
+        print(base.rstrip('/'))
+        exit()
+print('.sweetclaude/product')
+" 2>/dev/null || echo '.sweetclaude/product')
+V3_FILES=$(find "${PRODUCT_BASE}/backlog" -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
+if [ "$V3_FILES" -gt 0 ]; then
+  echo "This project has $V3_FILES v3 stories that need to be migrated first."
+  echo "Run: /sweetclaude:migrate"
+  exit 1
+fi
+```
+
+If the guard fires: print the message and stop. Do not proceed.
+
+```python
+import pathlib, yaml, datetime, shutil
+
+BACKLOG_BASE = pathlib.Path('docs/product/backlog')
+
+def read_story_file(path):
+    raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
+    parts = raw.split('---', 2)
+    fm = yaml.safe_load(parts[1]) or {}
+    body = parts[2] if len(parts) > 2 else ''
+    return fm, body
+
+def write_story_file(path, fm, body):
+    fm['updated'] = datetime.date.today().isoformat()
+    content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
+    pathlib.Path(path).write_text(content, encoding='utf-8')
+
+def all_backlog_story_files():
+    """Enumerate v4 story files under docs/product/backlog/ only.
+    Explicitly excludes docs/product/roadmap/ (out of scope — Phase 2).
+    """
+    roadmap_base = BACKLOG_BASE.parent / 'roadmap'
+    result = []
+    for p in BACKLOG_BASE.rglob('*.md'):
+        if p.name in ('INDEX.md', 'MIGRATION-MAP.md'):
+            continue
+        # Guard: skip any file that somehow resolves under roadmap/
+        if roadmap_base.exists() and roadmap_base in p.parents:
+            continue
+        result.append(p)
+    return result
+
+def find_story_by_gh_number(gh_number):
+    for p in all_backlog_story_files():
+        fm, body = read_story_file(p)
+        if fm.get('github_issue_number') == gh_number:
+            return p, fm, body
+    return None, None, None
+
+def close_story_file(path, fm, body):
+    """Set status=done, closed_date=today, move to done/ subdir."""
+    today = datetime.date.today().isoformat()
+    fm['status'] = 'done'
+    fm['closed_date'] = today
+    write_story_file(path, fm, body)
+    done_dir = path.parent / 'done'
+    done_dir.mkdir(parents=True, exist_ok=True)
+    new_path = done_dir / path.name
+    shutil.move(str(path), str(new_path))
+    return new_path
 ```
 
 # GitHub Issues — Sync
 
-Bidirectional status sync between local issues and GitHub. Run anytime to keep the two in sync. Arguments: `$ARGUMENTS`
+Bidirectional status sync between local v4 story files and GitHub Issues. Operates on `docs/product/backlog/` story files only. Roadmap sync is out of scope. Arguments: `$ARGUMENTS`
 
 ---
 
@@ -34,29 +106,32 @@ If `NO_REMOTE`: "No git remote found. Sync requires a GitHub remote." Stop.
 gh issue list --state closed --limit 500 --json number,state 2>/dev/null
 ```
 
-For each closed GitHub issue, find the matching local issue by `github_issue_number`:
+For each closed GitHub issue, find the matching local story by `github_issue_number` using `find_story_by_gh_number(number)`.
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_query issue github_issue_number=<number>
+If the local story's status is not `done` or `abandoned`, close it:
+
+```python
+new_path = close_story_file(path, fm, body)
+# File is now at docs/product/backlog/<type>s/done/<ID>-<slug>.md
 ```
 
-If the local issue's status is not `done` or `cancelled`, mark it done:
-
-```bash
-sc_artifact_write <ID> '{"status": "done"}'
-```
+**Guard:** `docs/product/roadmap/` is explicitly out of scope. The `all_backlog_story_files()` function above silently skips any file under that directory if it exists.
 
 ---
 
 ## Pass 2 — Local done → close on GitHub
 
-```bash
-_sc_hooks="${CLAUDE_PLUGIN_ROOT:+${CLAUDE_PLUGIN_ROOT}/hooks}"; _sc_hooks="${_sc_hooks:-$HOME/.claude/hooks/sweetclaude}"; source "${_sc_hooks}/sc-artifact.sh"
-sc_artifact_query issue status=done
+Enumerate all story files with `status: done` or `status: abandoned` that have a `github_issue_number` field:
+
+```python
+done_stories = []
+for p in all_backlog_story_files():
+    fm, body = read_story_file(p)
+    if fm.get('status') in ('done', 'abandoned') and fm.get('github_issue_number'):
+        done_stories.append((p, fm))
 ```
 
-For each local issue with `status: done` that has a `github_issue_number` field, check if the GitHub issue is still open:
+For each such story, check if the GitHub issue is still open:
 
 ```bash
 gh issue view <github_issue_number> --json state 2>/dev/null
@@ -80,3 +155,12 @@ GitHub Issues sync complete
 ```
 
 If any `gh issue close` fails (e.g., permissions): note the ID and continue. List all failures at the end. Do not stop on individual failures.
+
+---
+
+## Rules
+
+- Only syncs `docs/product/backlog/` story files. Files under `docs/product/roadmap/` (Phase 2) are silently ignored.
+- Closing a local story via sync moves it to `<type>s/done/` exactly as `project-issues close` does.
+- Import is one-way only (Pass 1 direction for new issues — handled by `project-gh-import-issues`).
+- Never touch `.sweetclaude/product/backlog/`.

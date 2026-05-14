@@ -118,100 +118,6 @@ Use `$TMPDIR/sweetclaude` as SOURCE_DIR.
 
 ---
 
-## Step 2c: Prerelease check (STORY-050)
-
-Before comparing versions for the standard stable update, check if any prerelease tags are newer than the installed version. If one exists, ask the user whether to install it or wait for the final release.
-
-```bash
-INSTALLED_VERSION=$(python3 -c "
-import json, os
-try:
-    d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
-    for plugin_key, versions in d.get('plugins', {}).items():
-        if 'sweetclaude' in plugin_key.lower():
-            for v in versions:
-                if v.get('scope') == 'user':
-                    print(v.get('version', ''))
-                    exit()
-except Exception:
-    pass
-" 2>/dev/null)
-
-# Read prerelease_declined from this project's sweetclaude.yaml (if present —
-# project-level declines persist across update runs in that project only).
-DECLINED_PRERELEASE=$(python3 -c "
-import yaml
-try:
-    d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
-    print((d.get('framework') or {}).get('update', {}).get('prerelease_declined', '') or '')
-except Exception:
-    pass
-" 2>/dev/null)
-
-PRERELEASE_OUT=$(python3 ~/.claude/scripts/sweetclaude/maintenance/check-prerelease.py \
-    --installed-version "$INSTALLED_VERSION" \
-    --declined "$DECLINED_PRERELEASE" \
-    --repo-dir "$SOURCE_DIR" 2>/dev/null)
-
-SHOULD_PROMPT=$(echo "$PRERELEASE_OUT" | python3 -c "import sys, json; print('true' if json.load(sys.stdin).get('should_prompt') else 'false')")
-PRERELEASE_TAG=$(echo "$PRERELEASE_OUT" | python3 -c "import sys, json; v=json.load(sys.stdin).get('prerelease_available'); print(v if v else '')")
-```
-
-If `SHOULD_PROMPT` is `true`, present **AskUserQuestion**:
-
-> ⚠ **SweetClaude {PRERELEASE_TAG} is available as a prerelease.**
->
-> Prereleases are not final. They may contain bugs that have not yet been caught and may change in incompatible ways before the final release. Real-world usage helps surface issues — but if you need stability for production work, wait for the final release.
->
-> - Currently installed: `{INSTALLED_VERSION}`
-> - Available prerelease: `{PRERELEASE_TAG}`
-
-Options:
-- **Install the prerelease** — pull and install from the `{PRERELEASE_TAG}` tag instead of stable
-- **Wait for the final release** — record the decline and proceed with normal stable update flow
-
-On **Install the prerelease**:
-```bash
-# Ensure TMPDIR is set — Step 2a (local repo path) doesn't create one, so we
-# need a fresh tempdir here regardless of which Step 2 path ran.
-TMPDIR="${TMPDIR:-$(mktemp -d)}"
-mkdir -p "$TMPDIR"
-rm -rf "$TMPDIR/sweetclaude"
-
-# Resolve the repo URL: prefer the source dir's remote, fall back to canonical GitHub URL.
-REPO_URL=$(git -C "$SOURCE_DIR" config --get remote.origin.url 2>/dev/null || echo "https://github.com/carson-sweet/sweetclaude.git")
-
-# Re-fetch source at the prerelease tag specifically (overrides Step 2a/2b result).
-git clone --branch "$PRERELEASE_TAG" --depth 1 "$REPO_URL" "$TMPDIR/sweetclaude"
-SOURCE_DIR="$TMPDIR/sweetclaude"
-PRERELEASE_INSTALL=true
-NEW_VERSION_LABEL="$PRERELEASE_TAG"
-```
-
-On **Wait for the final release**:
-```bash
-# Record the decline so this specific prerelease tag won't re-prompt every update.
-# A newer prerelease tag (e.g. v4.0.0-beta2) will still prompt.
-python3 -c "
-import yaml, os, tempfile
-p = '.sweetclaude/state/sweetclaude.yaml'
-if os.path.exists(p):
-    d = yaml.safe_load(open(p)) or {}
-    d.setdefault('framework', {}).setdefault('update', {})['prerelease_declined'] = '$PRERELEASE_TAG'
-    with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(p), suffix='.tmp', delete=False) as t:
-        yaml.safe_dump(d, t, default_flow_style=False, sort_keys=False)
-        tn = t.name
-    os.replace(tn, p)
-"
-PRERELEASE_INSTALL=false
-```
-
-Set `PRERELEASE_INSTALL=false` if `SHOULD_PROMPT` was false (no prerelease available or already declined).
-
-After Step 2c: continue to Step 3.
-
----
-
 ## Step 3: Compare versions
 
 When SOURCE_DIR is the local repo (came from Step 2a), compare against `origin/HEAD` — not local `HEAD` — so commits on GitHub that haven't been pulled yet are detected. If origin is ahead of local HEAD, pull before syncing:
@@ -318,7 +224,58 @@ If no removed skills have live artifacts, continue silently to Step 4.
 
 ---
 
+## Step 3c: Major version gate (v3 → v4)
+
+After determining the installed version and the incoming version, check for a v3→v4 major upgrade:
+
+```python
+import re
+
+def major_version(v):
+    m = re.match(r'^(\d+)', str(v or ''))
+    return int(m.group(1)) if m else 0
+
+current_major = major_version(installed_version)   # from Step 1
+incoming_major = major_version(new_version)         # from Step 3 source package.json
+```
+
+If `current_major == 3` and `incoming_major >= 4`:
+
+Present AskUserQuestion with this body block before any sync:
+
+> **SweetClaude v4 is available — this is a major release.**
+>
+> Stories move from `.sweetclaude/` to `docs/product/` in a new per-type directory structure with new IDs. Each project migrates independently the first time you open it after updating.
+>
+> Migration creates a safety backup and can be rolled back. Active and future stories must migrate. Done stories are optional.
+
+- **Options:** `Yes, update`, `Not now`
+- On `Not now`:
+  - Write `framework.update.declined: true` to `.sweetclaude/state/sweetclaude.yaml` (if it exists in the current project).
+  - **Do NOT re-offer** in subsequent bootstrap runs until the user explicitly runs `/sweetclaude:update` again.
+  - Clean up temp dir if used. Stop.
+- On `Yes, update`: proceed to Step 4.
+
+If it is not a v3→v4 transition (e.g. minor/patch updates), skip this step and proceed directly to Step 4.
+
 ## Step 4: Sync
+
+Before syncing, capture which skills are new (present in source, absent in the currently installed path). Claude Code loads skills at session start, so new skills added during this update will not be available until the user restarts.
+
+```bash
+NEW_SKILLS=""
+if [ -d "{installPath}/skills" ]; then
+  for skill_dir in "$SOURCE_DIR/skills"/*/; do
+    skill_name=$(basename "$skill_dir")
+    if [ ! -d "{installPath}/skills/$skill_name" ]; then
+      NEW_SKILLS="${NEW_SKILLS:+$NEW_SKILLS }$skill_name"
+    fi
+  done
+fi
+echo "NEW_SKILLS=${NEW_SKILLS}"
+```
+
+Save the value of `NEW_SKILLS` — it is used in the Step 6c success report.
 
 Copy from SOURCE_DIR to installed locations. Use `rsync --delete` to remove files that no longer exist in the source.
 
@@ -361,6 +318,23 @@ chmod +x "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/hooks/sweetclaude}/"*.sh 2>/dev/nu
 
 # Verify registry file synced correctly
 ls ~/.claude/config/sweetclaude/skills-registry.yaml 2>/dev/null || echo "WARNING: skills-registry.yaml not found after sync"
+
+# Claude Code may load skills from a version-named directory (e.g. 4.0.6-beta/)
+# rather than installPath (e.g. 3.52.14/) when they differ. Sync to both.
+# Derive the version-named dir from the new package.json version.
+NEW_VER=$(python3 -c "import json; print(json.load(open('$SOURCE_DIR/package.json'))['version'])" 2>/dev/null)
+PLUGIN_CACHE_PARENT=$(dirname {installPath})
+VERSION_DIR="$PLUGIN_CACHE_PARENT/$NEW_VER"
+if [ -n "$NEW_VER" ] && [ "$VERSION_DIR" != "{installPath}" ]; then
+  mkdir -p "$VERSION_DIR/skills" "$VERSION_DIR/hooks"
+  rsync -a --delete $SOURCE_DIR/skills/ "$VERSION_DIR/skills/"
+  rsync -a --delete $SOURCE_DIR/hooks/ "$VERSION_DIR/hooks/"
+  rsync -a $SOURCE_DIR/.claude-plugin/ "$VERSION_DIR/.claude-plugin/"
+  for f in CLAUDE.md package.json LICENSE; do
+    [ -f "$SOURCE_DIR/$f" ] && cp "$SOURCE_DIR/$f" "$VERSION_DIR/"
+  done
+  echo "Synced to version-named dir: $VERSION_DIR"
+fi
 ```
 
 ---
@@ -395,6 +369,7 @@ Update `~/.claude/plugins/installed_plugins.json`:
    - `lastUpdated` → current ISO timestamp
    - `gitCommitSha` → HEAD SHA
    - `version` → package.json version
+   - `installPath` → the version-named directory synced in Step 4 (`$VERSION_DIR`) if it was created; otherwise leave unchanged. This ensures Claude Code loads skills from the same directory that was just synced.
 
 ---
 
@@ -407,9 +382,10 @@ rm -rf "$TMPDIR"
 
 Run a final diff to confirm sync:
 ```bash
-diff -rq $SOURCE_DIR/skills/ {installPath}/skills/ 2>/dev/null
+SYNC_TARGET="${VERSION_DIR:-{installPath}}"
+diff -rq $SOURCE_DIR/skills/ "$SYNC_TARGET/skills/" 2>/dev/null
 diff -rq $SOURCE_DIR/skills/ ~/.claude/skills/sweetclaude/ 2>/dev/null
-diff -rq $SOURCE_DIR/scripts/ {installPath}/scripts/ 2>/dev/null
+diff -rq $SOURCE_DIR/scripts/ "$SYNC_TARGET/scripts/" 2>/dev/null
 ```
 
 Continue to Step 6b. The user-facing success report is deferred until Step 6b confirms project state is coherent — reporting "updated" before the drift verdict is what caused BUG-002.
@@ -524,10 +500,8 @@ Stop. Do NOT continue to Step 7.
 
 ## Step 6c: Success report (only reached when project state is verified clean)
 
-If `$PRERELEASE_INSTALL` is `true`, the header is `SweetClaude updated (PRERELEASE).` and the `✓ Version:` line uses the tag label (e.g. `v4.0.0-beta`) rather than the package.json version. Add a `⚠ Prerelease:` line above the trailing arrow to remind the user.
-
 ```
-SweetClaude updated.                       (or "updated (PRERELEASE)." for prerelease)
+SweetClaude updated.
 ═══════════════════
 
 ✓ Version:    {old_version} → {new_version}  (or same if unchanged)
@@ -536,27 +510,32 @@ SweetClaude updated.                       (or "updated (PRERELEASE)." for prere
 ✓ Hooks:      {only include this line if Step 4b reported cleaned: entries}
 ✓ Project:    {clean | clean (verified post-migrate)}
 
-⚠ Prerelease: {only include this line when PRERELEASE_INSTALL=true. Wording:
-   "Installed from prerelease tag {PRERELEASE_TAG}. Report issues at
-   https://github.com/carson-sweet/sweetclaude/issues with the v4-beta label."}
-
-→ New Claude Code sessions in any project will use the updated version.
-  Current sessions keep the old version until restarted.
+→ Restart Claude Code to use this update — skills are loaded at session start
+  and are not updated in the current session.
 ```
 
 The `✓ Project:` line wording depends on which Step 6b exit path was taken:
 - DRIFT_COUNT=0 on first check → `clean`
 - _migrate ran and POST_MIGRATE_COUNT=0 → `clean (verified post-migrate)`
 
-Print exactly one of those two; do not print the literal text `clean OR clean (verified post-migrate)`. After printing the template, continue to Step 7.
+Print exactly one of those two; do not print the literal text `clean OR clean (verified post-migrate)`.
+
+If `NEW_SKILLS` (from Step 4) is non-empty, append this block after the success report — one line per new skill:
+
+```
+New skills added (not available until restart):
+  {list each name from NEW_SKILLS, one per line, prefixed with /sweetclaude:}
+```
+
+Do not mention any `/sweetclaude:` command as something the user can run now. Do not ask "Want to run it?" or offer to invoke any skill. The current session does not have the updated skill set.
+
+After printing the template (and the new-skills block if applicable), continue to Step 7.
 
 ---
 
 ## Step 7: Surface capabilities
 
 Read [capability-surface.md](capability-surface.md) and execute it in full.
-
-It has two parts (7a and 7b) — both must run. 7a presents new items in this update, then runs a `skills.yaml` schema migration and an onboarding prompt for data-owning skills. 7b prints the full skill catalog grouped by category. Do not stop between 7a and 7b.
 
 
 ---
