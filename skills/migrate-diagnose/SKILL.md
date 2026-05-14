@@ -29,10 +29,21 @@ def patch_frontmatter(path, mutate):
 
 ### Step 1: Enumerate v3 files
 
+Resolve the product base path via the migration script before scanning. This must use the same path resolution logic as `sweetclaude:migrate` — do not hardcode `.sweetclaude/product/backlog`.
+
+```bash
+SCRIPT=~/.claude/scripts/sweetclaude/migrate/migrate-v3-to-v4.py
+if [ ! -f "$SCRIPT" ]; then
+  SCRIPT=$(find ~/.claude/plugins/cache/sweetclaude -type f -name 'migrate-v3-to-v4.py' 2>/dev/null | head -1)
+fi
+PRODUCT_BASE=$(python3 "$SCRIPT" resolve-base --project-dir . | python3 -c "import sys, json; print(json.load(sys.stdin)['product_base'])")
+V3_BACKLOG="${PRODUCT_BASE}/backlog"
+```
+
 ```python
 import pathlib, yaml, sys
 
-backlog_path = pathlib.Path('.sweetclaude/product/backlog')
+backlog_path = pathlib.Path(V3_BACKLOG)  # resolved above, not hardcoded
 files = sorted(backlog_path.glob('BL-*.md'), key=lambda p: p.name)
 
 if not files:
