@@ -456,6 +456,99 @@ MDEOF
     rm -rf "$tmp"
 }
 
+# ── legacy markdown format regression (BUG-009) ─────────────────────────────
+
+run_legacy_markdown_scenario() {
+    echo ""
+    echo "=== Scenario: legacy markdown format — # BL-NNN: Title + **Field:** value ==="
+    local tmp
+    tmp=$(mktemp -d)
+
+    mkdir -p "$tmp/.sweetclaude/state" "$tmp/.sweetclaude/product/backlog"
+    cp "$REPO_ROOT/tests/fixtures/migrate-smoke/.sweetclaude/state/sweetclaude.yaml" \
+        "$tmp/.sweetclaude/state/sweetclaude.yaml"
+
+    # File with no YAML frontmatter — old markdown-header format.
+    cat > "$tmp/.sweetclaude/product/backlog/BL-001-some-feature.md" << 'MDEOF'
+# BL-001: Some Feature
+
+**Priority:** P2
+**Status:** backlog
+**Created:** 2026-01-01
+
+## Summary
+
+A backlog item in the old markdown format.
+MDEOF
+
+    # File with date-embedded status (e.g. "DONE — 2026-05-02").
+    cat > "$tmp/.sweetclaude/product/backlog/BL-002-completed-thing.md" << 'MDEOF'
+# BL-002: Completed Thing
+
+**Priority:** P1
+**Status:** DONE — 2026-03-15
+**Created:** 2026-01-15
+
+## Summary
+
+A done item with date embedded in status.
+MDEOF
+
+    # File with YAML frontmatter and uppercase BACKLOG status.
+    cat > "$tmp/.sweetclaude/product/backlog/BL-003-yaml-uppercase.md" << 'MDEOF'
+---
+id: BL-003
+title: Yaml Uppercase Status
+status: BACKLOG
+---
+body text
+MDEOF
+
+    # File with YAML frontmatter and open status.
+    cat > "$tmp/.sweetclaude/product/backlog/BL-004-open-status.md" << 'MDEOF'
+---
+id: BL-004
+title: Open Status Item
+status: open
+---
+body text
+MDEOF
+
+    local validate_out failure_count
+    validate_out=$(python3 "$SCRIPT" validate --project-dir "$tmp" 2>&1)
+    failure_count=$(echo "$validate_out" | python3 -c "import sys, json; print(len(json.load(sys.stdin).get('failures', [])))")
+
+    if [ "$failure_count" = "0" ]; then
+        pass "legacy-markdown: 0 validation failures (all 4 files parseable)"
+    else
+        fail "legacy-markdown: expected 0 failures, got $failure_count"
+        echo "$validate_out"
+        rm -rf "$tmp"
+        return
+    fi
+
+    # Verify plan correctly resolves types and statuses.
+    local plan_out
+    plan_out=$(python3 "$SCRIPT" plan --project-dir "$tmp" --include-done 2>&1)
+    local story_count done_count
+    story_count=$(echo "$plan_out" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['counters']['story'])" 2>/dev/null)
+    done_count=$(echo "$plan_out" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for i in d['plan_items'] if i['is_terminal']))" 2>/dev/null)
+
+    if [ "$story_count" = "4" ]; then
+        pass "legacy-markdown: plan assigns all 4 as stories"
+    else
+        fail "legacy-markdown: expected story_count=4, got '$story_count'"
+    fi
+
+    if [ "$done_count" = "1" ]; then
+        pass "legacy-markdown: plan correctly identifies 1 terminal (done) item"
+    else
+        fail "legacy-markdown: expected done_count=1, got '$done_count'"
+    fi
+
+    rm -rf "$tmp"
+}
+
 # ── run scenarios ───────────────────────────────────────────────────────────
 
 echo "=== B2/C smoke test: v3 -> v4 migration ==="
@@ -466,6 +559,7 @@ run_skip_done_scenario
 run_bug_005_reorder
 run_bug_005_idempotency
 run_frontmatter_not_dict_scenario
+run_legacy_markdown_scenario
 
 echo ""
 if [ "$FAILED" -gt 0 ]; then

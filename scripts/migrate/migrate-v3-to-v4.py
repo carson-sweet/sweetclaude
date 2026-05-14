@@ -32,7 +32,7 @@ import sys
 import yaml
 
 
-V3_VALID_STATUSES = {"backlog", "in_progress", "done", "cancelled", "blocked", "abandoned"}
+V3_VALID_STATUSES = {"backlog", "in_progress", "done", "cancelled", "blocked", "abandoned", "deferred"}
 VALID_TYPES = {"story", "bug", "debt", "chore"}
 TYPE_PREFIX = {"story": "STORY", "bug": "BUG", "debt": "DEBT", "chore": "CHORE"}
 TYPE_DIR = {"story": "stories", "bug": "bugs", "debt": "debt", "chore": "chores"}
@@ -43,6 +43,7 @@ STATUS_REMAP = {
     "backlog": "new",
     "cancelled": "abandoned",
     "in_progress": "active",
+    "deferred": "deferred",
 }
 
 
@@ -65,6 +66,108 @@ def resolve_product_base(project_dir: pathlib.Path) -> pathlib.Path:
     return project_dir / ".sweetclaude" / "product"
 
 
+_LEGACY_STATUS_MAP = {
+    "done": "done",
+    "in_progress": "in_progress",
+    "in progress": "in_progress",
+    "open": "in_progress",
+    "backlog": "backlog",
+    "blocked": "blocked",
+    "deferred": "deferred",
+    "cancelled": "cancelled",
+    "canceled": "cancelled",
+    "abandoned": "abandoned",
+}
+
+_LEGACY_PRIORITY_MAP = {
+    "spike": "soon",
+    "p0": "next",
+    "p1": "sooner",
+    "p2": "soon",
+    "p3": "later",
+    "p4": "someday",
+    "next": "next",
+    "now": "next",
+    "sooner": "sooner",
+    "soon": "soon",
+    "later": "later",
+    "someday": "someday",
+    "high": "sooner",
+    "medium": "soon",
+    "low": "later",
+}
+
+
+_STATUS_PREFIX_RE = re.compile(
+    r"^(done|in[_\s]progress|backlog|blocked|deferred|cancelled|canceled|abandoned|open)\b",
+    re.I,
+)
+
+
+def _normalize_legacy_status(raw: str) -> tuple[str, str | None]:
+    """
+    Parse status strings like 'DONE — 2026-05-02', 'Done', 'DONE (2026-05-02)',
+    'BACKLOG' into (v3_status, closed_date_or_None).
+    Matches a known keyword prefix instead of splitting on separators, so date
+    hyphens inside '2026-05-02' do not break the base keyword extraction.
+    """
+    raw = raw.strip()
+    m = _STATUS_PREFIX_RE.match(raw)
+    if m:
+        base = m.group(1).lower()
+    else:
+        base = raw.lower().split()[0] if raw else "backlog"
+    status = _LEGACY_STATUS_MAP.get(base, base.replace(" ", "_"))
+    date_m = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", raw)
+    return status, (date_m.group(1) if date_m else None)
+
+
+def _parse_legacy_markdown(text: str, stem: str) -> dict | None:
+    """
+    Parse BL-*.md files that use '# BL-NNN: Title' + '**Field:** value' format
+    instead of YAML frontmatter. Returns a frontmatter-compatible dict, or None
+    if the file does not match the expected pattern.
+    """
+    h1_m = re.search(r"^#\s+(BL-\d+)[:\s]+(.+)", text, re.M)
+    fn_m = re.match(r"(BL-\d+)", stem)
+    if not h1_m and not fn_m:
+        return None
+
+    if h1_m:
+        bl_id = h1_m.group(1)
+        title = h1_m.group(2).strip()
+    else:
+        bl_id = fn_m.group(1)
+        slug_part = stem[len(bl_id):].lstrip("-")
+        title = slug_part.replace("-", " ").strip() if slug_part else bl_id
+
+    fields: dict[str, str] = {}
+    for m in re.finditer(r"^\*\*([^*:]+):\*\*\s*(.+)", text, re.M):
+        key = m.group(1).strip().lower().replace(" ", "_")
+        fields[key] = m.group(2).strip()
+
+    status_raw = fields.get("status", "backlog")
+    v3_status, closed_date = _normalize_legacy_status(status_raw)
+
+    raw_priority = fields.get("priority", "soon").lower().strip()
+    priority = _LEGACY_PRIORITY_MAP.get(raw_priority, "soon")
+
+    fm: dict = {
+        "id": bl_id,
+        "title": title,
+        "type": fields.get("type", "story").lower(),
+        "status": v3_status,
+        "priority": priority,
+    }
+    if closed_date:
+        fm["closed_date"] = closed_date
+    if "created" in fields:
+        fm["created"] = fields["created"]
+    if "tags" in fields:
+        fm["tags"] = [t.strip() for t in fields["tags"].split(",") if t.strip()]
+    return fm
+
+
 def _read_v3_file(path: pathlib.Path) -> tuple[dict, str] | tuple[None, str]:
     """Return (frontmatter_dict, body_text) or (None, error_reason)."""
     raw = path.read_bytes()
@@ -73,6 +176,9 @@ def _read_v3_file(path: pathlib.Path) -> tuple[dict, str] | tuple[None, str]:
     text = raw.decode("utf-8").replace("\r\n", "\n")
     parts = text.split("---", 2)
     if len(parts) < 3:
+        fm = _parse_legacy_markdown(text, path.stem)
+        if fm is not None:
+            return fm, text
         return None, "no-frontmatter-delimiter"
     try:
         fm = yaml.safe_load(parts[1])
@@ -80,6 +186,11 @@ def _read_v3_file(path: pathlib.Path) -> tuple[dict, str] | tuple[None, str]:
         return None, f"frontmatter-parse-error:{e}"
     if not isinstance(fm, dict):
         return None, f"frontmatter-not-a-dict:{type(fm).__name__}"
+    if isinstance(fm.get("status"), str):
+        norm_status, closed_date = _normalize_legacy_status(fm["status"])
+        fm["status"] = norm_status
+        if closed_date and fm.get("closed_date") is None:
+            fm["closed_date"] = closed_date
     return fm, parts[2]
 
 
@@ -98,7 +209,7 @@ def validate(project_dir: pathlib.Path) -> dict:
             failures.append({"file": str(path), "problem": fm_or_err[1]})
             continue
         fm, _ = fm_or_err
-        for field in ("id", "type", "title", "status"):
+        for field in ("id", "title", "status"):
             if fm.get(field) is None:
                 failures.append({"file": str(path), "problem": f"missing-field:{field}"})
         status = fm.get("status")
