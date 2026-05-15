@@ -117,7 +117,7 @@ PY
 
 ## Step 4: Onboard newly-enabled features
 
-For each feature that is newly enabled (was not previously `active`), invoke its onboarding action. Complete each before starting the next.
+For each feature that is newly enabled (was not previously `active`), invoke its onboarding action. **Do not move to the next feature until the current one either completes or explicitly signals it is paused.**
 
 | Feature key | Action |
 |---|---|
@@ -128,5 +128,7 @@ For each feature that is newly enabled (was not previously `active`), invoke its
 | `document_corpus` | invoke `sweetclaude:document-corpus` with argument `onboard` |
 | `usage_tracking` | invoke `sweetclaude:usage on` |
 | `behavioral_regression` | invoke `sweetclaude:behavioral-regression` |
+
+**Handling a paused onboard:** Some skills (notably `document_corpus`) run multi-step pipelines requiring active user review at each stage. If a skill's onboard output contains a pause marker (e.g. "⏸ … paused … resume with …"), surface that message verbatim, then output: "Moving on — I'll set up the remaining features and you can resume corpus setup at any time." Then continue to the next feature. Do NOT treat a pause marker as onboard completion.
 
 If no features are newly enabled, say: "Feature configuration saved." and stop.

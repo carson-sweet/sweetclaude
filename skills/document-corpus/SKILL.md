@@ -207,7 +207,19 @@ If nothing found:
 
 3. **If yes:** Invoke `sweetclaude:corpus-consolidate` with the discovered directories as suggested sources.
 
-4. **If later / nothing found:** Stop.
+4. **After consolidate completes:** Ask whether to continue the pipeline now or pause:
+
+> "Files staged in corpus/raw/inbox/ (step 1 of 4). The next steps — triage, reconcile, and promote — each require your review and can't run automatically.
+>
+> Continue to triage now, or pause and come back later?"
+
+Use AskUserQuestion with options:
+- "Continue to triage now" — invoke `sweetclaude:corpus-triage`; after triage, ask the same way before reconcile; after reconcile, ask before promote
+- "Pause — I'll resume later" — output: "⏸ Corpus onboarding paused after consolidate. Resume with `/sweetclaude:document-corpus triage` when ready." Stop.
+
+When invoking as part of `_features` onboarding (i.e., called with argument `onboard`), if the user chooses pause at any stage, end with the pause message above so the orchestrator can surface it before moving to the next feature.
+
+5. **If later / nothing found:** Stop.
 
 ---
 
