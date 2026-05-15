@@ -4,6 +4,8 @@ user-invocable: false
 description: "Consistency scan and version check."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:_health" 2>/dev/null || true`
+
 # Health Check
 
 Run the health check script inline. Called when `hook_last_ran` is stale — covers the case where the skill is invoked outside a normal session start.

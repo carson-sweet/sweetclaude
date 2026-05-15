@@ -4,6 +4,8 @@ user-invocable: true
 description: "Define load scenarios, establish performance baselines, set thresholds."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:testing-performance" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 ```bash

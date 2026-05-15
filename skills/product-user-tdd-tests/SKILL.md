@@ -4,6 +4,8 @@ user-invocable: true
 description: "Transition user stories into Gherkin .feature files."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:product-user-tdd-tests" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

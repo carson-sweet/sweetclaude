@@ -5,6 +5,8 @@ description: "Convert user stories into UX/UI flows — step-by-step paths throu
 category: design
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:design-user-flows" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 # Design User Flows

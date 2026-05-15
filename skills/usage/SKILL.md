@@ -4,6 +4,8 @@ user-invocable: true
 description: "Toggle and view local usage tracking."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:usage" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 # SweetClaude Usage
@@ -34,10 +36,8 @@ Parse the user's input to determine the subcommand:
 4. Confirm:
    ```
    Metrics enabled. SweetClaude will record:
-     - Skill invocations
-     - Phase gate outcomes
-     - TDD enforcement events (guardian blocks, level selection)
-     - Deference level and phase transitions
+     - Skill invocations (all skills)
+     - Session starts
 
    All data stays in .sweetclaude/metrics/ — local, committed with your project.
    View anytime: /sweetclaude:usage

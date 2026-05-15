@@ -3,6 +3,8 @@ name: sweetclaude:migrate-diagnose
 description: Internal subskill — diagnoses v3 BL-NNN file problems before migration. NOT user-invocable. Called only by sweetclaude:migrate (failure menu option 1) and sweetclaude:bootstrap (offer at hard stop).
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:migrate-diagnose" 2>/dev/null || true`
+
 This skill is internal-only. It is not accessible via slash command by the user. It is invoked exclusively by `sweetclaude:migrate` when migration fails (failure menu option 1) and by `sweetclaude:bootstrap` when a v3-files hard stop is detected.
 
 ## Procedure

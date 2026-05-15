@@ -4,6 +4,8 @@ user-invocable: true
 description: "RICE scoring and stack-rank analysis for roadmap items."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:product-roadmap-analysis" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 ```bash

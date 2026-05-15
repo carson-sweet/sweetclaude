@@ -4,6 +4,8 @@ user-invocable: false
 description: "Consolidated onboarding skill."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:setup" 2>/dev/null || true`
+
 # SweetClaude Setup
 
 Three branches. Detection is automatic.

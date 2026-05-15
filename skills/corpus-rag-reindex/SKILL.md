@@ -4,6 +4,8 @@ user-invocable: true
 description: "Rebuild RAG collections from source files."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:corpus-rag-reindex" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

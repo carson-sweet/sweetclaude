@@ -5,6 +5,8 @@ description: "Competitive analysis at three depth levels — from a quick compan
 category: strategy
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:product-competition" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 # Product Competition

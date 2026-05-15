@@ -4,6 +4,8 @@ user-invocable: true
 description: "Import open GitHub Issues into the local issue store as v4 story files."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:project-gh-import-issues" 2>/dev/null || true`
+
 ## MIGRATION GUARD
 
 Before any other work, check for unmigrated v3 BL files:

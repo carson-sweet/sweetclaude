@@ -4,6 +4,8 @@ user-invocable: false
 description: "Find and start the right skill for any work."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:find-skill" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

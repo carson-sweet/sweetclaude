@@ -4,6 +4,8 @@ user-invocable: false
 description: "Natural language classifier — maps user text to the right internal skill."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:_route" 2>/dev/null || true`
+
 # Route
 
 Classify `$ARGUMENTS` and invoke the matched skill. Do not ask the user for clarification first — make a call, then confirm if the match is non-obvious.

@@ -4,6 +4,8 @@ user-invocable: false
 description: "Migration orchestrator. Wraps the runner with snapshot, recovery menus, and end-of-session report."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:_migrate" 2>/dev/null || true`
+
 # SweetClaude Migration
 
 Internal skill. Called by `bootstrap` Step 5b when the registry-driven drift scan detects out-of-version state. Wraps the migration runner with the safety scaffolding from Gaps #5/#6:

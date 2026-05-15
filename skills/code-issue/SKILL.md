@@ -3,6 +3,8 @@ spdx-license: AGPL-3.0-or-later
 description: "Implement a GitHub issue end-to-end."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:code-issue" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

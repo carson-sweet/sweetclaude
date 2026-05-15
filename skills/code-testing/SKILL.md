@@ -4,6 +4,8 @@ user-invocable: true
 description: "Run any combination of test suite, mutation testing, security review, and PR pre-check."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:code-testing" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

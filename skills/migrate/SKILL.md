@@ -3,6 +3,8 @@ name: sweetclaude:migrate
 description: Migrate v3 BL-NNN stories to v4 docs/product/backlog/ layout. User-invocable as /sweetclaude:migrate. Builds backup, validates, previews, executes, verifies, finalizes.
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:migrate" 2>/dev/null || true`
+
 This skill is a thin orchestrator. The deterministic migration operations
 (validation, plan, execute, verify, finalize) are implemented in
 `scripts/migrate/migrate-v3-to-v4.py` and tested end-to-end by
