@@ -397,12 +397,14 @@ p = d.get('project', {})
 w = d.get('work', {})
 h = d.get('work_history', [])
 
-name   = p.get('name') or 'this project'
-stage  = p.get('version_stage', '')
-active = w.get('active', {}) or {}
-last3  = h[:3]
+name    = p.get('name') or 'this project'
+stage   = p.get('version_stage', '')
+sc_ver  = d.get('framework', {}).get('installed_version', '')
+active  = w.get('active', {}) or {}
+last3   = h[:3]
 
-print(f"**{name}** · {stage}")
+ver_str = f"SweetClaude {sc_ver} · " if sc_ver else ""
+print(f"{ver_str}**{name}** · {stage}")
 if active.get('title'):
     print(f"Active: {active['title']} [{active.get('phase','')}]")
 elif last3:
