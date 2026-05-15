@@ -4,6 +4,8 @@ user-invocable: true
 description: "Record and track design and architecture decisions with context, options considered, decision made, and rationale."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:design-manage-decisions" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

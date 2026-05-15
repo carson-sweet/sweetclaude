@@ -4,6 +4,8 @@ user-invocable: true
 description: "Manage project issues — list, view, create, update, and close."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:project-issues" 2>/dev/null || true`
+
 ## MIGRATION GUARD
 
 Before any other work, check for unmigrated v3 BL files:

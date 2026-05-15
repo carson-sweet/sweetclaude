@@ -4,6 +4,8 @@ user-invocable: true
 description: "View and manage the unscheduled issue backlog."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:project-backlog" 2>/dev/null || true`
+
 ## MIGRATION GUARD
 
 Before any other work, check for unmigrated v3 BL files:

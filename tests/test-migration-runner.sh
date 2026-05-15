@@ -565,6 +565,69 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Test 11b: snapshot + rollback with dirty working tree (BUG-003)
+# Uncommitted tracked changes must survive snapshot → rollback.
+# ---------------------------------------------------------------------------
+
+echo "[11b] snapshot + rollback with dirty working tree"
+
+DIRTY_TMPDIR=$(mktemp -d)
+trap "rm -rf $TEST_TMPDIR $DIR_TMPDIR $VAR_TMPDIR $SCAN_TMPDIR $REC_TMPDIR $SNAP_TMPDIR $DIRTY_TMPDIR" EXIT
+
+(
+  cd "$DIRTY_TMPDIR"
+  git init -q -b main 2>/dev/null
+  git config user.email "test@example.com"
+  git config user.name "Test"
+  mkdir -p .sweetclaude/state
+  cat > .sweetclaude/state/sweetclaude.yaml << 'YAML'
+schema_version: 1
+framework:
+  installed_version: "3.99.0"
+YAML
+  echo "initial source" > src.py
+  git add .
+  git -c commit.gpgsign=false commit -q -m "initial" 2>/dev/null
+  # Dirty the working tree with an uncommitted change.
+  echo "uncommitted work" >> src.py
+) || { fail "dirty-tree git setup failed"; }
+
+python3 - "$DIRTY_TMPDIR" "$REPO_ROOT/scripts/migrations" << 'PY' \
+  && pass "snapshot + rollback preserves uncommitted changes (BUG-003)" \
+  || fail "dirty-tree rollback: uncommitted changes destroyed"
+import sys, os
+sys.path.insert(0, sys.argv[2])
+from runner import MigrationRunner
+
+project_dir = sys.argv[1]
+reg_path = os.path.join(project_dir, "registry.yaml")
+with open(reg_path, "w") as f:
+    f.write("schema_version: 1\nstate_files: {}\n")
+runner = MigrationRunner(project_dir=project_dir, registry_path=reg_path)
+
+snap = runner.create_snapshot()
+assert snap.git_stash_ref is not None, "stash_ref should be set for dirty working tree"
+assert snap.git_tag_created, "git tag should be created"
+
+src = os.path.join(project_dir, "src.py")
+# Stash removes changes from the working tree — src.py is now the committed version.
+assert "uncommitted work" not in open(src).read(), "stash should revert working tree to committed state"
+
+# Simulate migration changing src.py (as if runner modified it).
+with open(src, "w") as f:
+    f.write("migration clobbered this\n")
+
+ok, reason = runner.rollback(snap)
+assert ok, f"rollback failed: {reason}"
+
+content = open(src).read()
+assert "uncommitted work" in content, f"uncommitted change lost after rollback: {content!r}"
+assert "migration clobbered" not in content, f"rollback did not restore pre-migration state: {content!r}"
+
+sys.exit(0)
+PY
+
+# ---------------------------------------------------------------------------
 # Test 12: sweetclaude.yaml v1 -> v2 (decline amnesty + stale cleanup)
 # ---------------------------------------------------------------------------
 

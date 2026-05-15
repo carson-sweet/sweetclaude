@@ -4,6 +4,8 @@ user-invocable: true
 description: "Orient to the current project."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:status" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>
@@ -128,7 +130,34 @@ print('ISSUES_END')
 
 # --- Backlog ---
 backlog = []
-_HORIZON_ORDER = {'next': 1, 'sooner': 2, 'soon': 3, 'later': 4, 'someday': 5}
+_HORIZON_ORDER = {'now': 0, 'next': 1, 'sooner': 2, 'soon': 3, 'later': 4, 'someday': 5}
+_DONE_STATUSES = {'done', 'complete', 'achieved', 'closed', 'cancelled', 'canceled'}
+
+def _item_title(c):
+    # YAML frontmatter title: takes precedence over H1
+    fm = re.match(r'^---\s*\n(.*?)\n---', c, re.DOTALL)
+    if fm:
+        tm = re.search(r'^title:\s*(.+)', fm.group(1), re.MULTILINE)
+        if tm:
+            return tm.group(1).strip().strip('"\'')
+    return title(c)
+
+# v4: typed subdirs — priority field serves as horizon
+_V4_SUBDIRS = [('stories', 'STORY'), ('bugs', 'BUG'), ('debt', 'DEBT'), ('chores', 'CHORE')]
+for _subdir, _prefix in _V4_SUBDIRS:
+    for f in sorted(glob.glob(f'{base}/backlog/{_subdir}/{_prefix}-*.md')):
+        c = open(f).read()
+        s = (field(c, 'status') or field(c, 'Status')).lower()
+        if s in _DONE_STATUSES:
+            continue
+        h_raw = (field(c, 'priority') or field(c, 'Priority') or '').lower()
+        h = h_raw if h_raw in _HORIZON_ORDER else 'unscheduled'
+        m = re.match(rf'({_prefix}-\d+)', os.path.basename(f))
+        item_id = m.group(1) if m else os.path.basename(f).split('.')[0]
+        backlog.append({'id': item_id, 'title': _item_title(c), 'priority': h_raw.upper(),
+                        'status': s, 'horizon': h, 'horizon_order': _HORIZON_ORDER.get(h, 6)})
+
+# v3 backwards compat: BL-*.md in backlog/
 for f in sorted(glob.glob(f'{base}/backlog/BL-*.md')):
     c = open(f).read()
     s = field(c, 'Status').lower()

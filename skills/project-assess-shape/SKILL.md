@@ -4,6 +4,8 @@ description: "Interview user and recommend a SweetClaude project mode (Flow, Kan
 version: 1.0.0
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:project-assess-shape" 2>/dev/null || true`
+
 # project-assess-shape
 
 Recommend a project mode by interviewing the user. Called automatically from `/sweetclaude:setup` at init and available on demand.

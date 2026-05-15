@@ -5,6 +5,8 @@ description: "Synthetic panel research using persona archetypes as parallel suba
 category: product
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:product-user-focus-group" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 # Product User Focus Group

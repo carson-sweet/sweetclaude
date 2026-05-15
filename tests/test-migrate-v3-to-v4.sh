@@ -549,6 +549,92 @@ MDEOF
     rm -rf "$tmp"
 }
 
+run_milestone_reference_rewrite_scenario() {
+    # After execute(), any BL-NNN references in milestone files should be rewritten
+    # to their v4 counterparts using the migration map.
+    local tmp
+    tmp=$(mktemp -d)
+
+    # Set up minimal sweetclaude state
+    mkdir -p "$tmp/.sweetclaude/state"
+    cat > "$tmp/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
+schema_version: 2
+framework:
+  installed_version: "3.18.0"
+YAML
+    cat > "$tmp/.sweetclaude/artifact-privacy.yaml" << 'YAML'
+categories:
+  product:
+    base_path: docs/product
+YAML
+
+    # v3 backlog items
+    mkdir -p "$tmp/docs/product/backlog"
+    cat > "$tmp/docs/product/backlog/BL-001-add-oauth.md" << 'MD'
+---
+id: BL-001
+title: Add OAuth login
+type: story
+status: backlog
+priority: soon
+---
+MD
+    cat > "$tmp/docs/product/backlog/BL-002-fix-crash.md" << 'MD'
+---
+id: BL-002
+title: Fix crash on empty input
+type: bug
+status: backlog
+priority: sooner
+---
+MD
+
+    # Milestone file with BL-NNN references in Contributing work items
+    mkdir -p "$tmp/docs/product/milestones"
+    cat > "$tmp/docs/product/milestones/MS-001-v1.md" << 'MD'
+# MS-001: v1.0 Release
+
+**Status:** active
+
+## Contributing work items
+
+- BL-001 — Add OAuth login
+- BL-002 — Fix crash on empty input
+MD
+
+    (cd "$tmp" && git init -q && git add -A && git commit -q -m "fixture" --no-gpg-sign 2>/dev/null) || true
+
+    local exec_out
+    exec_out=$(python3 "$SCRIPT" execute --project-dir "$tmp" 2>&1)
+    local exec_exit=$?
+
+    if [ $exec_exit -ne 0 ]; then
+        fail "milestone-rewrite: execute failed: $exec_out"
+        rm -rf "$tmp"
+        return
+    fi
+
+    local ms_content
+    ms_content=$(cat "$tmp/docs/product/milestones/MS-001-v1.md" 2>/dev/null || echo "MISSING")
+
+    # BL-001 → STORY-001, BL-002 → BUG-001
+    if echo "$ms_content" | grep -q "STORY-001" && echo "$ms_content" | grep -q "BUG-001"; then
+        pass "milestone-rewrite: BL-001→STORY-001 and BL-002→BUG-001 rewritten in milestone"
+    else
+        fail "milestone-rewrite: milestone still contains old BL IDs or missing v4 IDs"
+        echo "  milestone content:"
+        echo "$ms_content" | sed 's/^/    /'
+    fi
+
+    if ! echo "$ms_content" | grep -qE '\bBL-00[12]\b'; then
+        pass "milestone-rewrite: no BL-NNN references remain in milestone"
+    else
+        fail "milestone-rewrite: BL-NNN references still present after rewrite"
+    fi
+
+    rm -rf "$tmp"
+}
+
 # ── run scenarios ───────────────────────────────────────────────────────────
 
 echo "=== B2/C smoke test: v3 -> v4 migration ==="
@@ -560,6 +646,7 @@ run_bug_005_reorder
 run_bug_005_idempotency
 run_frontmatter_not_dict_scenario
 run_legacy_markdown_scenario
+run_milestone_reference_rewrite_scenario
 
 echo ""
 if [ "$FAILED" -gt 0 ]; then

@@ -3,6 +3,8 @@ spdx-license: AGPL-3.0-or-later
 description: "Build a new feature end-to-end."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:code-feature" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>
@@ -21,12 +23,12 @@ Build feature: $ARGUMENTS
 git branch --show-current
 ```
 
-If the output already starts with a story ID prefix (e.g., `BL-046/`, `issue-42/`) — skip this step.
+If the output already starts with a story ID prefix (e.g., `STORY-046/`, `BUG-012/`, `issue-42/`) — skip this step.
 
 Otherwise, derive the branch name:
-- **ID**: extract from `$ARGUMENTS` if it contains a backlog ID (`BL-NNN`, `issue-NNN`). Fall back to `active_work_item.id` from session state. If neither is found, use `feature` as the ID.
+- **ID**: extract from `$ARGUMENTS` if it contains a backlog ID (`STORY-NNN`, `BUG-NNN`, `DEBT-NNN`, `CHORE-NNN`, `issue-NNN`). Fall back to `active_work_item.id` from session state. If neither is found, use `feature` as the ID.
 - **Slug**: take the work item title, lowercase, replace non-alphanumeric characters with hyphens, collapse consecutive hyphens, trim trailing hyphens, truncate to 40 characters.
-- **Branch name**: `{ID}/{slug}` — e.g., `BL-046/git-branch-discipline`
+- **Branch name**: `{ID}/{slug}` — e.g., `STORY-046/git-branch-discipline`
 
 Offer via AskUserQuestion:
 - **Create branch `{branch-name}`** (Recommended) — `git checkout -b {branch-name}`

@@ -4,6 +4,8 @@ user-invocable: true
 description: "Plan a sprint by selecting stories from the backlog, estimating scope, and producing a sprint commitment."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:product-sprint-plan" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

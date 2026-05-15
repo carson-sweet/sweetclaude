@@ -4,6 +4,8 @@ user-invocable: true
 description: "Bidirectional status sync between local v4 story files and GitHub Issues."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:project-gh-sync-issues" 2>/dev/null || true`
+
 ## MIGRATION GUARD
 
 Before any other work, check for unmigrated v3 BL files:

@@ -4,6 +4,8 @@ user-invocable: true
 description: "Classify files in corpus/raw/inbox/ as keep-as-is, needs-reconciliation, discard, or defer."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:corpus-triage" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>

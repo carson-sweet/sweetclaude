@@ -4,6 +4,8 @@ user-invocable: true
 description: "Show the full project at a glance — milestones in roadmap pipeline order with nested work items. Trigger on: 'big picture', 'whole project status', 'full status', 'what's the full state', 'project overview', 'where is everything', 'show me everything'."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:big-picture" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>
@@ -45,8 +47,6 @@ print(d.get('paths', {}).get('product_base', '.sweetclaude/product'))
 
 echo "PRODUCT_BASE=$product_base"
 ls ${product_base}/milestones/MS-*.md 2>/dev/null || echo "NO_MILESTONES"
-ls ${product_base}/backlog/BL-*.md 2>/dev/null | head -200 || echo "NO_BACKLOG"
-ls ${product_base}/stories/US-*.md 2>/dev/null | head -200 || echo "NO_STORIES"
 ```
 
 If output contains `NO_MILESTONES`, output:
@@ -132,7 +132,10 @@ for f in sorted(glob.glob(os.path.join(base, 'milestones', 'MS-*.md'))):
     work_items = []
     if contrib_match:
         for line in contrib_match.group(1).strip().splitlines():
-            lm = re.match(r'-\s*(BL-\d+)\s*[—–-]\s*(.+?)(?:\s+\((.+?)\))?\s*$', line.strip())
+            lm = re.match(
+                r'-\s*((?:STORY|BUG|DEBT|CHORE|BL)-\d+)\s*[—–-]\s*(.+?)(?:\s+\((.+?)\))?\s*$',
+                line.strip()
+            )
             if lm:
                 work_items.append({
                     'id': lm.group(1),
@@ -149,43 +152,49 @@ for f in sorted(glob.glob(os.path.join(base, 'milestones', 'MS-*.md'))):
         'work_items': work_items,
     }
 
-# --- Load backlog items (for current status) ---
-bl_cache = {}
+# --- Load backlog items (v4 typed subdirs + v3 BL-*.md compat) ---
+item_cache = {}
+
+# v4: typed subdirectories, each with an optional done/ subdir
+V4_TYPES = [('stories', 'STORY'), ('bugs', 'BUG'), ('debt', 'DEBT'), ('chores', 'CHORE')]
+for subdir, prefix in V4_TYPES:
+    for search_dir in [
+        os.path.join(base, 'backlog', subdir),
+        os.path.join(base, 'backlog', subdir, 'done'),
+    ]:
+        for f in sorted(glob.glob(os.path.join(search_dir, f'{prefix}-*.md'))):
+            fname = os.path.basename(f)
+            if 'INDEX' in fname.upper():
+                continue
+            m = re.match(rf'({prefix}-\d+)', fname)
+            if not m:
+                continue
+            item_id = m.group(1)
+            c = open(f).read()
+            status_val = field(c, 'status') or field(c, 'Status')
+            milestone_val = field(c, 'milestone') or field(c, 'Milestone')
+            item_cache[item_id] = {
+                'id': item_id,
+                'title': h1(c),
+                'status_tag': status_tag(status_val),
+                'milestone': milestone_val if milestone_val and milestone_val.lower() != 'null' else '',
+            }
+
+# v3 backwards compat: BL-*.md files in backlog/
 for f in sorted(glob.glob(os.path.join(base, 'backlog', 'BL-*.md'))):
-    if 'INDEX' in f.upper():
+    if 'INDEX' in os.path.basename(f).upper():
         continue
+    m = re.match(r'(BL-\d+)', os.path.basename(f))
+    if not m:
+        continue
+    item_id = m.group(1)
     c = open(f).read()
-    bm = re.match(r'(BL-\d+)', os.path.basename(f))
-    if not bm:
-        continue
-    bl_id = bm.group(1)
-    bl_cache[bl_id] = {
-        'id': bl_id,
+    item_cache[item_id] = {
+        'id': item_id,
         'title': h1(c),
-        'status_raw': field(c, 'Status'),
         'status_tag': status_tag(field(c, 'Status')),
         'milestone': field(c, 'Milestone'),
     }
-
-# --- Load stories (optional — keyed by backlog item if linked) ---
-story_map = {}  # BL-NNN -> [story objects]
-for f in sorted(glob.glob(os.path.join(base, 'stories', 'US-*.md'))):
-    c = open(f).read()
-    sm = re.match(r'(US-\d+)', os.path.basename(f))
-    if not sm:
-        continue
-    us_id = sm.group(1)
-    bl_ref = field(c, 'Backlog Item') or field(c, 'Backlog') or field(c, 'BL')
-    bl_ref_m = re.match(r'(BL-\d+)', bl_ref.strip()) if bl_ref else None
-    if bl_ref_m:
-        bl_key = bl_ref_m.group(1)
-        if bl_key not in story_map:
-            story_map[bl_key] = []
-        story_map[bl_key].append({
-            'id': us_id,
-            'title': h1(c),
-            'status_tag': status_tag(field(c, 'Status')),
-        })
 
 # --- Topological sort milestones ---
 def topo_sort(ms_dict):
@@ -240,30 +249,20 @@ for ms_id in sorted_ids:
     for i, wi in enumerate(work_items):
         is_last = (i == len(work_items) - 1)
         connector = '└──' if is_last else '├──'
-        cont = '    ' if is_last else '│   '
 
-        # Prefer live status from bl_cache over inline annotation
-        bl = bl_cache.get(wi['id'])
-        if bl:
-            bl_status = bl['status_tag']
-            bl_title = bl['title']
-            bl_title_clean = re.sub(r'^BL-\d+:\s*', '', bl_title)
+        # Prefer live status from item_cache over inline annotation
+        item = item_cache.get(wi['id'])
+        if item:
+            wi_status = item['status_tag']
+            wi_title_clean = re.sub(
+                r'^(?:STORY|BUG|DEBT|CHORE|BL)-\d+:\s*', '', item['title']
+            )
         else:
-            bl_status = status_tag(wi['status_inline'])
-            bl_title_clean = wi['title']
+            wi_status = status_tag(wi['status_inline'])
+            wi_title_clean = wi['title']
 
-        done_mark = ' ✓' if bl_status == 'done' else ''
-        bl_line = f"{connector} {wi['id']}{done_mark}  {bl_title_clean}"
-        output.append(bl_line)
-
-        # Stories under this BL item
-        stories = story_map.get(wi['id'], [])
-        for j, story in enumerate(stories):
-            is_last_story = (j == len(stories) - 1)
-            s_conn = cont + ('└──' if is_last_story else '├──')
-            s_done = ' ✓' if story['status_tag'] == 'done' else ''
-            s_title_clean = re.sub(r'^US-\d+:\s*', '', story['title'])
-            output.append(f"{s_conn} {story['id']}{s_done}  {s_title_clean}")
+        done_mark = ' ✓' if wi_status == 'done' else ''
+        output.append(f"{connector} {wi['id']}{done_mark}  {wi_title_clean}")
 
     prev_id = ms_id
 

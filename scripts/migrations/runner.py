@@ -531,6 +531,25 @@ class MigrationRunner:
         git_tag_created = False
         stash_ref = None
         if self._is_git_repo():
+            # Stash uncommitted changes before tagging so rollback can restore them.
+            # git diff --quiet HEAD exits non-zero when tracked files have staged or
+            # unstaged changes relative to HEAD. Untracked files are not affected by
+            # git reset --hard, so they don't need stashing.
+            rc_dirty, _, _ = self._git("diff", "--quiet", "HEAD")
+            if rc_dirty != 0:
+                stash_msg = f"pre-migration-{stamp}"
+                rc_stash, stash_out, stash_err = self._git(
+                    "stash", "push", "-m", stash_msg
+                )
+                if rc_stash != 0:
+                    raise RuntimeError(
+                        f"git stash failed: {stash_err.strip() or stash_out.strip()}"
+                    )
+                if "No local changes to save" not in stash_out:
+                    rc_ref, stash_hash, _ = self._git("rev-parse", "stash@{0}")
+                    if rc_ref == 0 and stash_hash.strip():
+                        stash_ref = stash_hash.strip()
+
             rc, _, tag_err = self._git("tag", git_tag)
             if rc == 0:
                 git_tag_created = True
@@ -567,15 +586,11 @@ class MigrationRunner:
         """Restore the project to the snapshot state. Returns (ok, reason).
 
         Order:
-          1. tar -xzf the comprehensive tarball over its source paths.
-          2. git reset --hard <pre-migration-tag> if a tag was created.
-          3. No stash-restore here — the snapshot was taken with the stash
-             popped back into the working tree before the tag, so the tag
-             already represents the user's pre-migration HEAD without the
-             stashed changes. Restoring stashed changes is the caller's
-             concern (they were popped at snapshot time, so they're already
-             in the post-rollback working tree if they hadn't been overwritten
-             by the migration).
+          1. git reset --hard <pre-migration-tag> if a tag was created.
+          2. tar -xzf the comprehensive tarball over its source paths.
+          3. git stash apply + drop if uncommitted changes were stashed at
+             snapshot time. This restores the user's working-tree modifications
+             that were stashed to protect them from git reset --hard.
 
         This method does NOT prompt the user — the calling skill must obtain
         explicit confirmation before invoking it (Gap #6 locked: rollback is
@@ -609,6 +624,18 @@ class MigrationRunner:
         )
         if proc.returncode != 0:
             return False, f"tar extract failed: {proc.stderr.strip()}"
+
+        # 3. Restore uncommitted changes that were stashed during snapshot.
+        if snapshot.git_stash_ref:
+            rc, _, err = self._git("stash", "apply", snapshot.git_stash_ref)
+            if rc != 0:
+                return False, (
+                    f"rollback complete but stash restore failed — your uncommitted "
+                    f"changes are preserved in git stash ({snapshot.git_stash_ref}). "
+                    f"Run `git stash pop` manually to restore them. "
+                    f"Error: {err.strip()}"
+                )
+            self._git("stash", "drop", snapshot.git_stash_ref)
 
         return True, None
 

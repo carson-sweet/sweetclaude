@@ -4,6 +4,8 @@ user-invocable: false
 description: "Enable the Protocol Guardian — enforces skill invocations, TDD discipline, and artifact saves for the current session"
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:guardian-on" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 # Protocol Guardian — Enable

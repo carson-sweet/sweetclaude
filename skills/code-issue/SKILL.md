@@ -3,6 +3,8 @@ spdx-license: AGPL-3.0-or-later
 description: "Implement a GitHub issue end-to-end."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:code-issue" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 <preflight-guard>
@@ -21,7 +23,7 @@ Implement GitHub issue $ARGUMENTS using the SweetClaude pipeline.
    git branch --show-current
    ```
 
-   If already on a branch matching a story ID prefix (e.g., `issue-42/...`, `BL-046/...`) — skip.
+   If already on a branch matching a story ID prefix (e.g., `issue-42/...`, `STORY-046/...`, `BUG-012/...`) — skip.
 
    Otherwise, derive the branch name: ID = `issue-{number}` from `$ARGUMENTS`; slug = issue title lowercased, non-alphanumeric → hyphens, collapsed + truncated to 40 chars. Branch name: `{ID}/{slug}`.
 

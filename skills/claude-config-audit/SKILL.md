@@ -4,6 +4,8 @@ user-invocable: false
 description: "Scan the CLAUDE.md hierarchy, settings.json, and ~/.claude/rules/ for instructions that conflict with SweetClaude."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:claude-config-audit" 2>/dev/null || true`
+
 # SweetClaude Claude Config Audit
 
 Scan Claude Code configuration for instructions that conflict with SweetClaude. Detection is pattern-based — deterministic, auditable, no semantic drift.

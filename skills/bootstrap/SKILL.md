@@ -4,6 +4,8 @@ user-invocable: false
 description: "Session startup skill — pre-flight checks, drift/update offers, and initial routing."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:bootstrap" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/sweetclaude.yaml 2>/dev/null || echo "SC_YAML_NOT_FOUND"`
 
 # SweetClaude
@@ -360,6 +362,28 @@ _SC_HASH=$(printf '%s' "$_SC_PROJ" | md5 2>/dev/null \
 touch "/tmp/.sweetclaude-bootstrap-ran-${_SC_HASH}"
 ```
 
+Record a `session_start` event if metrics are enabled:
+
+```bash
+_SC_METRICS_CONFIG=".sweetclaude/metrics/config.yaml"
+_SC_EVENTS_LOG=".sweetclaude/metrics/events.log"
+if [ -f "$_SC_METRICS_CONFIG" ] && grep -q "enabled: true" "$_SC_METRICS_CONFIG" 2>/dev/null; then
+  _SC_PHASE=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
+print(d.get('work', {}).get('active', {}).get('phase') or 'none')
+" 2>/dev/null || echo "none")
+  _SC_DEFERENCE=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('.sweetclaude/state/sweetclaude.yaml')) or {}
+print(d.get('session', {}).get('deference_level') or 'unknown')
+" 2>/dev/null || echo "unknown")
+  _SC_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  printf -- '---\ntimestamp: %s\nevent: session_start\nphase: %s\ndeference: %s\n' \
+    "$_SC_TS" "$_SC_PHASE" "$_SC_DEFERENCE" >> "$_SC_EVENTS_LOG"
+fi
+```
+
 Read from pre-loaded state:
 
 ```bash
@@ -373,12 +397,14 @@ p = d.get('project', {})
 w = d.get('work', {})
 h = d.get('work_history', [])
 
-name   = p.get('name') or 'this project'
-stage  = p.get('version_stage', '')
-active = w.get('active', {}) or {}
-last3  = h[:3]
+name    = p.get('name') or 'this project'
+stage   = p.get('version_stage', '')
+sc_ver  = d.get('framework', {}).get('installed_version', '')
+active  = w.get('active', {}) or {}
+last3   = h[:3]
 
-print(f"**{name}** · {stage}")
+ver_str = f"SweetClaude {sc_ver} · " if sc_ver else ""
+print(f"{ver_str}**{name}** · {stage}")
 if active.get('title'):
     print(f"Active: {active['title']} [{active.get('phase','')}]")
 elif last3:

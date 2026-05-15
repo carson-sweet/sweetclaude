@@ -4,6 +4,8 @@ user-invocable: true
 description: "Delete all SweetClaude artifacts from the current project."
 ---
 
+!`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:purge" 2>/dev/null || true`
+
 !`cat .sweetclaude/state/session-state.yaml 2>/dev/null || echo "STATE_NOT_FOUND"`
 
 # Purge SweetClaude
