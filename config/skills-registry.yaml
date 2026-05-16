@@ -7,7 +7,7 @@ schema_version: 1
 skills:
   product-milestones:
     description: "Roadmap targets"
-    data_signal: "{base_path}/milestones/MILESTONES-INDEX.md"
+    data_signal: "{base_path}/milestones/MS-*.md"
     dependencies: []
 
   epics:
@@ -17,7 +17,7 @@ skills:
 
   product-parking-lot:
     description: "Deferred work items"
-    data_signal: "{base_path}/backlog/BACKLOG-INDEX.md"
+    data_signal: "docs/product/backlog/stories/*.md"
     dependencies: []
 
   product-sprint-plan:

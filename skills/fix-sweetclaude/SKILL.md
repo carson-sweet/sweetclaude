@@ -150,7 +150,7 @@ Check that artifacts are where SweetClaude expects them:
 | `.sweetclaude/state/` | phase.yaml, project.yaml, skills.yaml, decision-log, assumption-register, improvement-register, scope-changes |
 | `docs/` or `{technical_base}/` | product-brief, prd, architecture, tech-spec, data-model, api-design, workflows (if they exist anywhere in the project) |
 | `{product_base}/stories/` | user stories and .feature files (if they exist) |
-| `{product_base}/backlog/` | BACKLOG-INDEX.md and item detail files (if product-parking-lot has been used) |
+| `{product_base}/backlog/` | Item files by type (stories/, bugs/, debt/, chores/) |
 | `{product_base}/milestones/` | milestone detail files (if product-milestones has been used) |
 | `{product_base}/sprints/` | sprint files (if product-sprint-plan has been used) |
 | `{strategy_base}/` | concept, pain-thesis, ICP, competitive, etc. |
@@ -225,8 +225,8 @@ For each data-owning skill, check whether it is present in `skills.yaml`. Use th
 
 | Skill | Artifact signal (file exists → was in use) |
 |---|---|
-| `product-milestones` | `{product_base}/milestones/MILESTONES-INDEX.md` |
-| `product-parking-lot` | `{product_base}/backlog/BACKLOG-INDEX.md` |
+| `product-milestones` | any `MS-*.md` under `{product_base}/milestones/` |
+| `product-parking-lot` | any item files under `{product_base}/backlog/` |
 | `product-sprint-plan` | any file under `{product_base}/sprints/` |
 | `user-personas` | `.sweetclaude/state/personas.yaml` |
 | `product-user-stories` | any `US-*.md` under `{product_base}/stories/` |
@@ -303,8 +303,8 @@ Use `base_path` from session-state (`paths.product_base`) or fall back to `.swee
 
 | Skill | Artifact path |
 |---|---|
-| `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
-| `product-parking-lot` or `product-backlog` | `{base_path}/backlog/BACKLOG-INDEX.md` |
+| `product-milestones` | `{base_path}/milestones/MS-*.md` |
+| `product-parking-lot` or `product-backlog` | `{base_path}/backlog/stories/*.md` |
 | `product-sprint-plan` | `{base_path}/sprints/` (any files) |
 | `user-personas` | `.sweetclaude/state/personas.yaml` |
 | `product-user-stories` | `{base_path}/stories/US-*.md` (any files) |
@@ -700,33 +700,11 @@ Auto-repair: set counter to max(observed, current).
 import pathlib, yaml, re
 
 BACKLOG_BASE = pathlib.Path('docs/product/backlog')
-INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
-raw = INDEX_PATH.read_text(encoding='utf-8')
-parts = raw.split('---', 2)
-index_fm = yaml.safe_load(parts[1]) or {}
-counters = index_fm.setdefault('counters', {})
-
-TYPE_PREFIX = {'story': 'STORY', 'bug': 'BUG', 'debt': 'DEBT', 'chore': 'CHORE'}
-TYPE_DIRS = {'story': 'stories', 'bug': 'bugs', 'debt': 'debt', 'chore': 'chores'}
-
-for typ, dir_name in TYPE_DIRS.items():
-    prefix = TYPE_PREFIX[typ]
-    max_seen = 0
-    for p in (BACKLOG_BASE / dir_name).rglob('*.md'):
-        m = re.match(rf'^{prefix}-(\d+)-', p.name)
-        if m:
-            max_seen = max(max_seen, int(m.group(1)))
-    counters[typ] = max(counters.get(typ, 0), max_seen)
-
-import datetime
-index_fm['updated'] = datetime.date.today().isoformat()
-INDEX_PATH.write_text(
-    f"---\n{yaml.safe_dump(index_fm, default_flow_style=False, sort_keys=False).rstrip()}\n---{parts[2]}",
-    encoding='utf-8'
-)
+import subprocess
+subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
 ```
 
-> "Counter drift repaired. Counters set to max(observed, stored) for each type."
+> "Counter drift repaired. Cache rebuilt from file state."
 
 ---
 
