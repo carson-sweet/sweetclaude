@@ -180,7 +180,7 @@ sc_artifact_create issue '{
   "title": "<finding title>",
   "type": "bug",
   "status": "backlog",
-  "priority": "next",
+  "priority": "now",
   "description": "<finding description with attack vector and remediation>",
   "tags": ["security", "SR-NNN"]
 }'

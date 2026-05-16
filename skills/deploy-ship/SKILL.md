@@ -212,6 +212,34 @@ Shipped
 >
 > Run `/sweetclaude:status` to see the updated project state, or `/sweetclaude:go` to pick up the next item."
 
+**Hotfix post-mortem gate** — if the completed work item's type was `hotfix`, run this after the shipped message:
+
+Log to `.sweetclaude/state/decision-log.md`:
+```markdown
+| {next #} | {today} | POST-MORTEM required for {work item id} | Required after all hotfixes | N/A |
+```
+
+Then ask via AskUserQuestion:
+
+| Option | Description |
+|---|---|
+| **Create POST-MORTEM item now** | Write a new CHORE backlog item linked to this hotfix and open it |
+| **Skip — I'll create it later** | The decision-log entry marks the obligation; create it manually |
+
+If "Create POST-MORTEM item now": write a new CHORE item to `docs/product/backlog/chores/CHORE-NNN-post-mortem-{work-item-id}.md` with:
+```yaml
+type: chore
+title: POST-MORTEM — {hotfix title}
+status: new
+priority: now
+tags: [post-mortem, hotfix, {work-item-id}]
+```
+Body: "## Origin\n\nFollow-on from {work-item-id} hotfix. Document timeline, root cause (5 whys), contributing factors, and action items to prevent recurrence.\n\nIf the fix was a workaround rather than a real fix, also create a follow-on tech-debt item."
+
+Increment the chore counter in `docs/product/backlog/INDEX.md`. Add the new CHORE row to the Chores table. Report: `✓ {CHORE-NNN} created — run /sweetclaude:go when ready for the post-mortem.`
+
+If "Skip": log the skip: append `| {next #} | {today} | POST-MORTEM skipped for {work item id} | User opted to create manually | N/A |` to decision log.
+
 ---
 
 ## Rules

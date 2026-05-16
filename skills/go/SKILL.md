@@ -96,7 +96,7 @@ Milestones exist in `${product_base}/milestones/`. Any milestone has `Status: ac
 If an active milestone exists but has no open contributing work items (all done, none listed, or item files missing), record internally: MILESTONE_GAP = true, ACTIVE_MS = {the milestone filename stem}. Fall through to Priority 4.
 
 **Priority 4 — Other backlog items:**
-Non-bug backlog items. The filenames above are already sorted by horizon (next first, unscheduled last). Use the first filename in that sorted list.
+Non-bug backlog items. The filenames above are already sorted by horizon (now first, unscheduled last). Use the first filename in that sorted list.
 
 If `active_milestone` is set in the pre-loaded state and MILESTONE_GAP is not already true: read the proposed item's file and check for a `**Milestone:**` header. If the header is absent or its value does not match `active_milestone`, record internally: ITEM_ORPHANED = true.
 

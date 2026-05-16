@@ -210,6 +210,63 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Test 8: session-preflight.sh does NOT heal for schema_version: 1
+# ---------------------------------------------------------------------------
+echo "[8] session-preflight.sh: no schema-version heal for schema_version: 1"
+
+FX8_HOME="$TMPROOT/home8"
+FX8_PROJ="$TMPROOT/proj8"
+mkdir -p "$FX8_HOME/.claude"
+_make_git_repo "$FX8_PROJ"
+mkdir -p "$FX8_PROJ/.sweetclaude/state"
+printf 'schema_version: 1\nsetup_complete: true\n' > "$FX8_PROJ/.sweetclaude/state/sweetclaude.yaml"
+
+OUTPUT8=$(cd "$FX8_PROJ" && HOME="$FX8_HOME" bash "$REPO_ROOT/hooks/session-preflight.sh" 2>/dev/null) || true
+if printf '%s' "$OUTPUT8" | grep -q "unsupported schema version"; then
+  fail "schema_version: 1 triggered unsupported-schema-version heal"
+else
+  pass "schema_version: 1 — no unsupported-schema-version heal"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 9: session-preflight.sh does NOT heal for schema_version: 2
+# ---------------------------------------------------------------------------
+echo "[9] session-preflight.sh: no schema-version heal for schema_version: 2"
+
+FX9_HOME="$TMPROOT/home9"
+FX9_PROJ="$TMPROOT/proj9"
+mkdir -p "$FX9_HOME/.claude"
+_make_git_repo "$FX9_PROJ"
+mkdir -p "$FX9_PROJ/.sweetclaude/state"
+printf 'schema_version: 2\nsetup_complete: true\n' > "$FX9_PROJ/.sweetclaude/state/sweetclaude.yaml"
+
+OUTPUT9=$(cd "$FX9_PROJ" && HOME="$FX9_HOME" bash "$REPO_ROOT/hooks/session-preflight.sh" 2>/dev/null) || true
+if printf '%s' "$OUTPUT9" | grep -q "unsupported schema version"; then
+  fail "schema_version: 2 triggered unsupported-schema-version heal"
+else
+  pass "schema_version: 2 — no unsupported-schema-version heal"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 10: session-preflight.sh DOES heal for schema_version: 3
+# ---------------------------------------------------------------------------
+echo "[10] session-preflight.sh: heals for unsupported schema_version: 3"
+
+FX10_HOME="$TMPROOT/home10"
+FX10_PROJ="$TMPROOT/proj10"
+mkdir -p "$FX10_HOME/.claude"
+_make_git_repo "$FX10_PROJ"
+mkdir -p "$FX10_PROJ/.sweetclaude/state"
+printf 'schema_version: 3\nsetup_complete: true\n' > "$FX10_PROJ/.sweetclaude/state/sweetclaude.yaml"
+
+OUTPUT10=$(cd "$FX10_PROJ" && HOME="$FX10_HOME" bash "$REPO_ROOT/hooks/session-preflight.sh" 2>/dev/null) || true
+if printf '%s' "$OUTPUT10" | grep -q "unsupported schema version"; then
+  pass "schema_version: 3 triggers unsupported-schema-version heal"
+else
+  fail "schema_version: 3 should trigger heal (got: $(printf '%s' "$OUTPUT10" | head -c 200))"
+fi
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$FAILED" -eq 0 ]; then
   echo "ALL TESTS PASSED"
