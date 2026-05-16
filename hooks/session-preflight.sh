@@ -148,19 +148,52 @@ if [ ! -f "$HOOKS_MANIFEST" ]; then
 fi
 
 # ── Step 9: Health Check 2 Tier 1 — global hooks ─────────────────────────────
-# DEPENDENCY: hooks-manifest.json must have a scope field ("global" or "project")
-# on each entry before this step works correctly. This field does not exist in
-# the current manifest and must be added as part of this rewrite.
 
 if [ -f "$SETTINGS" ]; then
-  _SC_GLOBAL_CMDS=$(jq -r '[.hooks[][].hooks[].command] | .[]' "$SETTINGS" 2>/dev/null || echo "")
   _SC_MISSING_GLOBAL=""
+  _SC_UNRESOLVED_GLOBAL=""
+  _SC_NONEXEC_GLOBAL=""
   while IFS= read -r _sc_file; do
-    if ! echo "$_SC_GLOBAL_CMDS" | grep -qF "$_sc_file"; then
+    # Get all command strings from settings.json that reference this hook's basename
+    _sc_matching=$(jq -r --arg f "$_sc_file" \
+      '[.hooks[][].hooks[] | select((.command // "") | contains($f)) | .command] | .[]' \
+      "$SETTINGS" 2>/dev/null)
+
+    if [ -z "$_sc_matching" ]; then
       _SC_MISSING_GLOBAL="${_SC_MISSING_GLOBAL}${_sc_file} "
+      continue
     fi
+
+    _sc_found_unresolved=0
+    _sc_found_nonexec=0
+    while IFS= read -r _sc_cmd; do
+      # Check for unresolved ${CLAUDE_PLUGIN_ROOT} variable
+      if printf '%s' "$_sc_cmd" | grep -qF '${CLAUDE_PLUGIN_ROOT}'; then
+        _sc_found_unresolved=1
+        break
+      fi
+      # Extract the script path (first token ending in .sh or .py, else first token)
+      _sc_path=$(printf '%s' "$_sc_cmd" | awk '{for(i=1;i<=NF;i++) if($i~/\.(sh|py)$/) {print $i; exit}} END{if(!found) print $1}')
+      if [ -n "$_sc_path" ] && [ ! -x "$_sc_path" ]; then
+        _sc_found_nonexec=1
+      fi
+    done <<< "$_sc_matching"
+
+    [ "$_sc_found_unresolved" -eq 1 ] && \
+      _SC_UNRESOLVED_GLOBAL="${_SC_UNRESOLVED_GLOBAL}${_sc_file} "
+    [ "$_sc_found_nonexec" -eq 1 ] && [ "$_sc_found_unresolved" -eq 0 ] && \
+      _SC_NONEXEC_GLOBAL="${_SC_NONEXEC_GLOBAL}${_sc_file} "
+
   done < <(jq -r '.hooks[] | select(.required == true and .scope == "global") | .file' "$HOOKS_MANIFEST" 2>/dev/null)
 
+  if [ -n "$_SC_UNRESOLVED_GLOBAL" ]; then
+    emit_heal "The SweetClaude setup needs some love. Hang tight." "Global hook registered but command is unresolved (contains \${CLAUDE_PLUGIN_ROOT}): $_SC_UNRESOLVED_GLOBAL"
+    exit 0
+  fi
+  if [ -n "$_SC_NONEXEC_GLOBAL" ]; then
+    emit_heal "The SweetClaude setup needs some love. Hang tight." "Global hook registered but command is not executable: $_SC_NONEXEC_GLOBAL"
+    exit 0
+  fi
   if [ -n "$_SC_MISSING_GLOBAL" ]; then
     emit_heal "The SweetClaude setup needs some love. Hang tight." "Missing required global hooks: $_SC_MISSING_GLOBAL"
     exit 0

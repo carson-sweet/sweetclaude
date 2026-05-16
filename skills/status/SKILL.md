@@ -130,7 +130,7 @@ print('ISSUES_END')
 
 # --- Backlog ---
 backlog = []
-_HORIZON_ORDER = {'now': 0, 'next': 1, 'sooner': 2, 'soon': 3, 'later': 4, 'someday': 5}
+_HORIZON_ORDER = {'now': 0, 'next': 0, 'sooner': 1, 'soon': 2, 'later': 3, 'someday': 4}
 _DONE_STATUSES = {'done', 'complete', 'achieved', 'closed', 'cancelled', 'canceled'}
 
 def _item_title(c):
@@ -151,7 +151,7 @@ for _subdir, _prefix in _V4_SUBDIRS:
         if s in _DONE_STATUSES:
             continue
         h_raw = (field(c, 'priority') or field(c, 'Priority') or '').lower()
-        h = h_raw if h_raw in _HORIZON_ORDER else 'unscheduled'
+        h = ('now' if h_raw == 'next' else h_raw) if h_raw in _HORIZON_ORDER else 'unscheduled'
         m = re.match(rf'({_prefix}-\d+)', os.path.basename(f))
         item_id = m.group(1) if m else os.path.basename(f).split('.')[0]
         backlog.append({'id': item_id, 'title': _item_title(c), 'priority': h_raw.upper(),
@@ -163,7 +163,7 @@ for f in sorted(glob.glob(f'{base}/backlog/BL-*.md')):
     s = field(c, 'Status').lower()
     p = field(c, 'Priority').upper()
     h_raw = field(c, 'Horizon').lower()
-    h = h_raw if h_raw in _HORIZON_ORDER else 'unscheduled'
+    h = ('now' if h_raw == 'next' else h_raw) if h_raw in _HORIZON_ORDER else 'unscheduled'
     if 'DONE' not in s.upper() and 'COMPLETE' not in s.upper():
         backlog.append({'id': os.path.basename(f).split('.')[0],
                         'title': title(c), 'priority': p, 'status': s,
@@ -185,7 +185,7 @@ Compute derived values:
 - **ROADMAP_ACHIEVED** = roadmap items where status ∈ {complete, achieved}
 - **ROADMAP_ACTIVE** = roadmap items where status ∈ {in_progress, active}
 - **ROADMAP_PLANNED** = all others (not achieved/complete)
-- **BACKLOG_BY_HORIZON** = backlog items grouped by horizon: next, sooner, soon, later, someday, unscheduled (items where `horizon` field is absent or unrecognized)
+- **BACKLOG_BY_HORIZON** = backlog items grouped by horizon: now, sooner, soon, later, someday, unscheduled (items where `horizon` field is absent or unrecognized; `next` is treated as alias for `now`)
 
 Output in this format. Use clean markdown — no box-drawing characters, no ANSI codes.
 
@@ -242,12 +242,12 @@ Then:
 
 ### Backlog
 
-For each horizon bucket that is non-empty, in order: next, sooner, soon, later, someday, unscheduled. Use `horizon_order` from the JSON to determine sort order (next=1 sorts first, unscheduled=6 sorts last).
+For each horizon bucket that is non-empty, in order: now, sooner, soon, later, someday, unscheduled. Use `horizon_order` from the JSON to determine sort order (now=0 sorts first, unscheduled=5 sorts last). Items with `horizon` = `next` are displayed in the `Now` bucket.
 
 Output the bucket heading as bold markdown followed by the item count:
 `**{Bucket_Label}** ({N}{suffix})`
 
-Where `{Bucket_Label}` is the bucket name in title case (e.g. `Next`, `Sooner`, `Unscheduled`), and `{suffix}` is ` — no horizon set` for the unscheduled bucket and empty string for all others.
+Where `{Bucket_Label}` is the bucket name in title case (e.g. `Now`, `Sooner`, `Unscheduled`), and `{suffix}` is ` — no horizon set` for the unscheduled bucket and empty string for all others.
 
 Under each heading, show up to 5 items:
 `- {id}  [{priority_badge}]  {title}`

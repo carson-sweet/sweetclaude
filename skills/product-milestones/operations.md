@@ -373,12 +373,12 @@ List each follow-up as: "<category>: <short title>". Enter blank line when done.
 
 Before delegating each follow-up, collect two fields:
 
-**9a. Horizon** — Ask: `"Horizon for this item? next/sooner/soon/later/someday — or enter to skip"`. If provided, note the value. If skipped, horizon is unset.
+**9a. Horizon** — Ask: `"Horizon for this item? now/sooner/soon/later/someday — or enter to skip"`. If provided, note the value. If skipped, horizon is unset.
 
 **9b. Priority hint** — Ask: `"Priority? P0/P1/P2/SPIKE — or enter to skip"`. If provided, note the value. If skipped, the backlog add flow will set it.
 
 **9c. Reconciliation gate** — If both horizon was provided AND priority hint is P0 or P1 AND horizon is `later` or `someday`, surface before delegating:
-> "P0/P1 item assigned to '{horizon}' — these usually signal urgent work. Reconcile: raise the horizon (next/sooner/soon), lower the priority (P2/SPIKE/none), or keep as-is with a note."
+> "P0/P1 item assigned to '{horizon}' — these usually signal urgent work. Reconcile: raise the horizon (now/sooner/soon), lower the priority (P2/SPIKE/none), or keep as-is with a note."
 Apply whichever field the user adjusts. If they choose keep-as-is, ask for a brief note and append it to the item's Notes field when delegating.
 
 Then delegate to `sweetclaude:product/backlog`, passing horizon and priority hint (if provided) so the backlog add flow can pre-fill those fields.
