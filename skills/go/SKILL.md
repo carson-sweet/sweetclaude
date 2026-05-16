@@ -226,7 +226,195 @@ print('GATES_OK')
 
 If output starts with `BLOCKED:`, do not invoke any skill. Output the text after `BLOCKED:` and stop.
 
-Otherwise, invoke the appropriate skill from the routing table below. One sentence explaining what you're doing.
+**Pre-routing: PR recording at VERIFY phase entry**
+
+If the routing table resolves to a VERIFY-phase skill (`sweetclaude:code-review`, `sweetclaude:code-testing`, `sweetclaude:documents-update-docs`): before invoking, locate the story file and check its `prs` field.
+
+Locate the story file:
+```bash
+python3 - "{STORY-ID}" << 'PY'
+import sys, pathlib
+story_id = sys.argv[1]
+for p in pathlib.Path('docs/product/backlog').rglob(f'{story_id}-*.md'):
+    if 'INDEX' not in p.name.upper() and '/done/' not in str(p):
+        print(p); exit()
+print('NOT_FOUND')
+PY
+```
+
+If `NOT_FOUND`: skip PR recording and continue to routing.
+
+Otherwise read the story's `prs` field (`yaml.safe_load` the frontmatter). If `prs` is empty, ask via AskUserQuestion:
+
+| Option | Description |
+|---|---|
+| **Enter PR number** | I'll record it against this story |
+| **Skip — no PR** | Continue to VERIFY without tracking a PR |
+
+If a number is entered:
+1. `git rev-parse --abbrev-ref HEAD` — get current branch
+2. Append `{number: N, branch: {current-branch}, opened_at: {today}}` to `prs`
+3. Write back atomically (tmp file + `os.replace`), preserving all other frontmatter
+
+If skipped: continue. Note: "No PR tracked — closeout will skip PR closure."
+
+**Routing: invoke the appropriate skill**
+
+For all phases other than SHIP: invoke the appropriate skill from the routing table below. One sentence explaining what you're doing.
+
+For SHIP phase (routing to `sweetclaude:deploy-ship`): invoke `sweetclaude:deploy-ship`, then after it completes and the deploy or merge is confirmed, run the **Closeout sequence** below instead of prompting next steps.
+
+---
+
+**Closeout sequence** (runs after SHIP confirmation — do not prompt next steps after this):
+
+First, locate the story file and resolve `story_file_path`:
+```bash
+python3 - "{STORY-ID}" << 'PY'
+import sys, pathlib
+story_id = sys.argv[1]
+for p in pathlib.Path('docs/product/backlog').rglob(f'{story_id}-*.md'):
+    if 'INDEX' not in p.name.upper() and '/done/' not in str(p):
+        print(p); exit()
+print('NOT_FOUND')
+PY
+```
+If `NOT_FOUND`: report "⚠ Story file not found — closeout aborted." Stop.
+
+Output: "Running closeout for {STORY-ID}…"
+
+Run each step in order. If any step fails, report the failure inline and **continue** to the next step — never abort mid-sequence.
+
+**Step C1 — Sub-PR scan** (superseded open PRs not already in `prs`):
+
+First fetch to ensure remote refs are current:
+```bash
+git fetch --prune 2>/dev/null
+```
+
+Then scan:
+```bash
+python3 - << 'PY'
+import subprocess, json
+r = subprocess.run(['gh', 'pr', 'list', '--state', 'open', '--json', 'number,headRefName'],
+    capture_output=True, text=True)
+if r.returncode != 0:
+    print('GH_UNAVAILABLE'); exit()
+for pr in json.loads(r.stdout or '[]'):
+    branch = pr['headRefName']
+    r2 = subprocess.run(['git', 'merge-base', '--is-ancestor', f'origin/{branch}', 'HEAD'],
+        capture_output=True)
+    if r2.returncode == 0:
+        print(f"SUPERSEDED:{pr['number']}:{branch}")
+PY
+```
+If `GH_UNAVAILABLE`: note "gh unavailable — PR closure skipped", skip C1 and C2, continue from C3.
+For each `SUPERSEDED:N:branch` not already in `prs`: `gh pr close N --comment "Superseded by closeout of {STORY-ID}."` Report: `✓ PR #N [branch] — closed (superseded)`
+
+**Step C2 — Close tracked PRs**: for each entry in `prs`:
+```bash
+gh pr view {number} --json state -q '.state' 2>/dev/null || echo "UNKNOWN"
+```
+- `OPEN` → `gh pr close {number} --comment "Closed as part of {STORY-ID} closeout."` → `✓ PR #{number} closed`
+- `MERGED` → `✓ PR #{number} already merged — skipped`
+- `CLOSED` → `✓ PR #{number} already closed — skipped`
+- `UNKNOWN` or gh error → warn and continue
+
+**Step C3 — Switch off story branch, then delete**: if the current branch matches any branch in `prs`, switch to main first:
+```bash
+git checkout main 2>/dev/null
+```
+Then for each `branch` in `prs`:
+```bash
+python3 - "{branch}" << 'PY'
+import sys, subprocess
+branch = sys.argv[1]
+if subprocess.run(['git','rev-parse','--verify', branch], capture_output=True).returncode != 0:
+    print('NOT_FOUND'); exit()
+r = subprocess.run(['git','branch','-d', branch], capture_output=True, text=True)
+if r.returncode == 0:
+    print('DELETED')
+elif 'not fully merged' in r.stderr:
+    print('UNMERGED')
+else:
+    print(f'ERROR:{r.stderr.strip()}')
+PY
+```
+- `DELETED` → `✓ branch {branch} deleted`
+- `UNMERGED` → `⚠ branch {branch} has unmerged commits — skipped`
+- `NOT_FOUND` → `✓ branch {branch} already gone`
+- `ERROR:...` → `⚠ branch {branch}: {error}`
+
+**Step C4 — Delete remote branch**: for each `branch` in `prs`:
+```bash
+git ls-remote --heads origin {branch} | grep -q . \
+  && git push origin --delete {branch} 2>/dev/null \
+  && echo "DELETED" || echo "NOT_FOUND"
+```
+Report: `✓ origin/{branch} deleted` or `✓ origin/{branch} not present — skipped`
+
+**Step C5 — Move story to `done/` and update frontmatter**:
+```bash
+python3 - "{story_file_path}" "{today}" << 'PY'
+import sys, yaml, os, shutil, tempfile
+path, today = sys.argv[1], sys.argv[2]
+raw = open(path).read()
+parts = raw.split('---', 2)
+fm = yaml.safe_load(parts[1]) or {}
+fm['status'] = 'done'
+fm['closed_date'] = today
+updated = '---\n' + yaml.dump(fm, default_flow_style=False, allow_unicode=True) + '---' + parts[2]
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    tmp.write(updated); tmp_name = tmp.name
+os.rename(tmp_name, path)
+dest_dir = os.path.join(os.path.dirname(path), 'done')
+os.makedirs(dest_dir, exist_ok=True)
+dest = os.path.join(dest_dir, os.path.basename(path))
+shutil.move(path, dest)
+print(f'MOVED:{dest}')
+PY
+```
+Report: `✓ {STORY-ID} → done/{filename}`
+
+**Step C6 — Update INDEX.md** (remove story row, atomic write):
+```bash
+python3 - "{STORY-ID}" << 'PY'
+import sys, os, tempfile
+story_id = sys.argv[1]
+path = 'docs/product/backlog/INDEX.md'
+if not os.path.exists(path): print('NOT_FOUND'); exit()
+lines = open(path).readlines()
+filtered = [l for l in lines if story_id not in l]
+if len(filtered) == len(lines): print('ROW_NOT_FOUND'); exit()
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    tmp.writelines(filtered); tmp_name = tmp.name
+os.replace(tmp_name, path)
+print('UPDATED')
+PY
+```
+Report: `✓ INDEX.md updated` or `⚠ INDEX.md row not found — skipped`
+
+**Step C7 — Clear active_work_item** (if `phase.yaml` exists):
+```bash
+python3 - << 'PY'
+import yaml, os, tempfile
+path = '.sweetclaude/state/phase.yaml'
+if not os.path.exists(path): exit()
+d = yaml.safe_load(open(path)) or {}
+last_id = (d.get('active_work_item') or {}).get('id')
+d['active_work_item'] = {'id': None, 'title': None, 'type': None, 'phase': None}
+if last_id:
+    d['last_work_item_id'] = last_id
+with tempfile.NamedTemporaryFile('w', dir='.sweetclaude/state', suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False); tmp_name = tmp.name
+os.replace(tmp_name, path)
+PY
+```
+
+**Final output** — no menu, no "what's next?", no prompt:
+```
+Done. {STORY-ID} — {title} — closed.
+```
 
 **Review other items:**
 List the next 2–3 candidates from the priority tiers, in order. For each: name it, say which tier it came from, and say which skill would handle it. Then call AskUserQuestion again with one option per candidate plus a "None of these" escape.
