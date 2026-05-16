@@ -10,6 +10,11 @@ skills:
     data_signal: "{base_path}/milestones/MILESTONES-INDEX.md"
     dependencies: []
 
+  epics:
+    description: "Epic and objective management"
+    data_signal: "docs/product/roadmap/epics/EP-*.md"
+    dependencies: []
+
   product-parking-lot:
     description: "Deferred work items"
     data_signal: "{base_path}/backlog/BACKLOG-INDEX.md"

@@ -11,6 +11,7 @@ always_loaded:
     - sweetclaude:find-skill
     - sweetclaude:hibernate
     - sweetclaude:product-milestones
+    - sweetclaude:epics
     - sweetclaude:user-personas
     - sweetclaude:recap
     - sweetclaude:usage
