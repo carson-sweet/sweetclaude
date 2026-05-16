@@ -27,54 +27,17 @@ tail -25 .sweetclaude/state/checkpoint.md 2>/dev/null || echo "NO_CHECKPOINT"
 ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -3
 ```
 
-Then read the v4 backlog from `docs/product/backlog/INDEX.md` (v4 storage) if it exists, otherwise fall back to legacy:
+Then rebuild the cache and read backlog + roadmap state:
 
-```python
-import pathlib, yaml, re, os
-
-BACKLOG_INDEX = pathlib.Path('docs/product/backlog/INDEX.md')
-
-if BACKLOG_INDEX.exists():
-    # v4 storage: read active story files sorted by priority
-    BACKLOG_BASE = pathlib.Path('docs/product/backlog')
-    PRIORITY_ORDER = {'now': 1, 'soon': 2, 'later': 3, 'someday': 4, None: 5}
-    active_items = []
-    done_ids = set()
-    for p in BACKLOG_BASE.rglob('*.md'):
-        if p.name in ('INDEX.md', 'MIGRATION-MAP.md'):
-            continue
-        try:
-            raw = p.read_bytes().decode('utf-8').replace('\r\n', '\n')
-            parts = raw.split('---', 2)
-            fm = yaml.safe_load(parts[1]) or {}
-        except Exception:
-            continue
-        status = fm.get('status', 'new')
-        if status in ('done', 'abandoned'):
-            done_ids.add(fm.get('id', ''))
-        elif status != 'deferred' and '/done/' not in str(p):
-            active_items.append(fm)
-    active_items.sort(key=lambda fm: (PRIORITY_ORDER.get(fm.get('priority'), 5), fm.get('id', '')))
-    print("--- V4 BACKLOG (priority order) ---")
-    for fm in active_items[:60]:
-        print(f"{fm.get('id', '?')}  {fm.get('type', 'story')}  {fm.get('priority', '—')}  {fm.get('title', '')[:60]}")
-    print("--- DONE ITEMS ---")
-    for id_ in sorted(done_ids):
-        print(id_)
-    print("--- RECENT COMMITS (cross-check item IDs) ---")
-    import subprocess
-    result = subprocess.run(['git', 'log', '--oneline', '-20'], capture_output=True, text=True)
-    for line in result.stdout.splitlines():
-        if re.search(r'(STORY|BUG|DEBT|CHORE)-\d+', line):
-            print(line)
-else:
-    # Legacy fallback — should not occur on v4 installs
-    print("BACKLOG_INDEX_NOT_FOUND — run /sweetclaude:migrate to upgrade to v4 storage")
+```bash
+python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
+python3 scripts/cache.py --project-dir . --query backlog 2>/dev/null
+python3 scripts/cache.py --project-dir . --query active-epic 2>/dev/null
 ```
 
-Do not call `gh`. Do not read backlog file contents for routing — the ID+priority+title list above is enough. **Skip any item whose ID appears in the DONE ITEMS list when evaluating Priority 4.** Also skip any item whose ID appears in the RECENT COMMITS list. If state is `STATE_NOT_FOUND`, note it but continue.
+If cache.py is not found or fails, fall back to reading `docs/product/backlog/INDEX.md` directly with the legacy Python scanner.
 
-Roadmap routing (milestones, MS-*.md) remains untouched — Phase 2 work.
+Do not call `gh`. Do not read backlog file contents for routing — the cache output is enough. **Skip any item whose ID appears in recent commits when evaluating Priority 4.** If state is `STATE_NOT_FOUND`, note it but continue.
 
 ## Step 2: Apply improvement register
 
@@ -90,15 +53,21 @@ Work through the priority tiers below. Stop at the first tier that has something
 **Priority 2 — Hot bugs / security / hotfixes:**
 Any backlog filename containing `bug`, `hotfix`, `security`, `p0`, `p1`, `critical`, `urgent`.
 
-**Priority 3 — Active roadmap:**
-Milestones exist in `${product_base}/milestones/`. Any milestone has `Status: active`. Read its Contributing work items and find the first open one.
+**Priority 3 — Active epic:**
+The `active-epic` cache query returned a non-null result. Query its stories in sequence order:
 
-If an active milestone exists but has no open contributing work items (all done, none listed, or item files missing), record internally: MILESTONE_GAP = true, ACTIVE_MS = {the milestone filename stem}. Fall through to Priority 4.
+```bash
+python3 scripts/cache.py --project-dir . --query epic-stories --epic {EP-NNN} 2>/dev/null
+```
+
+Propose the first open story (lowest `epic_sequence`). This is the next work item for the active capability area.
+
+If the active epic has no open stories (all done or none linked), record internally: EPIC_GAP = true, ACTIVE_EPIC = {EP-NNN title}. Fall through to Priority 4.
 
 **Priority 4 — Other backlog items:**
-Non-bug backlog items. The filenames above are already sorted by horizon (now first, unscheduled last). Use the first filename in that sorted list.
+Non-bug backlog items from the cache `backlog` query, already sorted by priority (now first). Use the first item in that list. Skip any item whose ID appears in recent commits.
 
-If `active_milestone` is set in the pre-loaded state and MILESTONE_GAP is not already true: read the proposed item's file and check for a `**Milestone:**` header. If the header is absent or its value does not match `active_milestone`, record internally: ITEM_ORPHANED = true.
+If an active epic exists (from Step 1's `active-epic` query) and EPIC_GAP is not already true: check the proposed item's `epic` field. If it is null or does not match the active epic ID, record internally: ITEM_ORPHANED = true.
 
 **Priority 5 — Nothing queued:**
 None of the above tiers have anything actionable.
@@ -120,8 +89,8 @@ Output the bold header followed by one prose paragraph explaining the proposal. 
 ```
 
 **Drift advisories — append after the proposal paragraph when applicable (do not omit):**
-- If MILESTONE_GAP is true: `⚠ Active milestone advisory: **{ACTIVE_MS}** has no open linked work items. Run \`/sweetclaude:product-milestones blockers {ACTIVE_MS}\` to check status or link new work.`
-- If ITEM_ORPHANED is true: `⚠ Milestone drift: this item is not linked to your active milestone (**{active_milestone}**). Proceeding may not advance your current roadmap target.`
+- If EPIC_GAP is true: `⚠ Active epic advisory: **{ACTIVE_EPIC}** has no open linked stories. Run \`/sweetclaude:epics status {EP-NNN}\` to check criteria or \`/sweetclaude:epics link\` to assign work.`
+- If ITEM_ORPHANED is true: `⚠ Epic drift: this item is not linked to the active epic (**{active epic title}**). Proceeding may not advance your current roadmap target. Run \`/sweetclaude:epics link {ITEM-ID} {EP-NNN}\` to assign it.`
 
 Then immediately call AskUserQuestion with these three options:
 
@@ -142,7 +111,7 @@ Output the bold header and one prose paragraph:
 ```
 **PROPOSED NEXT WORK**
 
-There's nothing obviously queued. No active work item, no open bugs, no active milestone, no backlog items. I can help you plan what comes next: create milestones and epics, write user stories, or start a backlog.
+There's nothing obviously queued. No active work item, no open bugs, no active epic, no backlog items. I can help you plan what comes next: create epics, write user stories, or start a backlog.
 ```
 
 Then call AskUserQuestion with two options:
@@ -152,7 +121,7 @@ Then call AskUserQuestion with two options:
 | **Start planning** | Begin a planning session — milestones, epics, stories, backlog |
 | **Something else** | I have a different direction in mind |
 
-If the user picks Start planning, invoke `sweetclaude:product-milestones`. If Something else, follow Adaptive Flow.
+If the user picks Start planning, invoke `sweetclaude:epics add`. If Something else, follow Adaptive Flow.
 
 ---
 
