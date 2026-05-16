@@ -97,11 +97,14 @@ def parse_frontmatter(path):
 def scan_files(project_dir):
     backlog = os.path.join(project_dir, 'docs', 'product', 'backlog')
     roadmap = os.path.join(project_dir, 'docs', 'product', 'roadmap')
+    skip_dirs = {os.path.join(backlog, 'epics')}
     files = []
     for base in [backlog, roadmap]:
         if not os.path.isdir(base):
             continue
-        for root, _, filenames in os.walk(base):
+        for root, dirs, filenames in os.walk(base):
+            if root in skip_dirs or os.path.dirname(root) in skip_dirs:
+                continue
             for fname in filenames:
                 if fname.endswith('.md') and fname != 'SCHEMA.md':
                     full = os.path.join(root, fname)
