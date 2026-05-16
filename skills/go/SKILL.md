@@ -35,7 +35,7 @@ python3 scripts/cache.py --project-dir . --query backlog 2>/dev/null
 python3 scripts/cache.py --project-dir . --query active-epic 2>/dev/null
 ```
 
-If cache.py is not found or fails, fall back to reading `docs/product/backlog/INDEX.md` directly with the legacy Python scanner.
+If cache.py is not found or fails, scan `docs/product/backlog/` directly for markdown files with YAML frontmatter.
 
 Do not call `gh`. Do not read backlog file contents for routing — the cache output is enough. **Skip any item whose ID appears in recent commits when evaluating Priority 4.** If state is `STATE_NOT_FOUND`, note it but continue.
 
@@ -345,23 +345,11 @@ PY
 ```
 Report: `✓ {STORY-ID} → done/{filename}`
 
-**Step C6 — Update INDEX.md** (remove story row, atomic write):
+**Step C6 — Rebuild cache** (reflects the done status and moved file):
 ```bash
-python3 - "{STORY-ID}" << 'PY'
-import sys, os, tempfile
-story_id = sys.argv[1]
-path = 'docs/product/backlog/INDEX.md'
-if not os.path.exists(path): print('NOT_FOUND'); exit()
-lines = open(path).readlines()
-filtered = [l for l in lines if story_id not in l]
-if len(filtered) == len(lines): print('ROW_NOT_FOUND'); exit()
-with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
-    tmp.writelines(filtered); tmp_name = tmp.name
-os.replace(tmp_name, path)
-print('UPDATED')
-PY
+python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
 ```
-Report: `✓ INDEX.md updated` or `⚠ INDEX.md row not found — skipped`
+Report: `✓ Cache rebuilt`
 
 **Step C7 — Clear active_work_item** (if `phase.yaml` exists):
 ```bash

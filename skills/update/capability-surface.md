@@ -50,8 +50,8 @@ For each of the six data-owning skills not already in `skills.yaml`, infer state
 
 | Skill | Data file that indicates it was in use |
 |---|---|
-| `product-milestones` | `{base_path}/milestones/MILESTONES-INDEX.md` |
-| `product-parking-lot` | `{base_path}/backlog/BACKLOG-INDEX.md` |
+| `product-milestones` | any `MS-*.md` under `{base_path}/milestones/` |
+| `product-parking-lot` | any item files under `{base_path}/backlog/` |
 | `product-sprint-plan` | *(no inference — always `uninitialized` if absent)* |
 | `user-personas` | `.sweetclaude/state/personas.yaml` |
 | `product-user-stories` | any `US-*.md` under `{base_path}/stories/` |

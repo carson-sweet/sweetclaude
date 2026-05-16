@@ -36,18 +36,9 @@ If the guard fires: print the message and stop. Do not proceed.
 import pathlib, yaml, re, datetime, shutil
 
 BACKLOG_BASE = pathlib.Path('docs/product/backlog')
-INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
 TYPE_DIRS = {'story': 'stories', 'bug': 'bugs', 'debt': 'debt', 'chore': 'chores'}
 TYPE_PREFIX = {'story': 'STORY', 'bug': 'BUG', 'debt': 'DEBT', 'chore': 'CHORE'}
-
-def read_index():
-    raw = INDEX_PATH.read_text(encoding='utf-8')
-    parts = raw.split('---', 2)
-    return yaml.safe_load(parts[1]) or {}, parts[2]
-
-def write_index(fm, body):
-    content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---{body}"
-    INDEX_PATH.write_text(content, encoding='utf-8')
+SKIP_FILES = {'INDEX.md', 'MIGRATION-MAP.md', 'SCHEMA.md'}
 
 def read_story_file(path):
     raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
@@ -62,7 +53,7 @@ def write_story_file(path, fm, body):
 
 def find_story_by_id(story_id):
     for p in BACKLOG_BASE.rglob('*.md'):
-        if p.name in ('INDEX.md', 'MIGRATION-MAP.md'):
+        if p.name in SKIP_FILES:
             continue
         stem = p.stem
         if stem == story_id or stem.startswith(story_id + '-'):
@@ -73,17 +64,20 @@ def make_slug(title):
     return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', title.lower())).strip('-')
 
 def assign_new_id(typ):
-    index_fm, index_body = read_index()
-    counters = index_fm.setdefault('counters', {'story': 0, 'bug': 0, 'debt': 0, 'chore': 0})
-    counters[typ] = counters.get(typ, 0) + 1
-    index_fm['updated'] = datetime.date.today().isoformat()
-    write_index(index_fm, index_body)
-    return f"{TYPE_PREFIX[typ]}-{counters[typ]:03d}"
+    import subprocess, json
+    prefix = TYPE_PREFIX[typ]
+    r = subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--query', 'next-id', '--prefix', prefix],
+        capture_output=True, text=True)
+    return json.loads(r.stdout)['next_id']
+
+def rebuild_cache():
+    import subprocess
+    subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
 
 def all_story_files():
     return [
         p for p in BACKLOG_BASE.rglob('*.md')
-        if p.name not in ('INDEX.md', 'MIGRATION-MAP.md')
+        if p.name not in SKIP_FILES
     ]
 ```
 
