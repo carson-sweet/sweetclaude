@@ -103,6 +103,15 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-tracker.sh"
           }
         ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/plan-tracker.sh"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [

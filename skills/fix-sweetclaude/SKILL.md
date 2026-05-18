@@ -376,11 +376,9 @@ Surface the script's output to the user. If it printed `cleaned:` lines (broken 
 
 If it printed `ok: hooks already up to date`, no further action needed.
 
-**7b: Check project hooks (v2 only)**
+**7b: Verify no project-scope hooks exist**
 
-Skip entirely for v1 projects — per-project hook registration is a v2 concept.
-
-Filter manifest for entries where `required=true` and `scope="project"`. Verify each file is referenced in `.claude/settings.local.json` in the current project directory.
+All SweetClaude hooks are now plugin-native (registered in `hooks/hooks.json` where `${CLAUDE_PLUGIN_ROOT}` resolves). No hooks should have `scope: project` in the manifest. This step guards against re-introduction of the bug fixed in issue #61.
 
 ```bash
 python3 -c "
@@ -389,80 +387,26 @@ _sc_root = os.environ.get('CLAUDE_PLUGIN_ROOT','')
 manifest_path = (os.path.join(_sc_root, 'hooks', 'hooks-manifest.json') if _sc_root
                  else os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', 'hooks-manifest.json'))
 manifest = json.load(open(manifest_path))
-project_settings_path = os.path.join(os.getcwd(), '.claude/settings.local.json')
-try:
-    settings = json.load(open(project_settings_path))
-except:
-    settings = {}
-all_cmds = ' '.join(
-    h.get('command', '')
-    for event_hooks in settings.get('hooks', {}).values()
-    for entry in event_hooks
-    for h in entry.get('hooks', [])
-)
-missing = [h for h in manifest['hooks']
-           if h.get('required') and h.get('scope') == 'project' and h.get('event') and h['file'] not in all_cmds]
-print('\n'.join(f\"{h['file']} ({h['event']})\" for h in missing) if missing else 'OK')
+project_scope = [h for h in manifest['hooks'] if h.get('scope') == 'project']
+if project_scope:
+    names = ', '.join(h['file'] for h in project_scope)
+    print(f'ERROR: {len(project_scope)} hook(s) have scope=project: {names}')
+    print('Project-scope hooks cannot use \${CLAUDE_PLUGIN_ROOT} in settings.local.json.')
+    print('Either move them to hooks.json (plugin-native) or resolve the path at write time.')
+else:
+    print('OK')
 " 2>/dev/null
 ```
 
-If any required project hooks are missing:
-> "These required project hooks are not registered in .claude/settings.local.json: {list}. Add them?"
+If the script prints ERROR, surface the message verbatim. Do not attempt to install project-scope hooks — the write path that previously existed here wrote `${CLAUDE_PLUGIN_ROOT}` verbatim into `settings.local.json`, where it does not resolve (issue #61).
 
-If user says yes, add the missing entries to `.claude/settings.local.json` under `hooks.{event}`. Create the file if it does not exist. Write atomically (temp file → rename). Do not remove or modify existing entries.
+**7c: Strip stale and reclassified hook registrations**
 
-```bash
-python3 - << 'PY'
-import json, os, tempfile
-project_settings_path = os.path.join(os.getcwd(), '.claude/settings.local.json')
-_sc_root = os.environ.get('CLAUDE_PLUGIN_ROOT','')
-manifest_path = (os.path.join(_sc_root, 'hooks', 'hooks-manifest.json') if _sc_root
-                 else os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', 'hooks-manifest.json'))
+Hooks present in `settings.json` or `.claude/settings.local.json` that are stale or reclassified must be removed:
+- **Stale:** hook basename no longer appears in `hooks-manifest.json` (e.g., `version-bump.sh` removed in v3.66.0).
+- **Reclassified:** hook is in the manifest but its scope is now `plugin-native`, meaning it is loaded by the plugin system via `hooks/hooks.json` and must not also appear in settings files (issue #61 — duplicate registrations with unresolvable `${CLAUDE_PLUGIN_ROOT}` paths).
 
-os.makedirs(os.path.dirname(project_settings_path), exist_ok=True)
-try:
-    with open(project_settings_path) as f:
-        settings = json.load(f)
-except:
-    settings = {}
-with open(manifest_path) as f:
-    manifest = json.load(f)
-
-all_cmds = ' '.join(
-    h.get('command', '')
-    for event_hooks in settings.get('hooks', {}).values()
-    for entry in event_hooks
-    for h in entry.get('hooks', [])
-)
-
-hooks_section = settings.setdefault('hooks', {})
-for h in manifest['hooks']:
-    if not h.get('required') or h.get('scope') != 'project' or not h.get('event') or h['file'] in all_cmds:
-        continue
-    event = h['event']
-    cmd = h.get('command_path') or os.path.join(os.path.expanduser('~'), '.claude', 'hooks', 'sweetclaude', h['file'])
-    entry = {'hooks': [{'type': 'command', 'command': cmd}]}
-    matcher = h.get('matcher', '')
-    if matcher and matcher != 'startup':
-        entry['matcher'] = matcher
-    hooks_section.setdefault(event, []).append(entry)
-
-with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(project_settings_path),
-                                  suffix='.tmp', delete=False) as tmp:
-    json.dump(settings, tmp, indent=2)
-    tmp_name = tmp.name
-os.replace(tmp_name, project_settings_path)
-print('OK')
-PY
-```
-
-> "Project hooks registered in .claude/settings.local.json. New event-time hooks (SessionStart) require a new session to take effect; PreToolUse / PostToolUse / UserPromptSubmit hooks become active on next event in this session."
-
-**7c: Strip stale hook registrations**
-
-Hooks present in `settings.json` or `.claude/settings.local.json` that no longer appear in `hooks-manifest.json` are STALE — typically because the hook was removed in a framework version bump (e.g., `version-bump.sh` was removed in v3.66.0 but its registration lingers in old projects).
-
-Scan both files for hook commands matching SweetClaude paths (`hooks/sweetclaude/` or `${CLAUDE_PLUGIN_ROOT}/hooks/`). For each, extract the hook script's basename and check whether `hooks-manifest.json` lists it as a `file` entry. If not present in the manifest → stale.
+Scan both files for hook commands matching SweetClaude paths (`hooks/sweetclaude/` or `${CLAUDE_PLUGIN_ROOT}/hooks/`). For each, extract the basename and check: (a) is it in the manifest? If not → stale. (b) Is its scope `plugin-native`? If so → reclassified. Either way → remove.
 
 ```bash
 python3 - << 'PY'
@@ -476,14 +420,14 @@ except:
     print('MANIFEST_MISSING')
     raise SystemExit
 
-known_files = {h.get('file') for h in manifest.get('hooks', [])}
+hook_index = {h.get('file'): h for h in manifest.get('hooks', [])}
 
-def find_stale(settings_path):
+def find_removable(settings_path):
     try:
         d = json.load(open(settings_path))
     except:
         return []
-    stale = []
+    removable = []
     for event, entries in (d.get('hooks') or {}).items():
         for entry in entries:
             for h in entry.get('hooks', []):
@@ -491,21 +435,25 @@ def find_stale(settings_path):
                 if 'hooks/sweetclaude/' not in cmd and '${CLAUDE_PLUGIN_ROOT}/hooks/' not in cmd:
                     continue
                 base = cmd.rsplit('/', 1)[-1]
-                if base and base not in known_files:
-                    stale.append((event, base, cmd))
-    return stale
+                if not base:
+                    continue
+                if base not in hook_index:
+                    removable.append((event, base, cmd, 'stale'))
+                elif hook_index[base].get('scope') == 'plugin-native':
+                    removable.append((event, base, cmd, 'reclassified'))
+    return removable
 
 for sp in [os.path.expanduser('~/.claude/settings.json'),
            os.path.join(os.getcwd(), '.claude/settings.local.json')]:
     if not os.path.exists(sp):
         continue
-    s = find_stale(sp)
-    for event, base, cmd in s:
-        print(f"STALE|{sp}|{event}|{base}")
+    s = find_removable(sp)
+    for event, base, cmd, reason in s:
+        print(f"{reason.upper()}|{sp}|{event}|{base}")
 PY
 ```
 
-For each STALE entry: propose removal via AskUserQuestion (one entry at a time, or batched per settings file). On user approval, rewrite the settings file with the stale entries removed (atomic temp+rename).
+For each STALE or RECLASSIFIED entry: propose removal via AskUserQuestion (one entry at a time, or batched per settings file). On user approval, rewrite the settings file with the entries removed (atomic temp+rename). Reclassified entries are already loaded by the plugin's `hooks.json` — the settings entry is a broken duplicate.
 
 ```bash
 python3 - << 'PY'
