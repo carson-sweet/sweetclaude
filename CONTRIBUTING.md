@@ -66,8 +66,10 @@ The body is instruction text that Claude follows when the skill is invoked. No c
 **Sync to installed locations after editing.** Skills in the repo are not automatically live. After editing, run:
 
 ```bash
-rsync -a skills/ ~/.claude/skills/sweetclaude/
+bash scripts/sync-to-installed.sh
 ```
+
+This syncs hooks, skills, scripts, and config to all installed locations with safety gates (phase check, test validation). Use `--dry-run` to preview without syncing. See `scripts/sync-to-installed.sh` for details.
 
 ---
 
