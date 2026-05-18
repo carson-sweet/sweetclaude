@@ -200,25 +200,7 @@ if [ -f "$SETTINGS" ]; then
   fi
 fi
 
-# ── Step 10: Health Check 2 Tier 2 — project hooks ───────────────────────────
-
-if [ "$EXPECTED_SC_VERSION" = "v2" ]; then
-  _SC_PROJECT_SETTINGS="$PROJECT_DIR/.claude/settings.local.json"
-  _SC_PROJECT_CMDS=$(jq -r '[.hooks[][].hooks[].command] | .[]' "$_SC_PROJECT_SETTINGS" 2>/dev/null || echo "")
-  _SC_MISSING_PROJECT=""
-  while IFS= read -r _sc_file; do
-    if ! echo "$_SC_PROJECT_CMDS" | grep -qF "$_sc_file"; then
-      _SC_MISSING_PROJECT="${_SC_MISSING_PROJECT}${_sc_file} "
-    fi
-  done < <(jq -r '.hooks[] | select(.required == true and .scope == "project") | .file' "$HOOKS_MANIFEST" 2>/dev/null)
-
-  if [ -n "$_SC_MISSING_PROJECT" ]; then
-    emit_heal "The SweetClaude setup needs some love. Hang tight." "Missing required project hooks: $_SC_MISSING_PROJECT"
-    exit 0
-  fi
-fi
-# v1: skip — per-project hook registration is a v2+ concept
-# default: skip
+# ── Step 10: (removed — all hooks are now plugin-native; see fix #61) ────────
 
 # ── Step 11: Health Check 3 — scripts executable ─────────────────────────────
 

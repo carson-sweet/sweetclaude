@@ -34,7 +34,7 @@
       "event": "PreToolUse",
       "matcher": ".*",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Blocks tool calls when SweetClaude is disabled or phase.yaml is missing",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/preflight-guard.sh"
     },
@@ -43,7 +43,7 @@
       "event": "PreToolUse",
       "matcher": "Write|Edit",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Prevents edits to test files during TDD implementation phase",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/test-guardian.sh"
     },
@@ -52,7 +52,7 @@
       "event": "PreToolUse",
       "matcher": "Write|Edit",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Warns when writing implementation code before tests exist",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/tdd-prewrite-guardian.sh"
     },
@@ -61,7 +61,7 @@
       "event": "PreToolUse",
       "matcher": "Bash",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Blocks writes to artifact paths that bypass the sc-artifact adapter",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/artifact-guardian.sh"
     },
@@ -70,7 +70,7 @@
       "event": "PreToolUse",
       "matcher": "Bash",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Blocks IMPLEMENT entry in Kanban mode when WIP limit is reached",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/wip-limit.sh"
     },
@@ -79,7 +79,7 @@
       "event": "PostToolUse",
       "matcher": "Write|Edit",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Runs the test suite after every source file edit during TDD IMPLEMENT phase",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-test-runner.sh"
     },
@@ -88,7 +88,7 @@
       "event": "PostToolUse",
       "matcher": "Write|Edit",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Regenerates session-state.yaml when phase.yaml or skills.yaml changes",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/state-regenerator.sh"
     },
@@ -97,7 +97,7 @@
       "event": "PostToolUse",
       "matcher": "Skill",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Logs every skill invocation to .sweetclaude/state/skill-usage-log.md",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-tracker.sh"
     },
@@ -106,7 +106,7 @@
       "event": "PostToolUse",
       "matcher": "ExitPlanMode",
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Records the active plan file path and sprint/milestone context to .sweetclaude/state/active-plan.txt when plan mode exits",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/plan-tracker.sh"
     },
@@ -115,7 +115,7 @@
       "event": "UserPromptSubmit",
       "matcher": null,
       "required": true,
-      "scope": "project",
+      "scope": "plugin-native",
       "purpose": "Reminds the user of a pending migration Accept/Rollback decision; hard-blocks at turn 10. Silent when no marker file is present.",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/migration-decision-reminder.sh"
     },
