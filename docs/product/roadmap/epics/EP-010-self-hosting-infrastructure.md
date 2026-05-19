@@ -23,7 +23,7 @@ completion_criteria_done: [0, 1, 2, 3, 4]
 
 # EP-010: Self-Hosting Infrastructure
 
-**Release:** REL-002 (Self-Hosting Infrastructure)
+**Release:** REL-004 (4.0.10 — EP-010 Completion)
 **Source:** Four-architect caucus on SweetClaude self-hosting (2026-05-18)
 
 ## Summary
