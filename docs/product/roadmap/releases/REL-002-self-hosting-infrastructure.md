@@ -3,8 +3,9 @@ id: REL-002
 type: release
 title: "Self-Hosting Infrastructure"
 status: active
+version: "4.0.9"
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-19
 ---
 
 # REL-002: Self-Hosting Infrastructure

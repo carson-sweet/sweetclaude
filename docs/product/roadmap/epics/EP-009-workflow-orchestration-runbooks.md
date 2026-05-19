@@ -6,8 +6,9 @@ status: proposed
 release: REL-003
 milestones: [MS-007, MS-008, MS-009, MS-010, MS-011, MS-012, MS-013, MS-014, MS-015]
 source: BL-082
+depends_on: [EP-010]
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-19
 ---
 
 # EP-009: Workflow Orchestration Runbooks
