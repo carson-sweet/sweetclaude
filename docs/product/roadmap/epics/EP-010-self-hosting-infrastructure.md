@@ -157,6 +157,10 @@ All criteria are binary pass/fail. Verification method is listed for each.
 9. **Hook dev workflow documented.** `docs/user-guide/hook-development.md` covers logic testing, regression testing, sync timing, recovery. Verify: file exists and is git-tracked.
 10. **Zero manual rules.** All three carve-outs are machine-enforced or machine-detected. Verify: no step in the documented workflow requires the developer to remember a safety rule.
 
+## Release Scope
+
+Stories 300-303 ship in 4.0.9-beta (REL-002). Stories 304-306 are deferred to 4.0.10 — the schema assigns the epic to one release, so deferred stories are tracked here by convention.
+
 ## Dependency
 
 EP-010 should be completed before EP-009 stories enter IMPLEMENT phase, since EP-009's workflows will be used on SweetClaude itself.
