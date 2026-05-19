@@ -2,8 +2,8 @@
 id: EP-004
 type: epic
 title: "Mode Enforcement"
-status: new
-release: REL-004
+status: proposed
+release: null
 objective: "Flow, kanban, shape up, and agile modes enforce distinct behavioral rules across all skills, with mode-appropriate routing, gating, and artifact management."
 completion_criteria:
   - "Discovery complete"
@@ -17,15 +17,14 @@ completion_criteria:
   - "Docs and changelog updated"
 completion_criteria_done: []
 depends_on:
-  - EP-001
-  - EP-003
+  - EP-009
 created: 2026-05-15
-updated: 2026-05-15
+updated: 2026-05-19
 ---
 
 ## Description
 
-The constraint layer for SweetClaude v4.4. Each mode (flow, kanban, shape up, agile) defines which skills are available, which gates apply, and how routing works. Requires both the execution workflow engine (EP-001) and planning workflows (EP-003) to exist first.
+The constraint layer for SweetClaude v4.4. Each mode (flow, kanban, shape up, agile) defines which skills are available, which gates apply, and how routing works. Requires the workflow orchestration engine (EP-009) to exist first. Deferred beyond the current roadmap horizon — no release assigned.
 
 ## Source milestones
 

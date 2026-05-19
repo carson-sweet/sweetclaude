@@ -2,11 +2,12 @@
 id: STORY-011
 type: story
 title: Roadmap system — docs/product/roadmap/ structure and routing in go/big-picture/code-issue
-status: new
+status: done
 priority: now
 effort: xl
 epic: EP-002
 sprint: null
+closed_date: 2026-05-18
 tags:
 - roadmap
 - epics
