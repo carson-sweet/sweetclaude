@@ -480,6 +480,12 @@ If the repo is also broken and no backup exists:
 1. Re-install SweetClaude from the plugin marketplace
 2. Or: check out a known-good git tag and copy hooks manually:
    `git checkout v3.68.6 -- hooks/ && cp hooks/*.sh ~/.claude/plugins/cache/.../hooks/`
+
+## What to Read Next
+
+- [How It Works](how-it-works.md) — hook architecture and the Write|Edit matcher
+- [Skills Reference](skills-reference.md) — full list of available skills including `/sweetclaude:hook-repair`
+- [TDD](tdd.md) — the testing discipline that keeps hooks correct before they are synced
 ```
 
 ---
