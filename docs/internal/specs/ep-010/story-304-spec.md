@@ -2,9 +2,10 @@
 id: SPEC-304
 story: STORY-304
 epic: EP-010
-version: 2.0
+version: 2.1
 date: 2026-05-19
 supersedes: SPEC-304 v1.0 (2026-05-18)
+amendment: "v2.1 — added --dry-run flag to emergency script and test_dry_run_preview function (Option B resolution, 2026-05-19)"
 status: approved
 ---
 
@@ -69,6 +70,9 @@ readonly CONTRACT_LINE_DONE_PREFIX="Done. Verify with:"
 readonly CONTRACT_FATAL_NO_INSTALL="FATAL: Cannot find installed hooks path."
 readonly CONTRACT_FATAL_BAD_NAME="FATAL: Hook name must be a bare filename, not a path."
 readonly CONTRACT_FATAL_NOT_FOUND_SUFFIX=" not found in backup or repo"
+# Dry-run output contract
+readonly EHR_RESOLVED_PREFIX="Resolved install path:"
+readonly EHR_WOULD_RESTORE_PREFIX="Would restore:"
 ```
 
 Tests source the script with `INSTALL_PATH` unset and a sentinel guard so the script's main body does not execute on source; instead, the test reads the constants. See Deliverable 2 for the mechanism.
@@ -93,6 +97,16 @@ fi
 
 The override flag `INSTALL_PATH_OVERRIDE=1` (or equivalently, `INSTALL_PATH` being non-empty at script entry) is the back-door. Tests set it; normal users do not.
 
+### Dry-run mode
+
+`--dry-run` is the first positional argument. When set, the script resolves the install path and enumerates what would be restored, then exits 0 without writing anything. The optional hook name argument (`[hook-name.sh]`) is still honored: in dry-run mode a single `Would restore:` line is emitted for the named hook.
+
+Output contract in dry-run mode:
+- `Resolved install path: <absolute-path>` — one line, always
+- `Would restore: <hook-filename>` — one line per hook (from backup or repo, in discovery order)
+
+The `EHR_RESOLVED_PREFIX` and `EHR_WOULD_RESTORE_PREFIX` constants carry these prefixes. Tests source the script and assert against these constants.
+
 ### Full script body
 
 ```bash
@@ -114,10 +128,20 @@ readonly CONTRACT_LINE_DONE_PREFIX="Done. Verify with:"
 readonly CONTRACT_FATAL_NO_INSTALL="FATAL: Cannot find installed hooks path."
 readonly CONTRACT_FATAL_BAD_NAME="FATAL: Hook name must be a bare filename, not a path."
 readonly CONTRACT_FATAL_NOT_FOUND_SUFFIX=" not found in backup or repo"
+# Dry-run output contract
+readonly EHR_RESOLVED_PREFIX="Resolved install path:"
+readonly EHR_WOULD_RESTORE_PREFIX="Would restore:"
 
 # Sentinel for test-source mode: when set, exit after defining constants.
 if [ -n "${EMERGENCY_RESTORE_SOURCE_ONLY:-}" ]; then
   return 0 2>/dev/null || exit 0
+fi
+
+# --dry-run: list what would be restored without writing
+DRY_RUN=""
+if [ "${1:-}" = "--dry-run" ]; then
+  DRY_RUN=1
+  shift
 fi
 
 # BASH_SOURCE-based repo root resolution (no git dependency)
@@ -180,6 +204,26 @@ if [ -n "$TARGET_HOOK" ]; then
       exit 1
       ;;
   esac
+fi
+
+# Dry-run mode: enumerate what would be restored without writing
+if [ -n "$DRY_RUN" ]; then
+  echo "$EHR_RESOLVED_PREFIX $INSTALL_PATH"
+  if [ -n "$TARGET_HOOK" ]; then
+    echo "$EHR_WOULD_RESTORE_PREFIX $TARGET_HOOK"
+  else
+    DRY_SOURCE=""
+    if [ -d "$BACKUP_DIR" ] && [ "$(find "$BACKUP_DIR" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')" -gt 0 ]; then
+      DRY_SOURCE="$BACKUP_DIR"
+    else
+      DRY_SOURCE="$REPO_ROOT/hooks"
+    fi
+    for hook in "$DRY_SOURCE"/*.sh; do
+      [ -f "$hook" ] || continue
+      echo "$EHR_WOULD_RESTORE_PREFIX $(basename "$hook")"
+    done
+  fi
+  exit 0
 fi
 
 echo "$CONTRACT_LINE_INSTALL $HOOKS_DIR"
@@ -252,7 +296,7 @@ echo "Write/Edit should be unblocked now."
 
 ## Deliverable 2: `tests/test-emergency-restore.sh`
 
-A bash test script that exercises the emergency restore script in three scenarios. Runs under `set -euo pipefail` (loud failure mode appropriate for tests, contrasted with the script's `set -e`).
+A bash test script that exercises the emergency restore script in four scenarios. Runs under `set -euo pipefail` (loud failure mode appropriate for tests, contrasted with the script's `set -e`).
 
 ### Test isolation strategy
 
@@ -389,10 +433,43 @@ test_back_door_skips_prefix_check() {
   fi
 }
 
+# --- Test 4: --dry-run lists what would be restored without writing ---
+test_dry_run_preview() {
+  local dir="$TEST_TMPDIR/t4"
+  local install="$dir/install"
+  mkdir -p "$install/hooks" "$install/hooks.bak"
+
+  printf '#!/bin/bash\necho ok\n' > "$install/hooks.bak/test-guardian.sh"
+  chmod +x "$install/hooks.bak/test-guardian.sh"
+  # Broken hook — must remain broken after --dry-run
+  printf '#!/bin/bash\nif [[ ; then\n' > "$install/hooks/test-guardian.sh"
+
+  local output
+  if output=$(INSTALL_PATH="$install" bash "$SCRIPT" --dry-run 2>&1); then
+    if ! printf '%s' "$output" | grep -q "$EHR_RESOLVED_PREFIX"; then
+      fail "test_dry_run_preview: missing resolved-path line"
+      return
+    fi
+    if ! printf '%s' "$output" | grep -q "$EHR_WOULD_RESTORE_PREFIX"; then
+      fail "test_dry_run_preview: missing would-restore line"
+      return
+    fi
+    # Hook must NOT have been restored (still fails bash -n)
+    if bash -n "$install/hooks/test-guardian.sh" 2>/dev/null; then
+      fail "test_dry_run_preview: hook was modified in dry-run mode"
+    else
+      pass "test_dry_run_preview"
+    fi
+  else
+    fail "test_dry_run_preview: --dry-run exited non-zero"
+  fi
+}
+
 # --- Runner ---
 test_restore_from_backup
 test_fallback_to_repo
 test_back_door_skips_prefix_check
+test_dry_run_preview
 
 echo ""
 echo "Summary: $PASS_COUNT passed, $FAIL_COUNT failed"
