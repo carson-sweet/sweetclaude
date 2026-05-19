@@ -1,6 +1,6 @@
 ---
 counters:
-  story: 306
+  story: 307
   bug: 10
   debt: 14
   chore: 12
@@ -36,6 +36,7 @@ This file is the source of truth for backlog counter state and the visible table
 | [STORY-304](stories/STORY-304-hook-repair-recovery.md) | Bash-based hook repair recovery procedure | deferred | now | s | self-hosting, hooks, recovery |
 | [STORY-305](stories/STORY-305-symlink-detection.md) | Session-start symlink detection | deferred | now | s | self-hosting, hooks, safety |
 | [STORY-306](stories/STORY-306-hook-dev-workflow-docs.md) | Fixture-based hook development workflow documentation | deferred | now | s | self-hosting, hooks, documentation |
+| [STORY-307](stories/STORY-307-spike-deference-enforcement.md) | Spike — enforce collaborative deference checkpoints via prompt engineering and/or subagent isolation | new | soon | m | spike, deference, prompt-engineering, subagents, safety, self-hosting |
 
 ## Bugs
 | ID | Title | Status | Priority | Effort | Tags |
