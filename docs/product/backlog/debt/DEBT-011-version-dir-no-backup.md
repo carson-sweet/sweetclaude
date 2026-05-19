@@ -1,5 +1,5 @@
 ---
-id: DEBT-009
+id: DEBT-011
 type: debt
 title: "Version-dir hooks sync bypasses backup and rollback"
 status: new

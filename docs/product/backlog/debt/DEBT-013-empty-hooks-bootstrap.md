@@ -1,5 +1,5 @@
 ---
-id: DEBT-011
+id: DEBT-013
 type: debt
 title: "First sync to fresh install fails on empty hooks/ validation"
 status: new

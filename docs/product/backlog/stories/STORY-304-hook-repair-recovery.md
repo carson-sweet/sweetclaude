@@ -2,7 +2,7 @@
 id: STORY-304
 type: story
 title: "Bash-based hook repair recovery procedure"
-status: new
+status: deferred
 priority: now
 effort: s
 epic: EP-010

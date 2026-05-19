@@ -1,5 +1,5 @@
 ---
-id: BUG-007
+id: BUG-009
 type: bug
 title: Epic completion criteria only in body text — cache renders Criteria 0/0
 status: new

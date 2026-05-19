@@ -2,7 +2,7 @@
 id: STORY-305
 type: story
 title: "Session-start symlink detection"
-status: new
+status: deferred
 priority: now
 effort: s
 epic: EP-010

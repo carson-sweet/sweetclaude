@@ -1,5 +1,5 @@
 ---
-id: DEBT-003
+id: DEBT-005
 type: debt
 title: "Dry-run output completeness"
 status: new

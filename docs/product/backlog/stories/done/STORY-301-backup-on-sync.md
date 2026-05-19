@@ -9,7 +9,7 @@ epic: EP-010
 epic_sequence: 2
 tags: [self-hosting, hooks, sync, recovery]
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-19
 completed: 2026-05-18
 ---
 

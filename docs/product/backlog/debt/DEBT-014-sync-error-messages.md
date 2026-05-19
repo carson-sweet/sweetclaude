@@ -1,5 +1,5 @@
 ---
-id: DEBT-012
+id: DEBT-014
 type: debt
 title: "Sync script error messages not actionable"
 status: new

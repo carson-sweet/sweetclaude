@@ -1,5 +1,5 @@
 ---
-id: DEBT-001
+id: DEBT-003
 type: debt
 title: "Sync script exit code hygiene"
 status: new

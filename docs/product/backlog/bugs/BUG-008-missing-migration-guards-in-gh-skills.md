@@ -1,5 +1,5 @@
 ---
-id: BUG-006
+id: BUG-008
 type: bug
 title: project-gh-import-issues and project-gh-sync-issues missing v4 migration guards
 status: new
