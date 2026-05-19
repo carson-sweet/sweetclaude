@@ -112,8 +112,15 @@ The `EHR_RESOLVED_PREFIX` and `EHR_WOULD_RESTORE_PREFIX` constants carry these p
 ```bash
 #!/bin/bash
 # Emergency hook restore — run this when everything else is broken.
-# Usage: bash scripts/emergency-hook-restore.sh [hook-name.sh]
+# Usage: bash scripts/emergency-hook-restore.sh [--dry-run] [hook-name.sh]
 # No arguments: restores ALL hooks from backup or repo.
+#
+# Install-path resolution assumptions:
+#   - installed_plugins.json uses scope="user" for user-scoped installs
+#   - lastUpdated field is present and ISO-8601 sortable
+#   - Plugin cache layout: ~/.claude/plugins/cache/sweetclaude/sweetclaude/<ver>/
+#   - find fallback pattern: */sweetclaude/sweetclaude/*/hooks (dirname = install root)
+# If your install does not match these assumptions, set INSTALL_PATH explicitly.
 
 set -e
 
