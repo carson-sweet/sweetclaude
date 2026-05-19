@@ -133,6 +133,11 @@ readonly EHR_RESOLVED_PREFIX="Resolved install path:"
 readonly EHR_WOULD_RESTORE_PREFIX="Would restore:"
 
 # Sentinel for test-source mode: when set, exit after defining constants.
+# WARNING: This guard uses `return` to exit the sourced context. Caller MUST
+# source this script at top level — sourcing inside a function causes `return`
+# to return from the function, not from the source, and the script body will
+# execute. Setting this var when executing the script directly (not sourcing)
+# produces a silent no-op exit 0; do not set it in normal shell environments.
 if [ -n "${EMERGENCY_RESTORE_SOURCE_ONLY:-}" ]; then
   return 0 2>/dev/null || exit 0
 fi
