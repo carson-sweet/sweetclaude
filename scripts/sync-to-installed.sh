@@ -98,12 +98,35 @@ if [ "$PHASE_LOWER" = "implement" ]; then
   fi
 fi
 
-# ── Test gate (STORY-302 adds implementation here) ───────────────────────────
+# ── Test gate ────────────────────────────────────────────────────────────────
+
+TEST_HOOKS="$REPO_ROOT/tests/test-hooks.sh"
+
+if [ ! -f "$TEST_HOOKS" ]; then
+  echo "ERROR: Sync blocked — tests/test-hooks.sh not found." >&2
+  exit 2
+fi
+
+if [ ! -x "$TEST_HOOKS" ]; then
+  echo "ERROR: Sync blocked — tests/test-hooks.sh is not executable." >&2
+  exit 2
+fi
+
+if ! bash "$TEST_HOOKS"; then
+  if [ "$DRY_RUN" = true ]; then
+    echo "Dry run: hook tests failed. Sync would be blocked." >&2
+  else
+    echo "ERROR: Sync blocked — tests failed. Fix failing tests before syncing." >&2
+  fi
+  exit 2
+fi
+
+echo "All hook tests passed."
 
 # ── Dry-run exit ─────────────────────────────────────────────────────────────
 
 if [ "$DRY_RUN" = true ]; then
-  echo "Dry run: all checks passed. Would sync to $INSTALL_PATH"
+  echo "Dry run: all checks passed (phase, tests). Would sync to $INSTALL_PATH"
   exit 0
 fi
 

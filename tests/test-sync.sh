@@ -30,6 +30,58 @@ _make_install_fixture() {
     > "$home_dir/.claude/plugins/installed_plugins.json"
 }
 
+# _make_302_fixture ROOT HOME_DIR INSTALL_DIR TESTS_EXIT_CODE
+#
+# Sets up a self-contained fake-repo directory at ROOT/fake-repo/ whose
+# scripts/sync-to-installed.sh is a copy of the real script, and whose
+# tests/test-hooks.sh exits with TESTS_EXIT_CODE (0 = all pass, 1 = failure).
+# Also populates ROOT/fake-repo/hooks/ with a minimal .sh file and stubs for
+# skills/, config/, and package.json so the non-hook sync section does not
+# error.
+#
+# After calling this, the script to run is: bash "$1/fake-repo/scripts/sync-to-installed.sh"
+# with cwd=some project dir and HOME=HOME_DIR.
+_make_302_fixture() {
+  local root="$1"
+  local home_dir="$2"
+  local install_dir="$3"
+  local tests_exit_code="$4"
+
+  local fake_repo="$root/fake-repo"
+  mkdir -p "$fake_repo/scripts"
+  mkdir -p "$fake_repo/tests"
+  mkdir -p "$fake_repo/hooks"
+  mkdir -p "$fake_repo/skills"
+  mkdir -p "$fake_repo/config"
+
+  cp "$REPO_ROOT/scripts/sync-to-installed.sh" "$fake_repo/scripts/sync-to-installed.sh"
+  chmod +x "$fake_repo/scripts/sync-to-installed.sh"
+
+  printf '#!/bin/bash\necho stub-hook\n' > "$fake_repo/hooks/stub-hook.sh"
+  chmod +x "$fake_repo/hooks/stub-hook.sh"
+
+  printf '{"name":"sweetclaude","version":"0.0.0-test"}\n' > "$fake_repo/package.json"
+
+  if [ "$tests_exit_code" -eq 0 ]; then
+    cat > "$fake_repo/tests/test-hooks.sh" << 'HOOKEOF'
+#!/bin/bash
+echo "ALL TESTS PASSED"
+exit 0
+HOOKEOF
+  else
+    cat > "$fake_repo/tests/test-hooks.sh" << 'HOOKEOF'
+#!/bin/bash
+echo "  FAIL: stub test always fails"
+echo "FAILURES: 1"
+exit 1
+HOOKEOF
+  fi
+  chmod +x "$fake_repo/tests/test-hooks.sh"
+
+  _make_install_fixture "$home_dir" "$install_dir"
+  printf '#!/bin/bash\necho pre-existing-hook\n' > "$install_dir/hooks/pre-existing.sh"
+}
+
 SCRIPT="$REPO_ROOT/scripts/sync-to-installed.sh"
 
 # ---------------------------------------------------------------------------
@@ -923,6 +975,456 @@ if [ ! -d "$FX31_INSTALL/hooks.bak.tmp" ]; then
   pass "hooks.bak.tmp cleaned up after rm failure"
 else
   fail "hooks.bak.tmp still exists after rm failure"
+fi
+
+# ===========================================================================
+# STORY-302: Pre-sync test validation gate
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Test 32 (302-1): Sync runs test suite before copying — passing tests
+# ---------------------------------------------------------------------------
+echo "[32] test gate runs test-hooks.sh before sync and reports pass"
+
+FX32_ROOT="$TMPROOT/fx32"
+FX32_HOME="$FX32_ROOT/home"
+FX32_INSTALL="$FX32_HOME/.claude/plugins/cache/test-install"
+FX32_PROJ="$FX32_ROOT/proj"
+
+_make_git_repo "$FX32_PROJ"
+_make_302_fixture "$FX32_ROOT" "$FX32_HOME" "$FX32_INSTALL" 0
+mkdir -p "$FX32_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX32_PROJ/.sweetclaude/state/phase.yaml"
+
+FX32_SCRIPT="$FX32_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+EXIT32=0
+STDOUT32=$(cd "$FX32_PROJ" && HOME="$FX32_HOME" bash "$FX32_SCRIPT" 2>/dev/null) || EXIT32=$?
+
+if printf '%s' "$STDOUT32" | grep -qiE "test-hooks|hook test|All hook tests passed|ALL TESTS PASSED"; then
+  pass "stdout contains evidence that test-hooks.sh was executed"
+else
+  fail "stdout missing evidence of test-hooks.sh execution (got: $(printf '%s' "$STDOUT32" | head -c 300))"
+fi
+
+if printf '%s' "$STDOUT32" | grep -qiE "All hook tests passed|ALL TESTS PASSED|tests passed"; then
+  pass "stdout contains 'All hook tests passed' or equivalent"
+else
+  fail "stdout missing test-pass confirmation (got: $(printf '%s' "$STDOUT32" | head -c 300))"
+fi
+
+if [ "$EXIT32" -eq 0 ]; then
+  pass "sync exits 0 when tests pass"
+else
+  fail "expected exit code 0 when tests pass, got $EXIT32"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 33 (302-2): Failing tests block sync — exit 2, stderr message, hooks unchanged
+# ---------------------------------------------------------------------------
+echo "[33] failing tests block sync: exit 2, stderr message, hooks unchanged"
+
+FX33_ROOT="$TMPROOT/fx33"
+FX33_HOME="$FX33_ROOT/home"
+FX33_INSTALL="$FX33_HOME/.claude/plugins/cache/test-install"
+FX33_PROJ="$FX33_ROOT/proj"
+
+_make_git_repo "$FX33_PROJ"
+_make_302_fixture "$FX33_ROOT" "$FX33_HOME" "$FX33_INSTALL" 1
+mkdir -p "$FX33_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX33_PROJ/.sweetclaude/state/phase.yaml"
+
+FX33_SCRIPT="$FX33_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+HOOKS_BEFORE_33=$(find "$FX33_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX33_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+EXIT33=0
+STDERR33=$(cd "$FX33_PROJ" && HOME="$FX33_HOME" bash "$FX33_SCRIPT" 2>&1 >/dev/null) || EXIT33=$?
+
+if [ "$EXIT33" -eq 2 ]; then
+  pass "exit code is 2 when tests fail"
+else
+  fail "expected exit code 2 when tests fail, got $EXIT33"
+fi
+
+if printf '%s' "$STDERR33" | grep -qiE "tests failed|Sync blocked"; then
+  pass "stderr contains 'tests failed' or 'Sync blocked'"
+else
+  fail "stderr missing expected message (got: $(printf '%s' "$STDERR33" | head -c 300))"
+fi
+
+HOOKS_AFTER_33=$(find "$FX33_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX33_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+if [ "$HOOKS_BEFORE_33" = "$HOOKS_AFTER_33" ]; then
+  pass "installed hooks/ unchanged after test gate blocked sync"
+else
+  fail "installed hooks/ were modified despite test gate blocking sync"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 34 (302-3): --force does NOT bypass test gate
+# ---------------------------------------------------------------------------
+echo "[34] --force does not bypass test gate when tests fail"
+
+FX34_ROOT="$TMPROOT/fx34"
+FX34_HOME="$FX34_ROOT/home"
+FX34_INSTALL="$FX34_HOME/.claude/plugins/cache/test-install"
+FX34_PROJ="$FX34_ROOT/proj"
+
+_make_git_repo "$FX34_PROJ"
+_make_302_fixture "$FX34_ROOT" "$FX34_HOME" "$FX34_INSTALL" 1
+mkdir -p "$FX34_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX34_PROJ/.sweetclaude/state/phase.yaml"
+printf '| # | Date | Phase | Decision | Rationale |\n| --- | --- | --- | --- | --- |\n| 1 | 2026-01-01 | plan | initial | setup |\n' \
+  > "$FX34_PROJ/.sweetclaude/state/decision-log.md"
+
+FX34_SCRIPT="$FX34_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+HOOKS_BEFORE_34=$(find "$FX34_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX34_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+EXIT34=0
+STDERR34=$(cd "$FX34_PROJ" && HOME="$FX34_HOME" bash "$FX34_SCRIPT" --force 2>&1 >/dev/null) || EXIT34=$?
+
+if [ "$EXIT34" -eq 2 ]; then
+  pass "--force does not bypass test gate (exit 2)"
+else
+  fail "expected exit code 2 with --force + failing tests, got $EXIT34"
+fi
+
+if printf '%s' "$STDERR34" | grep -qiE "tests failed|Sync blocked"; then
+  pass "stderr contains 'tests failed' or 'Sync blocked' with --force"
+else
+  fail "stderr missing expected message with --force (got: $(printf '%s' "$STDERR34" | head -c 300))"
+fi
+
+HOOKS_AFTER_34=$(find "$FX34_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX34_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+if [ "$HOOKS_BEFORE_34" = "$HOOKS_AFTER_34" ]; then
+  pass "installed hooks/ unchanged after --force + failing tests"
+else
+  fail "installed hooks/ were modified despite --force + failing tests"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 35 (302-4): Test success allows sync — exit 0, hooks actually synced
+# ---------------------------------------------------------------------------
+echo "[35] passing tests allow sync to proceed and hooks are copied"
+
+FX35_ROOT="$TMPROOT/fx35"
+FX35_HOME="$FX35_ROOT/home"
+FX35_INSTALL="$FX35_HOME/.claude/plugins/cache/test-install"
+FX35_PROJ="$FX35_ROOT/proj"
+
+_make_git_repo "$FX35_PROJ"
+_make_302_fixture "$FX35_ROOT" "$FX35_HOME" "$FX35_INSTALL" 0
+mkdir -p "$FX35_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX35_PROJ/.sweetclaude/state/phase.yaml"
+
+FX35_SCRIPT="$FX35_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+printf '#!/bin/bash\necho pre-existing\n' > "$FX35_INSTALL/hooks/pre-existing.sh"
+
+EXIT35=0
+(cd "$FX35_PROJ" && HOME="$FX35_HOME" bash "$FX35_SCRIPT" >/dev/null 2>&1) || EXIT35=$?
+
+if [ "$EXIT35" -eq 0 ]; then
+  pass "exit code 0 when tests pass and sync proceeds"
+else
+  fail "expected exit code 0, got $EXIT35"
+fi
+
+SYNCED_COUNT=$(find "$FX35_INSTALL/hooks" -name "*.sh" -type f 2>/dev/null | wc -l | tr -d ' ')
+if [ "$SYNCED_COUNT" -gt 0 ]; then
+  pass "installed hooks/ contains synced .sh files after passing tests ($SYNCED_COUNT files)"
+else
+  fail "no .sh files found in installed hooks/ after sync with passing tests"
+fi
+
+if [ -f "$FX35_INSTALL/hooks/stub-hook.sh" ]; then
+  pass "stub-hook.sh from fake-repo/hooks/ is present at installed path"
+else
+  fail "stub-hook.sh not found at installed path (sync did not copy repo hooks)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 36 (302-dry-run): Tests still run in dry-run mode — passing tests
+# ---------------------------------------------------------------------------
+echo "[36] dry-run still executes test-hooks.sh, hooks unchanged after"
+
+FX36_ROOT="$TMPROOT/fx36"
+FX36_HOME="$FX36_ROOT/home"
+FX36_INSTALL="$FX36_HOME/.claude/plugins/cache/test-install"
+FX36_PROJ="$FX36_ROOT/proj"
+
+_make_git_repo "$FX36_PROJ"
+_make_302_fixture "$FX36_ROOT" "$FX36_HOME" "$FX36_INSTALL" 0
+mkdir -p "$FX36_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX36_PROJ/.sweetclaude/state/phase.yaml"
+
+FX36_SCRIPT="$FX36_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+HOOKS_BEFORE_36=$(find "$FX36_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX36_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+EXIT36=0
+STDOUT36=$(cd "$FX36_PROJ" && HOME="$FX36_HOME" bash "$FX36_SCRIPT" --dry-run 2>/dev/null) || EXIT36=$?
+
+if printf '%s' "$STDOUT36" | grep -qiE "test-hooks|hook test|All hook tests passed|ALL TESTS PASSED|tests passed"; then
+  pass "dry-run stdout contains evidence that test-hooks.sh was executed"
+else
+  fail "dry-run stdout missing evidence of test-hooks.sh execution (got: $(printf '%s' "$STDOUT36" | head -c 300))"
+fi
+
+if [ "$EXIT36" -eq 0 ]; then
+  pass "dry-run exits 0 when tests pass"
+else
+  fail "expected exit code 0 for dry-run with passing tests, got $EXIT36"
+fi
+
+HOOKS_AFTER_36=$(find "$FX36_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX36_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+if [ "$HOOKS_BEFORE_36" = "$HOOKS_AFTER_36" ]; then
+  pass "installed hooks/ unchanged after dry-run (dry-run did not copy)"
+else
+  fail "installed hooks/ changed during dry-run (should not copy)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 37 (302-dry-run-fail): Dry-run with failing tests — exit 2, stderr, hooks unchanged
+# ---------------------------------------------------------------------------
+echo "[37] dry-run with failing tests exits 2, stderr message, hooks unchanged"
+
+FX37_ROOT="$TMPROOT/fx37"
+FX37_HOME="$FX37_ROOT/home"
+FX37_INSTALL="$FX37_HOME/.claude/plugins/cache/test-install"
+FX37_PROJ="$FX37_ROOT/proj"
+
+_make_git_repo "$FX37_PROJ"
+_make_302_fixture "$FX37_ROOT" "$FX37_HOME" "$FX37_INSTALL" 1
+mkdir -p "$FX37_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX37_PROJ/.sweetclaude/state/phase.yaml"
+
+FX37_SCRIPT="$FX37_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+HOOKS_BEFORE_37=$(find "$FX37_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX37_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+EXIT37=0
+STDERR37=$(cd "$FX37_PROJ" && HOME="$FX37_HOME" bash "$FX37_SCRIPT" --dry-run 2>&1 >/dev/null) || EXIT37=$?
+
+if [ "$EXIT37" -eq 2 ]; then
+  pass "dry-run exits 2 when tests fail"
+else
+  fail "expected exit code 2 for dry-run with failing tests, got $EXIT37"
+fi
+
+if printf '%s' "$STDERR37" | grep -qi "Dry run.*hook tests failed"; then
+  pass "dry-run stderr contains dry-run-specific failure message"
+else
+  fail "dry-run stderr missing dry-run-specific message (got: $(printf '%s' "$STDERR37" | head -c 300))"
+fi
+
+HOOKS_AFTER_37=$(find "$FX37_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX37_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+if [ "$HOOKS_BEFORE_37" = "$HOOKS_AFTER_37" ]; then
+  pass "installed hooks/ unchanged after dry-run with failing tests"
+else
+  fail "installed hooks/ changed after dry-run with failing tests (should not copy)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 38 (302-missing): test-hooks.sh does not exist → exit 2, stderr message
+# ---------------------------------------------------------------------------
+echo "[38] missing test-hooks.sh exits 2 with error message"
+
+FX38_ROOT="$TMPROOT/fx38"
+FX38_HOME="$FX38_ROOT/home"
+FX38_INSTALL="$FX38_HOME/.claude/plugins/cache/test-install"
+FX38_PROJ="$FX38_ROOT/proj"
+
+_make_git_repo "$FX38_PROJ"
+_make_302_fixture "$FX38_ROOT" "$FX38_HOME" "$FX38_INSTALL" 0
+mkdir -p "$FX38_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX38_PROJ/.sweetclaude/state/phase.yaml"
+
+FX38_SCRIPT="$FX38_ROOT/fake-repo/scripts/sync-to-installed.sh"
+rm -f "$FX38_ROOT/fake-repo/tests/test-hooks.sh"
+
+EXIT38=0
+STDERR38=$(cd "$FX38_PROJ" && HOME="$FX38_HOME" bash "$FX38_SCRIPT" 2>&1 >/dev/null) || EXIT38=$?
+
+if [ "$EXIT38" -eq 2 ]; then
+  pass "exit code is 2 when test-hooks.sh is missing"
+else
+  fail "expected exit code 2 for missing test-hooks.sh, got $EXIT38"
+fi
+
+if printf '%s' "$STDERR38" | grep -qiE "tests failed|Sync blocked|test-hooks.sh|not found"; then
+  pass "stderr contains error message about missing tests"
+else
+  fail "stderr missing expected message for missing test-hooks.sh (got: $(printf '%s' "$STDERR38" | head -c 300))"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 39 (302-no-backup): test gate blocks before backup is created
+# ---------------------------------------------------------------------------
+echo "[39] test gate blocks before backup — hooks.bak/ not created"
+
+FX39_ROOT="$TMPROOT/fx39"
+FX39_HOME="$FX39_ROOT/home"
+FX39_INSTALL="$FX39_HOME/.claude/plugins/cache/test-install"
+FX39_PROJ="$FX39_ROOT/proj"
+
+_make_git_repo "$FX39_PROJ"
+_make_302_fixture "$FX39_ROOT" "$FX39_HOME" "$FX39_INSTALL" 1
+mkdir -p "$FX39_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX39_PROJ/.sweetclaude/state/phase.yaml"
+
+FX39_SCRIPT="$FX39_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+rm -rf "$FX39_INSTALL/hooks.bak" 2>/dev/null || true
+
+EXIT39=0
+(cd "$FX39_PROJ" && HOME="$FX39_HOME" bash "$FX39_SCRIPT" >/dev/null 2>&1) || EXIT39=$?
+
+if [ ! -d "$FX39_INSTALL/hooks.bak" ]; then
+  pass "hooks.bak/ not created when test gate blocks sync"
+else
+  fail "hooks.bak/ was created despite test gate blocking (gate runs after backup?)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 40 (302-force-dry-run-fail): --force --dry-run with failing tests → exit 2
+# ---------------------------------------------------------------------------
+echo "[40] --force --dry-run with failing tests exits 2"
+
+FX40_ROOT="$TMPROOT/fx40"
+FX40_HOME="$FX40_ROOT/home"
+FX40_INSTALL="$FX40_HOME/.claude/plugins/cache/test-install"
+FX40_PROJ="$FX40_ROOT/proj"
+
+_make_git_repo "$FX40_PROJ"
+_make_302_fixture "$FX40_ROOT" "$FX40_HOME" "$FX40_INSTALL" 1
+mkdir -p "$FX40_PROJ/.sweetclaude/state"
+printf 'phase: implement\n' > "$FX40_PROJ/.sweetclaude/state/phase.yaml"
+printf '| # | Date | Phase | Decision | Rationale |\n| --- | --- | --- | --- | --- |\n' \
+  > "$FX40_PROJ/.sweetclaude/state/decision-log.md"
+
+FX40_SCRIPT="$FX40_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+EXIT40=0
+STDERR40=$(cd "$FX40_PROJ" && HOME="$FX40_HOME" bash "$FX40_SCRIPT" --force --dry-run 2>&1 >/dev/null) || EXIT40=$?
+
+if [ "$EXIT40" -eq 2 ]; then
+  pass "--force --dry-run exits 2 when tests fail"
+else
+  fail "expected exit code 2 for --force --dry-run + failing tests, got $EXIT40"
+fi
+
+if printf '%s' "$STDERR40" | grep -qiE "tests failed|Sync blocked"; then
+  pass "--force --dry-run stderr contains test failure message"
+else
+  fail "--force --dry-run stderr missing expected message (got: $(printf '%s' "$STDERR40" | head -c 300))"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 41 (302-force-implement-fail): --force + IMPLEMENT + failing tests → exit 2
+# ---------------------------------------------------------------------------
+echo "[41] --force during IMPLEMENT with failing tests exits 2 (test gate not bypassed)"
+
+FX41_ROOT="$TMPROOT/fx41"
+FX41_HOME="$FX41_ROOT/home"
+FX41_INSTALL="$FX41_HOME/.claude/plugins/cache/test-install"
+FX41_PROJ="$FX41_ROOT/proj"
+
+_make_git_repo "$FX41_PROJ"
+_make_302_fixture "$FX41_ROOT" "$FX41_HOME" "$FX41_INSTALL" 1
+mkdir -p "$FX41_PROJ/.sweetclaude/state"
+printf 'phase: implement\n' > "$FX41_PROJ/.sweetclaude/state/phase.yaml"
+printf '| # | Date | Phase | Decision | Rationale |\n| --- | --- | --- | --- | --- |\n' \
+  > "$FX41_PROJ/.sweetclaude/state/decision-log.md"
+
+FX41_SCRIPT="$FX41_ROOT/fake-repo/scripts/sync-to-installed.sh"
+
+HOOKS_BEFORE_41=$(find "$FX41_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX41_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+EXIT41=0
+STDERR41=$(cd "$FX41_PROJ" && HOME="$FX41_HOME" bash "$FX41_SCRIPT" --force 2>&1 >/dev/null) || EXIT41=$?
+
+if [ "$EXIT41" -eq 2 ]; then
+  pass "--force + IMPLEMENT + failing tests exits 2"
+else
+  fail "expected exit code 2 for --force + IMPLEMENT + failing tests, got $EXIT41"
+fi
+
+HOOKS_AFTER_41=$(find "$FX41_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX41_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+
+if [ "$HOOKS_BEFORE_41" = "$HOOKS_AFTER_41" ]; then
+  pass "installed hooks/ unchanged after --force + IMPLEMENT + failing tests"
+else
+  fail "installed hooks/ modified despite --force + IMPLEMENT + failing tests"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 42 (302-exit127): test-hooks.sh exits 127 → gate still produces exit 2
+# ---------------------------------------------------------------------------
+echo "[42] test-hooks.sh exiting 127 still produces exit 2 from gate"
+
+FX42_ROOT="$TMPROOT/fx42"
+FX42_HOME="$FX42_ROOT/home"
+FX42_INSTALL="$FX42_HOME/.claude/plugins/cache/test-install"
+FX42_PROJ="$FX42_ROOT/proj"
+
+_make_git_repo "$FX42_PROJ"
+_make_302_fixture "$FX42_ROOT" "$FX42_HOME" "$FX42_INSTALL" 0
+mkdir -p "$FX42_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX42_PROJ/.sweetclaude/state/phase.yaml"
+
+FX42_SCRIPT="$FX42_ROOT/fake-repo/scripts/sync-to-installed.sh"
+cat > "$FX42_ROOT/fake-repo/tests/test-hooks.sh" << 'HOOKEOF'
+#!/bin/bash
+exit 127
+HOOKEOF
+chmod +x "$FX42_ROOT/fake-repo/tests/test-hooks.sh"
+
+EXIT42=0
+STDERR42=$(cd "$FX42_PROJ" && HOME="$FX42_HOME" bash "$FX42_SCRIPT" 2>&1 >/dev/null) || EXIT42=$?
+
+if [ "$EXIT42" -eq 2 ]; then
+  pass "exit 127 from test-hooks.sh produces gate exit code 2"
+else
+  fail "expected exit code 2 when test-hooks.sh exits 127, got $EXIT42"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 43 (302-not-executable): test-hooks.sh exists but is not executable → exit 2
+# ---------------------------------------------------------------------------
+echo "[43] non-executable test-hooks.sh produces exit 2"
+
+FX43_ROOT="$TMPROOT/fx43"
+FX43_HOME="$FX43_ROOT/home"
+FX43_INSTALL="$FX43_HOME/.claude/plugins/cache/test-install"
+FX43_PROJ="$FX43_ROOT/proj"
+
+_make_git_repo "$FX43_PROJ"
+_make_302_fixture "$FX43_ROOT" "$FX43_HOME" "$FX43_INSTALL" 0
+mkdir -p "$FX43_PROJ/.sweetclaude/state"
+printf 'phase: verify\n' > "$FX43_PROJ/.sweetclaude/state/phase.yaml"
+
+FX43_SCRIPT="$FX43_ROOT/fake-repo/scripts/sync-to-installed.sh"
+chmod -x "$FX43_ROOT/fake-repo/tests/test-hooks.sh"
+
+EXIT43=0
+STDERR43=$(cd "$FX43_PROJ" && HOME="$FX43_HOME" bash "$FX43_SCRIPT" 2>&1 >/dev/null) || EXIT43=$?
+
+if [ "$EXIT43" -eq 2 ]; then
+  pass "non-executable test-hooks.sh produces exit 2"
+else
+  fail "expected exit code 2 for non-executable test-hooks.sh, got $EXIT43"
+fi
+
+if printf '%s' "$STDERR43" | grep -qiE "tests failed|Sync blocked|not found|Permission"; then
+  pass "stderr contains error message for non-executable test-hooks.sh"
+else
+  fail "stderr missing expected message for non-executable test-hooks.sh (got: $(printf '%s' "$STDERR43" | head -c 300))"
 fi
 
 # ---------------------------------------------------------------------------
