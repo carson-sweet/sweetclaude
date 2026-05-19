@@ -10,8 +10,15 @@ updated: 2026-05-19
 
 # REL-002: Self-Hosting Infrastructure
 
-Enable SweetClaude to manage its own development with zero manual safety rules. Sync gates, backup/recovery, symlink detection, and extended hook test coverage.
+Shipped 4.0.9-beta (tag v4.0.9-beta). First four EP-010 stories delivered: phase-aware sync gate, backup-on-sync, pre-sync test gate, and extended hook test coverage. Remaining EP-010 work deferred to REL-004 (4.0.10).
 
-## Epics
+## Shipped
 
-- EP-010: Self-Hosting Infrastructure [active]
+- STORY-300 ✓ Phase-aware sync gate
+- STORY-301 ✓ Backup-on-sync with rollback support
+- STORY-302 ✓ Pre-sync test validation gate
+- STORY-303 ✓ Extend test-hooks.sh coverage to TDD-sensitive hooks
+
+## Deferred to REL-004
+
+EP-010 continues in 4.0.10 — see REL-004.

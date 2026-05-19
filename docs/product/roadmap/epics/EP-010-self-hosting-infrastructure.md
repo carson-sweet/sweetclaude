@@ -3,7 +3,7 @@ id: EP-010
 type: epic
 title: Self-Hosting Infrastructure
 status: active
-release: REL-002
+release: REL-004
 objective: "Enable SweetClaude to fully manage its own development with zero manual safety rules."
 created: 2026-05-18
 updated: 2026-05-19
