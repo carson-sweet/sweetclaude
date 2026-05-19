@@ -1,5 +1,5 @@
 ---
-id: DEBT-007
+id: DEBT-009
 type: debt
 title: "grep fallback for sweetclaude.yaml is ambiguous"
 status: new

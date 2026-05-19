@@ -1,5 +1,5 @@
 ---
-id: BUG-005
+id: BUG-007
 type: bug
 title: Migrate Step 8 (finalize) is not atomic — crash mid-finalize can leave half-state
 status: new

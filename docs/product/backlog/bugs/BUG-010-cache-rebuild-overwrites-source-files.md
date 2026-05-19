@@ -1,5 +1,5 @@
 ---
-id: BUG-008
+id: BUG-010
 type: bug
 title: "Cache rebuild modifies source markdown files"
 status: new

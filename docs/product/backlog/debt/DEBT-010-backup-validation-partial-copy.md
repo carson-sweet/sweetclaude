@@ -1,5 +1,5 @@
 ---
-id: DEBT-008
+id: DEBT-010
 type: debt
 title: "Backup validation should compare source and destination file counts"
 status: new

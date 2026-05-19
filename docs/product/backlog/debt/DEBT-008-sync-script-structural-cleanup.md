@@ -1,5 +1,5 @@
 ---
-id: DEBT-006
+id: DEBT-008
 type: debt
 title: "Sync script structural cleanup"
 status: new

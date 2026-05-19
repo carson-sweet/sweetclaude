@@ -2,7 +2,7 @@
 id: STORY-306
 type: story
 title: "Fixture-based hook development workflow documentation"
-status: new
+status: deferred
 priority: now
 effort: s
 epic: EP-010

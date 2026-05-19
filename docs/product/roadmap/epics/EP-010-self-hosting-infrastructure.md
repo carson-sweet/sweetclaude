@@ -4,22 +4,21 @@ type: epic
 title: Self-Hosting Infrastructure
 status: active
 release: REL-002
-milestones: []
-source: caucus-2026-05-18-self-hosting
+objective: "Enable SweetClaude to fully manage its own development with zero manual safety rules."
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-19
 completion_criteria:
   - "Sync script exists and works (300)"
   - "Phase gate blocks sync during IMPLEMENT (300)"
-  - "Test gate blocks sync on test failure (302)"
   - "Backup created on every sync (301)"
-  - "Broken hook recoverable via Bash (304)"
+  - "Test gate blocks sync on test failure (302)"
   - "TDD-sensitive hooks have test coverage (303)"
+  - "Broken hook recoverable via Bash (304)"
   - "Symlinks detected at session start (305)"
   - "fix-sweetclaude repairs symlinks (305)"
   - "Hook dev workflow documented (306)"
   - "Zero manual rules — all carve-outs machine-enforced"
-completion_criteria_done: [0, 1, 2, 3, 5]
+completion_criteria_done: [0, 1, 2, 3, 4]
 ---
 
 # EP-010: Self-Hosting Infrastructure

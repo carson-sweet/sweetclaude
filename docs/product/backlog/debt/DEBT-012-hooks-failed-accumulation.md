@@ -1,5 +1,5 @@
 ---
-id: DEBT-010
+id: DEBT-012
 type: debt
 title: "hooks.failed/ artifact not cleaned on subsequent syncs"
 status: new

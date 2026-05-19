@@ -1,5 +1,5 @@
 ---
-id: DEBT-002
+id: DEBT-004
 type: debt
 title: "Decision-log append robustness"
 status: new

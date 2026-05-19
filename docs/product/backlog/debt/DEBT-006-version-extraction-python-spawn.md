@@ -1,5 +1,5 @@
 ---
-id: DEBT-004
+id: DEBT-006
 type: debt
 title: "Replace Python spawn for version extraction"
 status: new
