@@ -2,11 +2,12 @@
 id: STORY-012
 type: story
 title: Epic and objective management skill — add/review/link/status/complete operations
-status: new
+status: done
 priority: now
 effort: l
 epic: EP-002
 sprint: null
+closed_date: 2026-05-18
 tags:
 - skill
 - epics
