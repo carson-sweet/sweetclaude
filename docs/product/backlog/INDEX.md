@@ -3,7 +3,7 @@ counters:
   story: 307
   bug: 10
   debt: 14
-  chore: 13
+  chore: 14
 updated: 2026-05-19
 ---
 
@@ -73,3 +73,4 @@ This file is the source of truth for backlog counter state and the visible table
 | [CHORE-011](chores/CHORE-011-cutover-gate-enforcement-in-migration-runner.md) | CUTOVER gate enforcement in migration runner | new | later | s | migration, cutover, gate, enforcement |
 | [CHORE-012](chores/CHORE-012-force-flag-audit-logging.md) | --force decision-log on non-implement phases | new | later | s | self-hosting, sync, audit |
 | [CHORE-013](chores/CHORE-013-wire-hooks-tests-into-sync-gate.md) | Wire tests/hooks/*.sh into the pre-sync test gate | new | later | s | self-hosting, sync, testing, gate |
+| [CHORE-014](chores/CHORE-014-skill-count-reconciliation.md) | Reconcile skills-reference.md skill count with actual skills/ directory | new | sooner | s | skills, documentation, skills-reference, count-drift |

@@ -3,7 +3,7 @@ id: BLAST-304
 story: STORY-304
 title: "Blast Radius and Impact Analysis — STORY-304"
 date: 2026-05-19
-status: draft
+status: resolved
 ---
 
 # Blast Radius: STORY-304 — Bash-based hook repair recovery procedure
@@ -167,15 +167,12 @@ These require user input before implementation begins. They cannot be resolved b
 
    These are not reconcilable — they imply different scripts. If we go story-first, SPEC-304 v2.0 needs a v3.0 supersede. If we go spec-first, the story's criteria 304-6/7/8 need editing.
 
-2. **STORY-306 ordering (Area 8).** STORY-306 is `status: deferred` but STORY-304 is `status: active` and depends on the file STORY-306 creates. Either:
-   - (a) Undefer STORY-306 and ship it first.
-   - (b) STORY-304 creates `hook-development.md` with only the Recovery + Emergency Recovery sections; STORY-306 expands the file later.
-   - (c) Defer STORY-304 until STORY-306 ships.
+2. ~~**STORY-306 ordering (Area 8).**~~ **RESOLVED — Option A (2026-05-19).** STORY-304 creates `docs/user-guide/hook-development.md` with only the Recovery and Emergency Recovery sections. STORY-306 adds the rest (workflow content) when undeferred. 304 acceptance criteria can pass on ship.
 
-3. **README.md insertion point (Area 7).** SPEC-304 Deliverable 5 says "add `hook-repair` to the skills index with one-line description and reference the break-glass script under a 'Recovery' subsection." The README has no "Recovery" subsection today and no obvious place for one. Should this be a new subsection under Common Commands, or should the skill just appear in one of the existing Primary/Housekeeping/Advanced tables (and if so, which)?
+3. ~~**README.md insertion point (Area 7).**~~ **RESOLVED (2026-05-19).** Add `hook-repair` to the Housekeeping table. Rename that table heading from "Housekeeping" to "Maintenance & Troubleshooting". Update the story implementation notes accordingly.
 
-4. **Pre-existing skill-count drift (Area 7).** `ls skills/` returns 109 directories, but skills-reference.md says "All 103 skills." Should STORY-304 reconcile the drift (104 → updated to the actual count), or just bump from the documented baseline (103 → 104)? The story's Implementation Notes line 49 assumes the documented baseline.
+4. ~~**Pre-existing skill-count drift (Area 7).**~~ **RESOLVED — Option A (2026-05-19).** Bump from documented baseline (103→104). Full reconciliation of the 6-skill gap (109 actual vs 103 documented) deferred to CHORE-014.
 
 5. ~~**CHORE-013 timing (Area 3).**~~ **MOOT — RESOLVED (2026-05-19).** The test file lives at `tests/test-emergency-restore.sh`, outside the `tests/hooks/` glob. CHORE-013 does not affect STORY-304 at all. CHORE-013 remains `priority: later` independently.
 
-6. **Story 304-11 version stamp.** Criterion 304-11 requires a line `Validated against SweetClaude v<X.Y.Z>` in the story file. The current branch is `release/3.68.x` and `package.json` was bumped to 3.68.6 in commit `7252ebf`, but EP-010 targets 4.0.10 (REL-004). Which version is being stamped — the one the recovery was validated against, or the one it ships in? Today's version on this branch is 3.68.6, but REL-004 is 4.0.10. There is a branch-mismatch question latent here: STORY-304 is `status: active` on a `release/3.68.x` branch, but its release target is 4.0.10.
+6. ~~**Story 304-11 version stamp.**~~ **RESOLVED — Option A (2026-05-19).** Stamp the version the recovery was validated against, not the ship version. Current branch is `release/3.68.x` at v3.68.6. The implementer writes `Validated against SweetClaude v3.68.6` in the story file during IMPLEMENT/VERIFY after confirming the recovery procedure works on that version.
