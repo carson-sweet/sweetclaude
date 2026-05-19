@@ -5,6 +5,9 @@ restore-config.sh
 # macOS metadata
 .DS_Store
 
+# Playwright MCP artifacts (screenshots, page captures, console logs)
+.playwright-mcp/
+
 # SweetClaude dogfood artifacts (internal work, not framework source)
 .sweetclaude/*
 /strategy/
