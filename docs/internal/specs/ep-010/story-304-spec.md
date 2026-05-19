@@ -649,7 +649,9 @@ If still broken, the backup itself is bad — direct to emergency script.
 
 ---
 
-## Success criteria
+## Design verification reference
+
+> **Canonical acceptance criteria for IMPLEMENT and VERIFY are the 13-item table in `docs/product/backlog/stories/STORY-304-hook-repair-recovery.md` (criteria 304-1 through 304-13).** Those grep-based verification commands are what the implementer runs to confirm done. The table below is the spec author's design-intent mapping — useful for tracing criteria to deliverables, but not the authoritative verification list.
 
 | # | Criterion | Verification | Deliverable |
 |---|---|---|---|
