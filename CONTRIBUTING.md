@@ -69,7 +69,7 @@ The body is instruction text that Claude follows when the skill is invoked. No c
 bash scripts/sync-to-installed.sh
 ```
 
-This syncs hooks, skills, scripts, and config to all installed locations with safety gates (phase check, test validation). Use `--dry-run` to preview without syncing. See `scripts/sync-to-installed.sh` for details.
+This syncs hooks, skills, scripts, and config to all installed locations with safety gates (phase check, test validation, backup). Installed hooks are backed up to `hooks.bak/` before overwriting — if a sync breaks your hooks, recover with `cp hooks.bak/<hook>.sh hooks/<hook>.sh` at the installed path. Use `--dry-run` to preview without syncing. See `scripts/sync-to-installed.sh` for details.
 
 ---
 
