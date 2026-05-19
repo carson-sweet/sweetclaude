@@ -106,6 +106,8 @@ This is the only comment in the script that explains a non-obvious design constr
 
 Security note: a caller who can set environment variables in the Claude Code session can already set `PATH`, write to arbitrary files via Bash, etc. The back-door does not widen the attack surface. The prefix check defends against a corrupted `installed_plugins.json`, not against a hostile caller. The back-door is documented in the spec's "test-only" framing — it is not advertised to end users.
 
+**Caller obligation.** Callers MUST NOT pass an `INSTALL_PATH` value derived from untrusted input — user prompts, model output, or external API responses. The back-door bypasses the prefix guard; an attacker-controlled `INSTALL_PATH` enables writes outside the plugin tree. The current `hook-repair` skill does not pass `INSTALL_PATH` at all — it lets the script resolve internally — and future callers must preserve this invariant. If a future skill ever needs to pass an explicit path, it must validate the path starts with `$HOME/.claude/plugins/` before passing it to the script.
+
 ### 5. The `--dry-run` flag: parsing position, output contract, exit code
 
 **Parsing position: BEFORE `BASH_SOURCE` resolution? AFTER?**
