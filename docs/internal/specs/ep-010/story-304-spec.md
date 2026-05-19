@@ -483,7 +483,7 @@ fi
 
 ## Deliverable 3: User guide sections
 
-Added to `docs/user-guide/hook-development.md` (file created by STORY-306).
+Added to `docs/user-guide/hook-development.md`. **STORY-304 creates this file as a stub** containing only the Recovery and Emergency Recovery sections. STORY-306 (currently deferred) will expand it with the full hook development workflow when it ships. (Ordering decision: blast-radius OQ2, Option A, 2026-05-19.)
 
 ### Section: Recovery
 
@@ -634,7 +634,7 @@ If still broken, the backup itself is bad — direct to emergency script.
 ## Dependencies
 
 - **STORY-301** — creates `hooks.bak/` during sync. Until 301 ships, the skill falls through to the "no backup" branch and the emergency script falls back to repo copy.
-- **STORY-306** — creates `docs/user-guide/hook-development.md`. This story adds two sections to that file. Implementation order: 306 first, then 304.
+- **STORY-306** — will expand `docs/user-guide/hook-development.md` when undeferred. STORY-304 creates that file as a stub (Recovery + Emergency Recovery sections only). The original 306-first ordering is superseded by blast-radius OQ2 Option A (2026-05-19).
 
 ---
 
@@ -669,7 +669,7 @@ If still broken, the backup itself is bad — direct to emergency script.
 
 ## Known gaps
 
-1. **Circular dependency with STORY-306.** This story adds content to a file STORY-306 creates. Implementation order: 306 first, then 304. Documented in Dependencies.
+1. ~~**Circular dependency with STORY-306.**~~ *Resolved (blast-radius OQ2, Option A, 2026-05-19): STORY-304 creates `docs/user-guide/hook-development.md` as a stub with Recovery + Emergency Recovery sections. STORY-306 expands it later. No circular dependency remains.*
 
 2. **In-place rewrite of v1.0 spec.** *Resolved: in-place rewrite.* Previous gap "create new parallel files vs rewrite in place" decided in favor of overwriting v1.0 with `supersedes:` frontmatter to keep one canonical artifact.
 

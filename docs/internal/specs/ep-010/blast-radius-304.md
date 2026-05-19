@@ -91,13 +91,13 @@ STORY-304 is a narrow but high-coordination story. It creates one standalone scr
 
 ---
 
-### 8. `docs/user-guide/hook-development.md` — file does not exist yet
+### 8. `docs/user-guide/hook-development.md` — **RESOLVED (Option A, 2026-05-19)**
 
-- **What it is**: STORY-304 Deliverable 3 (Recovery + Emergency Recovery sections). The file is created by STORY-306, which is currently `status: deferred`.
-- **Nature of impact**: BLOCKED — story acceptance criteria 304-1, 304-2, 304-3, 304-9, 304-10 all grep against `docs/user-guide/hook-development.md`. The file does not exist in the repo today.
-- **Specific change required**: Either (a) implement STORY-306 first (per SPEC-304 line 560 and DESIGN-304's implicit ordering and EP-010 architecture spec line 75), or (b) have STORY-304 create a stub `hook-development.md` containing only the Recovery / Emergency Recovery sections, and have STORY-306 fill in the rest. The EP-010 epic spec explicitly mandates 306-first ordering ("Implementation order: 306 first, then 304"). But STORY-306 is `status: deferred`.
-- **Risk level**: HIGH. STORY-304 is `status: active`, STORY-306 is `status: deferred`. Shipping 304 alone leaves it blocked on its own acceptance grep until 306 is undeferred. This is a real ordering inconsistency, not just a doc bug.
-- **Dependencies**: Hard dependency on STORY-306, or on a reduced-scope variant where 304 creates the file with placeholder sections that 306 expands.
+- **What it is**: STORY-304 Deliverable 3 (Recovery + Emergency Recovery sections). Pre-resolution: this file was expected to be created by STORY-306, causing a hard ordering dependency.
+- **Nature of impact**: NEW (created by STORY-304 as a stub).
+- **Specific change required**: STORY-304 creates `docs/user-guide/hook-development.md` with only the Recovery and Emergency Recovery (Break Glass) sections plus `## What to Read Next`. STORY-306 (currently deferred) inserts the workflow sections above Recovery when it ships.
+- **Risk level**: LOW (resolved). The stub approach unblocks all 304 acceptance criteria (304-1/2/3/9/10 can grep the file on ship). No ordering dependency on STORY-306 remains.
+- **Dependencies**: None blocking. STORY-306 is a follow-on that expands the stub; it does not need to precede 304.
 
 ---
 
