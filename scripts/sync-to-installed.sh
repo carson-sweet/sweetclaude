@@ -107,7 +107,38 @@ if [ "$DRY_RUN" = true ]; then
   exit 0
 fi
 
-# ── Force decision log (after dry-run exit — only log actual forced syncs) ───
+# ── Backup installed hooks ──────────────────────────────────────────────────
+
+HOOKS_DIR="$INSTALL_PATH/hooks"
+BACKUP_DIR="$INSTALL_PATH/hooks.bak"
+BACKUP_TMP="$INSTALL_PATH/hooks.bak.tmp"
+
+echo "Backing up installed hooks to hooks.bak/..."
+
+rm -rf "$BACKUP_TMP" || true
+if ! cp -R "$HOOKS_DIR" "$BACKUP_TMP"; then
+  echo "ERROR: Backup failed (cp). Sync aborted." >&2
+  rm -rf "$BACKUP_TMP" || true
+  exit 3
+fi
+
+BACKUP_COUNT=$(find "$BACKUP_TMP" -name "*.sh" -type f 2>/dev/null | wc -l | tr -d ' ')
+if [ "$BACKUP_COUNT" -eq 0 ]; then
+  echo "ERROR: Backup is empty (no .sh files). Sync aborted." >&2
+  rm -rf "$BACKUP_TMP" || true
+  exit 3
+fi
+
+if ! rm -rf "$BACKUP_DIR"; then
+  echo "ERROR: Cannot remove old backup. Sync aborted." >&2
+  rm -rf "$BACKUP_TMP" || true
+  exit 3
+fi
+mv "$BACKUP_TMP" "$BACKUP_DIR"
+
+echo "Backed up $BACKUP_COUNT hook scripts."
+
+# ── Force decision log (after backup — only log syncs that pass all gates) ──
 
 if [ "$FORCE" = true ] && [ "$PHASE_LOWER" = "implement" ]; then
   DECISION_LOG="$PROJECT_DIR/.sweetclaude/state/decision-log.md"
@@ -123,13 +154,23 @@ if [ "$FORCE" = true ] && [ "$PHASE_LOWER" = "implement" ]; then
   fi
 fi
 
-# ── Backup (STORY-301 adds implementation here) ──────────────────────────────
-
 # ── Sync hooks ───────────────────────────────────────────────────────────────
 
 echo "Syncing hooks..."
-if ! rsync -a "$REPO_ROOT/hooks/" "$INSTALL_PATH/hooks/"; then
-  echo "ERROR: Hook sync failed." >&2
+if ! rsync -a --delete "$REPO_ROOT/hooks/" "$INSTALL_PATH/hooks/"; then
+  echo "ERROR: Hook sync failed. Restoring from backup..." >&2
+  if [ -d "$BACKUP_DIR" ]; then
+    mv "$INSTALL_PATH/hooks" "$INSTALL_PATH/hooks.failed" 2>/dev/null || true
+    if cp -R "$BACKUP_DIR" "$INSTALL_PATH/hooks" 2>/dev/null; then
+      rm -rf "$INSTALL_PATH/hooks.failed" 2>/dev/null || true
+      echo "Restored hooks from backup." >&2
+    else
+      mv "$INSTALL_PATH/hooks.failed" "$INSTALL_PATH/hooks" 2>/dev/null || true
+      echo "WARNING: Could not restore hooks from backup." >&2
+    fi
+  else
+    echo "WARNING: No backup available to restore from." >&2
+  fi
   exit 4
 fi
 chmod +x "$INSTALL_PATH/hooks/"*.sh 2>/dev/null || true
