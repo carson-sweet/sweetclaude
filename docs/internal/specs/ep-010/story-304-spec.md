@@ -679,7 +679,7 @@ If still broken, the backup itself is bad — direct to emergency script.
 
 5. **No automatic re-execution of the originally blocked Write/Edit operation.** After repair, the user must re-issue the request. This is acceptable — auto-resume would be a separate, non-trivial feature.
 
-6. **Test for `hooks.bak/`-absent-and-repo-absent corner.** Not covered by the three test functions. Considered: catastrophic-only scenario; the script's behavior (zero `.sh` files restored, no error) is acceptable but untested. Deferred to STORY-309 hardening if needed.
+6. **Test for `hooks.bak/`-absent-and-repo-absent corner.** Not covered by the four test functions. Considered: catastrophic-only scenario; the script's behavior (zero `.sh` files restored, no error) is acceptable but untested. Deferred to STORY-309 hardening if needed.
 
 7. **Skill description triggers auto-invocation risk.** The phrase "restore broken hooks" in the description could pattern-match on unrelated user messages. Mitigation: skill is `user-invocable: true` and the description avoids verbs like "automatically" or "whenever".
 
