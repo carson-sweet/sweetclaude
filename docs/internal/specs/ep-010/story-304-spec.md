@@ -254,11 +254,13 @@ else
     echo "No backup found. Restoring ALL hooks from repo..."
   fi
 
+  RESTORED_COUNT=0
   for hook in "$RESTORE_SOURCE"/*.sh; do
     [ -f "$hook" ] || continue
     cp "$hook" "$HOOKS_DIR/$(basename "$hook")"
     chmod +x "$HOOKS_DIR/$(basename "$hook")"
     echo "  ${CONTRACT_LINE_RESTORED_PREFIX}$(basename "$hook")"
+    RESTORED_COUNT=$((RESTORED_COUNT + 1))
   done
 
   for meta in hooks.json hooks-manifest.json; do
@@ -267,6 +269,11 @@ else
       echo "  ${CONTRACT_LINE_RESTORED_PREFIX}$meta"
     fi
   done
+
+  if [ "$RESTORED_COUNT" -eq 0 ]; then
+    echo "WARNING: no hooks found in backup or repo — nothing restored" >&2
+    exit 1
+  fi
 fi
 
 echo ""
@@ -279,7 +286,7 @@ echo "Write/Edit should be unblocked now."
 | Code | Meaning |
 |---|---|
 | 0 | Restore completed successfully |
-| 1 | Fatal error — install path not found, bad hook name, hook not in backup or repo, or resolved path outside plugin tree |
+| 1 | Fatal error — install path not found, bad hook name, hook not in backup or repo, resolved path outside plugin tree, or zero hooks restored (backup and repo both empty) |
 
 ### `hooks.bak/` absence behavior
 
@@ -287,7 +294,7 @@ echo "Write/Edit should be unblocked now."
 |---|---|
 | `hooks.bak/` missing, repo has hooks/, no target arg | Falls back to copying from `$REPO_ROOT/hooks/`; prints `No backup found. Restoring ALL hooks from repo...` |
 | `hooks.bak/` missing, repo has hooks/, target arg given | Per-file fallback: copies named hook from repo; prints `RESTORED <hook> from repo (no backup available)` |
-| `hooks.bak/` missing, repo missing, no target arg | Loop body executes zero times (no `.sh` files matched); prints headers + `Done.` line but nothing restored |
+| `hooks.bak/` missing, repo missing, no target arg | Loop body executes zero times; `RESTORED_COUNT` = 0; prints `WARNING: no hooks found in backup or repo — nothing restored` to stderr; exit 1 |
 | `hooks.bak/` missing, repo missing, target arg given | `FATAL: <hook> not found in backup or repo` → exit 1 |
 | `hooks.bak/` present but empty | Same as missing — `find ... -name '*.sh' \| wc -l` returns 0, falls back to repo |
 | `hooks.bak/` present with `.sh` files, no target arg | Copies all `.sh` from backup + `hooks.json` + `hooks-manifest.json` if present |
