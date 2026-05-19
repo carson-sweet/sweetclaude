@@ -56,7 +56,7 @@ def all_backlog_story_files():
     roadmap_base = BACKLOG_BASE.parent / 'roadmap'
     result = []
     for p in BACKLOG_BASE.rglob('*.md'):
-        if p.name in ('INDEX.md', 'MIGRATION-MAP.md'):
+        if p.name in ('INDEX.md', 'MIGRATION-MAP.md', 'SCHEMA.md'):
             continue
         # Guard: skip any file that somehow resolves under roadmap/
         if roadmap_base.exists() and roadmap_base in p.parents:
