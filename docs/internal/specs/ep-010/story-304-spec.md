@@ -26,7 +26,7 @@ This is not a bypass — it is the intended escape hatch. The hook architecture 
 ## Deliverables
 
 1. **`scripts/emergency-hook-restore.sh`** — standalone break-glass recovery script (executable, zero SweetClaude dependencies)
-2. **`tests/test-emergency-restore.sh`** — test script with three test functions (see Test plan below)
+2. **`tests/test-emergency-restore.sh`** — test script with four test functions (see Test plan below)
 3. **`docs/user-guide/hook-development.md`** — two new sections: Recovery and Emergency Recovery (Break Glass)
 4. **`skills/hook-repair/SKILL.md`** — user-invocable escape skill for automated recovery
 5. **README and `skills-reference.md` entries** — list the new skill and reference the break-glass script
@@ -627,7 +627,7 @@ If still broken, the backup itself is bad — direct to emergency script.
 ## Deliverable 5: README and skills-reference entries
 
 - `README.md` — add `hook-repair` to the skills index with one-line description and reference the break-glass script under a "Recovery" subsection.
-- `docs/skills-reference.md` — full entry for `sweetclaude:hook-repair` matching the existing skill-entry format (name, invocation, when to use, what it does, constraints).
+- `docs/user-guide/skills-reference.md` — full entry for `sweetclaude:hook-repair` matching the existing skill-entry format (name, invocation, when to use, what it does, constraints).
 
 ---
 
@@ -663,7 +663,7 @@ If still broken, the backup itself is bad — direct to emergency script.
 | 304-8 | Break-glass procedure documented with in-session and terminal instructions | `grep -i "break glass\|emergency" docs/user-guide/hook-development.md` | 3 |
 | 304-9 | Test script asserts on pinned output contract constants | `grep -E 'CONTRACT_LINE_|CONTRACT_FATAL_' tests/test-emergency-restore.sh` | 2 |
 | 304-10 | Back-door `INSTALL_PATH` skips prefix check | `test_back_door_skips_prefix_check` passes | 1, 2 |
-| 304-11 | README and skills-reference list `hook-repair` | `grep hook-repair README.md docs/skills-reference.md` | 5 |
+| 304-11 | README and skills-reference list `hook-repair` | `grep hook-repair README.md docs/user-guide/skills-reference.md` | 5 |
 
 ---
 
