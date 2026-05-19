@@ -236,7 +236,7 @@ tags: [post-mortem, hotfix, {work-item-id}]
 ```
 Body: "## Origin\n\nFollow-on from {work-item-id} hotfix. Document timeline, root cause (5 whys), contributing factors, and action items to prevent recurrence.\n\nIf the fix was a workaround rather than a real fix, also create a follow-on tech-debt item."
 
-Increment the chore counter in `docs/product/backlog/INDEX.md`. Add the new CHORE row to the Chores table. Report: `✓ {CHORE-NNN} created — run /sweetclaude:go when ready for the post-mortem.`
+Derive the next chore ID: `python3 scripts/cache.py --project-dir . --query next-id --prefix CHORE`. Rebuild cache after creating the file: `python3 scripts/cache.py --project-dir . --rebuild`. Report: `✓ {CHORE-NNN} created — run /sweetclaude:go when ready for the post-mortem.`
 
 If "Skip": log the skip: append `| {next #} | {today} | POST-MORTEM skipped for {work item id} | User opted to create manually | N/A |` to decision log.
 

@@ -162,7 +162,7 @@ Run the v4 storage setup (see **v4 Storage Setup** section below), then invoke `
 
 ## v4 Storage Setup
 
-Run after `sweetclaude.yaml` is written in every branch. Creates the v4 backlog directory tree and writes the initial INDEX.md.
+Run after `sweetclaude.yaml` is written in every branch. Creates the v4 backlog directory tree and builds the initial cache.
 
 ```python
 import pathlib, yaml, datetime, tempfile, os
@@ -188,39 +188,9 @@ for subdir in ['stories/done', 'bugs/done', 'debt/done', 'chores/done']:
     p.mkdir(parents=True, exist_ok=True)
     (p / '.gitkeep').touch()
 
-# 3. Write INDEX.md (skip if already exists to avoid overwriting live data)
-index_path = pathlib.Path('docs/product/backlog/INDEX.md')
-if not index_path.exists():
-    index_content = f"""---
-counters:
-  story: 0
-  bug: 0
-  debt: 0
-  chore: 0
-updated: {today}
----
-
-# Backlog INDEX
-
-This file is the source of truth for backlog counter state and the visible table of unscheduled work.
-
-## Stories
-| ID | Title | Status | Priority | Effort | Tags |
-|---|---|---|---|---|---|
-
-## Bugs
-| ID | Title | Status | Priority | Effort | Tags |
-|---|---|---|---|---|---|
-
-## Debt
-| ID | Title | Status | Priority | Effort | Tags |
-|---|---|---|---|---|---|
-
-## Chores
-| ID | Title | Status | Priority | Effort | Tags |
-|---|---|---|---|---|---|
-"""
-    index_path.write_text(index_content, encoding='utf-8')
+# 3. Build initial cache (INDEX.md is no longer created — cache provides all views)
+import subprocess
+subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
 ```
 
 Whether these files end up tracked in the user's git tree depends on the user's `.gitignore`. In this dogfooding repo they are gitignored; the skill is verified against fixture projects for testing.

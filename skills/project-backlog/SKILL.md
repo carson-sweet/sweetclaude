@@ -50,14 +50,7 @@ All other modes: proceed normally.
 import pathlib, yaml, re, datetime
 
 BACKLOG_BASE = pathlib.Path('docs/product/backlog')
-INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
 TYPE_DIRS = {'story': 'stories', 'bug': 'bugs', 'debt': 'debt', 'chore': 'chores'}
-
-def read_index():
-    raw = INDEX_PATH.read_text(encoding='utf-8')
-    parts = raw.split('---', 2)
-    fm = yaml.safe_load(parts[1]) or {}
-    return fm
 
 def read_story_file(path):
     raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
@@ -76,19 +69,14 @@ def write_story_file(path, fm, body):
     content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
     pathlib.Path(path).write_text(content, encoding='utf-8')
 
-def patch_index_counters(counters):
-    raw = INDEX_PATH.read_text(encoding='utf-8')
-    parts = raw.split('---', 2)
-    index_fm = yaml.safe_load(parts[1]) or {}
-    index_fm['counters'] = counters
-    index_fm['updated'] = datetime.date.today().isoformat()
-    new_front = yaml.safe_dump(index_fm, default_flow_style=False, sort_keys=False).rstrip()
-    INDEX_PATH.write_text(f"---\n{new_front}\n---{parts[2]}", encoding='utf-8')
+def rebuild_cache():
+    import subprocess
+    subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
 
-# Load active backlog items (exclude done/ subdirs)
+# Load active backlog items (exclude done/ subdirs and metadata files)
 active_files = [
     p for p in BACKLOG_BASE.rglob('*.md')
-    if p.name != 'INDEX.md' and p.name != 'MIGRATION-MAP.md' and '/done/' not in str(p)
+    if p.name not in ('INDEX.md', 'MIGRATION-MAP.md', 'SCHEMA.md') and '/done/' not in str(p)
 ]
 items = []
 for p in active_files:
@@ -212,7 +200,7 @@ Imported issue {n} of {total}:
 Wait for response per issue.
 - **Keep:** `fm['origin'] = 'manual'` → write_story_file → confirm "Kept as {ID}"
 - **Edit:** ask for new title and/or type, write both fields + set origin=manual
-- **Discard:** delete the file + remove from INDEX.md table
+- **Discard:** delete the file and rebuild cache
 
 After all reviewed: "Reviewed {N} imported issues: {kept} kept, {edited} edited, {discarded} discarded."
 

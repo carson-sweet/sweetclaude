@@ -10,11 +10,15 @@ restore-config.sh
 /strategy/
 /corpus/
 
-# docs/ — only user-guide is public; everything else is internal
+# docs/ — whitelist specific subdirectories
 /docs/*
 !/docs/README.md
 !/docs/user-guide/
 !/docs/user-guide/**
+!/docs/product/
+!/docs/product/**
+!/docs/internal/
+!/docs/internal/**
 
 # Internal strategy, plans, and design docs — never public
 /docs-internal/

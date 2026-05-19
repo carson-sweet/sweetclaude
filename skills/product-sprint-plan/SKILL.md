@@ -117,11 +117,11 @@ Sprint planning has no data files to set up — it reads from backlog and storie
 
 If `$ARGUMENTS` is `onboard`:
 
-1. Check whether `{base_path}/backlog/BACKLOG-INDEX.md` exists.
-   - If not: > "Sprint planning requires the parking lot to be set up first. Setting up the parking lot now." Then invoke `sweetclaude:product-parking-lot onboard` and wait for it to complete.
+1. Check whether any backlog item files exist (`docs/product/backlog/stories/*.md`).
+   - If not: > "Sprint planning requires backlog items. Create some first with `/sweetclaude:project-issues create`."
    - If yes: continue.
 
-2. Check whether `{base_path}/milestones/MILESTONES-INDEX.md` exists.
+2. Check whether any milestone files exist (`{base_path}/milestones/MS-*.md`) or any epics exist (`docs/product/roadmap/epics/EP-*.md`).
    - If not: > "Sprint planning works best with milestones defined so each sprint can be tied to a roadmap target. Want to set up milestones now? (yes/skip)"
      - If yes: invoke `sweetclaude:product-milestones onboard` and wait.
      - If skip: continue.
