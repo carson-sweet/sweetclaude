@@ -507,6 +507,13 @@ operations are blocked — the broken hook returns `{"ok": false}` for
 every call. The Bash tool is unaffected because Write|Edit hooks only
 match those two tools.
 
+Three other hooks also match Bash, but none block a recovery `cp`:
+`artifact-guardian.sh` (warn-only, gates only `git commit`),
+`wip-limit.sh` (blocks only in Kanban mode at WIP limit, not during
+recovery), and `preflight-guard.sh` (blocks until first valid invocation;
+clears automatically once `phase.yaml` exists). In a normal recovery
+scenario all three are either inactive or transparent.
+
 ### Automated repair
 
 If the hook-repair skill is available:
