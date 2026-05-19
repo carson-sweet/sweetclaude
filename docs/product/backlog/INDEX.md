@@ -3,7 +3,7 @@ counters:
   story: 307
   bug: 10
   debt: 14
-  chore: 14
+  chore: 15
 updated: 2026-05-19
 ---
 
@@ -74,3 +74,4 @@ This file is the source of truth for backlog counter state and the visible table
 | [CHORE-012](chores/CHORE-012-force-flag-audit-logging.md) | --force decision-log on non-implement phases | new | later | s | self-hosting, sync, audit |
 | [CHORE-013](chores/CHORE-013-wire-hooks-tests-into-sync-gate.md) | Wire tests/hooks/*.sh into the pre-sync test gate | new | later | s | self-hosting, sync, testing, gate |
 | [CHORE-014](chores/CHORE-014-skill-count-reconciliation.md) | Reconcile skills-reference.md skill count with actual skills/ directory | new | sooner | s | skills, documentation, skills-reference, count-drift |
+| [CHORE-015](chores/CHORE-015-extract-shared-install-path-resolver.md) | Extract shared install-path resolver to eliminate triplicate drift | new | soon | s | self-hosting, sync, scripts, drift, architecture |
