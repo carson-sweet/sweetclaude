@@ -23,8 +23,6 @@ try:
 except ImportError:
     sys.exit("pyyaml is required: pip install pyyaml")
 
-PRIORITY_ORDER = {'now': 1, 'sooner': 2, 'soon': 3, 'later': 4, 'someday': 5}
-
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS items (
     id TEXT PRIMARY KEY,
@@ -62,6 +60,7 @@ CREATE TABLE IF NOT EXISTS epic_dependencies (
 CREATE TABLE IF NOT EXISTS tags (
     item_id TEXT NOT NULL,
     tag TEXT NOT NULL,
+    UNIQUE(item_id, tag),
     FOREIGN KEY (item_id) REFERENCES items(id)
 );
 
@@ -112,12 +111,11 @@ def scan_files(project_dir):
     return files
 
 
-def rebuild(project_dir):
+def _rebuild_cache(project_dir):
     dbp = db_path(project_dir)
     os.makedirs(os.path.dirname(dbp), exist_ok=True)
-    if os.path.exists(dbp):
-        os.remove(dbp)
-    conn = sqlite3.connect(dbp)
+    tmp_path = dbp + '.tmp'
+    conn = sqlite3.connect(tmp_path)
     conn.executescript(SCHEMA_SQL)
 
     for fpath in scan_files(project_dir):
@@ -158,11 +156,12 @@ def rebuild(project_dir):
             )
 
         if item_type == 'epic':
+            done_indexes = set(fm.get('completion_criteria_done', []) or [])
             for i, crit in enumerate(fm.get('completion_criteria', []) or []):
                 conn.execute(
                     """INSERT OR REPLACE INTO completion_criteria
-                       (epic_id, seq, criterion, done) VALUES (?, ?, ?, 0)""",
-                    (fm['id'], i, crit),
+                       (epic_id, seq, criterion, done) VALUES (?, ?, ?, ?)""",
+                    (fm['id'], i, crit, 1 if i in done_indexes else 0),
                 )
             for dep in fm.get('depends_on', []) or []:
                 conn.execute(
@@ -172,7 +171,12 @@ def rebuild(project_dir):
 
     conn.commit()
     conn.close()
+    os.replace(tmp_path, dbp)
     return dbp
+
+
+def rebuild(project_dir):
+    return _rebuild_cache(project_dir)
 
 
 def get_conn(project_dir):
@@ -222,12 +226,14 @@ def query_epic_stories(project_dir, epic_id, include_done=False):
     return [dict(r) for r in rows]
 
 
-def query_backlog(project_dir):
+def query_backlog(project_dir, unlinked_only=False):
     conn = get_conn(project_dir)
-    rows = conn.execute(
-        """SELECT * FROM items
+    sql = """SELECT * FROM items
            WHERE type IN ('story','bug','chore','debt')
-           AND status NOT IN ('done', 'abandoned', 'deferred')
+           AND status NOT IN ('done', 'abandoned', 'deferred')"""
+    if unlinked_only:
+        sql += " AND (epic IS NULL OR epic = '')"
+    sql += """
            ORDER BY
              CASE priority
                WHEN 'now' THEN 1
@@ -238,7 +244,7 @@ def query_backlog(project_dir):
                ELSE 6
              END,
              id"""
-    ).fetchall()
+    rows = conn.execute(sql).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -298,6 +304,95 @@ def query_releases(project_dir):
     return result
 
 
+def query_epics(project_dir, include_done=False):
+    conn = get_conn(project_dir)
+    if include_done:
+        rows = conn.execute(
+            "SELECT * FROM items WHERE type='epic' ORDER BY id"
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """SELECT * FROM items WHERE type='epic'
+               AND status NOT IN ('done', 'abandoned')
+               ORDER BY id"""
+        ).fetchall()
+
+    result = []
+    for row in rows:
+        ep = dict(row)
+        criteria = conn.execute(
+            "SELECT * FROM completion_criteria WHERE epic_id=? ORDER BY seq",
+            (ep['id'],),
+        ).fetchall()
+        ep['completion_criteria'] = [dict(c) for c in criteria]
+        ep['criteria_done'] = sum(1 for c in criteria if c['done'])
+        ep['criteria_total'] = len(criteria)
+        stories = conn.execute(
+            """SELECT * FROM items WHERE epic=? AND type IN ('story','bug','chore','debt')
+               ORDER BY epic_sequence, id""",
+            (ep['id'],),
+        ).fetchall()
+        ep['stories'] = [dict(s) for s in stories]
+        result.append(ep)
+
+    conn.close()
+    return result
+
+
+def query_summary(project_dir):
+    conn = get_conn(project_dir)
+    work_types = "('story','bug','chore','debt')"
+
+    type_counts = {}
+    for row in conn.execute("SELECT type, COUNT(*) as c FROM items GROUP BY type"):
+        type_counts[row['type']] = row['c']
+
+    status_counts = {}
+    for row in conn.execute("SELECT status, COUNT(*) as c FROM items GROUP BY status"):
+        status_counts[row['status']] = row['c']
+
+    epic_by_status = {}
+    for row in conn.execute("SELECT status, COUNT(*) as c FROM items WHERE type='epic' GROUP BY status"):
+        epic_by_status[row['status']] = row['c']
+
+    release_count = conn.execute("SELECT COUNT(*) as c FROM items WHERE type='release'").fetchone()['c']
+
+    linked_total = conn.execute(
+        f"SELECT COUNT(*) as c FROM items WHERE type IN {work_types} AND epic IS NOT NULL AND epic != ''"
+    ).fetchone()['c']
+    linked_open = conn.execute(
+        f"SELECT COUNT(*) as c FROM items WHERE type IN {work_types} AND epic IS NOT NULL AND epic != '' AND status NOT IN ('done','abandoned','deferred')"
+    ).fetchone()['c']
+    linked_done = conn.execute(
+        f"SELECT COUNT(*) as c FROM items WHERE type IN {work_types} AND epic IS NOT NULL AND epic != '' AND status = 'done'"
+    ).fetchone()['c']
+
+    unlinked_total = conn.execute(
+        f"SELECT COUNT(*) as c FROM items WHERE type IN {work_types} AND (epic IS NULL OR epic = '')"
+    ).fetchone()['c']
+    unlinked_open = conn.execute(
+        f"SELECT COUNT(*) as c FROM items WHERE type IN {work_types} AND (epic IS NULL OR epic = '') AND status NOT IN ('done','abandoned','deferred')"
+    ).fetchone()['c']
+
+    unlinked_by_priority = {}
+    for row in conn.execute(
+        f"SELECT COALESCE(priority, 'none') as p, COUNT(*) as c FROM items WHERE type IN {work_types} AND (epic IS NULL OR epic = '') AND status NOT IN ('done','abandoned','deferred') GROUP BY p"
+    ):
+        unlinked_by_priority[row['p']] = row['c']
+
+    conn.close()
+
+    return {
+        "total_items": sum(type_counts.values()),
+        "by_type": type_counts,
+        "by_status": status_counts,
+        "epics": {"total": type_counts.get('epic', 0), "by_status": epic_by_status},
+        "releases": {"total": release_count},
+        "linked": {"total": linked_total, "open": linked_open, "done": linked_done},
+        "unlinked": {"total": unlinked_total, "open": unlinked_open, "by_priority": unlinked_by_priority},
+    }
+
+
 def query_tags(project_dir, tag):
     conn = get_conn(project_dir)
     rows = conn.execute(
@@ -316,14 +411,14 @@ def main():
     parser.add_argument('--project-dir', default='.', help='Project root directory')
     parser.add_argument('--rebuild', action='store_true', help='Rebuild the cache from source files')
     parser.add_argument('--query', choices=[
-        'item-count', 'active-epic', 'epic-stories', 'backlog',
-        'next-id', 'releases', 'tags',
+        'item-count', 'active-epic', 'epic-stories', 'epics', 'backlog',
+        'next-id', 'releases', 'tags', 'summary',
     ], help='Query to run')
     parser.add_argument('--epic', help='Epic ID for epic-stories query')
     parser.add_argument('--prefix', help='ID prefix for next-id query')
     parser.add_argument('--tag', help='Tag name for tags query')
     parser.add_argument('--include-done', action='store_true', help='Include done items')
-    parser.add_argument('--format', choices=['json', 'table'], default='json')
+    parser.add_argument('--unlinked-only', action='store_true', help='Only return items not linked to an epic')
 
     args = parser.parse_args()
 
@@ -344,14 +439,18 @@ def main():
         if not args.epic:
             sys.exit("--epic required for epic-stories query")
         result = query_epic_stories(args.project_dir, args.epic, args.include_done)
+    elif args.query == 'epics':
+        result = query_epics(args.project_dir, args.include_done)
     elif args.query == 'backlog':
-        result = query_backlog(args.project_dir)
+        result = query_backlog(args.project_dir, unlinked_only=args.unlinked_only)
     elif args.query == 'next-id':
         if not args.prefix:
             sys.exit("--prefix required for next-id query")
         result = query_next_id(args.project_dir, args.prefix)
     elif args.query == 'releases':
         result = query_releases(args.project_dir)
+    elif args.query == 'summary':
+        result = query_summary(args.project_dir)
     elif args.query == 'tags':
         if not args.tag:
             sys.exit("--tag required for tags query")
