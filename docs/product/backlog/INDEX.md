@@ -3,7 +3,7 @@ counters:
   story: 307
   bug: 10
   debt: 14
-  chore: 12
+  chore: 13
 updated: 2026-05-19
 ---
 
@@ -72,3 +72,4 @@ This file is the source of truth for backlog counter state and the visible table
 | [CHORE-007](chores/CHORE-007-defer-case-wording-in-update-step-6c.md) | Distinguish Defer-case wording in update Step 6c from clean-state success | new | later | s | update, _migrate, ux, wording, defer |
 | [CHORE-011](chores/CHORE-011-cutover-gate-enforcement-in-migration-runner.md) | CUTOVER gate enforcement in migration runner | new | later | s | migration, cutover, gate, enforcement |
 | [CHORE-012](chores/CHORE-012-force-flag-audit-logging.md) | --force decision-log on non-implement phases | new | later | s | self-hosting, sync, audit |
+| [CHORE-013](chores/CHORE-013-wire-hooks-tests-into-sync-gate.md) | Wire tests/hooks/*.sh into the pre-sync test gate | new | later | s | self-hosting, sync, testing, gate |
