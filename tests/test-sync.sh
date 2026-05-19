@@ -1216,13 +1216,13 @@ else
   fail "expected exit code 2 for dry-run with failing tests, got $EXIT37"
 fi
 
-if printf '%s' "$STDERR37" | grep -qiE "tests failed|Sync blocked"; then
-  pass "dry-run stderr contains 'tests failed' or 'Sync blocked'"
+if printf '%s' "$STDERR37" | grep -qi "Dry run.*hook tests failed"; then
+  pass "dry-run stderr contains dry-run-specific failure message"
 else
-  fail "dry-run stderr missing expected message (got: $(printf '%s' "$STDERR37" | head -c 300))"
+  fail "dry-run stderr missing dry-run-specific message (got: $(printf '%s' "$STDERR37" | head -c 300))"
 fi
 
-HOOKS_AFTER_37=$(find "$FX37_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
+HOOKS_AFTER_37=$(find "$FX37_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5 -q 2>/dev/null || find "$FX37_INSTALL/hooks" -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | cut -d' ' -f1 | tr '\n' ':')
 
 if [ "$HOOKS_BEFORE_37" = "$HOOKS_AFTER_37" ]; then
   pass "installed hooks/ unchanged after dry-run with failing tests"
