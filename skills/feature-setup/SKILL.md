@@ -18,11 +18,17 @@ import json, os
 try:
     d = json.load(open(os.path.expanduser('~/.claude/sweetclaude-install.json')))
     print(d.get('repo_path', ''))
-except: print('')
+except Exception: print('')
 " 2>/dev/null)
 
 if [ -z "$REPO_PATH" ] || [ ! -f "$REPO_PATH/scripts/sync-to-installed.sh" ]; then
-  if [ -f "scripts/sync-to-installed.sh" ] && [ -f "package.json" ]; then
+  if [ -f "scripts/sync-to-installed.sh" ] && python3 -c "
+import json, sys
+try:
+    d = json.load(open('package.json'))
+    sys.exit(0 if d.get('name') == 'sweetclaude' else 1)
+except Exception: sys.exit(1)
+" 2>/dev/null; then
     REPO_PATH="$PWD"
   fi
 fi
@@ -54,9 +60,11 @@ If `SYNC_EXIT` is non-zero, stop. The sync script prints its own error messages.
 
 ## Step 3: Verify project structure
 
+Steps 3–5 operate on the current working directory (the user's project), not `$REPO_PATH`.
+
 ```bash
-ls .sweetclaude/state/sweetclaude.yaml 2>/dev/null || echo "NO_SWEETCLAUDE"
-ls docs/product/backlog/ 2>/dev/null | head -5 || echo "NO_BACKLOG_DIR"
+[ -f .sweetclaude/state/sweetclaude.yaml ] || echo "NO_SWEETCLAUDE"
+[ -d docs/product/backlog ] || echo "NO_BACKLOG_DIR"
 ```
 
 If `NO_SWEETCLAUDE`: stop with:
@@ -118,7 +126,13 @@ If releases and active epic are both "none", show getting-started guidance:
 > - `/sweetclaude:big-picture` — see the full project at a glance
 
 Check `.gitignore`:
-> If `.sweetclaude/cache/` is not already excluded: "Add `.sweetclaude/cache/` to your `.gitignore` — the cache is derived data and should not be committed."
+
+```bash
+git check-ignore -q .sweetclaude/cache/roadmap.db 2>/dev/null && echo "CACHE_IGNORED" || echo "CACHE_NOT_IGNORED"
+```
+
+If `CACHE_NOT_IGNORED`:
+> "Add `.sweetclaude/cache/` to your `.gitignore` — the cache is derived data and should not be committed."
 
 Final note:
 > "Restart Claude Code to pick up the updated skills."

@@ -166,12 +166,9 @@ echo "Backed up $BACKUP_COUNT hook scripts."
 if [ "$FORCE" = true ] && [ "$PHASE_LOWER" = "implement" ]; then
   DECISION_LOG="$PROJECT_DIR/.sweetclaude/state/decision-log.md"
   if [ -f "$DECISION_LOG" ]; then
-    LAST_NUM=$(grep -oE '^\| [0-9]+' "$DECISION_LOG" | tr -d '| ' | sort -n | tail -1 || echo "0")
-    [ -z "$LAST_NUM" ] && LAST_NUM=0
-    NEXT_NUM=$((LAST_NUM + 1))
     DATE=$(date +%Y-%m-%d)
-    printf '| %d | %s | IMPLEMENT | Force-synced hooks to installed path during implement phase | Developer override via --force flag |\n' \
-      "$NEXT_NUM" "$DATE" >> "$DECISION_LOG"
+    printf '\n| — | %s | IMPLEMENT | Force-synced hooks to installed path during implement phase | Developer override via --force flag |\n' \
+      "$DATE" >> "$DECISION_LOG"
   else
     echo "WARNING: --force override not logged — decision-log.md not found at $DECISION_LOG" >&2
   fi
@@ -207,7 +204,7 @@ echo "Syncing skills, scripts, config..."
 rsync -a "$REPO_ROOT/skills/" "$INSTALL_PATH/skills/" || echo "WARNING: skills sync failed (non-fatal)" >&2
 rsync -a --exclude='__pycache__' --exclude='*.pyc' "$REPO_ROOT/scripts/" "$INSTALL_PATH/scripts/" || echo "WARNING: scripts sync failed (non-fatal)" >&2
 
-mkdir -p ~/.claude/scripts/sweetclaude
+mkdir -p ~/.claude/scripts/sweetclaude 2>/dev/null || echo "WARNING: could not create ~/.claude/scripts/sweetclaude/ (non-fatal)" >&2
 rsync -a --exclude='__pycache__' --exclude='*.pyc' "$REPO_ROOT/scripts/" ~/.claude/scripts/sweetclaude/ || echo "WARNING: scripts mirror sync failed (non-fatal)" >&2
 
 if [ -d "$REPO_ROOT/config" ]; then
@@ -221,7 +218,7 @@ print(json.load(open(os.environ['REPO'] + '/package.json'))['version'])
 PYEOF
 )
 case "$MANIFEST_VER" in
-  */* | *..* | "") MANIFEST_VER="" ;;
+  */* | *..* | *[[:space:]]* | *\$* | *\`* | "") MANIFEST_VER="" ;;
 esac
 if [ -n "$INSTALL_PATH" ] && [ -n "$MANIFEST_VER" ]; then
   PLUGIN_CACHE_PARENT=$(dirname "$INSTALL_PATH")
