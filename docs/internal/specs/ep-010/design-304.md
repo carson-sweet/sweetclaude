@@ -49,11 +49,10 @@ This is not a side effect being exploited. It is the intended escape hatch baked
 
 ### 2. `set -e` (script) vs `set -euo pipefail` (test) asymmetry — deliberate
 
-**Script: `set -e` only.** The recovery script's job is to make a best effort under degraded conditions. Three specific reasons strict mode is wrong here:
+**Script: `set -e` only.** The recovery script tolerates degraded conditions by design — strict mode would force failure where best-effort is wanted. Two specific reasons:
 
 - `set -u` would force defensive `${VAR:-}` annotation on every env-var reference. `INSTALL_PATH`, `EMERGENCY_RESTORE_SOURCE_ONLY`, `DRY_RUN`, and the positional `$1` all may legitimately be unset, and the script already pattern-guards each (`if [ -n "${INSTALL_PATH:-}" ]`). Adding `-u` adds annotation noise without adding safety — the guards already exist.
 - `set -o pipefail` would propagate failures from `find ... | head -1` patterns where short-circuiting at `head` is exactly the desired behavior. Treating this as failure would force unnecessary `|| true` clauses on every pipeline.
-- The `python3` heredoc may produce empty output (no `installed_plugins.json`, or no matching entries). The script handles this by checking `[ -z "$INSTALL_PATH" ]` after the heredoc; under pipefail-equivalent semantics that empty output would be a non-zero exit propagating as a script failure.
 
 **Test: `set -euo pipefail`.** Tests must fail loudly. An unset variable in the test harness is a bug, not a graceful degradation. A failing pipeline silently passing would let a regression through. The test is short, controlled, and authored to satisfy strict mode.
 
