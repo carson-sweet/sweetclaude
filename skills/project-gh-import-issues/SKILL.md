@@ -36,27 +36,14 @@ If the guard fires: print the message and stop. Do not proceed.
 import pathlib, yaml, re, datetime
 
 BACKLOG_BASE = pathlib.Path('docs/product/backlog')
-INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
 TYPE_PREFIX = {'story': 'STORY', 'bug': 'BUG', 'debt': 'DEBT', 'chore': 'CHORE'}
 
-def read_index():
-    raw = INDEX_PATH.read_text(encoding='utf-8')
-    parts = raw.split('---', 2)
-    return yaml.safe_load(parts[1]) or {}, parts[2]
-
-def write_index(fm, body):
-    fm['updated'] = datetime.date.today().isoformat()
-    INDEX_PATH.write_text(
-        f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---{body}",
-        encoding='utf-8'
-    )
-
 def assign_new_id(typ):
-    index_fm, index_body = read_index()
-    counters = index_fm.setdefault('counters', {'story': 0, 'bug': 0, 'debt': 0, 'chore': 0})
-    counters[typ] = counters.get(typ, 0) + 1
-    write_index(index_fm, index_body)
-    return f"{TYPE_PREFIX[typ]}-{counters[typ]:03d}"
+    import subprocess, json
+    prefix = TYPE_PREFIX[typ]
+    r = subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--query', 'next-id', '--prefix', prefix],
+        capture_output=True, text=True)
+    return json.loads(r.stdout)['next_id']
 
 def make_slug(title):
     return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', title.lower())).strip('-')
@@ -68,7 +55,7 @@ def write_story_file(path, fm, body):
 def github_number_already_imported(gh_number):
     """Check if a GitHub issue number is already in any local story file."""
     for p in BACKLOG_BASE.rglob('*.md'):
-        if p.name in ('INDEX.md', 'MIGRATION-MAP.md'):
+        if p.name in ('INDEX.md', 'MIGRATION-MAP.md', 'SCHEMA.md'):
             continue
         raw = p.read_text(encoding='utf-8')
         parts = raw.split('---', 2)
@@ -183,6 +170,6 @@ If N > 20 imported: "That's a large import. Consider running `/sweetclaude:proje
 
 - All imported issues get `origin: imported` (not `source: github`) to follow the v4 story schema.
 - `github_issue_number` and `github_url` are stored as extra frontmatter fields for sync purposes.
-- ID assignment reads INDEX.md counters, increments, and writes back atomically before writing the story file.
+- ID assignment uses the cache next-id query to derive the next sequential ID.
 - All files land under `docs/product/backlog/stories/` (type defaults to `story` on import).
 - Never write to `.sweetclaude/product/backlog/`.

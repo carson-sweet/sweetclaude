@@ -129,11 +129,13 @@ json.dump(d['created_paths'], open('.sweetclaude/state/.migrate-created-paths.js
 "
 ```
 
-The `execute` subcommand performs the per-file transformation AND regenerates `docs/product/backlog/INDEX.md` and `MIGRATION-MAP.md` in one pass. Both files are written before Step 5 returns.
+The `execute` subcommand performs the per-file transformation and writes `MIGRATION-MAP.md`. After execution, the cache is rebuilt to reflect the new file layout.
 
-## Step 6: (now part of Step 5)
+## Step 6: Rebuild cache
 
-INDEX.md and MIGRATION-MAP.md are written by `execute` — no separate step needed.
+```bash
+python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
+```
 
 ## Step 7: Verify
 

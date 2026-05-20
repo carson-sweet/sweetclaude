@@ -84,23 +84,24 @@ if BACKLOG_BASE.exists():
     # Rule 2: All roadmap stories live in epic dirs (gate: skip if roadmap absent)
     # Phase 2 — defer until EP-009
 
-    # Rule 3: Counter state matches file count
-    if (BACKLOG_BASE / 'INDEX.md').exists():
-        index_raw = (BACKLOG_BASE / 'INDEX.md').read_text(encoding='utf-8')
-        index_parts = index_raw.split('---', 2)
-        index_fm = yaml.safe_load(index_parts[1]) or {}
-        counters = index_fm.get('counters', {})
-        for typ, dir_name in TYPE_DIRS.items():
-            prefix = TYPE_PREFIX[typ]
-            # Find highest NNN in active + done files
-            max_seen = 0
-            for p in (BACKLOG_BASE / dir_name).rglob('*.md'):
-                m = re.match(rf'^{prefix}-(\d+)-', p.name)
-                if m:
-                    max_seen = max(max_seen, int(m.group(1)))
-            stored = counters.get(typ, 0)
-            if max_seen > stored:
-                lint_findings.append(f"counter-drift:{typ} (stored={stored}, max_id_seen={max_seen})")
+    # Rule 3: Counter state matches file count (cache-based)
+    import subprocess, json as json_mod
+    for typ, dir_name in TYPE_DIRS.items():
+        prefix = TYPE_PREFIX[typ]
+        max_seen = 0
+        for p in (BACKLOG_BASE / dir_name).rglob('*.md'):
+            m = re.match(rf'^{prefix}-(\d+)-', p.name)
+            if m:
+                max_seen = max(max_seen, int(m.group(1)))
+        try:
+            r = subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--query', 'next-id', '--prefix', prefix],
+                capture_output=True, text=True)
+            cache_next = json_mod.loads(r.stdout).get('next_id', '')
+            cache_max = int(re.search(r'(\d+)', cache_next).group(1)) - 1 if cache_next else 0
+        except Exception:
+            cache_max = max_seen
+        if max_seen > cache_max:
+            lint_findings.append(f"counter-drift:{typ} (cache_max={cache_max}, file_max={max_seen})")
 
     # Rule 4: No v3 BL-NNN files present
     sc_version = ''

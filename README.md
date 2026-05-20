@@ -142,13 +142,14 @@ You can invoke skills directly if you know what you want. These are the most com
 | `/sweetclaude:status` | Project status dashboard — active work item, phase, roadmap, backlog. |
 | `/sweetclaude:help` | Conversational help — describe what you want to do, browse features, or ask questions |
 
-### Housekeeping
+### Maintenance & Troubleshooting
 | Command | What it does |
 |---|---|
 | `/sweetclaude:off` | Suspend SweetClaude — preserves all artifacts, reactivate with `/sweetclaude:go` |
 | `/sweetclaude:purge` | Delete all SweetClaude artifacts — recommends a backup branch, shows all files, requires "I understand". **Taking a branch snapshot before is highly recommended.** |
 | `/sweetclaude:update` | Fetch latest SweetClaude from GitHub and sync to all projects |
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
+| `/sweetclaude:hook-repair` | Restore broken installed hooks from backup. Uses Bash only — works when Write/Edit are blocked. See [hook-development.md](docs/user-guide/hook-development.md) for manual and emergency procedures. |
 
 ### Advanced
 | Command | What it does |

@@ -46,7 +46,7 @@ if [[ "$PHASE" != "implement" && "$PHASE" != "IMPLEMENT" ]] || [[ "$TDD_PHASE" !
 fi
 
 # Don't run on test files (we only run tests when source changes)
-TEST_PATTERNS=("test/" "tests/" "__tests__/" "spec/" ".test." ".spec." "_test." "_spec.")
+TEST_PATTERNS=("test/" "tests/" "__tests__/" "spec/" "specs/" ".test." ".spec." "_test." "_spec." "test_")
 IS_TEST=false
 for pattern in "${TEST_PATTERNS[@]}"; do
   if [[ "$FILE" == *"$pattern"* ]]; then
@@ -54,6 +54,10 @@ for pattern in "${TEST_PATTERNS[@]}"; do
     break
   fi
 done
+
+if [[ "$FILE" == *.feature ]]; then
+  IS_TEST=true
+fi
 
 if [ "$IS_TEST" = true ]; then
   exit 0

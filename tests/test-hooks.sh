@@ -267,6 +267,293 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Test 11: test-guardian.sh — phase inactive → ok
+# ---------------------------------------------------------------------------
+echo "[11] test-guardian.sh: allows test file edit when phase is not implement"
+
+FX11_HOME="$TMPROOT/home11"
+FX11_PROJ="$TMPROOT/proj11"
+mkdir -p "$FX11_HOME/.claude"
+_make_git_repo "$FX11_PROJ"
+mkdir -p "$FX11_PROJ/.sweetclaude/state"
+printf 'phase: discover\ntdd_phase:\n' > "$FX11_PROJ/.sweetclaude/state/phase.yaml"
+
+RESULT11=$(cd "$FX11_PROJ" && \
+  env HOME="$FX11_HOME" CLAUDE_FILE_PATH="$FX11_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
+  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+
+if printf '%s' "$RESULT11" | python3 -c "
+import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
+" 2>/dev/null; then
+  pass "phase inactive → ok for test file edit"
+else
+  fail "should allow test file edit when phase is not implement (got: $RESULT11)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 12: test-guardian.sh — phase active + implementing + test file → blocked
+# ---------------------------------------------------------------------------
+echo "[12] test-guardian.sh: blocks test file edit during implement/implementing"
+
+FX12_HOME="$TMPROOT/home12"
+FX12_PROJ="$TMPROOT/proj12"
+mkdir -p "$FX12_HOME/.claude"
+_make_git_repo "$FX12_PROJ"
+mkdir -p "$FX12_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase: implementing\n' > "$FX12_PROJ/.sweetclaude/state/phase.yaml"
+
+RESULT12=$(cd "$FX12_PROJ" && \
+  env HOME="$FX12_HOME" CLAUDE_FILE_PATH="$FX12_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Edit \
+  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+
+if printf '%s' "$RESULT12" | python3 -c "
+import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == False else 1)
+" 2>/dev/null; then
+  pass "blocks test file edit during implement/implementing"
+else
+  fail "should block test file edit (got: $RESULT12)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 13: test-guardian.sh — phase active + implementing + non-test file → ok
+# ---------------------------------------------------------------------------
+echo "[13] test-guardian.sh: allows non-test file edit during implement/implementing"
+
+FX13_HOME="$TMPROOT/home13"
+FX13_PROJ="$TMPROOT/proj13"
+mkdir -p "$FX13_HOME/.claude"
+_make_git_repo "$FX13_PROJ"
+mkdir -p "$FX13_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase: implementing\n' > "$FX13_PROJ/.sweetclaude/state/phase.yaml"
+
+RESULT13=$(cd "$FX13_PROJ" && \
+  env HOME="$FX13_HOME" CLAUDE_FILE_PATH="$FX13_PROJ/src/main.js" CLAUDE_TOOL_NAME=Write \
+  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+
+if printf '%s' "$RESULT13" | python3 -c "
+import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
+" 2>/dev/null; then
+  pass "allows non-test file during implement/implementing"
+else
+  fail "should allow non-test file (got: $RESULT13)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 14: test-guardian.sh — phase active + non-implementing tdd_phase → ok
+# ---------------------------------------------------------------------------
+echo "[14] test-guardian.sh: allows test file edit when tdd_phase is not implementing"
+
+FX14_HOME="$TMPROOT/home14"
+FX14_PROJ="$TMPROOT/proj14"
+mkdir -p "$FX14_HOME/.claude"
+_make_git_repo "$FX14_PROJ"
+mkdir -p "$FX14_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase: writing_tests\n' > "$FX14_PROJ/.sweetclaude/state/phase.yaml"
+
+RESULT14=$(cd "$FX14_PROJ" && \
+  env HOME="$FX14_HOME" CLAUDE_FILE_PATH="$FX14_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
+  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+
+if printf '%s' "$RESULT14" | python3 -c "
+import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
+" 2>/dev/null; then
+  pass "allows test file when tdd_phase is writing_tests"
+else
+  fail "should allow test file when tdd_phase is not implementing (got: $RESULT14)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 15: test-guardian.sh — non-Write/Edit tool → ok
+# ---------------------------------------------------------------------------
+echo "[15] test-guardian.sh: passes through non-Write/Edit tools"
+
+FX15_HOME="$TMPROOT/home15"
+FX15_PROJ="$TMPROOT/proj15"
+mkdir -p "$FX15_HOME/.claude"
+_make_git_repo "$FX15_PROJ"
+mkdir -p "$FX15_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase: implementing\n' > "$FX15_PROJ/.sweetclaude/state/phase.yaml"
+
+RESULT15=$(cd "$FX15_PROJ" && \
+  env HOME="$FX15_HOME" CLAUDE_FILE_PATH="$FX15_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Bash \
+  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+
+if printf '%s' "$RESULT15" | python3 -c "
+import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
+" 2>/dev/null; then
+  pass "non-Write/Edit tool passes through"
+else
+  fail "Bash tool should pass through even during implement (got: $RESULT15)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 16: test-guardian.sh — IMPLEMENT uppercase → blocked
+# ---------------------------------------------------------------------------
+echo "[16] test-guardian.sh: blocks on uppercase IMPLEMENT"
+
+FX16_HOME="$TMPROOT/home16"
+FX16_PROJ="$TMPROOT/proj16"
+mkdir -p "$FX16_HOME/.claude"
+_make_git_repo "$FX16_PROJ"
+mkdir -p "$FX16_PROJ/.sweetclaude/state"
+printf 'phase: IMPLEMENT\ntdd_phase: implementing\n' > "$FX16_PROJ/.sweetclaude/state/phase.yaml"
+
+RESULT16=$(cd "$FX16_PROJ" && \
+  env HOME="$FX16_HOME" CLAUDE_FILE_PATH="$FX16_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
+  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+
+if printf '%s' "$RESULT16" | python3 -c "
+import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == False else 1)
+" 2>/dev/null; then
+  pass "blocks on uppercase IMPLEMENT"
+else
+  fail "should block on uppercase IMPLEMENT (got: $RESULT16)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 17: auto-test-runner.sh — phase inactive → no test execution
+# ---------------------------------------------------------------------------
+echo "[17] auto-test-runner.sh: no test execution when phase is not implement"
+
+FX17_HOME="$TMPROOT/home17"
+FX17_PROJ="$TMPROOT/proj17"
+FX17_MARKER="$TMPROOT/marker17"
+mkdir -p "$FX17_HOME/.claude"
+_make_git_repo "$FX17_PROJ"
+mkdir -p "$FX17_PROJ/.sweetclaude/state"
+printf 'phase: discover\ntdd_phase: writing_tests\n' > "$FX17_PROJ/.sweetclaude/state/phase.yaml"
+printf 'test:\n  test_command: touch %s\n' "$FX17_MARKER" > "$FX17_PROJ/.sweetclaude/state/project.yaml"
+
+(cd "$FX17_PROJ" && \
+  env HOME="$FX17_HOME" CLAUDE_FILE_PATH="$FX17_PROJ/src/main.js" CLAUDE_TOOL_NAME=Write \
+  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+
+sleep 0.5
+if [ ! -f "$FX17_MARKER" ]; then
+  pass "no test execution when phase inactive"
+else
+  fail "test command should not run when phase is not implement"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 18: auto-test-runner.sh — phase active + source file → runs test command
+# ---------------------------------------------------------------------------
+echo "[18] auto-test-runner.sh: runs test command for source file edit during implement"
+
+FX18_HOME="$TMPROOT/home18"
+FX18_PROJ="$TMPROOT/proj18"
+FX18_MARKER="$TMPROOT/marker18"
+mkdir -p "$FX18_HOME/.claude"
+_make_git_repo "$FX18_PROJ"
+mkdir -p "$FX18_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase: implementing\n' > "$FX18_PROJ/.sweetclaude/state/phase.yaml"
+printf 'test:\n  test_command: touch %s\n' "$FX18_MARKER" > "$FX18_PROJ/.sweetclaude/state/project.yaml"
+
+(cd "$FX18_PROJ" && \
+  env HOME="$FX18_HOME" CLAUDE_FILE_PATH="$FX18_PROJ/src/main.js" CLAUDE_TOOL_NAME=Write \
+  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+
+for _i in 1 2 3 4 5; do
+  [ -f "$FX18_MARKER" ] && break
+  sleep 0.2 || true
+done
+
+if [ -f "$FX18_MARKER" ]; then
+  pass "runs test command for source file during implement"
+else
+  fail "test command should run for source file edit during implement/implementing"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 19: auto-test-runner.sh — test file → no execution
+# ---------------------------------------------------------------------------
+echo "[19] auto-test-runner.sh: no test execution for test file edit"
+
+FX19_HOME="$TMPROOT/home19"
+FX19_PROJ="$TMPROOT/proj19"
+FX19_MARKER="$TMPROOT/marker19"
+mkdir -p "$FX19_HOME/.claude"
+_make_git_repo "$FX19_PROJ"
+mkdir -p "$FX19_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase: implementing\n' > "$FX19_PROJ/.sweetclaude/state/phase.yaml"
+printf 'test:\n  test_command: touch %s\n' "$FX19_MARKER" > "$FX19_PROJ/.sweetclaude/state/project.yaml"
+
+(cd "$FX19_PROJ" && \
+  env HOME="$FX19_HOME" CLAUDE_FILE_PATH="$FX19_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Edit \
+  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+
+sleep 0.5
+if [ ! -f "$FX19_MARKER" ]; then
+  pass "no test execution for test file edit"
+else
+  fail "test command should not run for test file edits"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 20: auto-test-runner.sh — non-Write/Edit tool → no execution
+# ---------------------------------------------------------------------------
+echo "[20] auto-test-runner.sh: no test execution for non-Write/Edit tools"
+
+FX20_HOME="$TMPROOT/home20"
+FX20_PROJ="$TMPROOT/proj20"
+FX20_MARKER="$TMPROOT/marker20"
+mkdir -p "$FX20_HOME/.claude"
+_make_git_repo "$FX20_PROJ"
+mkdir -p "$FX20_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase: implementing\n' > "$FX20_PROJ/.sweetclaude/state/phase.yaml"
+printf 'test:\n  test_command: touch %s\n' "$FX20_MARKER" > "$FX20_PROJ/.sweetclaude/state/project.yaml"
+
+(cd "$FX20_PROJ" && \
+  env HOME="$FX20_HOME" CLAUDE_FILE_PATH="$FX20_PROJ/src/main.js" CLAUDE_TOOL_NAME=Bash \
+  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+
+sleep 0.5
+if [ ! -f "$FX20_MARKER" ]; then
+  pass "no test execution for Bash tool"
+else
+  fail "test command should not run for non-Write/Edit tools"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 22: test-guardian.sh — implement phase + blank tdd_phase → ok
+# ---------------------------------------------------------------------------
+echo "[22] test-guardian.sh: allows edit when phase is implement but tdd_phase is blank"
+
+FX22_HOME="$TMPROOT/home22"
+FX22_PROJ="$TMPROOT/proj22"
+mkdir -p "$FX22_HOME/.claude"
+_make_git_repo "$FX22_PROJ"
+mkdir -p "$FX22_PROJ/.sweetclaude/state"
+printf 'phase: implement\ntdd_phase:\n' > "$FX22_PROJ/.sweetclaude/state/phase.yaml"
+
+RESULT22=$(cd "$FX22_PROJ" && \
+  env HOME="$FX22_HOME" CLAUDE_FILE_PATH="$FX22_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
+  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+
+if printf '%s' "$RESULT22" | python3 -c "
+import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
+" 2>/dev/null; then
+  pass "allows edit when phase is implement but tdd_phase is blank"
+else
+  fail "should allow edit when tdd_phase is blank even in implement phase (got: $RESULT22)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 21: syntax validation — hook with syntax error fails bash -n
+# ---------------------------------------------------------------------------
+echo "[21] syntax validation: hook with syntax error fails bash -n"
+
+BROKEN_HOOK="$TMPROOT/broken-hook.sh"
+cp "$REPO_ROOT/hooks/test-guardian.sh" "$BROKEN_HOOK"
+printf '\nif [[ ; then\n' >> "$BROKEN_HOOK"
+
+if bash -n "$BROKEN_HOOK" 2>/dev/null; then
+  fail "broken hook should fail bash -n syntax check"
+else
+  pass "broken hook fails bash -n (fail-closed)"
+fi
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$FAILED" -eq 0 ]; then
   echo "ALL TESTS PASSED"

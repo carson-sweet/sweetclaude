@@ -36,7 +36,6 @@ If the guard fires: print the message and stop. Do not proceed.
 import pathlib, yaml, re, datetime
 
 BACKLOG_BASE = pathlib.Path('docs/product/backlog')
-INDEX_PATH = BACKLOG_BASE / 'INDEX.md'
 TYPE_DIRS = {'story': 'stories', 'bug': 'bugs', 'debt': 'debt', 'chore': 'chores'}
 
 def read_story_file(path):
@@ -51,36 +50,14 @@ def write_story_file(path, fm, body):
     content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
     pathlib.Path(path).write_text(content, encoding='utf-8')
 
-def read_index():
-    raw = INDEX_PATH.read_text(encoding='utf-8')
-    parts = raw.split('---', 2)
-    fm = yaml.safe_load(parts[1]) or {}
-    return fm, parts[2]
-
-def write_index(fm, body):
-    fm['updated'] = datetime.date.today().isoformat()
-    content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---{body}"
-    INDEX_PATH.write_text(content, encoding='utf-8')
-
-def rebuild_index_table(index_fm, index_body):
-    """Rebuild the active tables in INDEX.md from current story files."""
-    rows = {'story': [], 'bug': [], 'debt': [], 'chore': []}
-    for p in BACKLOG_BASE.rglob('*.md'):
-        if p.name in ('INDEX.md', 'MIGRATION-MAP.md') or '/done/' in str(p):
-            continue
-        fm, _ = read_story_file(p)
-        typ = fm.get('type', 'story')
-        if typ in rows and fm.get('status') not in ('done', 'abandoned', 'deferred'):
-            rows[typ].append(fm)
-    # Rebuild body by replacing tables
-    # (simple implementation: reconstruct body sections)
-    # Keep index_fm counters unchanged — they track IDs, not active count
-    return rows
+def rebuild_cache():
+    import subprocess
+    subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
 
 # Load active ungroomed backlog items
 active_items = []
 for p in BACKLOG_BASE.rglob('*.md'):
-    if p.name in ('INDEX.md', 'MIGRATION-MAP.md') or '/done/' in str(p):
+    if p.name in ('INDEX.md', 'MIGRATION-MAP.md', 'SCHEMA.md') or '/done/' in str(p):
         continue
     fm, body = read_story_file(p)
     if fm.get('status') not in ('done', 'abandoned', 'deferred'):
@@ -193,7 +170,7 @@ fm['priority'] = '<priority>'
 fm['effort'] = '<effort>'
 fm['status'] = 'ready'
 write_story_file(path, fm, body)
-# Also update INDEX.md active table row for this item
+rebuild_cache()
 ```
 
 On `cancel` (status → abandoned, move to done/):
@@ -218,7 +195,7 @@ done_dir.mkdir(exist_ok=True)
 shutil.move(str(path), str(done_dir / path.name))
 ```
 
-After each write: rebuild the relevant section of INDEX.md to reflect current active items.
+After each write: rebuild the cache to reflect current state.
 
 ### 6. Split flow
 
@@ -260,5 +237,5 @@ If `remaining > 0`: "Run `project-backlog-triage` again to continue."
 - If an issue has `xl` effort, always prompt to split. Never silently accept xl as the final estimate without checking.
 - Skipped issues stay ungroomed and will reappear next session.
 - Status is set to `ready` (not `new`) when groomed — this signals the issue is sprint-eligible.
-- Every write updates both the individual story file AND the INDEX.md active table.
+- Every write updates the individual story file and rebuilds the cache.
 - All reads and writes go directly to `docs/product/backlog/<type>s/<ID>-<slug>.md` files. Never touch `.sweetclaude/product/backlog/`.

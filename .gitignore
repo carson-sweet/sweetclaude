@@ -5,16 +5,23 @@ restore-config.sh
 # macOS metadata
 .DS_Store
 
+# Playwright MCP artifacts (screenshots, page captures, console logs)
+.playwright-mcp/
+
 # SweetClaude dogfood artifacts (internal work, not framework source)
 .sweetclaude/*
 /strategy/
 /corpus/
 
-# docs/ — only user-guide is public; everything else is internal
+# docs/ — whitelist specific subdirectories
 /docs/*
 !/docs/README.md
 !/docs/user-guide/
 !/docs/user-guide/**
+!/docs/product/
+!/docs/product/**
+!/docs/internal/
+!/docs/internal/**
 
 # Internal strategy, plans, and design docs — never public
 /docs-internal/
