@@ -1,9 +1,9 @@
 # SweetClaude Skills Reference
 
-**Version:** 1.6
-**Date:** 2026-05-07
+**Version:** 1.7
+**Date:** 2026-05-19
 
-All 104 skills, organized by domain. Internal framework skills (_features, _health, _migrate, _route, bootstrap, master) are listed in their sections but not user-invocable. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
+All 109 skills, organized by domain. Internal framework skills (_features, _health, _migrate, _route, bootstrap, master) are not user-invocable and have no table rows — they are referenced in section introductions only. One skill (`dashboard`) exists on disk but is not yet committed; it is excluded from this count. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
 
 You rarely need to memorize commands. `/sweetclaude:go` is the single entry point — it routes automatically based on project state and what you describe in plain English. The list below is for when you know exactly what you want.
 
@@ -19,7 +19,7 @@ If you are wondering "which skills go together for X?", the [Walkthroughs](walkt
 
 ---
 
-## Orchestration
+## Orchestration (10 skills)
 
 Session navigation and automatic routing. Most of these fire without being invoked directly — `/sweetclaude:go` is the primary entry point.
 
@@ -28,6 +28,7 @@ Session navigation and automatic routing. Most of these fire without being invok
 | **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, reads v4 backlog from `docs/product/backlog/INDEX.md`, checks phase exit criteria, routes to the right skill. Pass plain-English arguments to describe what you want. |
 | **Recap** | `/sweetclaude:recap` | One-screen orientation: current phase, active work item, last 3 commits, checkpoint state. Run after a break or context switch. Auto-triggers a checkpoint check-in at session start when unfinished work exists. |
 | **Status** | `/sweetclaude:status` | Project status dashboard. Active work item, phase, roadmap, backlog, recent commits. |
+| **Big Picture** | `/sweetclaude:big-picture` | Full project at a glance — roadmap pipeline with all releases, epics, stories, and criteria progress. Run after a context switch or to see where everything stands at once. |
 | **Find Skill** | _(internal)_ | Classifies plain-English input, confirms routing, updates state, and starts the right skill. Invoked automatically by `/sweetclaude:go` when arguments are present. |
 | **Next Steps** | _(internal)_ | Walk through the pipeline step by step. Explains what the current phase requires and what comes after. |
 | **Retro** | `/sweetclaude:retro` | End-of-phase or end-of-project retrospective. Surfaces what went well, what didn't, and what to adjust. Writes learnings to the improvement register so future sessions start with them applied. |
@@ -37,7 +38,7 @@ Session navigation and automatic routing. Most of these fire without being invok
 
 ---
 
-## System (16 skills)
+## System (18 skills)
 
 Framework management — setup, teardown, updates, audits, and guards. Always available regardless of version stage.
 
@@ -59,6 +60,8 @@ Framework management — setup, teardown, updates, audits, and guards. Always av
 | **Usage** | `/sweetclaude:usage` | View, enable, or disable local usage tracking. |
 | **Help** | `/sweetclaude:help` | Conversational help — describe what you want, learn how to work through prompting. Or browse all commands by category. |
 | **Hook Repair** | `/sweetclaude:hook-repair` | Restore broken installed hooks from `hooks.bak/`. Uses Bash only — works when Write/Edit hooks are blocking. Diagnoses broken hooks via `bash -n`, proposes restoration via AskUserQuestion, verifies after restore. Falls through to `bash scripts/emergency-hook-restore.sh` if backup is missing or itself broken. |
+| **Feature Setup** | `/sweetclaude:feature-setup` | Sync local SweetClaude repo to all installed locations and rebuild the project cache. Delegates to `scripts/sync-to-installed.sh` (phase gate, test gate, backup, rollback). For SweetClaude development only. |
+| **Claude Config Audit** | _(internal)_ | Scan the CLAUDE.md hierarchy, `settings.json`, and `~/.claude/rules/` for instructions that conflict with SweetClaude. Every conflict is raised to the user — nothing is changed without approval. |
 
 ---
 
@@ -152,12 +155,13 @@ Implementation. These skills enforce TDD via hooks, run tests and reviews, and m
 
 ---
 
-## Project Management (11 skills)
+## Project Management (14 skills)
 
 Execution-layer tracking. These skills manage the work that delivers the product — not what to build (that's product/), but how the building is organized and tracked.
 
 | Skill | Invocation | What it does |
 |---|---|---|
+| **Epics** | `/sweetclaude:epics [sub]` | Manage roadmap epics (EP-NNN) — add, review, link stories, status, complete. Sub-commands: `add`, `status [EP-NNN]`, `link [ITEM-ID] [EP-NNN]`. Roadmap-layer epic management; for the older story-grouping model see **Project Epics**. |
 | **Project Issues** | `/sweetclaude:project-issues` | Create, view, update, and close issues. Reads and writes v4 story files under `docs/product/backlog/`. Closing a story moves the file to `done/` and sets `closed_date`. Supports `list`, `backlog`, `view`, `new`, `update`, `close`, `reopen`. |
 | **Project Epics** | `/sweetclaude:project-epics` | Optional goal lens that groups stories by functional area. A classification attribute — tracks progress toward a named goal across multiple sprints, not a delivery container. Cancel an epic and its stories return to the backlog. Warns if an epic exceeds 20 stories. |
 | **Epic Design** | `/sweetclaude:epic-design [EP-NNN\|new <title>]` | Produce a complete, ordered story list for an epic. Design-first sequence: no implementation stories are written until design stories are complete and their outputs are on disk. Accepts an existing epic or creates a new one. |
@@ -200,7 +204,7 @@ Deployment and incident response.
 
 ---
 
-## Documents and Strategy Specialists (7 skills)
+## Documents and Strategy Specialists (14 skills)
 
 Long-form document work, corpus management, and specialized strategy capabilities.
 
