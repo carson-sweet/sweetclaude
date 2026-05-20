@@ -1,18 +1,22 @@
 ---
-id: BUG-005
-type: bug
-title: Migrate Step 8 (finalize) is not atomic — crash mid-finalize can leave half-state
-status: new
-priority: soon
+closed_date: '2026-05-13'
+created: 2026-05-13
 effort: m
 epic: null
+id: BUG-005
 milestone: null
-sprint: null
-tags: [migrate, atomicity, data-integrity, recovery]
 origin: manual
-created: 2026-05-13
+priority: soon
+sprint: null
+status: done
+tags:
+- migrate
+- atomicity
+- data-integrity
+- recovery
+title: Migrate Step 8 (finalize) is not atomic — crash mid-finalize can leave half-state
+type: bug
 updated: 2026-05-13
-closed_date: null
 ---
 
 ## Description

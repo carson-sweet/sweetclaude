@@ -1,18 +1,22 @@
 ---
-id: BUG-006
-type: bug
-title: project-gh-import-issues and project-gh-sync-issues missing v4 migration guards
-status: new
-priority: soon
+closed_date: '2026-05-13'
+created: 2026-05-13
 effort: s
 epic: null
+id: BUG-006
 milestone: null
-sprint: null
-tags: [v4, skills, migration-guard, ep-008-5]
 origin: manual
-created: 2026-05-13
+priority: soon
+sprint: null
+status: done
+tags:
+- v4
+- skills
+- migration-guard
+- ep-008-5
+title: project-gh-import-issues and project-gh-sync-issues missing v4 migration guards
+type: bug
 updated: 2026-05-13
-closed_date: null
 ---
 
 ## Description
