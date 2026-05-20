@@ -3,7 +3,7 @@ counters:
   story: 309
   bug: 10
   debt: 15
-  chore: 16
+  chore: 17
 updated: 2026-05-19
 ---
 
@@ -44,7 +44,7 @@ This file is the source of truth for backlog counter state and the visible table
 |---|---|---|---|---|---|
 | [BUG-007](bugs/BUG-007-migrate-step-8-atomicity-gap.md) | Migrate Step 8 (finalize) is not atomic — crash mid-finalize can leave half-state | new | soon | m | migrate, atomicity, data-integrity, recovery |
 | [BUG-008](bugs/BUG-008-missing-migration-guards-in-gh-skills.md) | project-gh-import-issues and project-gh-sync-issues missing v4 migration guards | new | soon | s | v4, skills, migration-guard, ep-008-5 |
-| [BUG-009](bugs/BUG-009-epic-criteria-not-in-frontmatter.md) | Epic completion criteria only in body text — cache renders Criteria 0/0 | new | now | s | cache, big-picture, roadmap, epic |
+| [BUG-009](bugs/done/BUG-009-epic-criteria-not-in-frontmatter.md) | Epic completion criteria only in body text — cache renders Criteria 0/0 | done | now | s | cache, big-picture, roadmap, epic |
 | [BUG-010](bugs/BUG-010-cache-rebuild-overwrites-source-files.md) | Cache rebuild modifies source markdown files | new | now | — | — |
 
 ## Debt
@@ -78,3 +78,4 @@ This file is the source of truth for backlog counter state and the visible table
 | [CHORE-014](chores/CHORE-014-skill-count-reconciliation.md) | Reconcile skills-reference.md skill count with actual skills/ directory | new | sooner | s | skills, documentation, skills-reference, count-drift |
 | [CHORE-015](chores/CHORE-015-extract-shared-install-path-resolver.md) | Extract shared install-path resolver to eliminate triplicate drift | new | soon | s | self-hosting, sync, scripts, drift, architecture |
 | [CHORE-016](chores/done/CHORE-016-hook-development-version-header.md) | Add version/date header to hook-development.md | done | later | xs | self-hosting, hooks, documentation, conventions |
+| [CHORE-017](chores/CHORE-017-epic-creation-workflow-criteria-frontmatter.md) | Epic creation workflow produces completion_criteria in frontmatter | new | later | xs | roadmap, epics, creation-workflow, frontmatter, cache |

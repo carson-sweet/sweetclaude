@@ -2,7 +2,7 @@
 id: BUG-009
 type: bug
 title: Epic completion criteria only in body text — cache renders Criteria 0/0
-status: new
+status: done
 priority: now
 effort: s
 epic: null
@@ -13,7 +13,7 @@ tags: [cache, big-picture, roadmap, epic]
 origin: manual
 created: 2026-05-19
 updated: 2026-05-19
-closed_date: null
+closed_date: 2026-05-19
 ---
 
 ## Description
@@ -53,6 +53,6 @@ Option 1 is simpler and prevents the problem at the source. Option 2 is more res
 
 ## Acceptance criteria
 
-- [ ] All existing epics have `completion_criteria` in frontmatter if they have body-text criteria
-- [ ] Epic creation workflow produces `completion_criteria` in frontmatter
-- [ ] A warning is surfaced (lint, health check, or creation-time) when body criteria exist without frontmatter criteria
+- [x] All existing epics have `completion_criteria` in frontmatter if they have body-text criteria
+- [ ] Epic creation workflow produces `completion_criteria` in frontmatter — deferred to CHORE-017
+- [x] A warning is surfaced (lint, health check, or creation-time) when body criteria exist without frontmatter criteria — Rule 6 added to `_health` SKILL.md
