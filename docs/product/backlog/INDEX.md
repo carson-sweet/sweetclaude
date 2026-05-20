@@ -75,7 +75,7 @@ This file is the source of truth for backlog counter state and the visible table
 | [CHORE-011](chores/CHORE-011-cutover-gate-enforcement-in-migration-runner.md) | CUTOVER gate enforcement in migration runner | new | later | s | migration, cutover, gate, enforcement |
 | [CHORE-012](chores/CHORE-012-force-flag-audit-logging.md) | --force decision-log on non-implement phases | new | later | s | self-hosting, sync, audit |
 | [CHORE-013](chores/CHORE-013-wire-hooks-tests-into-sync-gate.md) | Wire tests/hooks/*.sh into the pre-sync test gate | new | later | s | self-hosting, sync, testing, gate |
-| [CHORE-014](chores/CHORE-014-skill-count-reconciliation.md) | Reconcile skills-reference.md skill count with actual skills/ directory | new | sooner | s | skills, documentation, skills-reference, count-drift |
+| [CHORE-014](chores/done/CHORE-014-skill-count-reconciliation.md) | Reconcile skills-reference.md skill count with actual skills/ directory | done | sooner | s | skills, documentation, skills-reference, count-drift |
 | [CHORE-015](chores/CHORE-015-extract-shared-install-path-resolver.md) | Extract shared install-path resolver to eliminate triplicate drift | new | soon | s | self-hosting, sync, scripts, drift, architecture |
 | [CHORE-016](chores/done/CHORE-016-hook-development-version-header.md) | Add version/date header to hook-development.md | done | later | xs | self-hosting, hooks, documentation, conventions |
 | [CHORE-017](chores/CHORE-017-epic-creation-workflow-criteria-frontmatter.md) | Epic creation workflow produces completion_criteria in frontmatter | new | later | xs | roadmap, epics, creation-workflow, frontmatter, cache |
