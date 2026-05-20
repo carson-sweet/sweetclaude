@@ -1,18 +1,21 @@
 ---
-id: DEBT-002
-type: debt
-title: paths.product_base has two sources of truth (artifact-privacy.yaml + session-state.yaml)
-status: new
-priority: later
+closed_date: '2026-05-13'
+created: 2026-05-13
 effort: s
 epic: null
+id: DEBT-002
 milestone: null
-sprint: null
-tags: [state-management, dual-source-of-truth, architecture]
 origin: manual
-created: 2026-05-13
+priority: later
+sprint: null
+status: done
+tags:
+- state-management
+- dual-source-of-truth
+- architecture
+title: paths.product_base has two sources of truth (artifact-privacy.yaml + session-state.yaml)
+type: debt
 updated: 2026-05-13
-closed_date: null
 ---
 
 ## Description

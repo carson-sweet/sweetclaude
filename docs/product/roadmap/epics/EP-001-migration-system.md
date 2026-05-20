@@ -6,9 +6,9 @@ status: paused
 release: REL-001
 objective: "Migration system handles v3-to-v4 upgrades safely with atomic finalize and complete guard coverage."
 completion_criteria:
-  - "Finalize step is atomic (BUG-005)"
-  - "All GitHub skills have v4 migration guards (BUG-006)"
-completion_criteria_done: []
+  - "Finalize step is atomic (BUG-007)"
+  - "All GitHub skills have v4 migration guards (BUG-008)"
+completion_criteria_done: [0, 1]
 epic_sequence: 1
 created: 2026-05-18
 updated: 2026-05-19

@@ -1,18 +1,22 @@
 ---
-id: CHORE-008
-type: chore
-title: v4 plan documentation cleanup — STORY-040 vs STORY-018 + /sweetclaude:update v4 behavior
-status: new
-priority: later
+closed_date: '2026-05-13'
+created: 2026-05-13
 effort: s
 epic: null
+id: CHORE-008
 milestone: null
-sprint: null
-tags: [docs, v4-plan, hygiene]
 origin: manual
-created: 2026-05-13
+priority: later
+sprint: null
+status: done
+tags:
+- docs
+- v4-plan
+- hygiene
+title: v4 plan documentation cleanup — STORY-040 vs STORY-018 + /sweetclaude:update
+  v4 behavior
+type: chore
 updated: 2026-05-13
-closed_date: null
 ---
 
 ## Description
