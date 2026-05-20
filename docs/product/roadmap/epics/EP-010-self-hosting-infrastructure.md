@@ -18,7 +18,7 @@ completion_criteria:
   - "fix-sweetclaude repairs symlinks (305)"
   - "Hook dev workflow documented (306)"
   - "Zero manual rules — all carve-outs machine-enforced"
-completion_criteria_done: [0, 1, 2, 3, 4]
+completion_criteria_done: [0, 1, 2, 3, 4, 5]
 ---
 
 # EP-010: Self-Hosting Infrastructure

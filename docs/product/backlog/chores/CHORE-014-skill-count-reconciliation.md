@@ -23,6 +23,7 @@ As of 2026-05-19, `ls skills/` returns 109 directories but `docs/user-guide/skil
 3. For skills in the reference but not in `skills/`: remove stale entries or restore missing directories
 4. Update the global count heading at line 6 and each domain section heading to match reality
 5. Verify `ls skills/ | wc -l` matches the heading after changes
+6. Bump the `Version:` and `Date:` header in `docs/user-guide/skills-reference.md` to reflect the reconciliation pass (noted during STORY-304 closeout — the date was not updated when hook-repair was added)
 
 ## Acceptance criteria
 

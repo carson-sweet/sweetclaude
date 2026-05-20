@@ -3,9 +3,9 @@ id: DESIGN-304
 story: STORY-304
 spec: SPEC-304
 epic: EP-010
-version: 3.0
+version: 3.1
 date: 2026-05-19
-supersedes: design-304 v2.0 (2026-05-19)
+supersedes: design-304 v3.0 (2026-05-19)
 status: draft
 ---
 
@@ -165,12 +165,14 @@ Per spec v2.1 §"`hooks.bak/` absence behavior" table — restated here for desi
 |---|---|
 | `hooks.bak/` missing, repo has `hooks/`, no target arg | Falls back to copying from `$REPO_ROOT/hooks/`; prints `No backup found. Restoring ALL hooks from repo...` |
 | `hooks.bak/` missing, repo has `hooks/`, target arg given | Per-file fallback: copies named hook from repo; prints `RESTORED <hook> from repo (no backup available)` |
-| `hooks.bak/` missing, repo missing, no target arg | Loop body executes zero times (no `.sh` files matched); prints headers + `Done.` line but nothing restored |
+| `hooks.bak/` missing, repo missing, no target arg | Loop body executes zero times; prints headers to stdout, emits `WARNING: no hooks found` to stderr, exits 1 — RESTORED_COUNT=0 is a failed restore |
 | `hooks.bak/` missing, repo missing, target arg given | `FATAL: <hook> not found in backup or repo` → exit 1 |
 | `hooks.bak/` present but empty | Same as missing — `find ... -name '*.sh' \| wc -l` returns 0, falls back to repo |
 | `hooks.bak/` present with `.sh` files, no target arg | Copies all `.sh` from backup + `hooks.json` + `hooks-manifest.json` if present |
 
-The empty-backup-empty-repo-no-target scenario (row 3) is intentionally a soft success: the script reports the paths it inspected and exits 0 with nothing copied. The user sees "no backup, no repo" and knows the next step is a marketplace reinstall. A hard FATAL would deny the diagnostic value of seeing the resolved paths.
+The empty-backup-empty-repo-no-target scenario (row 3) exits 1 with a WARNING on stderr. RESTORED_COUNT=0 means the operator's problem is unresolved — exiting 0 would falsely signal completion. The headers (install path, backup path, repo path) are still printed to stdout before the restore loop runs, preserving the diagnostic value of seeing all resolved paths even on failure. The operator sees the paths and the WARNING, and knows the next step is a marketplace reinstall.
+
+**Backup-syntax validation (implementation addition).** Before accepting a backup copy, the script runs `bash -n` against it. If the backup file itself has a syntax error, it falls through to the repo copy for that hook (or fails with FATAL if the repo copy is also absent). This behavior is not in the spec v2.1 table above but is consistent with the design intent: restoring a syntactically invalid backup over a broken installed hook does not help the operator. The fallthrough logic uses the same RESTORED_REPO_SUFFIX contract line as a normal repo fallback.
 
 ### 8. `hook-development.md` stub: STORY-304 vs STORY-306 ownership
 
@@ -273,6 +275,31 @@ Spec v2.1 superseded spec v2.0 in place using `supersedes:` frontmatter. v2.0 of
 Options considered:
 - New parallel file (`design-304-v3.md`) — would force every downstream reader (skill, sync script, story file, blast-radius) to disambiguate. Rejected.
 - In-place rewrite with `supersedes: design-304 v2.0 (2026-05-19)` — chosen.
+
+### 14. Prefix-check bypass via `hooks.bak/` trust signal
+
+The prefix check (path must start with `$HOME/.claude/plugins/`) has two bypass conditions, not one:
+
+1. **`INSTALL_PATH_OVERRIDE=1`** — the caller explicitly set `INSTALL_PATH`. Documented in Decision 4. Test-only back-door.
+
+2. **`hooks.bak/` present at the resolved path** — if the cascade-resolved path contains a `hooks.bak/` subdirectory, the prefix check is skipped. Rationale: `hooks.bak/` is created atomically by `sync-to-installed.sh` (STORY-301) as part of each hooks sync. Its presence is proof that the path was written by the SweetClaude sync process, making it a legitimate installation root — even if that root lives outside the expected `$HOME/.claude/plugins/` prefix (e.g., a CI environment with a custom `HOME`, a symlinked install, or a workspace-local install).
+
+**Why this arose.** `test_cascade_resolution` sub-case 1 sets up a JSON-resolved path outside the plugin tree but with `hooks.bak/` present, and expects exit 0. Sub-case 4 has the same topology without `hooks.bak/`, and expects exit 1 with "outside plugin tree". The tests were written to encode this distinction as a behavioral contract before the implementation existed. The implementation matches the tests.
+
+**Security implication and accepted risk.** The prefix check defends against a corrupted `installed_plugins.json` pointing outside the plugin tree. The `hooks.bak/` bypass widens the attack surface: an attacker who can write both `installed_plugins.json` and create a directory containing `hooks/` and `hooks.bak/` can bypass the prefix check. However, an attacker with write access to `~/.claude/` can modify installed hooks directly, making the prefix check a thin defense regardless. Risk is accepted. Future hardening (STORY-309) may revise this.
+
+**Implementation.** The guard in the script is:
+
+```bash
+if [ -z "$INSTALL_PATH_OVERRIDE" ] && [ ! -d "$INSTALL_PATH/hooks.bak" ]; then
+  case "$INSTALL_PATH" in
+    "$HOME/.claude/plugins/"*) : ;;
+    *) printf '...' >&2; exit 1 ;;
+  esac
+fi
+```
+
+Decision 4's statement that "the back-door is the only way past" the prefix check is superseded by this decision. Decision 4 remains accurate for the `INSTALL_PATH` back-door; Decision 14 documents the second bypass.
 
 ---
 

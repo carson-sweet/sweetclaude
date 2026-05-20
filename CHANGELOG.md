@@ -4,6 +4,23 @@ All notable changes to SweetClaude are documented here.
 
 ---
 
+## [Unreleased] — targeting 4.0.10-beta
+
+### New features
+
+**Bash-based hook repair recovery (EP-010, STORY-304)**
+- `scripts/emergency-hook-restore.sh` — zero-dependency emergency hook restore script. Resolves install path via `installed_plugins.json` (with `find` fallback), restores from `hooks.bak/` (with `repo/hooks/` fallback), validates each backup with `bash -n` before accepting. Supports `--dry-run` and an optional `[hook-name.sh]` argument to restore a single hook. Uses Bash only — works when Write/Edit hooks are blocked.
+- `tests/test-emergency-restore.sh` — behavioral test suite for the recovery script (eight tests passing, one documented SKIP).
+- `sweetclaude:hook-repair` skill — invocable as `/sweetclaude:hook-repair`. Diagnoses broken installed hooks via `bash -n`, proposes restoration via AskUserQuestion, verifies after restore. Falls through to `bash scripts/emergency-hook-restore.sh` if the backup is missing or itself broken.
+- `docs/user-guide/hook-development.md` — new user-guide page with Recovery, Emergency Recovery (Break Glass), and What to Read Next sections.
+
+### Changed
+
+- `README.md` — "Housekeeping" table heading renamed to "Maintenance & Troubleshooting"; new `hook-repair` row added.
+- `docs/user-guide/skills-reference.md` — System table grew from 14 to 15 skills; total count bumped from 103 to 104.
+
+---
+
 ## [4.0.9-beta] — 2026-05-19
 
 ### New features
@@ -27,7 +44,7 @@ All notable changes to SweetClaude are documented here.
 
 ### Deferred to 4.0.10
 
-STORY-304 (Bash-based hook repair recovery), STORY-305 (session-start symlink detection), STORY-306 (hook development workflow documentation).
+STORY-305 (session-start symlink detection), STORY-306 (hook development workflow documentation). STORY-304 (Bash-based hook repair recovery) was completed post-release — see [Unreleased] above.
 
 ---
 

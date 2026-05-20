@@ -2,7 +2,7 @@
 id: STORY-304
 type: story
 title: "Bash-based hook repair recovery procedure"
-status: active
+status: done
 priority: now
 effort: s
 epic: EP-010
@@ -36,7 +36,7 @@ This is the last-resort recovery mechanism. The sync gate (STORY-300), test gate
 | 304-8 | Emergency script dry-run runs in a clean environment with sandboxed HOME, exercises real path-resolution logic, and emits parseable output | `bash tests/test-emergency-restore.sh` |
 | 304-9 | Break-glass procedure documented with both in-session and terminal instructions | `grep -iE "break.?glass|emergency" docs/user-guide/hook-development.md` |
 | 304-10 | Recovery path verified against both `test-guardian.sh` and `auto-test-runner.sh` failure modes | `grep -E "test-guardian|auto-test-runner" docs/user-guide/hook-development.md` |
-| 304-11 | Story documents the SweetClaude version stamp at which recovery was validated | `grep -E '^Validated against SweetClaude v[0-9]+\.[0-9]+\.[0-9]+' docs/product/backlog/stories/STORY-304-hook-repair-recovery.md` |
+| 304-11 | Story documents the SweetClaude version stamp at which recovery was validated | `grep -E '^Validated against SweetClaude v[0-9]+\.[0-9]+\.[0-9]+' docs/product/backlog/stories/done/STORY-304-hook-repair-recovery.md` |
 | 304-12 | `README.md` lists `sweetclaude:hook-repair` in the skills reference section | `grep -F 'hook-repair' README.md` |
 | 304-13 | `docs/user-guide/skills-reference.md` has an entry for `sweetclaude:hook-repair` | `grep -F 'hook-repair' docs/user-guide/skills-reference.md` |
 
@@ -50,5 +50,7 @@ This is the last-resort recovery mechanism. The sync gate (STORY-300), test gate
 - **README.md placement**: add `hook-repair` to the Housekeeping table. Rename the Housekeeping table heading to `Maintenance & Troubleshooting` (decision 2026-05-19).
 - **Spec v2.1 amendment** (2026-05-19): test file lives at `tests/test-emergency-restore.sh` (not `tests/hooks/`); four test functions: `test_restore_from_backup`, `test_fallback_to_repo`, `test_back_door_skips_prefix_check`, `test_dry_run_preview`. See SPEC-304 v2.1 for full script bodies.
 - **304-11 version stamp**: write `Validated against SweetClaude v3.68.6` — stamp the version the recovery was validated against (current branch), not the release version (4.0.10).
+
+Validated against SweetClaude v3.68.6
 
 ## Implementation History

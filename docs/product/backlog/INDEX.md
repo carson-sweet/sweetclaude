@@ -1,9 +1,9 @@
 ---
 counters:
-  story: 307
+  story: 309
   bug: 10
-  debt: 14
-  chore: 15
+  debt: 15
+  chore: 16
 updated: 2026-05-19
 ---
 
@@ -33,10 +33,11 @@ This file is the source of truth for backlog counter state and the visible table
 | [STORY-021](stories/STORY-021-spike-sqlite-state-storage.md) | Spike — SQLite as unified state store to replace drift-prone file/index system | new | soon | m | spike, sqlite, state, drift, architecture, indexes |
 | [STORY-022](stories/STORY-022-spike-deterministic-logic-to-scripts.md) | Spike — move deterministic logic out of LLM skills and into scripts | new | soon | l | spike, architecture, scripts, skills, determinism, reliability |
 | [STORY-024](stories/STORY-024-milestone-to-epic-migration-strategy.md) | Milestone-to-epic migration strategy for public launch | new | soon | l | roadmap, migration |
-| [STORY-304](stories/STORY-304-hook-repair-recovery.md) | Bash-based hook repair recovery procedure | active | now | s | self-hosting, hooks, recovery |
+| [STORY-304](stories/done/STORY-304-hook-repair-recovery.md) | Bash-based hook repair recovery procedure | done | now | s | self-hosting, hooks, recovery |
 | [STORY-305](stories/STORY-305-symlink-detection.md) | Session-start symlink detection | deferred | now | s | self-hosting, hooks, safety |
 | [STORY-306](stories/STORY-306-hook-dev-workflow-docs.md) | Fixture-based hook development workflow documentation | deferred | now | s | self-hosting, hooks, documentation |
 | [STORY-307](stories/STORY-307-spike-deference-enforcement.md) | Spike — enforce collaborative deference checkpoints via prompt engineering and/or subagent isolation | new | soon | m | spike, deference, prompt-engineering, subagents, safety, self-hosting |
+| [STORY-309](stories/STORY-309-emergency-restore-hardening.md) | Hardening pass for emergency-hook-restore.sh — REPO_ROOT override, prefix-check design note, coverage gaps | new | soon | s | self-hosting, hooks, emergency-restore, hardening, testing |
 
 ## Bugs
 | ID | Title | Status | Priority | Effort | Tags |
@@ -62,6 +63,7 @@ This file is the source of truth for backlog counter state and the visible table
 | [DEBT-012](debt/DEBT-012-hooks-failed-accumulation.md) | hooks.failed/ artifact not cleaned on subsequent syncs | new | later | xs | sync, rollback, cleanup |
 | [DEBT-013](debt/DEBT-013-empty-hooks-bootstrap.md) | First sync to fresh install fails on empty hooks/ validation | new | soon | xs | sync, backup, bootstrap |
 | [DEBT-014](debt/DEBT-014-sync-error-messages.md) | Sync script error messages not actionable | new | later | xs | sync, ux, error-messages |
+| [DEBT-015](debt/DEBT-015-tab-unsafe-path-split.md) | Tab-unsafe path split in find fallback of emergency-hook-restore.sh | new | later | xs | self-hosting, hooks, emergency-restore, correctness, shell |
 
 ## Chores
 | ID | Title | Status | Priority | Effort | Tags |
@@ -75,3 +77,4 @@ This file is the source of truth for backlog counter state and the visible table
 | [CHORE-013](chores/CHORE-013-wire-hooks-tests-into-sync-gate.md) | Wire tests/hooks/*.sh into the pre-sync test gate | new | later | s | self-hosting, sync, testing, gate |
 | [CHORE-014](chores/CHORE-014-skill-count-reconciliation.md) | Reconcile skills-reference.md skill count with actual skills/ directory | new | sooner | s | skills, documentation, skills-reference, count-drift |
 | [CHORE-015](chores/CHORE-015-extract-shared-install-path-resolver.md) | Extract shared install-path resolver to eliminate triplicate drift | new | soon | s | self-hosting, sync, scripts, drift, architecture |
+| [CHORE-016](chores/done/CHORE-016-hook-development-version-header.md) | Add version/date header to hook-development.md | done | later | xs | self-hosting, hooks, documentation, conventions |

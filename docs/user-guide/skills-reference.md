@@ -3,7 +3,7 @@
 **Version:** 1.6
 **Date:** 2026-05-07
 
-All 103 skills, organized by domain. Internal framework skills (_features, _health, _migrate, _route, bootstrap, master) are listed in their sections but not user-invocable. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
+All 104 skills, organized by domain. Internal framework skills (_features, _health, _migrate, _route, bootstrap, master) are listed in their sections but not user-invocable. This page is reference — for narrative explanations of how skills fit together, read [Walkthroughs](walkthroughs.md) and [How It Works](how-it-works.md).
 
 You rarely need to memorize commands. `/sweetclaude:go` is the single entry point — it routes automatically based on project state and what you describe in plain English. The list below is for when you know exactly what you want.
 
@@ -37,7 +37,7 @@ Session navigation and automatic routing. Most of these fire without being invok
 
 ---
 
-## System (14 skills)
+## System (16 skills)
 
 Framework management — setup, teardown, updates, audits, and guards. Always available regardless of version stage.
 
@@ -58,6 +58,7 @@ Framework management — setup, teardown, updates, audits, and guards. Always av
 | **Guardian Off** | `/sweetclaude:guardian-off` | Disable Protocol Guardian. |
 | **Usage** | `/sweetclaude:usage` | View, enable, or disable local usage tracking. |
 | **Help** | `/sweetclaude:help` | Conversational help — describe what you want, learn how to work through prompting. Or browse all commands by category. |
+| **Hook Repair** | `/sweetclaude:hook-repair` | Restore broken installed hooks from `hooks.bak/`. Uses Bash only — works when Write/Edit hooks are blocking. Diagnoses broken hooks via `bash -n`, proposes restoration via AskUserQuestion, verifies after restore. Falls through to `bash scripts/emergency-hook-restore.sh` if backup is missing or itself broken. |
 
 ---
 
