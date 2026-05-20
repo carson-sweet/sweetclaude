@@ -18,10 +18,11 @@ restore-config.sh
 !/docs/README.md
 !/docs/user-guide/
 !/docs/user-guide/**
-!/docs/product/
-!/docs/product/**
 !/docs/internal/
 !/docs/internal/**
+
+# docs/product/ contains real project backlog and roadmap data — never public
+/docs/product/
 
 # Internal strategy, plans, and design docs — never public
 /docs-internal/
