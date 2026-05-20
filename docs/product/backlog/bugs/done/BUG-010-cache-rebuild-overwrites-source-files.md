@@ -2,12 +2,13 @@
 id: BUG-010
 type: bug
 title: "Cache rebuild modifies source markdown files"
-status: new
+status: done
 priority: now
 epic: null
 epic_sequence: null
 created: 2026-05-19
 updated: 2026-05-19
+closed_date: 2026-05-19
 ---
 
 ## Summary
@@ -36,3 +37,9 @@ Critical. Silent data corruption of roadmap state. Status fields changed without
 ## Discovered
 
 2026-05-19 during release/4.0.9-beta assembly. Changes were reverted with `git checkout --`.
+
+## Fix
+
+Fixed in commit `4fedad1` — `rollup()` and `update_frontmatter()` were removed from `scripts/cache.py`. The installed version diverged from the repo and had gained these write-back functions. The fix ported all legitimate additions (query_summary, query_epics, atomic .tmp write, completion_criteria_done support, UNIQUE tag constraint) while excluding the write-back functions entirely.
+
+Verified: running `--rebuild` against the current codebase leaves EP-009 (status: proposed) and REL-003 (status: planned) unchanged.

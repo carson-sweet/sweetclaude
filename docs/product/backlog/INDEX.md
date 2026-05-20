@@ -45,7 +45,7 @@ This file is the source of truth for backlog counter state and the visible table
 | [BUG-007](bugs/BUG-007-migrate-step-8-atomicity-gap.md) | Migrate Step 8 (finalize) is not atomic — crash mid-finalize can leave half-state | new | soon | m | migrate, atomicity, data-integrity, recovery |
 | [BUG-008](bugs/BUG-008-missing-migration-guards-in-gh-skills.md) | project-gh-import-issues and project-gh-sync-issues missing v4 migration guards | new | soon | s | v4, skills, migration-guard, ep-008-5 |
 | [BUG-009](bugs/done/BUG-009-epic-criteria-not-in-frontmatter.md) | Epic completion criteria only in body text — cache renders Criteria 0/0 | done | now | s | cache, big-picture, roadmap, epic |
-| [BUG-010](bugs/BUG-010-cache-rebuild-overwrites-source-files.md) | Cache rebuild modifies source markdown files | new | now | — | — |
+| [BUG-010](bugs/done/BUG-010-cache-rebuild-overwrites-source-files.md) | Cache rebuild modifies source markdown files | done | now | — | — |
 
 ## Debt
 | ID | Title | Status | Priority | Effort | Tags |
