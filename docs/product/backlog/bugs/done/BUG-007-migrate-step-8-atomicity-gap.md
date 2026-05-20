@@ -2,7 +2,7 @@
 id: BUG-007
 type: bug
 title: Migrate Step 8 (finalize) is not atomic — crash mid-finalize can leave half-state
-status: new
+status: done
 priority: soon
 effort: m
 epic: EP-001
@@ -12,8 +12,8 @@ sprint: null
 tags: [migrate, atomicity, data-integrity, recovery]
 origin: manual
 created: 2026-05-13
-updated: 2026-05-16
-closed_date: null
+updated: 2026-05-19
+closed_date: 2026-05-19
 ---
 
 ## Description
@@ -40,22 +40,22 @@ User's STORY/BUG files survive, but they're orphaned from the INDEX. Backlog app
 
 `soon` priority. The crash window is small (two yaml writes, ~100ms total) and requires a specific OS/process failure during that window. But the consequence is data-integrity-adjacent (empty INDEX after recovery) and not obvious to the user how to fix.
 
-## Proposed fix
+## Fix
 
-Two complementary changes:
+Fixed prior to BUG-007 being filed — the fix was implemented as part of the BUG-005 resolution:
 
-1. **Reorder finalize() writes.** Write `sweetclaude.yaml` first (installed_version = 4.0.0), then `artifact-privacy.yaml`. Half-state is then: installed_version=4.0.0 + privacy=old. Bootstrap sees PLUGIN_IS_V4 && !PROJECT_NOT_V4 — no hard-stop. The half-state is benign; next migrate-update or session works normally.
+1. **Reorder implemented**: `finalize()` already writes `sweetclaude.yaml` first, then `artifact-privacy.yaml` (lines 572-584), with comment "BUG-005 reordering: write sweetclaude.yaml FIRST, then artifact-privacy.yaml".
 
-2. **Make execute() idempotent.** If `framework.installed_version` is already `4.0.0` AND `docs/product/backlog/INDEX.md` exists with counter > 0, refuse to regenerate INDEX/MAP from scratch. Either: preserve the existing INDEX, or refuse to run with a clear error directing the user to manually invoke `cleanup-v3-files` if v3 debris remains.
+2. **Idempotency guard implemented**: `_check_already_migrated()` (lines 331-374) checks `installed_version: 4.x` AND non-empty INDEX, refuses to regenerate with `error: already-migrated`. Called as first operation in `execute()` (line 379).
 
-(2) is the load-bearing fix. (1) is defense in depth.
+Verified: `tests/test-migrate-v3-to-v4.sh` scenarios `run_bug_005_reorder` and `run_bug_005_idempotency` both pass (all checks green).
 
 ## Acceptance Criteria
 
-- [ ] `finalize()` write order is: sweetclaude.yaml → artifact-privacy.yaml (sweetclaude.yaml is the source of truth for "are we at v4")
-- [ ] `execute()` detects "already migrated" state (`installed_version: 4.0.0` AND non-empty INDEX) and refuses to regenerate INDEX/MAP, with clear user-facing message
-- [ ] Test covers: simulated crash between finalize writes, then re-run of migrate → INDEX preserved
-- [ ] Test covers: re-run of migrate on already-migrated project → no-op, exits cleanly, INDEX untouched
+- [x] `finalize()` write order is: sweetclaude.yaml → artifact-privacy.yaml (sweetclaude.yaml is the source of truth for "are we at v4")
+- [x] `execute()` detects "already migrated" state (`installed_version: 4.0.0` AND non-empty INDEX) and refuses to regenerate INDEX/MAP, with clear user-facing message
+- [x] Test covers: simulated crash between finalize writes, then re-run of migrate → INDEX preserved
+- [x] Test covers: re-run of migrate on already-migrated project → no-op, exits cleanly, INDEX untouched
 
 ## Out of scope
 
