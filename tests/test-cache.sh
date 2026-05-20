@@ -335,6 +335,29 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+echo "[15] cache.py --query releases-compact returns compact hierarchy under 10KB"
+OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query releases-compact 2>&1)
+REL_ID=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'])" 2>/dev/null)
+EPIC_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics']))" 2>/dev/null)
+STORY_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics'][0]['stories']))" 2>/dev/null)
+HAS_CRITERIA=$(echo "$OUTPUT" | python3 -c "import sys,json; ep=json.load(sys.stdin)[0]['epics'][0]; print('criteria_done' in ep and 'criteria_total' in ep)" 2>/dev/null)
+BYTE_SIZE=$(echo -n "$OUTPUT" | wc -c | tr -d ' ')
+NO_EXTRA_FIELDS=$(echo "$OUTPUT" | python3 -c "
+import sys,json
+data = json.load(sys.stdin)
+ep = data[0]['epics'][0]
+allowed = {'id','title','status','criteria_done','criteria_total','stories'}
+extra = set(ep.keys()) - allowed
+print('none' if not extra else ','.join(sorted(extra)))
+" 2>/dev/null)
+if [ "$REL_ID" = "REL-001" ] && [ "$EPIC_COUNT" = "2" ] && [ "$STORY_COUNT" -gt 0 ] && \
+   [ "$HAS_CRITERIA" = "True" ] && [ "$BYTE_SIZE" -lt 10240 ] && [ "$NO_EXTRA_FIELDS" = "none" ]; then
+  pass "releases-compact: correct structure, criteria fields present, no extra fields, under 10KB (${BYTE_SIZE}B)"
+else
+  fail "releases-compact failed: rel=$REL_ID epics=$EPIC_COUNT stories=$STORY_COUNT criteria=$HAS_CRITERIA size=${BYTE_SIZE}B extra=$NO_EXTRA_FIELDS"
+fi
+
+# ---------------------------------------------------------------------------
 echo ""
 echo "=============================="
 echo "Results: $PASSED passed, $FAILED failed"

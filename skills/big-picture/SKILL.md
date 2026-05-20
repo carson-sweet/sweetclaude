@@ -47,20 +47,20 @@ ls docs/product/roadmap/epics/EP-*.md 2>/dev/null | head -1
 
 ## Step 3a: Roadmap pipeline (cache-backed)
 
-Rebuild the cache and query the full hierarchy:
+Rebuild the cache, then run all three queries:
 
 ```bash
 python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
-python3 scripts/cache.py --project-dir . --query releases 2>/dev/null
+python3 scripts/cache.py --project-dir . --query releases-compact 2>/dev/null
+python3 scripts/cache.py --project-dir . --query summary 2>/dev/null
+python3 scripts/cache.py --project-dir . --query backlog --unlinked-only 2>/dev/null
 ```
 
-Parse the JSON output. Also query the full backlog for unlinked items:
+- `releases-compact` — compact hierarchy (id, title, status, criteria_done/total, story list) for the tree display; use this instead of `releases` to avoid output truncation on large projects
+- `summary` — pre-computed totals for the bottom summary line (**use these numbers, do not count from the releases JSON**)
+- `backlog --unlinked-only` — open items with no epic, for the unlinked section (top 5 only)
 
-```bash
-python3 scripts/cache.py --project-dir . --query backlog 2>/dev/null
-```
-
-Build the display from the releases hierarchy. Skip to Step 4a.
+Skip to Step 4a.
 
 ## Step 3b: Legacy milestone pipeline
 

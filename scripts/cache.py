@@ -304,6 +304,43 @@ def query_releases(project_dir):
     return result
 
 
+def query_releases_compact(project_dir):
+    """Releases hierarchy with only the fields needed for big-picture tree rendering."""
+    conn = get_conn(project_dir)
+    releases = conn.execute(
+        "SELECT id, title, status FROM items WHERE type='release' ORDER BY id"
+    ).fetchall()
+    result = []
+    for rel in releases:
+        rel_dict = {'id': rel['id'], 'title': rel['title'], 'status': rel['status'], 'epics': []}
+        epics = conn.execute(
+            "SELECT id, title, status FROM items WHERE type='epic' AND release=? ORDER BY id",
+            (rel_dict['id'],),
+        ).fetchall()
+        for ep in epics:
+            criteria = conn.execute(
+                "SELECT done FROM completion_criteria WHERE epic_id=? ORDER BY seq",
+                (ep['id'],),
+            ).fetchall()
+            stories = conn.execute(
+                """SELECT id, title, status, epic_sequence
+                   FROM items WHERE epic=? AND type IN ('story','bug','chore','debt')
+                   ORDER BY epic_sequence, id""",
+                (ep['id'],),
+            ).fetchall()
+            rel_dict['epics'].append({
+                'id': ep['id'],
+                'title': ep['title'],
+                'status': ep['status'],
+                'criteria_done': sum(1 for c in criteria if c['done']),
+                'criteria_total': len(criteria),
+                'stories': [dict(s) for s in stories],
+            })
+        result.append(rel_dict)
+    conn.close()
+    return result
+
+
 def query_epics(project_dir, include_done=False):
     conn = get_conn(project_dir)
     if include_done:
@@ -412,7 +449,7 @@ def main():
     parser.add_argument('--rebuild', action='store_true', help='Rebuild the cache from source files')
     parser.add_argument('--query', choices=[
         'item-count', 'active-epic', 'epic-stories', 'epics', 'backlog',
-        'next-id', 'releases', 'tags', 'summary',
+        'next-id', 'releases', 'releases-compact', 'tags', 'summary',
     ], help='Query to run')
     parser.add_argument('--epic', help='Epic ID for epic-stories query')
     parser.add_argument('--prefix', help='ID prefix for next-id query')
@@ -449,6 +486,8 @@ def main():
         result = query_next_id(args.project_dir, args.prefix)
     elif args.query == 'releases':
         result = query_releases(args.project_dir)
+    elif args.query == 'releases-compact':
+        result = query_releases_compact(args.project_dir)
     elif args.query == 'summary':
         result = query_summary(args.project_dir)
     elif args.query == 'tags':
