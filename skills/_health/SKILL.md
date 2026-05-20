@@ -139,6 +139,24 @@ if BACKLOG_BASE.exists():
                 if fm.get('status') in ('done', 'abandoned'):
                     lint_findings.append(f"done-status-mismatch:{p.name} has status={fm.get('status')} but is not in done/")
 
+    # Rule 6: Open epics missing completion_criteria frontmatter
+    if ROADMAP_BASE.exists():
+        epics_dir = ROADMAP_BASE / 'epics'
+        if epics_dir.exists():
+            for p in epics_dir.glob('*.md'):
+                if p.parent.name == 'done':
+                    continue
+                fm = read_fm(p)
+                if fm.get('type') != 'epic':
+                    continue
+                if fm.get('status') in ('done', 'abandoned'):
+                    continue
+                criteria = fm.get('completion_criteria')
+                if not criteria:
+                    lint_findings.append(
+                        f"epic-missing-criteria:{fm.get('id', p.stem)} has no completion_criteria in frontmatter — cache will render Criteria: 0/0"
+                    )
+
 if lint_findings:
     print("## v4 Lint Findings")
     for f in lint_findings:

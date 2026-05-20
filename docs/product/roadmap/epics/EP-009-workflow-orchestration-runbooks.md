@@ -7,6 +7,17 @@ release: REL-003
 milestones: [MS-007, MS-008, MS-009, MS-010, MS-011, MS-012, MS-013, MS-014, MS-015]
 source: BL-082
 depends_on: [EP-010]
+completion_criteria:
+  - "Workflow taxonomy finalized (MS-007)"
+  - "State model designed (MS-008)"
+  - "Design consensus reached (MS-009)"
+  - "Technical spec approved (MS-010)"
+  - "Workflow state infrastructure implemented (MS-011)"
+  - "All 12 execution workflow types implemented (MS-012)"
+  - "Code and security review complete (MS-013)"
+  - "Behavioral regression suite passing (MS-014)"
+  - "Docs and changelog updated — release ready (MS-015)"
+completion_criteria_done: []
 created: 2026-05-18
 updated: 2026-05-19
 ---
