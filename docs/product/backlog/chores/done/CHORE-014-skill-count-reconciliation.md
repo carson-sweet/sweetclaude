@@ -1,13 +1,18 @@
 ---
-id: CHORE-014
-type: chore
-title: "Reconcile skills-reference.md skill count with actual skills/ directory"
-status: new
-priority: sooner
-effort: s
-tags: [skills, documentation, skills-reference, count-drift]
+closed_date: '2026-05-19'
 created: 2026-05-19
-updated: 2026-05-19
+effort: s
+id: CHORE-014
+priority: sooner
+status: done
+tags:
+- skills
+- documentation
+- skills-reference
+- count-drift
+title: Reconcile skills-reference.md skill count with actual skills/ directory
+type: chore
+updated: '2026-05-19'
 ---
 
 # Reconcile skills-reference.md skill count with actual skills/ directory
