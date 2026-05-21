@@ -166,8 +166,11 @@ def validate_exit_checks(step, state, project_dir="."):
 
 def _resolve_artifact_path(raw_path, project_dir):
     if os.path.isabs(raw_path):
-        return raw_path
-    return os.path.join(project_dir, raw_path)
+        resolved = raw_path
+    else:
+        resolved = os.path.join(project_dir, raw_path)
+    _check_containment(resolved, project_dir)
+    return resolved
 
 
 def assemble_context_envelope(step, state, project_dir="."):
@@ -243,6 +246,9 @@ def find_active_workflows(project_dir="."):
             continue
         if not isinstance(state, dict):
             continue
+        expected_id = fname[:-5]
+        if state.get("workflow_id") != expected_id:
+            continue
         if state.get("status") in active_statuses:
             result.append({
                 "workflow_id": state.get("workflow_id"),
@@ -267,7 +273,10 @@ def extract_output_signal(step, agent_output_path):
     if end == -1:
         end = content.find("\n---\r\n", 3)
     if end == -1:
-        return None
+        if content.rstrip("\r\n").endswith("\n---"):
+            end = content.rstrip("\r\n").rfind("\n---")
+        else:
+            return None
 
     frontmatter_text = content[content.index("\n") + 1:end].strip()
     try:

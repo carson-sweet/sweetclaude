@@ -276,3 +276,36 @@ class TestAllArtifactsNonEmptyCheck:
         assert passed is False
         assert isinstance(msg, str)
         assert len(msg) > 0
+
+
+# ---------------------------------------------------------------------------
+# Hotfix: _make_absolute containment check (caucus finding C1)
+# ---------------------------------------------------------------------------
+
+class TestMakeAbsoluteContainment:
+    def test_rejects_traversal_path(self, tmp_path):
+        from orchestrator_checks import _make_absolute
+        with pytest.raises(ValueError, match="escapes project directory"):
+            _make_absolute("../../etc/passwd", str(tmp_path))
+
+    def test_rejects_absolute_path_outside_project(self, tmp_path):
+        from orchestrator_checks import _make_absolute
+        with pytest.raises(ValueError, match="escapes project directory"):
+            _make_absolute("/etc/passwd", str(tmp_path))
+
+    def test_accepts_relative_path_within_project(self, tmp_path):
+        from orchestrator_checks import _make_absolute
+        result = _make_absolute("docs/spec.md", str(tmp_path))
+        assert result == str(tmp_path / "docs" / "spec.md")
+
+    def test_file_exists_check_rejects_traversal_artifact(self, tmp_path):
+        state = _make_state({"spec_file": "../../etc/passwd"})
+        step = _make_step(output_artifact="spec_file")
+        with pytest.raises(ValueError, match="escapes project directory"):
+            CHECKS["file_exists"](step, state, str(tmp_path))
+
+    def test_all_artifacts_exist_rejects_traversal_artifact(self, tmp_path):
+        state = _make_state({"spec_file": "../../etc/passwd"})
+        step = _make_step(input_artifacts=["spec_file"])
+        with pytest.raises(ValueError, match="escapes project directory"):
+            CHECKS["all_artifacts_exist"](step, state, str(tmp_path))

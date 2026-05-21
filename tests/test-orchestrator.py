@@ -737,3 +737,99 @@ class TestMissingStateKeys:
         state = {}
         updated = record_gate_passage(state, "gate-1", "user_approval", "approved")
         assert len(updated["gates_passed"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# Hotfix: artifact path containment (caucus finding C1)
+# ---------------------------------------------------------------------------
+
+class TestArtifactPathContainment:
+    def test_assemble_context_envelope_rejects_traversal_path(self, tmp_path):
+        step = {"input_artifacts": ["spec_file"]}
+        state = {"artifacts": {"spec_file": "../../etc/passwd"}}
+        with pytest.raises(ValueError, match="escapes project directory"):
+            assemble_context_envelope(step, state, project_dir=str(tmp_path))
+
+    def test_assemble_context_envelope_rejects_absolute_path_outside_project(self, tmp_path):
+        step = {"input_artifacts": ["spec_file"]}
+        state = {"artifacts": {"spec_file": "/etc/passwd"}}
+        with pytest.raises(ValueError, match="escapes project directory"):
+            assemble_context_envelope(step, state, project_dir=str(tmp_path))
+
+    def test_assemble_context_envelope_accepts_path_within_project(self, tmp_path):
+        artifact = tmp_path / "docs" / "spec.md"
+        artifact.parent.mkdir(parents=True)
+        artifact.write_text("spec content")
+        step = {"input_artifacts": ["spec_file"]}
+        state = {"artifacts": {"spec_file": "docs/spec.md"}}
+        result = assemble_context_envelope(step, state, project_dir=str(tmp_path))
+        assert result == [str(artifact)]
+
+    def test_assemble_context_envelope_accepts_absolute_path_within_project(self, tmp_path):
+        artifact = tmp_path / "docs" / "spec.md"
+        artifact.parent.mkdir(parents=True)
+        artifact.write_text("spec content")
+        step = {"input_artifacts": ["spec_file"]}
+        state = {"artifacts": {"spec_file": str(artifact)}}
+        result = assemble_context_envelope(step, state, project_dir=str(tmp_path))
+        assert result == [str(artifact)]
+
+
+# ---------------------------------------------------------------------------
+# Hotfix: frontmatter closing delimiter at EOF (caucus finding N4)
+# ---------------------------------------------------------------------------
+
+class TestExtractOutputSignalEOF:
+    def test_signal_extracted_when_closing_delimiter_at_eof_no_trailing_newline(self, tmp_path):
+        output_file = tmp_path / "output.md"
+        output_file.write_text("---\nsignal: critical\n---")
+        step = {"id": "review"}
+        result = extract_output_signal(step, str(output_file))
+        assert result == "critical"
+
+    def test_signal_extracted_when_closing_delimiter_at_eof_with_trailing_newline(self, tmp_path):
+        output_file = tmp_path / "output.md"
+        output_file.write_text("---\nsignal: clean\n---\n")
+        step = {"id": "review"}
+        result = extract_output_signal(step, str(output_file))
+        assert result == "clean"
+
+    def test_signal_extracted_with_body_after_frontmatter(self, tmp_path):
+        output_file = tmp_path / "output.md"
+        output_file.write_text("---\nsignal: pass\n---\n\nBody content here.\n")
+        step = {"id": "review"}
+        result = extract_output_signal(step, str(output_file))
+        assert result == "pass"
+
+
+# ---------------------------------------------------------------------------
+# Hotfix: find_active_workflows filename/id mismatch (caucus finding W8)
+# ---------------------------------------------------------------------------
+
+class TestFindActiveWorkflowsFilenameMismatch:
+    def test_skips_file_where_workflow_id_does_not_match_filename(self, tmp_path):
+        wf_dir = tmp_path / ".sweetclaude" / "state" / "workflows"
+        wf_dir.mkdir(parents=True)
+        mismatched = wf_dir / "STORY-025.yaml"
+        mismatched.write_text(yaml.safe_dump({
+            "workflow_id": "STORY-999",
+            "status": "active",
+            "checkpoint": "test",
+            "checkpoint_at": "2026-05-20T10:00:00Z",
+        }))
+        result = find_active_workflows(project_dir=str(tmp_path))
+        assert len(result) == 0
+
+    def test_includes_file_where_workflow_id_matches_filename(self, tmp_path):
+        wf_dir = tmp_path / ".sweetclaude" / "state" / "workflows"
+        wf_dir.mkdir(parents=True)
+        matched = wf_dir / "STORY-025.yaml"
+        matched.write_text(yaml.safe_dump({
+            "workflow_id": "STORY-025",
+            "status": "active",
+            "checkpoint": "test",
+            "checkpoint_at": "2026-05-20T10:00:00Z",
+        }))
+        result = find_active_workflows(project_dir=str(tmp_path))
+        assert len(result) == 1
+        assert result[0]["workflow_id"] == "STORY-025"

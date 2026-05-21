@@ -20,10 +20,23 @@ def _resolve_artifact_paths(artifact_key, state, project_dir):
     return [value], ""
 
 
+def _check_containment(resolved_path, project_dir):
+    project_root = os.path.abspath(project_dir)
+    resolved = os.path.abspath(resolved_path)
+    if not resolved.startswith(project_root + os.sep) and resolved != project_root:
+        raise ValueError(
+            "Path '{}' escapes project directory".format(resolved_path)
+        )
+    return resolved
+
+
 def _make_absolute(path, project_dir):
     if os.path.isabs(path):
-        return path
-    return os.path.join(project_dir, path)
+        resolved = path
+    else:
+        resolved = os.path.join(project_dir, path)
+    _check_containment(resolved, project_dir)
+    return resolved
 
 
 @register("file_exists")
