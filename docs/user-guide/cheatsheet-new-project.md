@@ -98,7 +98,7 @@ These are not part of the automatic flow. They are available anytime.
 - **Positioning statement** (`/sweetclaude:product-positioning-statement`) — for/who/that/unlike framework
 - **Corpus pipeline and RAG search** (`/sweetclaude:document-corpus`) — organize messy files into canonical documents with full provenance (consolidate → triage → reconcile → promote), then index for semantic search. Presents a menu; pick the step you need or check status first.
 - **Update SweetClaude** (`/sweetclaude:update`) — fetch the latest version from GitHub and sync to all projects
-- **Auto version bumping** — create `.sweetclaude/version-bump.yaml` to auto-bump version files after every git commit based on conventional commit prefixes
+- **Version bumping** — run `scripts/bump-version.sh patch|minor|major` to bump version explicitly; no automatic bump on commit
 
 ## Tips
 

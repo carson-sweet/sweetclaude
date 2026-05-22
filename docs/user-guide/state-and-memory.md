@@ -25,7 +25,6 @@ This page is reference. For why state is structured the way it is, read [How It 
 ├── plans/                      ← Claude Code plan files (.sweetclaude/plans is set as plansDirectory)
 │   └── archive/                ← Plans archived at ship time, organized by milestone/sprint
 ├── traceability/               ← Story → requirement → test → code traceability maps
-├── version-bump.yaml           ← (optional) Auto-bump configuration
 └── disabled                    ← (optional) Presence disables SweetClaude for this project
 ```
 

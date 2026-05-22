@@ -127,28 +127,25 @@ PRs that include test results from a real session are much more likely to be mer
 
 Version bumping is operator-driven, not automated. There is no commit hook that bumps `package.json` automatically.
 
-To cut a release:
+To bump the version:
 
 ```bash
-# Compute the next version from package.json:
-scripts/bump-version.sh patch
-scripts/bump-version.sh minor
-scripts/bump-version.sh major
-
-# Or set an explicit version:
-scripts/bump-version.sh 3.66.0
+scripts/bump-version.sh patch   # 4.0.9-beta → 4.0.10-beta
+scripts/bump-version.sh minor   # 4.0.9-beta → 4.1.0-beta
+scripts/bump-version.sh major   # 4.0.9-beta → 5.0.0-beta
 ```
 
 The script:
 
-- Refuses to run on a dirty working tree or off `main` (use `--force` to override).
-- Writes the new version into `package.json` and `.claude-plugin/plugin.json`.
-- Creates a single `chore(release): vX.Y.Z` commit and a matching `vX.Y.Z` annotated tag.
-- Does **not** push. Review the commit and tag, then push when ready:
+- Updates `package.json` with the new version.
+- Converts the `[Unreleased]` section in `CHANGELOG.md` to the new version heading and adds a fresh `[Unreleased]` section.
+- Preserves any prerelease suffix (e.g., `-beta`).
+- Does **not** commit or tag. Review the changes, then commit and push yourself:
 
 ```bash
+git add package.json CHANGELOG.md
+git commit -m 'chore(release): v4.0.10-beta'
 git push origin main
-git push origin vX.Y.Z
 ```
 
-Add additional version-stamped files to `scripts/version-files.txt` (one per line) if any are introduced; the script will pick them up automatically.
+Use `--dry-run` to preview the version change without modifying files.

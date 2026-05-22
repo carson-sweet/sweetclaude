@@ -54,12 +54,7 @@ When a co-maintainer joins, governance transitions to:
 
 ## Release Process
 
-SweetClaude uses semantic versioning with conventional commits:
-- `feat:` → minor bump
-- `fix:` / `chore:` → patch bump
-- `BREAKING CHANGE:` → major bump
-
-The auto-version-bump hook handles bumps automatically after each commit. Releases are tagged on main. There is no separate release branch.
+SweetClaude uses semantic versioning. Version bumps are operator-driven — run `scripts/bump-version.sh patch|minor|major` explicitly. There is no automatic version bump on commit. Releases are tagged on main. There is no separate release branch.
 
 After each release, update the two static badges in `README.md` manually:
 

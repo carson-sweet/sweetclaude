@@ -195,4 +195,4 @@ You can change this mid-session.
 - **SweetClaude does not judge your code.** When adopting a project, it treats your codebase like an archaeologist treats a dig site — understanding before changing, respecting what is already there.
 - **Status fires automatically at session start.** For active projects, SweetClaude shows status without being asked. Run `/sweetclaude` to immediately pick up where you left off.
 - **Keep SweetClaude updated.** Run `/sweetclaude:update` periodically to get the latest skills, hooks, and fixes.
-- **Enable auto version bumping.** Create `.sweetclaude/version-bump.yaml` listing your version files. Every git commit automatically bumps the version based on conventional commit prefixes.
+- **Version bumping is explicit.** Run `scripts/bump-version.sh patch|minor|major` to bump the version in `package.json` and `CHANGELOG.md`. There is no automatic version bump on commit.

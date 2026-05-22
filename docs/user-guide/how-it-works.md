@@ -187,7 +187,7 @@ your-project/.sweetclaude/          ← Per-project state
 │   ├── improvement-register.md
 │   └── scope-changes.md
 ├── traceability/                   ← Story → requirement → test → code
-└── version-bump.yaml               ← Optional: auto-bump on commit
+└── disabled                        ← Optional: presence disables SweetClaude
 ```
 
 The split is intentional. Global install is the framework. Per-project state is your work. They are committed separately. The framework can update without disturbing your project history.
