@@ -396,6 +396,8 @@ Continue to Step 6b. The user-facing success report is deferred until Step 6b co
 
 ## Step 6b: Project-state drift detection and migration
 
+> **Future:** Steps 6b, 6b1, and 6b2 will be delegated to `sweetclaude:doctor` check categories (`migration_currency`, `file_diagnostics`, `storage_lint`) in a future version. The doctor skill provides a unified safety model (archive, backup, dry-run) that these inline checks lack.
+
 Only run if `.sweetclaude/state/sweetclaude.yaml` exists in the current project directory — skip silently otherwise. (Update can be run from any directory; this step only applies when run from inside a SweetClaude project.)
 
 After the framework sync, the registry on disk may declare schema versions newer than this project's state files. Surface it immediately — don't make the user bounce sessions.
