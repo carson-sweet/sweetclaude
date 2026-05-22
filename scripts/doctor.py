@@ -1394,13 +1394,20 @@ def execute_recipe(
 # ---------------------------------------------------------------------------
 
 def auto_fix(
-    project_dir: Path, findings: list[dict], archive_path: Path
+    project_dir: Path, findings: list[dict], archive_path: Path,
+    include_prompted: bool = False,
 ) -> dict:
     actions: list[dict] = []
     fixed_categories: set[str] = set()
+    allowed_types = {"auto"}
+    if include_prompted:
+        allowed_types.add("prompted")
 
     for f in findings:
-        if f.get("fix_type") != "auto":
+        if f.get("fix_type") not in allowed_types:
+            continue
+        recipe = f.get("fix_recipe", {})
+        if recipe.get("action") == "prompt":
             continue
         recipe = f.get("fix_recipe", {})
         try:
@@ -1530,6 +1537,7 @@ def persist(
     project_dir: Path, archive_path: Path,
     menu_preference: str | None = None,
     scan_findings: list[dict] | None = None,
+    safety_branch: str | None = None,
 ) -> dict:
     auto_actions = []
     actions_file = archive_path / "actions.json"
@@ -1554,7 +1562,7 @@ def persist(
     manifest = {
         "timestamp": _now_iso(),
         "version": _resolve_installed_version() or "unknown",
-        "safety_branch": None,
+        "safety_branch": safety_branch,
         "actions": all_actions,
         "post_fix_findings": [],
         "summary": {
@@ -1611,6 +1619,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p_fix = _add("auto-fix")
     p_fix.add_argument("--archive-dir", required=True, type=Path)
+    p_fix.add_argument("--include-prompted", action="store_true", default=False)
 
     p_rescan = _add("post-fix-rescan")
     p_rescan.add_argument("--categories", required=True)
@@ -1623,6 +1632,7 @@ def main(argv: list[str] | None = None) -> int:
     p_persist = _add("persist")
     p_persist.add_argument("--archive-dir", required=True, type=Path)
     p_persist.add_argument("--menu-preference", default=None)
+    p_persist.add_argument("--safety-branch", default=None)
 
     _add("prune-archives")
 
@@ -1648,7 +1658,8 @@ def main(argv: list[str] | None = None) -> int:
             if isinstance(findings, dict):
                 findings = findings.get("findings", [])
             result = auto_fix(
-                args.project_dir.resolve(), findings, args.archive_dir.resolve()
+                args.project_dir.resolve(), findings, args.archive_dir.resolve(),
+                include_prompted=args.include_prompted,
             )
             _emit(result)
 
@@ -1684,6 +1695,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.archive_dir.resolve(),
                 args.menu_preference,
                 scan_findings=scan_findings,
+                safety_branch=args.safety_branch,
             )
             _emit(result)
 
