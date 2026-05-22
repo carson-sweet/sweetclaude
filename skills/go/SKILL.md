@@ -223,8 +223,8 @@ Locate the story file:
 ```bash
 python3 - "{STORY-ID}" << 'PY'
 import sys, pathlib
-story_id = sys.argv[1]
-for p in pathlib.Path('.sweetclaude/product/backlog').rglob(f'{story_id}-*.md'):
+issue_id = sys.argv[1]
+for p in pathlib.Path('.sweetclaude/product/backlog').rglob(f'{issue_id}-*.md'):
     if 'INDEX' not in p.name.upper() and '/done/' not in str(p):
         print(p); exit()
 print('NOT_FOUND')
@@ -257,12 +257,12 @@ For SHIP phase (routing to `sweetclaude:deploy-ship`): invoke `sweetclaude:deplo
 
 **Closeout sequence** (runs after SHIP confirmation — do not prompt next steps after this):
 
-First, locate the story file and resolve `story_file_path`:
+First, locate the issue file and resolve `issue_file_path`:
 ```bash
 python3 - "{STORY-ID}" << 'PY'
 import sys, pathlib
-story_id = sys.argv[1]
-for p in pathlib.Path('.sweetclaude/product/backlog').rglob(f'{story_id}-*.md'):
+issue_id = sys.argv[1]
+for p in pathlib.Path('.sweetclaude/product/backlog').rglob(f'{issue_id}-*.md'):
     if 'INDEX' not in p.name.upper() and '/done/' not in str(p):
         print(p); exit()
 print('NOT_FOUND')
@@ -344,7 +344,7 @@ Report: `✓ origin/{branch} deleted` or `✓ origin/{branch} not present — sk
 
 **Step C5 — Move story to `done/` and update frontmatter**:
 ```bash
-python3 - "{story_file_path}" "{today}" << 'PY'
+python3 - "{issue_file_path}" "{today}" << 'PY'
 import sys, yaml, os, shutil, tempfile
 path, today = sys.argv[1], sys.argv[2]
 raw = open(path).read()

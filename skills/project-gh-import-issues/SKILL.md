@@ -46,7 +46,7 @@ def assign_new_id():
 def make_slug(title):
     return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', title.lower())).strip('-')
 
-def write_story_file(path, fm, body):
+def write_issue_file(path, fm, body):
     content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
     pathlib.Path(path).write_text(content, encoding='utf-8')
 
@@ -139,7 +139,7 @@ For each GitHub issue:
    body_text = '<gh_issue_body truncated to 500 chars>'
    body = f"\n## Description\n\n{body_text}\n"
    dest = BACKLOG_BASE / f"{new_id}-{slug}.md"
-   write_story_file(dest, fm, body)
+   write_issue_file(dest, fm, body)
    ```
 
    Labels → effort mapping (applied if label present, otherwise default `m`):

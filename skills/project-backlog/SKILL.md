@@ -51,20 +51,20 @@ import pathlib, yaml, re, datetime
 
 BACKLOG_BASE = pathlib.Path('.sweetclaude/product/backlog')
 
-def read_story_file(path):
+def read_issue_file(path):
     raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
     parts = raw.split('---', 2)
     fm = yaml.safe_load(parts[1]) or {}
     body = parts[2] if len(parts) > 2 else ''
     return fm, body
 
-def find_story_by_id(story_id):
+def find_issue_by_id(issue_id):
     for p in BACKLOG_BASE.rglob('*.md'):
-        if p.stem.startswith(story_id + '-') or p.stem == story_id:
+        if p.stem.startswith(issue_id + '-') or p.stem == issue_id:
             return p
     return None
 
-def write_story_file(path, fm, body):
+def write_issue_file(path, fm, body):
     content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
     pathlib.Path(path).write_text(content, encoding='utf-8')
 
@@ -79,7 +79,7 @@ active_files = [
 ]
 items = []
 for p in active_files:
-    fm, _ = read_story_file(p)
+    fm, _ = read_issue_file(p)
     if fm.get('status') not in ('done', 'abandoned', 'deferred'):
         items.append((p, fm))
 ```
@@ -136,8 +136,8 @@ After the list, surface any of these conditions if present:
 Move issue `<ID>` into sprint `<SP-NNN>`.
 
 ```python
-path = find_story_by_id('<ID>')
-fm, body = read_story_file(path)
+path = find_issue_by_id('<ID>')
+fm, body = read_issue_file(path)
 ```
 
 Verify:
@@ -151,7 +151,7 @@ fm['sprint'] = '<SP-NNN>'
 fm['status'] = 'ready'
 fm['updated'] = today
 # Append to Sprint History in body
-write_story_file(path, fm, body)
+write_issue_file(path, fm, body)
 ```
 
 Confirm: `Promoted {ID} → {SP-NNN}`
@@ -163,11 +163,11 @@ Confirm: `Promoted {ID} → {SP-NNN}`
 Set issue status to `deferred`. Hides it from the default backlog view without closing it.
 
 ```python
-path = find_story_by_id('<ID>')
-fm, body = read_story_file(path)
+path = find_issue_by_id('<ID>')
+fm, body = read_issue_file(path)
 fm['status'] = 'deferred'
 fm['updated'] = datetime.date.today().isoformat()
-write_story_file(path, fm, body)
+write_issue_file(path, fm, body)
 ```
 
 Confirm: `Deferred <ID> — removed from active backlog`
@@ -197,7 +197,7 @@ Imported issue {n} of {total}:
 ```
 
 Wait for response per issue.
-- **Keep:** `fm['origin'] = 'manual'` → write_story_file → confirm "Kept as {ID}"
+- **Keep:** `fm['origin'] = 'manual'` → write_issue_file → confirm "Kept as {ID}"
 - **Edit:** ask for new title and/or type, write both fields + set origin=manual
 - **Discard:** delete the file and rebuild cache
 

@@ -37,14 +37,14 @@ import pathlib, yaml, re, datetime
 
 BACKLOG_BASE = pathlib.Path('.sweetclaude/product/backlog')
 
-def read_story_file(path):
+def read_issue_file(path):
     raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
     parts = raw.split('---', 2)
     fm = yaml.safe_load(parts[1]) or {}
     body = parts[2] if len(parts) > 2 else ''
     return fm, body
 
-def write_story_file(path, fm, body):
+def write_issue_file(path, fm, body):
     fm['updated'] = datetime.date.today().isoformat()
     content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
     pathlib.Path(path).write_text(content, encoding='utf-8')
@@ -58,7 +58,7 @@ active_items = []
 for p in BACKLOG_BASE.rglob('*.md'):
     if p.name in ('INDEX.md', 'MIGRATION-MAP.md', 'SCHEMA.md') or '/done/' in str(p):
         continue
-    fm, body = read_story_file(p)
+    fm, body = read_issue_file(p)
     if fm.get('status') not in ('done', 'abandoned', 'deferred'):
         active_items.append((p, fm, body))
 
@@ -168,7 +168,7 @@ On `y` or field overrides:
 fm['priority'] = '<priority>'
 fm['effort'] = '<effort>'
 fm['status'] = 'ready'
-write_story_file(path, fm, body)
+write_issue_file(path, fm, body)
 rebuild_cache()
 ```
 
@@ -177,7 +177,7 @@ On `cancel` (status → abandoned, move to done/):
 import shutil
 fm['status'] = 'abandoned'
 fm['closed_date'] = datetime.date.today().isoformat()
-write_story_file(path, fm, body)
+write_issue_file(path, fm, body)
 done_dir = path.parent / 'done'
 done_dir.mkdir(exist_ok=True)
 shutil.move(str(path), str(done_dir / path.name))
@@ -188,7 +188,7 @@ On `done` (status → done, move to done/):
 import shutil
 fm['status'] = 'done'
 fm['closed_date'] = datetime.date.today().isoformat()
-write_story_file(path, fm, body)
+write_issue_file(path, fm, body)
 done_dir = path.parent / 'done'
 done_dir.mkdir(exist_ok=True)
 shutil.move(str(path), str(done_dir / path.name))

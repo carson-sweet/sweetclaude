@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Bidirectional status sync between local v4 story files and GitHub Issues."
+description: "Bidirectional status sync between local issue files and GitHub Issues."
 ---
 
 !`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:project-gh-sync-issues" 2>/dev/null || true`
@@ -37,14 +37,14 @@ import pathlib, yaml, datetime, shutil
 
 BACKLOG_BASE = pathlib.Path('.sweetclaude/product/backlog')
 
-def read_story_file(path):
+def read_issue_file(path):
     raw = pathlib.Path(path).read_bytes().decode('utf-8').replace('\r\n', '\n')
     parts = raw.split('---', 2)
     fm = yaml.safe_load(parts[1]) or {}
     body = parts[2] if len(parts) > 2 else ''
     return fm, body
 
-def write_story_file(path, fm, body):
+def write_issue_file(path, fm, body):
     fm['updated'] = datetime.date.today().isoformat()
     content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
     pathlib.Path(path).write_text(content, encoding='utf-8')
@@ -64,19 +64,19 @@ def all_backlog_issue_files():
         result.append(p)
     return result
 
-def find_story_by_gh_number(gh_number):
+def find_issue_by_gh_number(gh_number):
     for p in all_backlog_issue_files():
-        fm, body = read_story_file(p)
+        fm, body = read_issue_file(p)
         if fm.get('github_issue_number') == gh_number:
             return p, fm, body
     return None, None, None
 
-def close_story_file(path, fm, body):
+def close_issue_file(path, fm, body):
     """Set status=done, closed_date=today, move to done/ subdir."""
     today = datetime.date.today().isoformat()
     fm['status'] = 'done'
     fm['closed_date'] = today
-    write_story_file(path, fm, body)
+    write_issue_file(path, fm, body)
     done_dir = path.parent / 'done'
     done_dir.mkdir(parents=True, exist_ok=True)
     new_path = done_dir / path.name
@@ -108,12 +108,12 @@ If `NO_REMOTE`: "No git remote found. Sync requires a GitHub remote." Stop.
 gh issue list --state closed --limit 500 --json number,state 2>/dev/null
 ```
 
-For each closed GitHub issue, find the matching local story by `github_issue_number` using `find_story_by_gh_number(number)`.
+For each closed GitHub issue, find the matching local story by `github_issue_number` using `find_issue_by_gh_number(number)`.
 
-If the local story's status is not `done` or `abandoned`, close it:
+If the local issue's status is not `done` or `abandoned`, close it:
 
 ```python
-new_path = close_story_file(path, fm, body)
+new_path = close_issue_file(path, fm, body)
 # File is now at .sweetclaude/product/backlog/done/<ID>-<slug>.md
 ```
 
@@ -123,17 +123,17 @@ new_path = close_story_file(path, fm, body)
 
 ## Pass 2 — Local done → close on GitHub
 
-Enumerate all story files with `status: done` or `status: abandoned` that have a `github_issue_number` field:
+Enumerate all issue files with `status: done` or `status: abandoned` that have a `github_issue_number` field:
 
 ```python
 done_stories = []
 for p in all_backlog_issue_files():
-    fm, body = read_story_file(p)
+    fm, body = read_issue_file(p)
     if fm.get('status') in ('done', 'abandoned') and fm.get('github_issue_number'):
         done_stories.append((p, fm))
 ```
 
-For each such story, check if the GitHub issue is still open:
+For each such issue, check if the GitHub issue is still open:
 
 ```bash
 gh issue view <github_issue_number> --json state 2>/dev/null
