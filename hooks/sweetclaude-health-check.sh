@@ -314,4 +314,34 @@ PY
   }
 fi
 
+# --- Doctor checkup prompt (every 7 days) ---
+DOCTOR_MARKER="${PROJECT_DIR}/.sweetclaude/state/doctor-prompt-pending.json"
+if [ ! -f "$DOCTOR_MARKER" ]; then
+  LAST_DOCTOR=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get('timestamp', ''))
+except Exception:
+    print('')
+" "${PROJECT_DIR}/.sweetclaude/state/last-doctor-run.json" 2>/dev/null)
+
+  if [ "$(hours_since "$LAST_DOCTOR")" -ge 168 ]; then
+    python3 -c "
+import json, os, sys, tempfile
+from datetime import datetime, timezone
+marker = {
+    'trigger': 'time',
+    'created_at': datetime.now(timezone.utc).isoformat(timespec='seconds')
+}
+path = sys.argv[1]
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    json.dump(marker, tmp, indent=2)
+    tmp_name = tmp.name
+os.replace(tmp_name, path)
+" "$DOCTOR_MARKER" 2>/dev/null || true
+  fi
+fi
+
 exit 0

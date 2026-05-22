@@ -576,7 +576,24 @@ If `OLD_TAXONOMY > 0`: present via **AskUserQuestion**:
 > - **Migrate now** — run taxonomy migration with dry-run preview and safety snapshot
 > - **Skip for now** — migrate later with `/sweetclaude:migrate`
 
-If **Migrate now**: run `python3 scripts/migrate/migrate_taxonomy.py --project-dir . --dry-run` first to preview, then on confirmation run without `--dry-run`. Report results.
+If **Migrate now**: run `python3 scripts/migrate/migrate_taxonomy.py --project-dir . --dry-run` first to preview, then on confirmation run without `--dry-run`. Report results. After successful migration, write the doctor prompt marker:
+
+```bash
+python3 -c "
+import json, os, tempfile
+from datetime import datetime, timezone
+marker = {
+    'trigger': 'migration',
+    'created_at': datetime.now(timezone.utc).isoformat(timespec='seconds')
+}
+path = '.sweetclaude/state/doctor-prompt-pending.json'
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    json.dump(marker, tmp, indent=2)
+    tmp_name = tmp.name
+os.replace(tmp_name, path)
+" 2>/dev/null || true
+```
 
 If **Skip for now**: continue to Step 6c. The migration guard in skills will prompt the user when they next invoke a skill that reads work items.
 
@@ -613,7 +630,29 @@ New skills added (not available until restart):
 
 Do not mention any `/sweetclaude:` command as something the user can run now. Do not ask "Want to run it?" or offer to invoke any skill. The current session does not have the updated skill set.
 
-After printing the template (and the new-skills block if applicable), continue to Step 7.
+After printing the template (and the new-skills block if applicable), write the doctor prompt marker so the next session offers a post-update checkup:
+
+```bash
+if [ -f .sweetclaude/state/sweetclaude.yaml ]; then
+  python3 -c "
+import json, os, tempfile
+from datetime import datetime, timezone
+marker = {
+    'trigger': 'update',
+    'version': '${NEW_VERSION}',
+    'created_at': datetime.now(timezone.utc).isoformat(timespec='seconds')
+}
+path = '.sweetclaude/state/doctor-prompt-pending.json'
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    json.dump(marker, tmp, indent=2)
+    tmp_name = tmp.name
+os.replace(tmp_name, path)
+" 2>/dev/null || true
+fi
+```
+
+Continue to Step 7.
 
 ---
 

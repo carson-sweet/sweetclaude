@@ -87,6 +87,40 @@ else:
     print('KNOWN_CONFLICTS=0')
 " 2>/dev/null || echo "KNOWN_CONFLICTS=0"
 
+# Last doctor checkup
+python3 -c "
+import json, os
+from datetime import datetime, timezone
+path = '.sweetclaude/state/last-doctor-run.json'
+if not os.path.exists(path):
+    print('DOCTOR_CHECKUP=none')
+else:
+    try:
+        d = json.load(open(path))
+        ts = d.get('timestamp', '')
+        summary = d.get('summary', {})
+        errors = summary.get('errors', 0)
+        warnings = summary.get('warnings', 0)
+        t = datetime.fromisoformat(ts.replace('Z','+00:00'))
+        delta = datetime.now(timezone.utc) - t
+        days = delta.days
+        if days == 0:
+            age = 'today'
+        elif days == 1:
+            age = 'yesterday'
+        else:
+            age = f'{days} days ago'
+        if errors == 0 and warnings == 0:
+            print(f'DOCTOR_CHECKUP={age} — all clear')
+        else:
+            parts = []
+            if errors: parts.append(f'{errors} error{\"s\" if errors != 1 else \"\"}')
+            if warnings: parts.append(f'{warnings} warning{\"s\" if warnings != 1 else \"\"}')
+            print(f'DOCTOR_CHECKUP={age} — {\", \".join(parts)}')
+    except Exception:
+        print('DOCTOR_CHECKUP=unknown')
+" 2>/dev/null || echo "DOCTOR_CHECKUP=none"
+
 # Rebuild cache and query for roadmap/backlog data using cache.py
 python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
 echo "SUMMARY_START"
@@ -169,6 +203,10 @@ After all buckets: if total open backlog > 10, append:
 If backlog is empty: `Backlog is clear.`
 
 ## Step 4: Closing
+
+Parse `DOCTOR_CHECKUP` from Step 2:
+- If `DOCTOR_CHECKUP=none`: output `Last checkup: No checkup on record.`
+- Otherwise: output `Last checkup: {value}` (e.g., "Last checkup: 2 days ago — all clear" or "Last checkup: 5 days ago — 2 warnings")
 
 If `KNOWN_CONFLICTS` from Step 2 is > 0, output:
 > Config conflicts: {N} known — run `/sweetclaude:claude-config-audit` to review or resolve.

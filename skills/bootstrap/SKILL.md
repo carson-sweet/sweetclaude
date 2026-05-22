@@ -345,6 +345,45 @@ PY
 python3 ~/.claude/scripts/sweetclaude/maintenance/write-decline.py .
 ```
 
+## Step 6b: Doctor checkup prompt
+
+Check if a doctor checkup prompt is pending:
+
+```bash
+DOCTOR_MARKER=".sweetclaude/state/doctor-prompt-pending.json"
+if [ -f "$DOCTOR_MARKER" ]; then
+  python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print('TRIGGER=' + d.get('trigger', 'unknown'))
+except Exception:
+    print('TRIGGER=unknown')
+" "$DOCTOR_MARKER" 2>/dev/null
+fi
+```
+
+If the marker exists, present a prompt based on the trigger type via AskUserQuestion:
+
+- **Time trigger** (`TRIGGER=time`): "It's been a while since your last checkup. Want me to run one?"
+- **Update trigger** (`TRIGGER=update`): "You just updated SweetClaude — want to run a quick checkup?"
+- **Migration trigger** (`TRIGGER=migration`): "Migration just completed — want to run a quick checkup?"
+- **Unknown/other** (`TRIGGER=unknown` or any other value): "Want to run a quick checkup?"
+
+Options:
+- **Yes** — invoke `sweetclaude:doctor`, then remove the marker file
+- **Not now** — remove the marker file (session-scoped suppression; the health-check hook rewrites it next session if the condition still holds)
+
+Remove the marker regardless of choice:
+
+```bash
+rm -f "$DOCTOR_MARKER" 2>/dev/null || true
+```
+
+If the marker does not exist, continue silently.
+
+---
+
 ## Step 7: Route on args
 
 If `$ARGUMENTS` is present and non-empty:
