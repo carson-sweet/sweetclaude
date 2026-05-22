@@ -26,9 +26,9 @@ Session navigation and automatic routing. Most of these fire without being invok
 | Skill | Invocation | What it does |
 |---|---|---|
 | **Go** | `/sweetclaude:go` | Pick up where you left off. Reads state, reads v4 backlog from `docs/product/backlog/INDEX.md`, checks phase exit criteria, routes to the right skill. Pass plain-English arguments to describe what you want. |
-| **Recap** | `/sweetclaude:recap` | One-screen orientation: current phase, active work item, last 3 commits, checkpoint state. Run after a break or context switch. Auto-triggers a checkpoint check-in at session start when unfinished work exists. |
-| **Status** | `/sweetclaude:status` | Project status dashboard. Active work item, phase, roadmap, backlog, recent commits. |
-| **Big Picture** | `/sweetclaude:big-picture` | Full project at a glance — roadmap pipeline with all releases, epics, stories, and criteria progress. Run after a context switch or to see where everything stands at once. |
+| **Recap** | `/sweetclaude:recap` | Session continuity — active work item, phase, checkpoint, recent commits, scratch files. Run after a break or context switch. Auto-triggers at session start when unfinished work exists. |
+| **Status** | `/sweetclaude:status` | Project health dashboard — roadmap counts, backlog by horizon, mode/WIP, versions, config conflicts. No git log or checkpoint (those are recap's job). |
+| **Big Picture** | `/sweetclaude:big-picture` | Full delivery tree — milestones, epics, and issues in a visual pipeline with criteria progress. The structural view of the whole project. |
 | **Find Skill** | _(internal)_ | Classifies plain-English input, confirms routing, updates state, and starts the right skill. Invoked automatically by `/sweetclaude:go` when arguments are present. |
 | **Next Steps** | _(internal)_ | Walk through the pipeline step by step. Explains what the current phase requires and what comes after. |
 | **Retro** | `/sweetclaude:retro` | End-of-phase or end-of-project retrospective. Surfaces what went well, what didn't, and what to adjust. Writes learnings to the improvement register so future sessions start with them applied. |

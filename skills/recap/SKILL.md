@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Produce a concise 'where we are' summary: current phase, active work item, last 3 commits, checkpoint state, and any open flags."
+description: "Session continuity — active work item, phase, checkpoint, recent commits, scratch files. For project health use /status; for the full delivery tree use /big-picture."
 ---
 
 !`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:recap" 2>/dev/null || true`
@@ -32,8 +32,8 @@ git status --short 2>/dev/null | head -10
 # Checkpoint
 tail -15 .sweetclaude/state/checkpoint.md 2>/dev/null || echo "NO_CHECKPOINT"
 
-# Open flags (improvement register)
-tail -10 .sweetclaude/state/improvement-register.md 2>/dev/null || echo "NO_REGISTER"
+# Scratch directory (continuation files)
+ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -5
 ```
 
 ## Step 2: Produce the recap
@@ -50,14 +50,17 @@ Output in this format. Use clean markdown — no box-drawing characters.
 ### Recent commits
 {last 3 git log lines, or "none"}
 
+### Working tree
+{uncommitted file count, or "clean"}
+
 ### Checkpoint
 {checkpoint_next if set, or "No checkpoint — clean slate"}
 
-### Open flags
-{improvement register entries if any, or "None"}
+### Scratch
+{scratch continuation files if any, or omit section entirely}
 ```
 
-Keep each section to 3–5 lines maximum. This is a quick orientation, not a full status report. For full status, run `/sweetclaude:status`.
+Keep each section to 3–5 lines maximum. This is a quick orientation, not a full status report. For project health (roadmap, backlog, mode), run `/sweetclaude:status`. For the full delivery tree, run `/sweetclaude:big-picture`.
 
 ## Auto-trigger rule
 

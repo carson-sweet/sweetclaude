@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Orient to the current project."
+description: "Project health dashboard — roadmap, backlog, mode, versions, config. For session continuity use /recap; for the full delivery tree use /big-picture."
 ---
 
 !`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:status" 2>/dev/null || true`
@@ -24,24 +24,13 @@ Use `phase_schema_version` from pre-loaded session state above:
 
 ## Step 2: Read state directly
 
-Session state is pre-loaded above. Use `active_work_item`, `version_stage`, `deference`, `active_milestone`, `improvement_register_count`, `checkpoint_next`, and `paths.product_base` from there directly.
+Session state is pre-loaded above. Use `version_stage`, `improvement_register_count`, and `paths.product_base` from there directly.
 
 Run all of these inline — do NOT spawn a background agent:
 
 ```bash
-# Git context
-git log --oneline -5
+# Working tree (uncommitted count only — detailed git context is recap's job)
 git status --short
-
-# Checkpoint (last session handoff)
-tail -25 .sweetclaude/state/checkpoint.md 2>/dev/null || echo "NO_CHECKPOINT"
-
-# Scratch directory (continuation files)
-ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -5
-
-# RAG state (lightweight — existence check only)
-ls .rag-index/lancedb/ 2>/dev/null | wc -l
-find corpus/canonical/ -type f 2>/dev/null | wc -l
 
 # Migration guard — check that product dir exists before reading data
 if [[ -d .sweetclaude/product/ ]]; then
@@ -50,6 +39,10 @@ else
   echo "PRODUCT_DIR_MISSING"
   echo "This project has not been migrated. Run sweetclaude:migrate to migrate your product files."
 fi
+
+# RAG state (lightweight — existence check only)
+ls .rag-index/lancedb/ 2>/dev/null | wc -l
+find corpus/canonical/ -type f 2>/dev/null | wc -l
 
 # Versions
 python3 -c "import json; d=json.load(open('$HOME/.claude/plugins/installed_plugins.json')); e=[v[0] for k,v in d.get('plugins',{}).items() if 'sweetclaude' in k.lower() and v]; print(e[0].get('version','?') if e else '?')" 2>/dev/null
@@ -125,16 +118,14 @@ Output in this format. Use clean markdown — no box-drawing characters, no ANSI
 
 ## {project name} · {version_stage}
 
-### Unfinished Work
+### Alerts
 
-For each of the following, emit a `-` list item if the condition is true. If none are true, emit `Nothing open.`
+For each of the following, emit a `-` list item if the condition is true. If none are true, emit `Nothing flagged.`
 
 - UNCOMMITTED_COUNT > 0: `- {N} uncommitted file(s) in working tree`
-- checkpoint_next is set (non-null, non-empty): `- Checkpoint: {checkpoint_next}`
-- scratch files found: `- Scratch: {filenames}`
-- IN_PROGRESS_ITEMS non-empty: `- {N} item(s) in progress: {comma-separated IDs}`
-- MODE=kanban AND WIP_LIMIT is not null AND len(IN_PROGRESS_ITEMS) >= WIP_LIMIT: `- ⚠ WIP limit reached: {N}/{WIP_LIMIT} items in progress`
-- MODE=agile AND HAS_ACTIVE_SPRINT=false: `- ⚠ No active sprint`
+- MODE=kanban AND WIP_LIMIT is not null AND len(IN_PROGRESS_ITEMS) >= WIP_LIMIT: `- WIP limit reached: {N}/{WIP_LIMIT} items in progress`
+- MODE=agile AND HAS_ACTIVE_SPRINT=false: `- No active sprint`
+- `KNOWN_CONFLICTS` > 0: `- Config conflicts: {N} known — run /sweetclaude:claude-config-audit`
 
 Then:
 
@@ -170,13 +161,10 @@ If backlog is empty: `Backlog is clear.`
 
 ## Step 4: Closing
 
-If `KNOWN_CONFLICTS` from Step 2 is > 0, output:
-> Config conflicts: {N} known — run `/sweetclaude:claude-config-audit` to review or resolve.
-
 If `improvement_register_count` in pre-loaded state is > 0, output:
 > I absorbed {N} new learnings from previous sessions. Feel free to ask about them if you want.
 
 Then always output:
-> Anything you want to look at more closely, or is there something above you'd like to work on — or something else entirely?
+> For session continuity (checkpoint, recent commits), run `/sweetclaude:recap`. For the full delivery tree, run `/sweetclaude:big-picture`.
 
 Output nothing after this. No framework health, no version notes, no skill warnings.
