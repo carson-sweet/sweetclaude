@@ -117,57 +117,59 @@ def scan_files(project_dir):
 
 
 def _normalize_status(status):
-    if not status or not isinstance(status, str):
-        return 'new'
-    # Strip everything after first '(' or ' — ' (em-dash with spaces) or '—'
-    # Handle em-dash variants
-    for sep in [' — ', '—']:
-        if sep in status:
-            status = status.split(sep)[0]
-            break
-    # Handle parenthetical
-    if '(' in status:
-        status = status.split('(')[0]
-    return status.strip()
+    from schema import normalize_status
+    result = normalize_status(status)
+    return result if result else 'new'
 
 
 def _normalize_milestone(milestone):
-    if not milestone or not isinstance(milestone, str):
-        return None
-    val = milestone.strip()
-    if not val:
-        return None
-    # "(unassigned)" or any value starting with '('
-    if val.startswith('('):
-        return None
-    # TBD or tbd
-    if val.lower() == 'tbd':
-        return None
-    # Extract ID prefix: everything before first space or '('
-    m = re.match(r'^([^\s(]+)', val)
-    if m:
-        return m.group(1)
-    return val
+    from schema import normalize_milestone
+    return normalize_milestone(milestone)
 
 
 def _rebuild_cache(project_dir):
+    from schema import validate_frontmatter
+
     dbp = db_path(project_dir)
     os.makedirs(os.path.dirname(dbp), exist_ok=True)
     tmp_path = dbp + '.tmp'
+    scanned = 0
+    ingested = 0
+    skipped = []
     conn = sqlite3.connect(tmp_path)
     try:
         conn.executescript(SCHEMA_SQL)
 
+        seen_ids = set()
         for fpath in scan_files(project_dir):
+            scanned += 1
             fm = parse_frontmatter(fpath)
-            if not fm or 'id' not in fm or 'type' not in fm:
+            if not fm:
+                skipped.append({"path": fpath, "reasons": ["no valid frontmatter"]})
                 continue
+
+            fm_for_validation = dict(fm)
+            if 'status' in fm_for_validation:
+                fm_for_validation['status'] = _normalize_status(fm_for_validation['status'])
+            if 'milestone' in fm_for_validation:
+                fm_for_validation['milestone'] = _normalize_milestone(fm_for_validation['milestone'])
+
+            violations = validate_frontmatter(fm_for_validation)
+            if violations:
+                skipped.append({"path": fpath, "reasons": violations})
+                continue
+
+            item_id = fm['id']
+            if item_id in seen_ids:
+                skipped.append({"path": fpath, "reasons": [f"duplicate id: {item_id}"]})
+                continue
+            seen_ids.add(item_id)
 
             rel_path = os.path.relpath(fpath, project_dir)
             item_type = fm.get('type', '')
 
-            status = _normalize_status(fm.get('status', 'new'))
-            milestone = _normalize_milestone(fm.get('milestone'))
+            status = fm_for_validation['status']
+            milestone = fm_for_validation.get('milestone')
 
             conn.execute(
                 """INSERT OR REPLACE INTO items
@@ -201,10 +203,18 @@ def _rebuild_cache(project_dir):
             if item_type == 'epic':
                 done_indexes = set(fm.get('completion_criteria_done', []) or [])
                 for i, crit in enumerate(fm.get('completion_criteria', []) or []):
+                    if crit is None:
+                        continue
+                    if isinstance(crit, dict):
+                        criterion_text = crit.get('description', '')
+                        is_done = 1 if crit.get('done', False) else 0
+                    else:
+                        criterion_text = str(crit)
+                        is_done = 1 if i in done_indexes else 0
                     conn.execute(
                         """INSERT OR REPLACE INTO completion_criteria
                            (epic_id, seq, criterion, done) VALUES (?, ?, ?, ?)""",
-                        (fm['id'], i, crit, 1 if i in done_indexes else 0),
+                        (fm['id'], i, criterion_text, is_done),
                     )
 
             for dep in fm.get('depends_on', []) or []:
@@ -212,6 +222,8 @@ def _rebuild_cache(project_dir):
                     "INSERT OR IGNORE INTO dependencies (item_id, depends_on) VALUES (?, ?)",
                     (fm['id'], dep),
                 )
+
+            ingested += 1
 
         conn.commit()
         conn.close()
@@ -221,7 +233,13 @@ def _rebuild_cache(project_dir):
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
-    return dbp
+    return {
+        "rebuilt": True,
+        "path": dbp,
+        "scanned": scanned,
+        "ingested": ingested,
+        "skipped": skipped,
+    }
 
 
 def rebuild(project_dir):
@@ -231,7 +249,7 @@ def rebuild(project_dir):
 def get_conn(project_dir):
     dbp = db_path(project_dir)
     if not os.path.exists(dbp):
-        rebuild(project_dir)
+        rebuild(project_dir)  # result dict unused here — just need the side effect
     conn = sqlite3.connect(dbp)
     conn.row_factory = sqlite3.Row
     return conn
@@ -525,8 +543,8 @@ def main():
     args = parser.parse_args()
 
     if args.rebuild:
-        dbp = rebuild(args.project_dir)
-        print(json.dumps({"rebuilt": True, "path": dbp}))
+        result = rebuild(args.project_dir)
+        print(json.dumps(result))
         return
 
     if not args.query:

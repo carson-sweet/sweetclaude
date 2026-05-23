@@ -265,29 +265,17 @@ Use AskUserQuestion:
 - **Complete anyway** — I acknowledge the unmet criteria
 - **Cancel** — I'll address the gaps first
 
-### Step 2: Update epic file
+### Step 2: Update completion criteria and close
 
-If proceeding:
-- Set `status: done`
-- Add `closed_date: {today}`
-- Set `updated: {today}`
-- Set `completion_criteria_done` to match `completion_criteria` (all done)
-
-Write the updated file.
-
-### Step 3: Move to done directory
+If proceeding, first update `completion_criteria_done` to match `completion_criteria` (all done) and write the file. Then close via the status CLI:
 
 ```bash
-mv .sweetclaude/product/roadmap/epics/EP-{NNN}-{slug}.md .sweetclaude/product/roadmap/epics/done/
+python3 scripts/status.py set-terminal --file {epic_path} --status done --actor epics --project-dir .
 ```
 
-Ensure `.sweetclaude/product/roadmap/epics/done/` exists first.
+`set-terminal` handles: status change, `closed_date`, `updated`, file move to `done/`, completion criteria gate, audit log, cache rebuild.
 
-### Step 4: Rebuild and confirm
-
-```bash
-python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
-```
+### Step 3: Confirm
 
 Output: `Completed EP-{NNN}: {title}`
 

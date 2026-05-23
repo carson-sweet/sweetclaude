@@ -44,6 +44,8 @@ try:
 except ImportError:
     sys.exit("pyyaml is required: pip install pyyaml")
 
+from status import CANONICAL_STATUSES
+
 
 # ---------------------------------------------------------------------------
 # Data model
@@ -719,8 +721,7 @@ def check_file_diagnostics(state: ProjectState) -> list[Finding]:
     if roadmap_dir.is_dir():
         dirs_to_scan.append(roadmap_dir)
 
-    valid_statuses = {"new", "active", "in_progress", "done", "abandoned",
-                      "blocked", "deferred", "backlog", "cancelled", "superseded"}
+    valid_statuses = CANONICAL_STATUSES
     valid_types = {"story", "bug", "bug-fix", "debt", "tech-debt", "chore",
                    "epic", "release", "spike", "enhancement", "feature",
                    "net-new-feature", "milestone"}
@@ -1627,6 +1628,108 @@ def persist(
 
 
 # ---------------------------------------------------------------------------
+# Session-start health check
+# ---------------------------------------------------------------------------
+
+def session_check(project_dir: Path) -> dict:
+    findings: list[str] = []
+
+    sc_yaml_path = project_dir / ".sweetclaude" / "state" / "sweetclaude.yaml"
+    sc_yaml = _read_yaml(sc_yaml_path)
+
+    branch = _git_branch(project_dir)
+    active_id = None
+    if sc_yaml:
+        active_id = (sc_yaml.get("work") or {}).get("active")
+
+    branch_issue = _extract_issue_from_branch(branch) if branch else None
+
+    if active_id:
+        active_id = active_id.upper()
+
+    if branch_issue and active_id and branch_issue != active_id:
+        findings.append(
+            f"Branch implies {branch_issue} but work.active is {active_id}"
+        )
+    elif branch_issue and not active_id:
+        findings.append(
+            f"No active work item set — branch implies {branch_issue}"
+        )
+    elif active_id and not branch_issue and branch:
+        findings.append(
+            f"work.active is {active_id} but branch {branch!r} has no issue token"
+        )
+
+    if active_id:
+        fm = _find_item_frontmatter(project_dir, active_id)
+        raw_status = fm.get("status", "") if fm else ""
+        status_val = raw_status.split("—")[0].split("(")[0].strip() if isinstance(raw_status, str) else ""
+        if fm and status_val == "new" and branch:
+            findings.append(
+                f"{active_id} has status 'new' despite being on an active branch"
+            )
+
+    cache_findings = _check_cache_health(project_dir)
+    if cache_findings:
+        findings.append(cache_findings)
+
+    return {
+        "check": "session-start",
+        "findings": findings,
+        "status": "all clear" if not findings else "issues found",
+    }
+
+
+def _git_branch(project_dir: Path) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=str(project_dir), capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+
+def _extract_issue_from_branch(branch: str) -> str | None:
+    m = re.search(r"(ISSUE|EP|MS)-(\d+)", branch, re.IGNORECASE)
+    if m:
+        return f"{m.group(1).upper()}-{m.group(2)}"
+    return None
+
+
+def _find_item_frontmatter(project_dir: Path, item_id: str) -> dict | None:
+    product_dir = project_dir / ".sweetclaude" / "product"
+    if not product_dir.is_dir():
+        return None
+    pattern = f"{item_id}-*"
+    for match in product_dir.rglob(pattern):
+        if match.is_file() and match.suffix == ".md":
+            return _read_frontmatter(match)
+    for match in product_dir.rglob(f"{item_id}.*"):
+        if match.is_file() and match.suffix == ".md":
+            return _read_frontmatter(match)
+    return None
+
+
+def _check_cache_health(project_dir: Path) -> str | None:
+    try:
+        scripts_dir = project_dir / "scripts"
+        if scripts_dir not in [Path(p) for p in sys.path]:
+            sys.path.insert(0, str(scripts_dir))
+        from cache import rebuild
+        result = rebuild(str(project_dir))
+        skipped = result.get("skipped", [])
+        if skipped:
+            return f"Cache rebuild: {result['scanned']} scanned, {result['ingested']} indexed, {len(skipped)} skipped"
+    except Exception as e:
+        return f"Cache rebuild failed: {e}"
+    return None
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -1667,6 +1770,7 @@ def main(argv: list[str] | None = None) -> int:
     p_persist.add_argument("--safety-branch", default=None)
 
     _add("prune-archives")
+    _add("session-check")
 
     args = parser.parse_args(argv)
 
@@ -1735,6 +1839,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "prune-archives":
             pruned = prune_archives(args.project_dir.resolve())
             _emit({"pruned": pruned})
+
+        elif args.cmd == "session-check":
+            _emit(session_check(args.project_dir.resolve()))
 
     except Exception as e:
         print(json.dumps({"error": type(e).__name__, "message": str(e)}), file=sys.stderr)

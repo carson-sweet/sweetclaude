@@ -1,5 +1,8 @@
+import glob
 import os
 import re
+import subprocess
+import sys
 import yaml
 from datetime import datetime, timezone
 
@@ -197,12 +200,48 @@ def _update_sc_phase(project_dir, workflow_id, phase):
     _save_sc_yaml(sc, project_dir)
 
 
+def _find_item_file(project_dir, item_id):
+    product_dir = os.path.join(project_dir, ".sweetclaude", "product")
+    for pattern in ["{}-*".format(item_id), "{}.*".format(item_id)]:
+        for match in glob.glob(os.path.join(product_dir, "**", pattern), recursive=True):
+            if match.endswith(".md") and "/done/" not in match and "/archived/" not in match:
+                return match
+    return None
+
+
+def _update_item_status(project_dir, item_id, result):
+    filepath = _find_item_file(project_dir, item_id)
+    if not filepath:
+        return
+    status_py = os.path.join(project_dir, "scripts", "status.py")
+    if not os.path.isfile(status_py):
+        print("WARNING: scripts/status.py not found, skipping status update", file=sys.stderr)
+        return
+    if result == "complete":
+        cmd = ["python3", status_py, "set-terminal",
+               "--file", filepath, "--status", "done",
+               "--actor", "orchestrator", "--project-dir", project_dir]
+    elif result == "halted":
+        cmd = ["python3", status_py, "set",
+               "--file", filepath, "--status", "on-hold",
+               "--actor", "orchestrator", "--project-dir", project_dir]
+    else:
+        return
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    if r.returncode != 0:
+        print("WARNING: status update failed for {}: {}".format(
+            item_id, r.stdout.strip() or r.stderr.strip()), file=sys.stderr)
+
+
 def _complete_sc(project_dir, workflow_id, result):
     sc = _load_sc_yaml(project_dir)
     work = sc.setdefault("work", {})
     active = work.get("active", {})
     if active and active.get("id") and active["id"] != workflow_id:
         return
+    item_id = active.get("id") if active else None
+    if item_id:
+        _update_item_status(project_dir, item_id, result)
     history = sc.setdefault("work_history", [])
     already = any(h.get("id") == workflow_id and h.get("result") == result for h in history)
     if not already:

@@ -146,12 +146,13 @@ Verify:
 If valid:
 
 ```python
-today = datetime.date.today().isoformat()
 fm['sprint'] = '<SP-NNN>'
-fm['status'] = 'ready'
-fm['updated'] = today
 # Append to Sprint History in body
 write_issue_file(path, fm, body)
+```
+
+```bash
+python3 scripts/status.py set --file {path} --status ready --actor project-backlog --project-dir .
 ```
 
 Confirm: `Promoted {ID} → {SP-NNN}`
@@ -162,12 +163,8 @@ Confirm: `Promoted {ID} → {SP-NNN}`
 
 Set issue status to `deferred`. Hides it from the default backlog view without closing it.
 
-```python
-path = find_issue_by_id('<ID>')
-fm, body = read_issue_file(path)
-fm['status'] = 'deferred'
-fm['updated'] = datetime.date.today().isoformat()
-write_issue_file(path, fm, body)
+```bash
+python3 scripts/status.py set --file {path} --status deferred --actor project-backlog --project-dir .
 ```
 
 Confirm: `Deferred <ID> — removed from active backlog`

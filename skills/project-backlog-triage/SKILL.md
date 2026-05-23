@@ -167,34 +167,26 @@ On `y` or field overrides:
 ```python
 fm['priority'] = '<priority>'
 fm['effort'] = '<effort>'
-fm['status'] = 'ready'
 write_issue_file(path, fm, body)
-rebuild_cache()
+```
+
+```bash
+python3 scripts/status.py set --file {path} --status ready --actor project-backlog-triage --project-dir .
 ```
 
 On `cancel` (status → abandoned, move to done/):
-```python
-import shutil
-fm['status'] = 'abandoned'
-fm['closed_date'] = datetime.date.today().isoformat()
-write_issue_file(path, fm, body)
-done_dir = path.parent / 'done'
-done_dir.mkdir(exist_ok=True)
-shutil.move(str(path), str(done_dir / path.name))
+
+```bash
+python3 scripts/status.py set-terminal --file {path} --status abandoned --actor project-backlog-triage --project-dir .
 ```
 
 On `done` (status → done, move to done/):
-```python
-import shutil
-fm['status'] = 'done'
-fm['closed_date'] = datetime.date.today().isoformat()
-write_issue_file(path, fm, body)
-done_dir = path.parent / 'done'
-done_dir.mkdir(exist_ok=True)
-shutil.move(str(path), str(done_dir / path.name))
+
+```bash
+python3 scripts/status.py set-terminal --file {path} --status done --actor project-backlog-triage --project-dir .
 ```
 
-After each write: rebuild the cache to reflect current state.
+`set-terminal` handles: status change, `closed_date`, file move, audit log, cache rebuild.
 
 ### 6. Split flow
 
