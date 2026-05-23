@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""SweetClaude project dashboard — local read-only web UI.
+"""SweetClaude project dashboard — local web UI with write-back API.
 
 Serves a single-page dashboard from the SQLite cache, git log,
 and skill event log. No external dependencies beyond Python stdlib.
 
 Tabs align with the status view scopes spec (v3.1):
   Roadmap, Release, Epics, Backlog, Dependencies, Git, Activity
+
+Write-back API (POST /api/update):
+  Mutates status, priority, epic, epic_sequence on source files.
+  All writes validate through status.py, produce audit trail entries,
+  and trigger a cache rebuild.
 
 Usage:
     python3 scripts/dashboard.py [--project-dir .] [--port 8411]
@@ -273,6 +278,152 @@ def query_item_body(project_dir, item_id):
         return {'body': body, 'extra': extra}
     except Exception:
         return None
+
+
+VALID_PRIORITIES = frozenset({'P0', 'P1', 'P2', 'P3'})
+MUTABLE_FIELDS = frozenset({'status', 'priority', 'epic', 'epic_sequence'})
+
+
+def _resolve_source_path(project_dir, item_id):
+    conn = get_conn(project_dir)
+    if not conn:
+        return None
+    row = conn.execute("SELECT source_path FROM items WHERE id=?", (item_id,)).fetchone()
+    conn.close()
+    if not row or not row['source_path']:
+        return None
+    path = Path(project_dir) / row['source_path']
+    return path if path.exists() else None
+
+
+def _rebuild_cache(project_dir):
+    try:
+        from cache import rebuild
+        rebuild(str(project_dir))
+        return True
+    except Exception as e:
+        print(f"WARNING: cache rebuild failed after write: {e}", file=sys.stderr)
+        return False
+
+
+def _append_field_audit(project_dir, actor, item_id, filepath, field, old_val, new_val):
+    from status import _audit_log_path
+    log_path = _audit_log_path(Path(project_dir))
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    import datetime as _dt
+    entry = {
+        "ts": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "actor": actor,
+        "entity": item_id,
+        "file": filepath,
+        "field": field,
+        "old": str(old_val) if old_val is not None else "",
+        "new": str(new_val),
+    }
+    with open(log_path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry) + "\n")
+
+
+def _write_field(project_dir, item_id, field, value, actor):
+    source = _resolve_source_path(project_dir, item_id)
+    if not source:
+        return {"error": f"Item {item_id} not found or source file missing"}
+
+    from status import _parse_frontmatter, _atomic_write_frontmatter
+    from schema import validate_frontmatter, normalize_status
+
+    raw = source.read_text(encoding="utf-8-sig")
+    try:
+        fm, _fm_text, body = _parse_frontmatter(raw)
+    except ValueError as e:
+        return {"error": str(e)}
+
+    fm_check = dict(fm)
+    fm_check["status"] = normalize_status(fm_check.get("status", ""))
+    violations = validate_frontmatter(fm_check)
+    if violations:
+        return {"error": f"Cannot write to structurally invalid file: {'; '.join(violations)}"}
+
+    old_val = fm.get(field)
+    fm[field] = value
+    fm["updated"] = datetime.utcnow().strftime("%Y-%m-%d")
+
+    _atomic_write_frontmatter(source, fm, body)
+
+    try:
+        rel_path = str(source.relative_to(project_dir))
+    except ValueError:
+        rel_path = str(source)
+
+    _append_field_audit(project_dir, actor, item_id, rel_path, field, old_val, value)
+    _rebuild_cache(project_dir)
+
+    return {"ok": True, "id": item_id, "field": field, "old": old_val, "new": value}
+
+
+def handle_update(project_dir, payload):
+    item_id = payload.get("id", "").strip()
+    field = payload.get("field", "").strip()
+    value = payload.get("value")
+    actor = payload.get("actor", "dashboard").strip()
+
+    if not item_id:
+        return {"error": "Missing 'id'"}
+    if field not in MUTABLE_FIELDS:
+        return {"error": f"Field '{field}' is not mutable. Allowed: {sorted(MUTABLE_FIELDS)}"}
+
+    if field == "status":
+        source = _resolve_source_path(project_dir, item_id)
+        if not source:
+            return {"error": f"Item {item_id} not found"}
+        new_status = str(value).strip()
+        from status import validate, TERMINAL_STATUSES as TS, write_status, set_terminal
+        from status import _parse_frontmatter
+        if not validate(new_status):
+            return {"error": f"Invalid status: {new_status!r}"}
+        raw = source.read_text(encoding="utf-8-sig")
+        try:
+            fm, _, _ = _parse_frontmatter(raw)
+            old_status = fm.get("status", "")
+        except ValueError:
+            old_status = ""
+        try:
+            if new_status in TS:
+                set_terminal(str(source), new_status, actor, project_dir=str(project_dir))
+            else:
+                write_status(str(source), new_status, actor, project_dir=str(project_dir))
+            return {"ok": True, "id": item_id, "field": "status", "old": old_status, "new": new_status}
+        except (ValueError, FileNotFoundError, FileExistsError, RuntimeError) as e:
+            return {"error": str(e)}
+
+    if field == "priority":
+        if value not in VALID_PRIORITIES:
+            return {"error": f"Invalid priority: {value!r}. Valid: {sorted(VALID_PRIORITIES)}"}
+        return _write_field(project_dir, item_id, "priority", value, actor)
+
+    if field == "epic":
+        if value is not None and not isinstance(value, str):
+            return {"error": f"Epic must be a string, got {type(value).__name__}"}
+        epic_val = (value or "").strip()
+        if epic_val:
+            conn = get_conn(project_dir)
+            if conn:
+                row = conn.execute("SELECT id FROM items WHERE id=? AND type='epic'", (epic_val,)).fetchone()
+                conn.close()
+                if not row:
+                    return {"error": f"Epic {epic_val!r} does not exist"}
+            else:
+                return {"error": "Cache unavailable — cannot validate epic"}
+        return _write_field(project_dir, item_id, "epic", epic_val, actor)
+
+    if field == "epic_sequence":
+        try:
+            seq = int(value)
+        except (TypeError, ValueError):
+            return {"error": f"epic_sequence must be an integer, got {value!r}"}
+        return _write_field(project_dir, item_id, "epic_sequence", seq, actor)
+
+    return {"error": f"Unhandled field: {field}"}
 
 
 def build_api_data(project_dir):
@@ -1910,6 +2061,37 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.end_headers()
             self.wfile.write(HTML.encode())
+        else:
+            self.send_error(404)
+
+    _MAX_POST_BYTES = 65536
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == '/api/update':
+            length = int(self.headers.get('Content-Length', 0))
+            if length > self._MAX_POST_BYTES:
+                self.send_response(413)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Request body too large"}).encode())
+                return
+            body = self.rfile.read(length) if length else b'{}'
+            try:
+                payload = json.loads(body)
+            except json.JSONDecodeError:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Invalid JSON"}).encode())
+                return
+            result = handle_update(self.project_dir, payload)
+            status_code = 200 if result.get('ok') else 400
+            self.send_response(status_code)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Cache-Control', 'no-cache')
+            self.end_headers()
+            self.wfile.write(json.dumps(result, default=str).encode())
         else:
             self.send_error(404)
 
