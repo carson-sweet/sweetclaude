@@ -44,6 +44,8 @@ try:
 except ImportError:
     sys.exit("pyyaml is required: pip install pyyaml")
 
+from status import CANONICAL_STATUSES
+
 
 # ---------------------------------------------------------------------------
 # Data model
@@ -719,8 +721,7 @@ def check_file_diagnostics(state: ProjectState) -> list[Finding]:
     if roadmap_dir.is_dir():
         dirs_to_scan.append(roadmap_dir)
 
-    valid_statuses = {"new", "active", "in_progress", "done", "abandoned",
-                      "blocked", "deferred", "backlog", "cancelled", "superseded"}
+    valid_statuses = CANONICAL_STATUSES
     valid_types = {"story", "bug", "bug-fix", "debt", "tech-debt", "chore",
                    "epic", "release", "spike", "enhancement", "feature",
                    "net-new-feature", "milestone"}
