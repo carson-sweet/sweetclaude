@@ -49,6 +49,7 @@ from doctor import (
     check_file_diagnostics,
     check_onboarding_state,
     check_env_wiring,
+    check_derived_status,
     create_archive,
     backup_content,
     write_diff,
@@ -6172,11 +6173,11 @@ class TestManifestCompleteness:
 
 class TestChecksRegistry:
 
-    def test_checks_dict_contains_all_eight_categories(self):
+    def test_checks_dict_contains_all_categories(self):
         expected = {
             "state_integrity", "hook_health", "storage_lint",
             "migration_currency", "config_compat", "file_diagnostics",
-            "onboarding_state", "env_wiring",
+            "onboarding_state", "env_wiring", "derived_status",
         }
         assert set(CHECKS.keys()) == expected
 
@@ -6440,3 +6441,234 @@ class TestCategoryFilter:
             "--category", "bogus",
         ])
         assert exit_code == 1
+
+
+# ---------------------------------------------------------------------------
+# check_derived_status tests (ISSUE-184)
+# ---------------------------------------------------------------------------
+
+class TestCheckDerivedStatus:
+
+    def _make_project(self, tmp_path, fake_home, epics=None, issues=None, milestones=None):
+        roadmap_files = []
+        if milestones:
+            for ms in milestones:
+                roadmap_files.append({
+                    "name": f"milestones/{ms['id']}-test.md",
+                    "frontmatter": ms,
+                })
+        if epics:
+            for ep in epics:
+                roadmap_files.append({
+                    "name": f"epics/{ep['id']}-test.md",
+                    "frontmatter": ep,
+                })
+        if issues:
+            for iss in issues:
+                roadmap_files.append({
+                    "name": f"issues/{iss['id']}-test.md",
+                    "frontmatter": iss,
+                })
+        project_dir = build_fixture(tmp_path, overrides={"roadmap_files": roadmap_files})
+        return build_project_state(project_dir)
+
+    def test_no_findings_when_status_matches_derived(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "active",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_discrepancy_flagged(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "new",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+                {"id": "ISSUE-101", "title": "I2", "type": "enhancement", "status": "done",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 1
+        f = findings[0]
+        assert f.category == "derived_status"
+        assert f.severity == "info"
+        assert "EP-01" in f.id
+        assert "'new'" in f.summary
+        assert "'active'" in f.summary
+
+    def test_blocked_with_reason_is_exempt(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "blocked",
+                     "blocked_reason": "Waiting on external API",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_blocked_without_reason_flags_discrepancy(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "blocked",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 1
+        assert "'blocked'" in findings[0].summary
+
+    def test_on_hold_with_reason_is_exempt(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "on-hold",
+                     "hold_reason": "Deprioritized for Q3",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_on_hold_generic_reason_field_is_exempt(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "on-hold",
+                     "reason": "Deprioritized",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_all_children_done_flags_parent_not_done(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "active",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "done",
+                 "created": "2026-01-01", "epic": "EP-01"},
+                {"id": "ISSUE-101", "title": "I2", "type": "enhancement", "status": "done",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 1
+        assert "'done'" in findings[0].summary
+
+    def test_no_roadmap_dir_returns_empty(self, tmp_path, fake_home):
+        project_dir = build_fixture(tmp_path)
+        state = build_project_state(project_dir)
+        shutil.rmtree(state.product_base / "roadmap")
+        findings = check_derived_status(state)
+        assert findings == []
+
+    def test_epic_with_no_children_skipped(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "new",
+                     "created": "2026-01-01", "milestone": "MS-01"}])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_milestone_discrepancy(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            milestones=[{"id": "MS-01", "title": "M1", "type": "milestone",
+                          "status": "new", "created": "2026-01-01",
+                          "target_release": "v1.0"}],
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "active",
+                     "created": "2026-01-01", "milestone": "MS-01"}])
+        findings = check_derived_status(state)
+        ms_findings = [f for f in findings if "MS-01" in f.id]
+        assert len(ms_findings) == 1
+        assert "'new'" in ms_findings[0].summary
+        assert "'active'" in ms_findings[0].summary
+
+    def test_non_epic_non_milestone_parent_skipped(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            issues=[
+                {"id": "ISSUE-100", "title": "Parent", "type": "enhancement",
+                 "status": "new", "created": "2026-01-01"},
+                {"id": "ISSUE-101", "title": "Child", "type": "enhancement",
+                 "status": "active", "created": "2026-01-01", "epic": "ISSUE-100"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_blocked_with_generic_reason_is_exempt(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "blocked",
+                     "reason": "External dependency",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_no_finding_when_stored_and_derived_both_done(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "done",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "done",
+                 "created": "2026-01-01", "epic": "EP-01"},
+                {"id": "ISSUE-101", "title": "I2", "type": "enhancement", "status": "abandoned",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert len(findings) == 0
+
+    def test_milestone_uses_epic_derived_not_stored(self, tmp_path, fake_home):
+        """Milestone rollup should use epic derived statuses, not stored.
+        Epic stored=new, but its children are active → epic derived=active.
+        Milestone stored=active should match epic derived=active → no finding."""
+        state = self._make_project(tmp_path, fake_home,
+            milestones=[{"id": "MS-01", "title": "M1", "type": "milestone",
+                          "status": "active", "created": "2026-01-01",
+                          "target_release": "v1.0"}],
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "new",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        ms_findings = [f for f in findings if "MS-01" in f.id]
+        assert len(ms_findings) == 0
+
+    def test_milestone_flags_when_derived_disagrees(self, tmp_path, fake_home):
+        """Milestone stored=done, but epic children are active → derived=active → discrepancy."""
+        state = self._make_project(tmp_path, fake_home,
+            milestones=[{"id": "MS-01", "title": "M1", "type": "milestone",
+                          "status": "done", "created": "2026-01-01",
+                          "target_release": "v1.0"}],
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "new",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        ms_findings = [f for f in findings if "MS-01" in f.id]
+        assert len(ms_findings) == 1
+        assert "'active'" in ms_findings[0].summary
+
+    def test_finding_is_report_only(self, tmp_path, fake_home):
+        state = self._make_project(tmp_path, fake_home,
+            epics=[{"id": "EP-01", "title": "E1", "type": "epic", "status": "new",
+                     "created": "2026-01-01", "milestone": "MS-01"}],
+            issues=[
+                {"id": "ISSUE-100", "title": "I1", "type": "enhancement", "status": "active",
+                 "created": "2026-01-01", "epic": "EP-01"},
+            ])
+        findings = check_derived_status(state)
+        assert findings[0].fix_type == "report-only"

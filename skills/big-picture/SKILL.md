@@ -122,6 +122,12 @@ For each milestone (ordered by ID):
 MS-{NNN}  {title}  [{status}]
 ```
 
+If the milestone's `derived_status` differs from its `status`, append after the status:
+
+```
+MS-{NNN}  {title}  [{status}]  ⚠ children suggest [{derived_status}]
+```
+
 For each epic within that milestone (ordered by ID):
 
 ```
@@ -131,6 +137,12 @@ For each epic within that milestone (ordered by ID):
 │   ├── {ISSUE-NNN}  {title (truncate to 50 chars)}  [{status}]
 │   ├── {ISSUE-NNN}  {title}  [{status}]
 │   └── {ISSUE-NNN}  {title}  [{status}]
+```
+
+If an epic's `derived_status` differs from its `status`, append the same discrepancy marker:
+
+```
+├── EP-{NNN}  {title}  [{status}]  ⚠ children suggest [{derived_status}]
 ```
 
 Use `✓` for done issues and done epics. Use `├──` / `└──` connectors.

@@ -44,7 +44,8 @@ try:
 except ImportError:
     sys.exit("pyyaml is required: pip install pyyaml")
 
-from status import CANONICAL_STATUSES
+from schema import normalize_milestone, normalize_status
+from status import CANONICAL_STATUSES, TERMINAL_STATUSES, derived_status
 
 
 # ---------------------------------------------------------------------------
@@ -956,6 +957,121 @@ def check_env_wiring(state: ProjectState) -> list[Finding]:
     return findings
 
 
+def check_derived_status(state: ProjectState) -> list[Finding]:
+    findings: list[Finding] = []
+    roadmap_dir = state.product_base / "roadmap"
+    backlog_dir = state.product_base / "backlog"
+    if not roadmap_dir.is_dir():
+        return findings
+
+    all_items: dict[str, dict] = {}
+    all_paths: dict[str, Path] = {}
+    children_of: dict[str, set[str]] = {}
+
+    scan_dirs = [roadmap_dir]
+    if backlog_dir.is_dir():
+        scan_dirs.append(backlog_dir)
+
+    for scan_dir in scan_dirs:
+        for p in scan_dir.rglob("*.md"):
+            if p.name in ("INDEX.md", "MIGRATION-MAP.md") or p.name.endswith("-INDEX.md"):
+                continue
+            fm = _read_frontmatter(p)
+            if not fm or not fm.get("id"):
+                continue
+            item_id = fm["id"]
+            raw_status = normalize_status(str(fm.get("status", "")))
+            fm["_normalized_status"] = raw_status
+            all_items[item_id] = fm
+            all_paths[item_id] = p
+
+            epic_ref = fm.get("epic")
+            if epic_ref and isinstance(epic_ref, str):
+                children_of.setdefault(epic_ref, set()).add(item_id)
+
+            ms_ref = fm.get("milestone")
+            if ms_ref and isinstance(ms_ref, str) and fm.get("type") == "epic":
+                ms_id = normalize_milestone(ms_ref)
+                if ms_id:
+                    children_of.setdefault(ms_id, set()).add(item_id)
+
+    _OVERRIDE_REASON_FIELDS = {
+        "blocked": ("blocked_reason", "reason"),
+        "on-hold": ("hold_reason", "on_hold_reason", "reason"),
+    }
+
+    computed_derived: dict[str, str] = {}
+    for parent_id, child_ids in children_of.items():
+        parent = all_items.get(parent_id)
+        if not parent or parent.get("type") != "epic":
+            continue
+        child_statuses = []
+        for cid in child_ids:
+            child = all_items.get(cid)
+            if child:
+                cs = child.get("_normalized_status", "")
+                if cs:
+                    child_statuses.append(cs)
+        if child_statuses:
+            computed_derived[parent_id] = derived_status(child_statuses)
+
+    for parent_id, child_ids in children_of.items():
+        parent = all_items.get(parent_id)
+        if not parent:
+            continue
+        parent_type = parent.get("type", "")
+        if parent_type not in ("epic", "milestone"):
+            continue
+
+        stored = parent.get("_normalized_status", "")
+        if not stored or stored not in CANONICAL_STATUSES:
+            continue
+
+        child_statuses = []
+        for cid in child_ids:
+            if parent_type == "milestone" and cid in computed_derived:
+                child_statuses.append(computed_derived[cid])
+            else:
+                child = all_items.get(cid)
+                if child:
+                    cs = child.get("_normalized_status", "")
+                    if cs:
+                        child_statuses.append(cs)
+
+        if not child_statuses:
+            continue
+
+        derived = derived_status(child_statuses)
+        computed_derived[parent_id] = derived
+
+        if stored == derived:
+            continue
+
+        reason_fields = _OVERRIDE_REASON_FIELDS.get(stored)
+        if reason_fields and any(parent.get(f) for f in reason_fields):
+            continue
+
+        parent_path = all_paths[parent_id]
+        findings.append(Finding(
+            id=f"derived-status:discrepancy:{parent_id}",
+            category="derived_status",
+            severity="info",
+            summary=(
+                f"{parent_id} status is {stored!r} but children suggest {derived!r}"
+            ),
+            detail=(
+                f"derived-status-discrepancy: {parent_id} (type={parent_type}) "
+                f"stored={stored}, derived={derived}, "
+                f"children={sorted(child_ids)}"
+            ),
+            file_paths=[str(parent_path)],
+            fix_type="report-only",
+            fix_recipe={},
+        ))
+
+    return findings
+
+
 CHECKS: dict[str, Callable[[ProjectState], list[Finding]]] = {
     "state_integrity":    check_state_integrity,
     "hook_health":        check_hook_health,
@@ -965,6 +1081,7 @@ CHECKS: dict[str, Callable[[ProjectState], list[Finding]]] = {
     "file_diagnostics":   check_file_diagnostics,
     "onboarding_state":   check_onboarding_state,
     "env_wiring":         check_env_wiring,
+    "derived_status":     check_derived_status,
 }
 
 

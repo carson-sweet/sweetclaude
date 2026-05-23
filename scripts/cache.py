@@ -127,6 +127,11 @@ def _normalize_milestone(milestone):
     return normalize_milestone(milestone)
 
 
+def _derived_status(child_statuses):
+    from status import derived_status
+    return derived_status(child_statuses)
+
+
 def _rebuild_cache(project_dir):
     from schema import validate_frontmatter
 
@@ -370,8 +375,12 @@ def query_releases(project_dir):
             ep_dict['completion_criteria'] = [dict(c) for c in criteria]
             ep_dict['criteria_done'] = sum(1 for c in criteria if c['done'])
             ep_dict['criteria_total'] = len(criteria)
+            child_statuses = [s['status'] for s in stories]
+            ep_dict['derived_status'] = _derived_status(child_statuses)
             epic_list.append(ep_dict)
 
+        epic_statuses = [ep['derived_status'] for ep in epic_list]
+        ms_dict['derived_status'] = _derived_status(epic_statuses)
         ms_dict['epics'] = epic_list
         result.append(ms_dict)
 
@@ -403,14 +412,19 @@ def query_milestones_compact(project_dir):
                    ORDER BY epic_sequence, id""",
                 (ep['id'],),
             ).fetchall()
+            child_statuses = [s['status'] for s in stories]
+            ep_derived = _derived_status(child_statuses)
             ms_dict['epics'].append({
                 'id': ep['id'],
                 'title': ep['title'],
                 'status': ep['status'],
+                'derived_status': ep_derived,
                 'criteria_done': sum(1 for c in criteria if c['done']),
                 'criteria_total': len(criteria),
                 'stories': [dict(s) for s in stories],
             })
+        epic_statuses = [ep['derived_status'] for ep in ms_dict['epics']]
+        ms_dict['derived_status'] = _derived_status(epic_statuses)
         result.append(ms_dict)
     conn.close()
     return result

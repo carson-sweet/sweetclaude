@@ -33,6 +33,8 @@ if _SCRIPTS_DIR not in sys.path:
 from status import (
     CANONICAL_STATUSES,
     TERMINAL_STATUSES,
+    STATUS_PRECEDENCE,
+    derived_status,
     validate,
     assert_valid,
     validate_transition,
@@ -1537,3 +1539,70 @@ class TestMilestoneBackfill:
     @pytest.mark.parametrize("canonical", ["new", "done", "declined", "active"])
     def test_canonical_target_is_accepted(self, canonical):
         assert validate(canonical) is True, f"'{canonical}' should be canonical"
+
+
+# ---------------------------------------------------------------------------
+# derived_status() tests (ISSUE-184)
+# ---------------------------------------------------------------------------
+
+class TestDerivedStatus:
+
+    def test_empty_list_returns_new(self):
+        assert derived_status([]) == "new"
+
+    def test_all_terminal_returns_done(self):
+        assert derived_status(["done", "done", "done"]) == "done"
+
+    def test_mixed_terminal_returns_done(self):
+        assert derived_status(["done", "abandoned", "declined", "superseded"]) == "done"
+
+    def test_single_active(self):
+        assert derived_status(["active"]) == "active"
+
+    def test_single_new(self):
+        assert derived_status(["new"]) == "new"
+
+    @pytest.mark.parametrize("higher,lower", [
+        ("blocked", "active"),
+        ("on-hold", "active"),
+        ("active", "ready"),
+        ("in-review", "ready"),
+        ("ready", "new"),
+        ("new", "deferred"),
+    ])
+    def test_precedence_higher_wins(self, higher, lower):
+        assert derived_status([higher, lower]) == higher
+
+    def test_blocked_beats_everything(self):
+        others = ["on-hold", "active", "in-review", "ready", "new", "deferred"]
+        assert derived_status(["blocked"] + others) == "blocked"
+
+    def test_terminal_children_ignored_when_non_terminal_present(self):
+        assert derived_status(["done", "done", "active"]) == "active"
+
+    def test_terminal_plus_new(self):
+        assert derived_status(["done", "new"]) == "new"
+
+    def test_deferred_is_lowest_precedence(self):
+        assert derived_status(["deferred"]) == "deferred"
+
+    def test_terminal_plus_non_active_non_terminal(self):
+        assert derived_status(["done", "in-review"]) == "in-review"
+
+    def test_terminal_plus_deferred(self):
+        assert derived_status(["done", "abandoned", "deferred"]) == "deferred"
+
+    def test_invalid_statuses_filtered_out(self):
+        assert derived_status(["bogus", "nonsense"]) == "done"
+
+    def test_invalid_mixed_with_valid(self):
+        assert derived_status(["bogus", "active"]) == "active"
+
+    def test_precedence_tuple_matches_expected_order(self):
+        assert STATUS_PRECEDENCE == (
+            "blocked", "on-hold", "active", "in-review", "ready", "new", "deferred",
+        )
+
+    def test_all_non_terminal_statuses_appear_in_precedence(self):
+        non_terminal = CANONICAL_STATUSES - TERMINAL_STATUSES
+        assert non_terminal == set(STATUS_PRECEDENCE)
