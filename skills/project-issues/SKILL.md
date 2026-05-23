@@ -276,22 +276,22 @@ Map the user's intent to fields:
 - "start review" → `status: in-review`
 - "add acceptance criteria" → append to body Acceptance Criteria section
 
-**Status validation:**
-- All status values must be one of the 11 canonical statuses defined in `STATUSES`.
-- Cannot transition FROM a terminal status (done/declined/abandoned/superseded) without using `reopen` first.
-- Setting `superseded` requires `superseded_by` to be set.
-- Setting `deferred` accepts optional `deferred_reason`.
+**Status validation:** Transition rules and audit logging are handled by `scripts/status.py`. Setting `superseded` requires `superseded_by` to be set first. Setting `deferred` accepts optional `deferred_reason`.
 
 Then:
 
 ```python
-fm['updated'] = datetime.date.today().isoformat()
-if fm.get('status') == 'superseded' and not fm.get('superseded_by'):
-    # ask: "What issue replaces this one?"
+if '<superseded>' and not fm.get('superseded_by'):
     fm['superseded_by'] = '<replacement_id>'
-if fm.get('status') == 'deferred' and '<reason_provided>':
+if '<deferred>' and '<reason_provided>':
     fm['deferred_reason'] = '<reason>'
 write_issue_file(path, fm, body)
+```
+
+If status is changing, update via the status CLI (do NOT set `fm['status']` directly):
+
+```bash
+python3 scripts/status.py set --file {path} --status {new_status} --actor project-issues --project-dir .
 ```
 
 Confirm: `Updated {ID} — {list of changed fields}`
@@ -313,21 +313,18 @@ path = find_issue_by_id('<ID>')
 if not (ROADMAP_ISSUES in path.parents or path.parent == ROADMAP_ISSUES):
     print("This issue hasn't been triaged. Use `decline` to reject it, or `triage` it first.")
     return
-fm, body = read_issue_file(path)
-today = datetime.date.today().isoformat()
 terminal_status = '<status>'  # done, abandoned, or superseded
-fm['status'] = terminal_status
-fm['closed_date'] = today
-fm['updated'] = today
 if terminal_status == 'superseded':
+    fm, body = read_issue_file(path)
     fm['superseded_by'] = '<replacement_id>'
-
-done_dir = ROADMAP_ISSUES / 'done'
-done_dir.mkdir(parents=True, exist_ok=True)
-new_path = done_dir / path.name
-write_issue_file(path, fm, body)
-shutil.move(str(path), str(new_path))
+    write_issue_file(path, fm, body)
 ```
+
+```bash
+python3 scripts/status.py set-terminal --file {path} --status {terminal_status} --actor project-issues --project-dir .
+```
+
+`set-terminal` handles: status change, `closed_date`, file move to `done/`, audit log, cache rebuild.
 
 Confirm: `Closed {ID} — {title} [{terminal_status}]`
 
@@ -345,18 +342,13 @@ path = find_issue_by_id('<ID>')
 if ROADMAP_ISSUES in path.parents or path.parent == ROADMAP_ISSUES:
     print("This issue has been triaged. Use `close` with status abandoned or superseded instead.")
     return
-fm, body = read_issue_file(path)
-today = datetime.date.today().isoformat()
-fm['status'] = 'declined'
-fm['closed_date'] = today
-fm['updated'] = today
-
-archived_dir = BACKLOG_BASE / 'archived'
-archived_dir.mkdir(parents=True, exist_ok=True)
-new_path = archived_dir / path.name
-write_issue_file(path, fm, body)
-shutil.move(str(path), str(new_path))
 ```
+
+```bash
+python3 scripts/status.py set-terminal --file {path} --status declined --actor project-issues --project-dir .
+```
+
+`set-terminal` handles: status change, `closed_date`, file move to `archived/`, audit log, cache rebuild.
 
 Confirm: `Declined {ID} — {title}`
 
@@ -374,15 +366,14 @@ if ROADMAP_ISSUES in path.parents or path.parent == ROADMAP_ISSUES:
 if 'archived' in str(path):
     print("This issue was declined. Reopen it first.")
     return
-fm, body = read_issue_file(path)
-today = datetime.date.today().isoformat()
-fm['status'] = 'ready'
-fm['updated'] = today
 
 ROADMAP_ISSUES.mkdir(parents=True, exist_ok=True)
 new_path = ROADMAP_ISSUES / path.name
-write_issue_file(path, fm, body)
 shutil.move(str(path), str(new_path))
+```
+
+```bash
+python3 scripts/status.py set --file {new_path} --status ready --actor project-issues --project-dir .
 ```
 
 Confirm: `Triaged {ID} — {title} → roadmap/issues/`
@@ -396,14 +387,8 @@ Reopen a closed issue. Returns it to the directory it came from: `roadmap/issues
 ```python
 path = find_issue_by_id('<ID>')
 fm, body = read_issue_file(path)
-today = datetime.date.today().isoformat()
-fm['status'] = 'new'
-fm['sprint'] = None
-fm['closed_date'] = None
-fm['superseded_by'] = None
-fm['deferred_reason'] = None
-fm['updated'] = today
 
+# Determine destination
 if str(ROADMAP_ISSUES / 'done') in str(path.parent):
     new_path = ROADMAP_ISSUES / path.name
 elif '/archived/' in str(path):
@@ -411,9 +396,21 @@ elif '/archived/' in str(path):
 else:
     new_path = None
 
-write_issue_file(path, fm, body)
+# Move file out of done/archived first
 if new_path and new_path != path:
     shutil.move(str(path), str(new_path))
+    path = new_path
+
+# Clear closure fields
+fm['sprint'] = None
+fm['closed_date'] = None
+fm['superseded_by'] = None
+fm['deferred_reason'] = None
+write_issue_file(path, fm, body)
+```
+
+```bash
+python3 scripts/status.py set --file {path} --status new --actor project-issues --project-dir . --reopen
 ```
 
 Confirm: `Reopened {ID} — returned to {destination}`

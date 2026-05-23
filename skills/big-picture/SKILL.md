@@ -62,10 +62,17 @@ ls .sweetclaude/product/roadmap/epics/EP-*.md 2>/dev/null | head -1
 
 ## Step 3a: Roadmap pipeline (cache-backed)
 
-Rebuild the cache, then run all three queries:
+Rebuild the cache first (separately, to capture the health check result), then run the three queries:
 
 ```bash
-python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
+python3 scripts/cache.py --project-dir . --rebuild
+```
+
+Parse the JSON output. Save the `scanned`, `ingested`, and `skipped` values for the cache health check in Step 4a.
+
+Then run the three queries:
+
+```bash
 python3 scripts/cache.py --project-dir . --query milestones-compact 2>/dev/null
 python3 scripts/cache.py --project-dir . --query summary 2>/dev/null
 python3 scripts/cache.py --project-dir . --query backlog --unlinked-only 2>/dev/null
@@ -143,6 +150,12 @@ Only show the count and the top 5 items by priority. Do not list the full backlo
 After the roadmap:
 
 `{total milestones} milestones · {active epics} active · {total issues across all epics} issues`
+
+**Cache health check (from Step 3a rebuild output):** If `skipped` is a non-empty list, output one warning line immediately after the summary:
+
+> `{scanned} scanned, {ingested} indexed, {len(skipped)} skipped — run doctor for details`
+
+If `skipped` is empty, output nothing extra (clean state).
 
 ---
 

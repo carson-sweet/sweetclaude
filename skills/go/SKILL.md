@@ -344,31 +344,11 @@ Report: `✓ origin/{branch} deleted` or `✓ origin/{branch} not present — sk
 
 **Step C5 — Move story to `done/` and update frontmatter**:
 ```bash
-python3 - "{issue_file_path}" "{today}" << 'PY'
-import sys, yaml, os, shutil, tempfile
-path, today = sys.argv[1], sys.argv[2]
-raw = open(path).read()
-parts = raw.split('---', 2)
-fm = yaml.safe_load(parts[1]) or {}
-fm['status'] = 'done'
-fm['closed_date'] = today
-updated = '---\n' + yaml.dump(fm, default_flow_style=False, allow_unicode=True) + '---' + parts[2]
-with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
-    tmp.write(updated); tmp_name = tmp.name
-os.rename(tmp_name, path)
-dest_dir = os.path.join(os.path.dirname(path), 'done')
-os.makedirs(dest_dir, exist_ok=True)
-dest = os.path.join(dest_dir, os.path.basename(path))
-shutil.move(path, dest)
-print(f'MOVED:{dest}')
-PY
+python3 scripts/status.py set-terminal --file "{issue_file_path}" --status done --actor go --project-dir .
 ```
 Report: `✓ {STORY-ID} → done/{filename}`
 
-**Step C6 — Rebuild cache** (reflects the done status and moved file):
-```bash
-python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
-```
+**Step C6 — Cache rebuilt** (handled by `set-terminal` in C5):
 Report: `✓ Cache rebuilt`
 
 **Step C7 — Clear active_work_item** (if `phase.yaml` exists):

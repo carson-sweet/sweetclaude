@@ -643,16 +643,16 @@ class TestWriteStatusRejectsTerminalStatus:
 class TestWriteStatusNoop:
     def test_noop_succeeds_silently(self, tmp_path):
         project_dir = _setup_project_dir(tmp_path)
-        path = _make_issue(project_dir, "backlog/ISSUE-205-noop.md", "active", "ISSUE-205-NOOP")
+        path = _make_issue(project_dir, "backlog/ISSUE-205-noop-test.md", "active", "ISSUE-205")
 
         # Must not raise
         write_status(str(path), "active", "go", project_dir=str(project_dir))
 
     def test_noop_creates_no_audit_entry(self, tmp_path):
         project_dir = _setup_project_dir(tmp_path)
-        path = project_dir / "backlog" / "ISSUE-205-noop.md"
+        path = project_dir / "backlog" / "ISSUE-205-noop-test.md"
         _frontmatter_file(path, {
-            "id": "ISSUE-205-NOOP",
+            "id": "ISSUE-205",
             "title": "Noop test",
             "status": "active",
             "type": "enhancement",
@@ -662,7 +662,7 @@ class TestWriteStatusNoop:
         write_status(str(path), "active", "go", project_dir=str(project_dir))
 
         entries = _read_audit_entries(project_dir)
-        noop_entries = [e for e in entries if e.get("entity") == "ISSUE-205-NOOP"]
+        noop_entries = [e for e in entries if e.get("entity") == "ISSUE-205"]
         assert noop_entries == []
 
 

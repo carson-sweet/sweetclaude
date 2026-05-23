@@ -71,17 +71,12 @@ def find_issue_by_gh_number(gh_number):
             return p, fm, body
     return None, None, None
 
-def close_issue_file(path, fm, body):
-    """Set status=done, closed_date=today, move to done/ subdir."""
-    today = datetime.date.today().isoformat()
-    fm['status'] = 'done'
-    fm['closed_date'] = today
-    write_issue_file(path, fm, body)
-    done_dir = path.parent / 'done'
-    done_dir.mkdir(parents=True, exist_ok=True)
-    new_path = done_dir / path.name
-    shutil.move(str(path), str(new_path))
-    return new_path
+def close_issue_file(path):
+    """Close via status CLI — handles status, closed_date, file move, audit log."""
+    import subprocess
+    subprocess.run(['python3', 'scripts/status.py', 'set-terminal',
+        '--file', str(path), '--status', 'done',
+        '--actor', 'project-gh-sync-issues', '--project-dir', '.'])
 ```
 
 # GitHub Issues — Sync
@@ -113,8 +108,8 @@ For each closed GitHub issue, find the matching local story by `github_issue_num
 If the local issue's status is not `done` or `abandoned`, close it:
 
 ```python
-new_path = close_issue_file(path, fm, body)
-# File is now at .sweetclaude/product/backlog/done/<ID>-<slug>.md
+close_issue_file(path)
+# status.py handles: status=done, closed_date, file move to done/, audit log
 ```
 
 **Guard:** `.sweetclaude/product/roadmap/` is explicitly out of scope. The `all_backlog_issue_files()` function above silently skips any file under that directory if it exists.

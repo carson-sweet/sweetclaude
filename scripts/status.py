@@ -109,6 +109,11 @@ def _append_audit(project_dir: Path, actor: str, entity: str, file_rel: str, old
         fh.write(json.dumps(entry) + "\n")
 
 
+def _normalize_status_field(value: str) -> str:
+    from schema import normalize_status
+    return normalize_status(value)
+
+
 def _trigger_cache_rebuild(project_dir: Path) -> None:
     try:
         _scripts_dir = Path(__file__).resolve().parent
@@ -116,8 +121,8 @@ def _trigger_cache_rebuild(project_dir: Path) -> None:
             sys.path.insert(0, str(_scripts_dir))
         from cache import rebuild as _rebuild
         _rebuild(str(project_dir))
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"WARNING: cache rebuild failed after status change: {e}", file=sys.stderr)
 
 
 def _atomic_write_frontmatter(filepath: Path, fm: dict, body: str) -> None:
@@ -136,7 +141,7 @@ def _atomic_write_frontmatter(filepath: Path, fm: dict, body: str) -> None:
         raise
 
 
-def write_status(filepath: str, new_status: str, actor: str, project_dir: str | None = None) -> None:
+def write_status(filepath: str, new_status: str, actor: str, project_dir: str | None = None, reopen: bool = False) -> None:
     path = Path(filepath)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {filepath}")
@@ -162,14 +167,25 @@ def write_status(filepath: str, new_status: str, actor: str, project_dir: str | 
     if "status" not in fm:
         raise ValueError(f"frontmatter is missing status key in {filepath}")
 
-    old_status = str(fm["status"])
+    from schema import validate_frontmatter
+    fm_check = dict(fm)
+    fm_check["status"] = _normalize_status_field(fm_check.get("status", ""))
+    violations = validate_frontmatter(fm_check)
+    if violations:
+        raise ValueError(
+            f"Cannot write status to structurally invalid file {filepath}: "
+            + "; ".join(violations)
+        )
+
+    old_status = fm_check["status"]
 
     if old_status == new_status:
         return
 
-    validate_transition(old_status, new_status, "issue")
+    validate_transition(old_status, new_status, "issue", reopen=reopen)
 
     fm["status"] = new_status
+    fm["updated"] = datetime.date.today().isoformat()
     _atomic_write_frontmatter(path, fm, body)
 
     pd = _resolve_project_dir(filepath, project_dir)
@@ -181,6 +197,28 @@ def write_status(filepath: str, new_status: str, actor: str, project_dir: str | 
 
     _append_audit(pd, actor, entity, file_rel, old_status, new_status)
     _trigger_cache_rebuild(pd)
+
+
+def _check_completion_criteria(fm: dict, filepath: str) -> None:
+    criteria = fm.get("completion_criteria")
+    if not criteria or not isinstance(criteria, list):
+        return
+    valid = [c for c in criteria if isinstance(c, dict)]
+    if not valid:
+        return
+    total = len(valid)
+    done = sum(1 for c in valid if c.get("done", False))
+    if done < total:
+        unmet = [
+            c.get("description", f"criterion #{i}")
+            for i, c in enumerate(valid)
+            if not c.get("done", False)
+        ]
+        raise ValueError(
+            f"Cannot mark epic done: {done} of {total} completion criteria met. "
+            f"Unmet criteria in {filepath}:\n"
+            + "\n".join(f"  - {d}" for d in unmet)
+        )
 
 
 def _dest_dir_for_terminal(filepath: Path) -> Path:
@@ -209,8 +247,21 @@ def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None
     if "status" not in fm:
         raise ValueError(f"frontmatter is missing status key in {filepath}")
 
-    old_status = str(fm["status"])
+    from schema import validate_frontmatter
+    fm_check = dict(fm)
+    fm_check["status"] = _normalize_status_field(fm_check.get("status", ""))
+    violations = validate_frontmatter(fm_check)
+    if violations:
+        raise ValueError(
+            f"Cannot set terminal status on structurally invalid file {filepath}: "
+            + "; ".join(violations)
+        )
+
+    old_status = fm_check["status"]
     validate_transition(old_status, status, "issue")
+
+    if fm.get("type") == "epic" and status == "done":
+        _check_completion_criteria(fm, filepath)
 
     dest_dir = _dest_dir_for_terminal(path)
     dest_path = dest_dir / path.name
@@ -224,6 +275,7 @@ def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None
 
     fm["status"] = status
     fm["closed_date"] = datetime.date.today().isoformat()
+    fm["updated"] = datetime.date.today().isoformat()
     updated_content = "---\n" + yaml.safe_dump(fm, default_flow_style=False, allow_unicode=True) + "---\n" + body
 
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
@@ -268,6 +320,7 @@ def main(argv: list[str] | None = None) -> int:
     p_set.add_argument("--status", required=True)
     p_set.add_argument("--actor", default=None)
     p_set.add_argument("--project-dir", default=None)
+    p_set.add_argument("--reopen", action="store_true", default=False)
 
     p_terminal = sub.add_parser("set-terminal")
     p_terminal.add_argument("--file", required=True)
@@ -291,7 +344,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "set":
         try:
-            write_status(args.file, args.status, args.actor, project_dir=args.project_dir)
+            write_status(args.file, args.status, args.actor, project_dir=args.project_dir, reopen=args.reopen)
             print(json.dumps({"status": args.status, "file": args.file}))
             return 0
         except Exception as e:
