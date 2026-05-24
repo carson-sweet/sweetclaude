@@ -31,7 +31,8 @@ FILE_KEY = "skills.yaml"
 
 
 def _today() -> str:
-    return date.today().isoformat()
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 def up(data: dict, params: dict | None = None) -> dict:

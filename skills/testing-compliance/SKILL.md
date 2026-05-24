@@ -97,7 +97,7 @@ except FileNotFoundError:
 # Add new standard with controls
 # <standard> and controls populated from control catalog below
 state['standards']['<standard>'] = {
-    'initialized_at': datetime.now().strftime('%Y-%m-%d'),
+    'initialized_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
     'modules': ['<selected modules>'],
     'controls': {
         '<control-id>': {
@@ -222,7 +222,7 @@ with open('.sweetclaude/state/compliance.yaml') as f:
 
 state['standards']['<standard>']['controls']['<control-id>']['status'] = '<pass|partial|gap|na>'
 state['standards']['<standard>']['controls']['<control-id>']['notes'] = '<assessment notes>'
-state['standards']['<standard>']['controls']['<control-id>']['assessed_at'] = datetime.now().strftime('%Y-%m-%d')
+state['standards']['<standard>']['controls']['<control-id>']['assessed_at'] = datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 with open('.sweetclaude/state/compliance.yaml', 'w') as f:
     yaml.dump(state, f, default_flow_style=False, allow_unicode=True)
@@ -273,7 +273,7 @@ for std_name, std_data in state['standards'].items():
             'description': '<description>',
             'location': '<location>',
             'date': '<date>',
-            'logged_at': datetime.now().strftime('%Y-%m-%d')
+            'logged_at': datetime.now(timezone.utc).isoformat(timespec='seconds')
         })
         break
 

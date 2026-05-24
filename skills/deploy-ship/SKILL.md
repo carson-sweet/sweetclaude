@@ -172,7 +172,7 @@ if not plan_file or not os.path.exists(plan_file):
 content = open(plan_file).read()
 h1 = re.search(r'^# (.+)', content, re.MULTILINE)
 slug = re.sub(r'[^a-z0-9]+', '-', (h1.group(1) if h1 else os.path.basename(plan_file)).lower()).strip('-')
-date_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+date_str = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H%M%SZ')
 
 # Archive folder: milestone/sprint or misc
 ms_raw = lines.get('milestone', '').strip()

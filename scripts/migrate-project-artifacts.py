@@ -18,7 +18,7 @@ import os
 import re
 import sys
 import textwrap
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -26,7 +26,7 @@ from pathlib import Path
 # Configuration
 # ---------------------------------------------------------------------------
 
-TODAY = datetime.now().strftime("%Y-%m-%d")
+TODAY = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 PRIORITY_MAP = {
     "P1": "sooner",

@@ -103,7 +103,7 @@ For each GitHub issue:
 3. If no match: map fields and create a new v4 story file:
 
    ```python
-   today = datetime.date.today().isoformat()
+   today = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
    typ = 'story'  # default; apply label mapping below to override
    new_id = assign_new_id(typ)
    title = '<gh_issue_title>'

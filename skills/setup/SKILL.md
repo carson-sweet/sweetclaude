@@ -167,7 +167,7 @@ Run after `sweetclaude.yaml` is written in every branch. Creates the v4 backlog 
 ```python
 import pathlib, yaml, datetime, tempfile, os
 
-today = datetime.date.today().isoformat()
+today = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
 
 # 1. Write artifact-privacy.yaml with v4 base_path
 privacy_path = pathlib.Path('.sweetclaude/state/artifact-privacy.yaml')

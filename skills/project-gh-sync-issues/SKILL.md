@@ -45,7 +45,7 @@ def read_issue_file(path):
     return fm, body
 
 def write_issue_file(path, fm, body):
-    fm['updated'] = datetime.date.today().isoformat()
+    fm['updated'] = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
     content = f"---\n{yaml.safe_dump(fm, default_flow_style=False, sort_keys=False).rstrip()}\n---\n{body}"
     pathlib.Path(path).write_text(content, encoding='utf-8')
 
