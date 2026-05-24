@@ -54,7 +54,7 @@ If `DASHBOARD_FAILED`:
 
 ## Rules
 
-- Read-write. Status changes via the dashboard use `write_status()` / `set_terminal()` with `source: manual`. Parent items with `source: auto` auto-sync from children; `source: manual` parents are immune to auto-sync.
+- View-only. No mutations.
 - Runs on 127.0.0.1 only — not exposed to the network.
 - Auto-rebuilds the cache on launch to ensure fresh data.
 - Default port 8411. Pass a different port as an argument: `/sweetclaude:dashboard 8080`

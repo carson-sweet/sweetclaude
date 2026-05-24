@@ -122,16 +122,10 @@ For each milestone (ordered by ID):
 MS-{NNN}  {title}  [{status}]
 ```
 
-If the item's `source` is `manual` and `derived_status` differs from `status`, append a muted annotation (the user chose to override):
+If the milestone's `derived_status` differs from its `status`, append after the status:
 
 ```
-MS-{NNN}  {title}  [{status}]  (manual — children: {derived_status})
-```
-
-If the item's `source` is `auto` (or absent) and `derived_status` differs from `status`, this is a sync error — flag it:
-
-```
-MS-{NNN}  {title}  [{status}]  ⚠ auto-sync mismatch [{derived_status}]
+MS-{NNN}  {title}  [{status}]  ⚠ children suggest [{derived_status}]
 ```
 
 For each epic within that milestone (ordered by ID):
@@ -145,7 +139,11 @@ For each epic within that milestone (ordered by ID):
 │   └── {ISSUE-NNN}  {title}  [{status}]
 ```
 
-Apply the same source-aware discrepancy rules to epics.
+If an epic's `derived_status` differs from its `status`, append the same discrepancy marker:
+
+```
+├── EP-{NNN}  {title}  [{status}]  ⚠ children suggest [{derived_status}]
+```
 
 Use `✓` for done issues and done epics. Use `├──` / `└──` connectors.
 
