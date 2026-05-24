@@ -69,8 +69,8 @@ def write_issue_file(path, fm, body):
     pathlib.Path(path).write_text(content, encoding='utf-8')
 
 def rebuild_cache():
-    import subprocess
-    subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
+    import subprocess, os
+    subprocess.run(['python3', os.path.expanduser('~/.claude/scripts/sweetclaude/cache.py'), '--project-dir', '.', '--rebuild'], capture_output=True)
 
 # Load active backlog items (exclude done/ subdirs and metadata files)
 active_files = [
@@ -152,7 +152,7 @@ write_issue_file(path, fm, body)
 ```
 
 ```bash
-python3 scripts/status.py set --file {path} --status ready --actor project-backlog --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set --file {path} --status ready --actor project-backlog --project-dir .
 ```
 
 Confirm: `Promoted {ID} → {SP-NNN}`
@@ -164,7 +164,7 @@ Confirm: `Promoted {ID} → {SP-NNN}`
 Set issue status to `deferred`. Hides it from the default backlog view without closing it.
 
 ```bash
-python3 scripts/status.py set --file {path} --status deferred --actor project-backlog --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set --file {path} --status deferred --actor project-backlog --project-dir .
 ```
 
 Confirm: `Deferred <ID> — removed from active backlog`

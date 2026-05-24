@@ -74,6 +74,18 @@ from doctor import (
 # E5-S01: Fixture builder
 # ---------------------------------------------------------------------------
 
+import doctor as _doctor_module
+
+
+@pytest.fixture
+def patch_scripts_dir(tmp_path, monkeypatch):
+    """Redirect doctor._SCRIPTS_DIR to the test fixture's scripts/ directory."""
+    scripts_dir = tmp_path / "project" / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(_doctor_module, "_SCRIPTS_DIR", scripts_dir)
+    return scripts_dir
+
+
 def _write_frontmatter_file(path, frontmatter, body=""):
     path.parent.mkdir(parents=True, exist_ok=True)
     content = f"---\n{yaml.safe_dump(frontmatter)}---\n{body}"
@@ -174,7 +186,9 @@ def build_fixture(tmp_path, overrides=None):
             path.write_text(rf.get("content", ""))
 
     for hf in overrides.get("hook_files", []):
-        path = project_dir / "hooks" / hf["name"]
+        hooks_dir = Path.home() / ".claude" / "hooks" / "sweetclaude"
+        hooks_dir.mkdir(parents=True, exist_ok=True)
+        path = hooks_dir / hf["name"]
         path.write_text(hf["content"])
 
     if "suppressions" in overrides:
@@ -240,7 +254,7 @@ class TestFixtureBuilder:
         project = build_fixture(tmp_path, overrides={
             "hook_files": [{"name": "test-hook.sh", "content": "#!/bin/bash\nexit 0\n"}],
         })
-        assert (project / "hooks" / "test-hook.sh").exists()
+        assert (Path.home() / ".claude" / "hooks" / "sweetclaude" / "test-hook.sh").exists()
 
     def test_fixture_overrides_suppressions(self, tmp_path, fake_home):
         project = build_fixture(tmp_path, overrides={
@@ -1115,7 +1129,7 @@ class TestStorageLint:
 
     # Scenario: Counter drift raises DependencyMissing when cache.py absent
     def test_counter_drift_skipped_silently_when_cache_absent(
-        self, tmp_path, fake_home
+        self, tmp_path, fake_home, patch_scripts_dir
     ):
         project_dir = build_fixture(tmp_path, overrides={
             "backlog_files": [
@@ -1173,7 +1187,7 @@ class TestStorageLint:
         assert f.fix_recipe["action"] == "rebuild_cache"
 
     # Scenario: No drift when cache max matches or exceeds file max
-    def test_no_drift_when_cache_max_exceeds_file_max(self, tmp_path, fake_home):
+    def test_no_drift_when_cache_max_exceeds_file_max(self, tmp_path, fake_home, patch_scripts_dir):
         project_dir = build_fixture(tmp_path, overrides={
             "backlog_files": [
                 {"name": "ISSUE-003-test.md", "frontmatter": {
@@ -1197,7 +1211,7 @@ class TestStorageLint:
         )
 
     # Scenario: Counter drift exact boundary — file max equals cache max
-    def test_counter_drift_exact_boundary_no_finding(self, tmp_path, fake_home):
+    def test_counter_drift_exact_boundary_no_finding(self, tmp_path, fake_home, patch_scripts_dir):
         project_dir = build_fixture(tmp_path, overrides={
             "backlog_files": [
                 {"name": "ISSUE-005-test.md", "frontmatter": {
@@ -1222,7 +1236,7 @@ class TestStorageLint:
         )
 
     # Scenario: Subprocess exception during counter drift silently suppresses drift
-    def test_subprocess_exception_silently_suppresses_drift(self, tmp_path, fake_home):
+    def test_subprocess_exception_silently_suppresses_drift(self, tmp_path, fake_home, patch_scripts_dir):
         project_dir = build_fixture(tmp_path, overrides={
             "backlog_files": [
                 {"name": "ISSUE-010-test.md", "frontmatter": {
@@ -1742,7 +1756,7 @@ class TestMigrationCurrency:
 
     # Scenario: Migration runner reports schema drift produces warning
     def test_migration_runner_reports_schema_drift_produces_warning(
-        self, tmp_path, fake_home
+        self, tmp_path, fake_home, patch_scripts_dir
     ):
         project_dir = build_fixture(tmp_path)
         runner_path = project_dir / "scripts" / "migrations" / "runner.py"
@@ -1842,7 +1856,7 @@ class TestMigrationCurrency:
 
     # Scenario: Migration runner returns JSON list directly
     def test_migration_runner_returns_json_list_directly(
-        self, tmp_path, fake_home
+        self, tmp_path, fake_home, patch_scripts_dir
     ):
         project_dir = build_fixture(tmp_path)
         runner_path = project_dir / "scripts" / "migrations" / "runner.py"
@@ -1905,7 +1919,7 @@ class TestMigrationCurrency:
 
     # Scenario: Migration runner timeout does not prevent orphan scan (S4)
     def test_migration_runner_timeout_does_not_prevent_orphan_scan(
-        self, tmp_path, fake_home, monkeypatch
+        self, tmp_path, fake_home, monkeypatch, patch_scripts_dir
     ):
         project_dir = build_fixture(tmp_path)
 
@@ -2114,7 +2128,7 @@ class TestMigrationCurrency:
 
     # Scenario: Orphan scan finds orphans produces warning
     def test_orphan_scan_finds_orphans_produces_warning(
-        self, tmp_path, fake_home
+        self, tmp_path, fake_home, patch_scripts_dir
     ):
         project_dir = build_fixture(tmp_path)
         orphan_script = project_dir / "scripts" / "migrate" / "migrate-v3-to-v4.py"
@@ -4429,7 +4443,7 @@ class TestAutoFix:
         assert len(result["actions"]) == 1
         assert result["actions"][0]["action"] == "auto-fix"
 
-    def test_rebuild_cache_records_failure_when_cache_missing(self, tmp_path, fake_home):
+    def test_rebuild_cache_records_failure_when_cache_missing(self, tmp_path, fake_home, patch_scripts_dir):
         project_dir = build_fixture(tmp_path)
         # Ensure cache.py does NOT exist
         cache_script = project_dir / "scripts" / "cache.py"
@@ -4625,7 +4639,7 @@ class TestAutoFix:
     # Partial failure
     # ------------------------------------------------------------------
 
-    def test_one_recipe_fails_while_others_succeed(self, tmp_path, fake_home):
+    def test_one_recipe_fails_while_others_succeed(self, tmp_path, fake_home, patch_scripts_dir):
         project_dir = build_fixture(tmp_path)
         ss_path = project_dir / ".sweetclaude" / "state" / "session-state.yaml"
         ss_path.write_text("phase_schema_version: 1\n")
@@ -5711,7 +5725,7 @@ class TestGracefulDegradation:
     # ------------------------------------------------------------------
 
     def test_missing_migration_runner_skips_migration_currency(
-        self, tmp_path, fake_home
+        self, tmp_path, fake_home, patch_scripts_dir
     ):
         project_dir = build_fixture(tmp_path)
         runner = project_dir / "scripts" / "migrations" / "runner.py"
@@ -5812,7 +5826,7 @@ class TestGracefulDegradation:
     # ------------------------------------------------------------------
 
     def test_dependency_missing_populates_skipped_category_and_reason(
-        self, tmp_path, fake_home
+        self, tmp_path, fake_home, patch_scripts_dir
     ):
         project_dir = build_fixture(tmp_path)
         runner = project_dir / "scripts" / "migrations" / "runner.py"

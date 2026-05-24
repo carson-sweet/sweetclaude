@@ -54,6 +54,8 @@ from schema import (
 from status import CANONICAL_STATUSES, TERMINAL_STATUSES, derived_status
 
 
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
@@ -200,7 +202,7 @@ def check_state_integrity(state: ProjectState) -> list[Finding]:
             file_paths=[str(ss_path)],
             fix_type="auto",
             fix_recipe={"action": "run_script",
-                        "cmd": ["bash", str(state.project_dir / "hooks" / "generate-session-state.sh")],
+                        "cmd": ["bash", str(Path.home() / ".claude" / "hooks" / "sweetclaude" / "generate-session-state.sh")],
                         "args": []},
         ))
 
@@ -258,7 +260,7 @@ def check_state_integrity(state: ProjectState) -> list[Finding]:
                 ],
                 fix_type="auto",
                 fix_recipe={"action": "run_script",
-                            "cmd": ["bash", str(state.project_dir / "hooks" / "generate-session-state.sh")],
+                            "cmd": ["bash", str(Path.home() / ".claude" / "hooks" / "sweetclaude" / "generate-session-state.sh")],
                             "args": []},
             ))
 
@@ -359,7 +361,7 @@ def check_storage_lint(state: ProjectState) -> list[Finding]:
             if m:
                 max_seen = max(max_seen, int(m.group(1)))
 
-        cache_script = state.project_dir / "scripts" / "cache.py"
+        cache_script = _SCRIPTS_DIR / "cache.py"
         if not cache_script.exists():
             pass
         else:
@@ -554,7 +556,7 @@ def check_migration_currency(state: ProjectState) -> list[Finding]:
                             "script": "migrate_taxonomy.py", "args": []},
             ))
 
-    orphan_script = state.project_dir / "scripts" / "migrate" / "migrate-v3-to-v4.py"
+    orphan_script = _SCRIPTS_DIR / "migrate" / "migrate-v3-to-v4.py"
     if orphan_script.exists():
         try:
             r = subprocess.run(
@@ -1282,7 +1284,7 @@ def _resolve_installed_version() -> str | None:
 
 
 def _find_migration_runner(project_dir: Path) -> Path | None:
-    candidate = project_dir / "scripts" / "migrations" / "runner.py"
+    candidate = _SCRIPTS_DIR / "migrations" / "runner.py"
     return candidate if candidate.exists() else None
 
 
@@ -1319,11 +1321,11 @@ def build_project_state(project_dir: Path) -> ProjectState:
             sorted(roadmap_dir.rglob("*.md")) if roadmap_dir.is_dir() else []
         ),
         hook_files=(
-            sorted((project_dir / "hooks").glob("*.sh"))
-            if (project_dir / "hooks").is_dir()
+            sorted((home_claude / "hooks" / "sweetclaude").glob("*.sh"))
+            if (home_claude / "hooks" / "sweetclaude").is_dir()
             else []
         ),
-        hook_manifest=_read_json(project_dir / "hooks" / "hooks-manifest.json"),
+        hook_manifest=_read_json(home_claude / "hooks" / "sweetclaude" / "hooks-manifest.json"),
         hooks_json=_read_json(home_claude / "hooks" / "sweetclaude" / "hooks.json"),
         settings_global=_read_json(home_claude / "settings.json"),
         settings_local=_read_json(project_dir / ".claude" / "settings.local.json"),
@@ -1385,6 +1387,67 @@ def auto_cleanup_suppressions(
 
 
 # ---------------------------------------------------------------------------
+# Migration recommendations
+# ---------------------------------------------------------------------------
+
+_OLD_PREFIXES = frozenset({"STORY-", "BUG-", "DEBT-", "CHORE-", "BL-"})
+
+
+def _build_migration_recommendations(
+    findings: list[Finding], state: ProjectState,
+) -> list[dict]:
+    recs: list[dict] = []
+
+    migration_findings = [
+        f for f in findings
+        if f.category == "migration_currency"
+        and getattr(f, "fix_recipe", {}).get("type") == "migration"
+    ]
+    for mf in migration_findings:
+        recipe = mf.fix_recipe or {}
+        script = recipe.get("script", "")
+
+        affected_count = 0
+        if script == "migrate_taxonomy.py":
+            for f in findings:
+                fps = f.file_paths or []
+                if fps and any(
+                    fps[0].split("/")[-1].startswith(pfx) for pfx in _OLD_PREFIXES
+                ):
+                    affected_count += 1
+            if affected_count == 0:
+                detail = mf.detail or ""
+                try:
+                    affected_count = int(
+                        "".join(c for c in mf.summary.split()[0] if c.isdigit())
+                    )
+                except (ValueError, IndexError):
+                    affected_count = 0
+
+        elif script in ("migrate-v3-to-v4.py", "runner.py"):
+            affected_count = sum(
+                1 for f in findings
+                if f.category in ("storage_lint", "file_diagnostics", "migration_currency")
+                and getattr(f, "fix_recipe", {}).get("type") == "migration"
+                and getattr(f, "fix_recipe", {}).get("script") == script
+            )
+
+        total = len(findings)
+        resolvable = max(affected_count, 1)
+
+        recs.append({
+            "script": script,
+            "finding_id": mf.id,
+            "summary": mf.summary,
+            "estimated_resolvable": resolvable,
+            "total_findings": total,
+            "pct": round(resolvable / total * 100) if total else 0,
+        })
+
+    return recs
+
+
+# ---------------------------------------------------------------------------
 # Scan
 # ---------------------------------------------------------------------------
 
@@ -1428,11 +1491,14 @@ def _scan(
 
     active = [f for f in all_findings if f.id not in suppressed_ids]
 
+    migration_recs = _build_migration_recommendations(active, project_state)
+
     result = {
         "findings": [asdict(f) for f in active],
         "skipped_categories": skipped,
         "suppressions_resolved": sorted(resolved_ids),
         "project_state_summary": build_state_summary(project_state),
+        "migration_recommendations": migration_recs,
     }
     if categories:
         result["scanned_categories"] = sorted(checks_to_run.keys())
@@ -1631,7 +1697,7 @@ def execute_recipe(
         )
 
     if action == "rebuild_cache":
-        cache_script = project_dir / "scripts" / "cache.py"
+        cache_script = _SCRIPTS_DIR / "cache.py"
         if not cache_script.exists():
             raise DependencyMissing("cache.py not found")
         result = subprocess.run(
@@ -1984,7 +2050,7 @@ def _find_item_frontmatter(project_dir: Path, item_id: str) -> dict | None:
 
 def _check_cache_health(project_dir: Path) -> str | None:
     try:
-        scripts_dir = project_dir / "scripts"
+        scripts_dir = _SCRIPTS_DIR
         if scripts_dir not in [Path(p) for p in sys.path]:
             sys.path.insert(0, str(scripts_dir))
         from cache import rebuild

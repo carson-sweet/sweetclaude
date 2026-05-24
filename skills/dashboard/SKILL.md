@@ -22,14 +22,14 @@ Tabs align with the status view scopes spec (v3.1):
 ## Step 1: Ensure cache is current
 
 ```bash
-python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/cache.py --project-dir . --rebuild 2>/dev/null
 ```
 
 ## Step 2: Launch server
 
 ```bash
 PORT=${1:-8411}
-python3 scripts/dashboard.py --project-dir . --port "$PORT" &
+python3 ~/.claude/scripts/sweetclaude/dashboard.py --project-dir . --port "$PORT" &
 DASH_PID=$!
 sleep 1
 if kill -0 "$DASH_PID" 2>/dev/null; then

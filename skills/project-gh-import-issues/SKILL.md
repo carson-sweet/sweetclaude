@@ -39,7 +39,8 @@ BACKLOG_BASE = pathlib.Path('.sweetclaude/product/backlog')
 
 def assign_new_id():
     import subprocess, json
-    r = subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--query', 'next-id', '--prefix', 'ISSUE'],
+    import os
+    r = subprocess.run(['python3', os.path.expanduser('~/.claude/scripts/sweetclaude/cache.py'), '--project-dir', '.', '--query', 'next-id', '--prefix', 'ISSUE'],
         capture_output=True, text=True)
     return json.loads(r.stdout)['next_id']
 

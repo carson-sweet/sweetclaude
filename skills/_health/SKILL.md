@@ -41,7 +41,7 @@ The orchestrator will act on these values in Steps 6 and 7 of its decision tree.
 Run `doctor.py scan` with the `--category` flag to run only `storage_lint` checks:
 
 ```bash
-python3 scripts/doctor.py scan --project-dir . --category storage_lint 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/doctor.py scan --project-dir . --category storage_lint 2>/dev/null
 ```
 
 Parse the JSON output. If it contains `"error": "not-configured"`, skip lint (not a SweetClaude project). Otherwise, read `findings` from the result.
@@ -62,7 +62,7 @@ Surface any findings to the caller. If invoked from `big-picture` or `project-ba
 Run `doctor.py scan` with the `--category` flag to run only `state_integrity` checks:
 
 ```bash
-python3 scripts/doctor.py scan --project-dir . --category state_integrity 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/doctor.py scan --project-dir . --category state_integrity 2>/dev/null
 ```
 
 Parse the JSON output. If the command fails (crash, timeout, or `"error"` in JSON), report informational and continue — non-blocking.

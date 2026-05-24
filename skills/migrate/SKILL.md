@@ -169,7 +169,7 @@ The `execute` subcommand performs the per-file transformation and writes `MIGRAT
 ## Step 6: Rebuild cache
 
 ```bash
-python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/cache.py --project-dir . --rebuild 2>/dev/null
 ```
 
 ## Step 7: Verify

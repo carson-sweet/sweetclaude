@@ -189,8 +189,8 @@ for subdir in ['backlog/done', 'roadmap/epics/done', 'roadmap/milestones', 'road
     (p / '.gitkeep').touch()
 
 # 3. Build initial cache (INDEX.md is no longer created — cache provides all views)
-import subprocess
-subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
+import subprocess, os
+subprocess.run(['python3', os.path.expanduser('~/.claude/scripts/sweetclaude/cache.py'), '--project-dir', '.', '--rebuild'], capture_output=True)
 ```
 
 Whether these files end up tracked in the user's git tree depends on the user's `.gitignore`. In this dogfooding repo they are gitignored; the skill is verified against fixture projects for testing.

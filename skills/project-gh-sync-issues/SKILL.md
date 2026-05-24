@@ -74,7 +74,8 @@ def find_issue_by_gh_number(gh_number):
 def close_issue_file(path):
     """Close via status CLI — handles status, closed_date, file move, audit log."""
     import subprocess
-    subprocess.run(['python3', 'scripts/status.py', 'set-terminal',
+    import os
+    subprocess.run(['python3', os.path.expanduser('~/.claude/scripts/sweetclaude/status.py'), 'set-terminal',
         '--file', str(path), '--status', 'done',
         '--actor', 'project-gh-sync-issues', '--project-dir', '.'])
 ```

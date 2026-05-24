@@ -66,7 +66,7 @@ Evaluate in order:
 
 **If yes:** write `mode: {mode_key}` to `.sweetclaude/state/sweetclaude.yaml`, then run:
 ```bash
-bash $HOME/dev/sweetclaude/scripts/generate-effective-gates.sh
+bash ~/.claude/scripts/sweetclaude/generate-effective-gates.sh
 ```
 Confirm: "Mode set to **{mode}**. Effective gates compiled."
 

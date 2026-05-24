@@ -23,7 +23,7 @@ Thin orchestrator — all scanning and file mutation happens in `scripts/doctor.
 ## Step 1: Scan
 
 ```bash
-python3 scripts/doctor.py scan --project-dir . 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/doctor.py scan --project-dir . 2>/dev/null
 ```
 
 Parse the JSON output. Handle these cases:
@@ -34,7 +34,7 @@ Parse the JSON output. Handle these cases:
 Stop. Do not continue to Step 2.
 
 **Parse failure:** If the output is not valid JSON or the command exits non-zero, print:
-> Doctor scan failed. Run `python3 scripts/doctor.py scan --project-dir .` manually to see the error.
+> Doctor scan failed. Run `python3 ~/.claude/scripts/sweetclaude/doctor.py scan --project-dir .` manually to see the error.
 
 Stop.
 
@@ -103,6 +103,41 @@ If `suppressions_resolved` is non-empty, list each one:
 
 ---
 
+## Step 2b: Migration gate
+
+Check `migration_recommendations` from the scan output. If the array is non-empty, a migration would resolve a significant number of findings. Present this **before** the fix menu — migration should run first because it eliminates findings that would otherwise clutter the fix flow.
+
+For each recommendation, present via AskUserQuestion:
+
+> {summary} — migration would resolve an estimated {estimated_resolvable} of {total_findings} findings ({pct}%). Run migration now?
+
+Options:
+- **Run migration** — "Run the migration, then rescan to see what's left"
+- **Skip** — "Continue without migrating"
+
+**On Run migration:**
+
+Delegate to the appropriate migration skill based on `script`:
+- `migrate_taxonomy.py` → invoke `sweetclaude:migrate`
+- `runner.py` → invoke `sweetclaude:_migrate`
+- `migrate-v3-to-v4.py` → invoke `sweetclaude:migrate`
+
+After the migration skill completes, **rescan automatically**:
+
+```bash
+python3 ~/.claude/scripts/sweetclaude/doctor.py scan --project-dir . 2>/dev/null
+```
+
+Parse the new scan result. Replace the current findings list and migration_recommendations with the fresh output. Print:
+
+> Migration complete. Rescanned: {new_total} findings remaining (was {old_total}).
+
+Continue to Step 3 with the new findings. The fix menu and all subsequent steps operate on the post-migration scan.
+
+**On Skip:** Continue to Step 3 with the original findings.
+
+---
+
 ## Step 3: Pre-fix menu
 
 If no findings have `fix_type` of `auto` or `prompted`, skip to Step 8.
@@ -133,7 +168,7 @@ After the list, the user can ask about a specific number for detail (show `detai
 If the user picks dry run:
 
 ```bash
-echo '{scan_findings_json}' | python3 scripts/doctor.py dry-run --project-dir .
+echo '{scan_findings_json}' | python3 ~/.claude/scripts/sweetclaude/doctor.py dry-run --project-dir .
 ```
 
 Parse the `simulations` array. For each:
@@ -201,7 +236,7 @@ If no: record that the user declined (pass `--safety-branch ""` to persist, or o
 ## Step 5: Create archive and run auto-fixes
 
 ```bash
-python3 scripts/doctor.py create-archive --project-dir .
+python3 ~/.claude/scripts/sweetclaude/doctor.py create-archive --project-dir .
 ```
 
 Store the `archive_dir` from the response.
@@ -209,7 +244,7 @@ Store the `archive_dir` from the response.
 Then pipe the scan findings to auto-fix:
 
 ```bash
-echo '{scan_findings_json}' | python3 scripts/doctor.py auto-fix --project-dir . --archive-dir {archive_dir}
+echo '{scan_findings_json}' | python3 ~/.claude/scripts/sweetclaude/doctor.py auto-fix --project-dir . --archive-dir {archive_dir}
 ```
 
 Parse the result. Report:
@@ -229,7 +264,7 @@ If no auto-fixable findings existed, skip this output.
 If `post_fix_categories` is non-empty:
 
 ```bash
-echo '{scan_findings_json}' | python3 scripts/doctor.py post-fix-rescan --project-dir . --categories {comma_separated_categories}
+echo '{scan_findings_json}' | python3 ~/.claude/scripts/sweetclaude/doctor.py post-fix-rescan --project-dir . --categories {comma_separated_categories}
 ```
 
 If the rescan returns new findings:
@@ -272,14 +307,14 @@ Present the finding details and offer via AskUserQuestion:
 Execute the fix through the script's backup pipeline. For fix types that have a concrete recipe action (not just `"prompt"`):
 
 ```bash
-echo '[{single_finding_json}]' | python3 scripts/doctor.py auto-fix --project-dir . --archive-dir {archive_dir} --include-prompted
+echo '[{single_finding_json}]' | python3 ~/.claude/scripts/sweetclaude/doctor.py auto-fix --project-dir . --archive-dir {archive_dir} --include-prompted
 ```
 
 For fix types that require further user input or skill delegation:
 
 - `config_conflict`: Present the options from `fix_recipe.options` (adopt / keep / keep both) via AskUserQuestion. Apply the chosen resolution, then record:
   ```bash
-  echo '{"finding_id": "...", "action": "prompted-fix", "choice": "...", "description": "...", "timestamp": "..."}' | python3 scripts/doctor.py record-action --archive-dir {archive_dir}
+  echo '{"finding_id": "...", "action": "prompted-fix", "choice": "...", "description": "...", "timestamp": "..."}' | python3 ~/.claude/scripts/sweetclaude/doctor.py record-action --archive-dir {archive_dir}
   ```
 
 - `hook_restore`: Present source options (backup vs repo) via AskUserQuestion. Restore the file, record the action.
@@ -292,7 +327,7 @@ For fix types that require further user input or skill delegation:
 
 **On Skip:**
 ```bash
-echo '{"finding_id": "...", "action": "skip", "timestamp": "..."}' | python3 scripts/doctor.py record-action --archive-dir {archive_dir}
+echo '{"finding_id": "...", "action": "skip", "timestamp": "..."}' | python3 ~/.claude/scripts/sweetclaude/doctor.py record-action --archive-dir {archive_dir}
 ```
 
 **On Suppress:**
@@ -306,7 +341,7 @@ Ask for a reason string. Write the suppression:
 
 Record the action:
 ```bash
-echo '{"finding_id": "...", "action": "suppress", "reason": "...", "timestamp": "..."}' | python3 scripts/doctor.py record-action --archive-dir {archive_dir}
+echo '{"finding_id": "...", "action": "suppress", "reason": "...", "timestamp": "..."}' | python3 ~/.claude/scripts/sweetclaude/doctor.py record-action --archive-dir {archive_dir}
 ```
 
 ---
@@ -346,13 +381,13 @@ For findings where `previously_suppressed` is true, note: "This finding was prev
 If no archive was created (zero-findings or "No fixes needed" path), create one for the persist record:
 
 ```bash
-python3 scripts/doctor.py create-archive --project-dir .
+python3 ~/.claude/scripts/sweetclaude/doctor.py create-archive --project-dir .
 ```
 
 Pipe the original scan findings to persist:
 
 ```bash
-echo '{scan_findings_json}' | python3 scripts/doctor.py persist --project-dir . --archive-dir {archive_dir} --menu-preference {choice_from_step_3} --safety-branch {branch_name_or_empty}
+echo '{scan_findings_json}' | python3 ~/.claude/scripts/sweetclaude/doctor.py persist --project-dir . --archive-dir {archive_dir} --menu-preference {choice_from_step_3} --safety-branch {branch_name_or_empty}
 ```
 
 Count severities from the findings array: errors = findings where severity="error", warnings = severity="warning", info = severity="info". Get fix counts from the archive actions (auto_fixed, user_fixed, skipped).
@@ -367,7 +402,7 @@ Report the archive location (unconditional — always show if an archive exists)
 Prune old archives:
 
 ```bash
-python3 scripts/doctor.py prune-archives --project-dir .
+python3 ~/.claude/scripts/sweetclaude/doctor.py prune-archives --project-dir .
 ```
 
 Silent — do not report pruning results to the user.

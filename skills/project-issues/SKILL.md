@@ -68,13 +68,14 @@ def make_slug(title):
 
 def assign_new_id():
     import subprocess, json
-    r = subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--query', 'next-id', '--prefix', 'ISSUE'],
+    import os
+    r = subprocess.run(['python3', os.path.expanduser('~/.claude/scripts/sweetclaude/cache.py'), '--project-dir', '.', '--query', 'next-id', '--prefix', 'ISSUE'],
         capture_output=True, text=True)
     return json.loads(r.stdout)['next_id']
 
 def rebuild_cache():
-    import subprocess
-    subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
+    import subprocess, os
+    subprocess.run(['python3', os.path.expanduser('~/.claude/scripts/sweetclaude/cache.py'), '--project-dir', '.', '--rebuild'], capture_output=True)
 
 def all_issue_files():
     files = []
@@ -291,7 +292,7 @@ write_issue_file(path, fm, body)
 If status is changing, update via the status CLI (do NOT set `fm['status']` directly):
 
 ```bash
-python3 scripts/status.py set --file {path} --status {new_status} --actor project-issues --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set --file {path} --status {new_status} --actor project-issues --project-dir .
 ```
 
 Confirm: `Updated {ID} — {list of changed fields}`
@@ -321,7 +322,7 @@ if terminal_status == 'superseded':
 ```
 
 ```bash
-python3 scripts/status.py set-terminal --file {path} --status {terminal_status} --actor project-issues --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set-terminal --file {path} --status {terminal_status} --actor project-issues --project-dir .
 ```
 
 `set-terminal` handles: status change, `closed_date`, file move to `done/`, audit log, cache rebuild.
@@ -345,7 +346,7 @@ if ROADMAP_ISSUES in path.parents or path.parent == ROADMAP_ISSUES:
 ```
 
 ```bash
-python3 scripts/status.py set-terminal --file {path} --status declined --actor project-issues --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set-terminal --file {path} --status declined --actor project-issues --project-dir .
 ```
 
 `set-terminal` handles: status change, `closed_date`, file move to `archived/`, audit log, cache rebuild.
@@ -373,7 +374,7 @@ shutil.move(str(path), str(new_path))
 ```
 
 ```bash
-python3 scripts/status.py set --file {new_path} --status ready --actor project-issues --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set --file {new_path} --status ready --actor project-issues --project-dir .
 ```
 
 Confirm: `Triaged {ID} — {title} → roadmap/issues/`
@@ -410,7 +411,7 @@ write_issue_file(path, fm, body)
 ```
 
 ```bash
-python3 scripts/status.py set --file {path} --status new --actor project-issues --project-dir . --reopen
+python3 ~/.claude/scripts/sweetclaude/status.py set --file {path} --status new --actor project-issues --project-dir . --reopen
 ```
 
 Confirm: `Reopened {ID} — returned to {destination}`

@@ -250,7 +250,7 @@ PYEOF
 **Step 6: Regenerate effective gates.**
 
 ```bash
-bash $HOME/dev/sweetclaude/scripts/generate-effective-gates.sh
+bash ~/.claude/scripts/sweetclaude/generate-effective-gates.sh
 ```
 
 Output: "Mode set to **{mode}**. Effective gates compiled."

@@ -578,7 +578,7 @@ If `OLD_TAXONOMY > 0`: present via **AskUserQuestion**:
 > - **Migrate now** — run taxonomy migration with dry-run preview and safety snapshot
 > - **Skip for now** — migrate later with `/sweetclaude:migrate`
 
-If **Migrate now**: run `python3 scripts/migrate/migrate_taxonomy.py --project-dir . --dry-run` first to preview, then on confirmation run without `--dry-run`. Report results. After successful migration, write the doctor prompt marker:
+If **Migrate now**: run `python3 ~/.claude/scripts/sweetclaude/migrate/migrate_taxonomy.py --project-dir . --dry-run` first to preview, then on confirmation run without `--dry-run`. Report results. After successful migration, write the doctor prompt marker:
 
 ```bash
 python3 -c "

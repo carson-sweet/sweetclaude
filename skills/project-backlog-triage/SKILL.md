@@ -50,8 +50,8 @@ def write_issue_file(path, fm, body):
     pathlib.Path(path).write_text(content, encoding='utf-8')
 
 def rebuild_cache():
-    import subprocess
-    subprocess.run(['python3', 'scripts/cache.py', '--project-dir', '.', '--rebuild'], capture_output=True)
+    import subprocess, os
+    subprocess.run(['python3', os.path.expanduser('~/.claude/scripts/sweetclaude/cache.py'), '--project-dir', '.', '--rebuild'], capture_output=True)
 
 # Load active ungroomed backlog items
 active_items = []
@@ -171,19 +171,19 @@ write_issue_file(path, fm, body)
 ```
 
 ```bash
-python3 scripts/status.py set --file {path} --status ready --actor project-backlog-triage --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set --file {path} --status ready --actor project-backlog-triage --project-dir .
 ```
 
 On `cancel` (status → abandoned, move to done/):
 
 ```bash
-python3 scripts/status.py set-terminal --file {path} --status abandoned --actor project-backlog-triage --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set-terminal --file {path} --status abandoned --actor project-backlog-triage --project-dir .
 ```
 
 On `done` (status → done, move to done/):
 
 ```bash
-python3 scripts/status.py set-terminal --file {path} --status done --actor project-backlog-triage --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set-terminal --file {path} --status done --actor project-backlog-triage --project-dir .
 ```
 
 `set-terminal` handles: status change, `closed_date`, file move, audit log, cache rebuild.

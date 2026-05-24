@@ -30,9 +30,9 @@ ls scratch/ 2>/dev/null | grep -iE "checkpoint|continue|resume|handoff" | head -
 Then rebuild the cache and read backlog + roadmap state:
 
 ```bash
-python3 scripts/cache.py --project-dir . --rebuild 2>/dev/null
-python3 scripts/cache.py --project-dir . --query backlog 2>/dev/null
-python3 scripts/cache.py --project-dir . --query active-epic 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/cache.py --project-dir . --rebuild 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/cache.py --project-dir . --query backlog 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/cache.py --project-dir . --query active-epic 2>/dev/null
 ```
 
 If cache.py is not found or fails, scan `.sweetclaude/product/backlog/` directly for markdown files with YAML frontmatter.
@@ -77,7 +77,7 @@ Any backlog filename containing `bug`, `hotfix`, `security`, `p0`, `p1`, `critic
 The `active-epic` cache query returned a non-null result. Query its stories in sequence order:
 
 ```bash
-python3 scripts/cache.py --project-dir . --query epic-stories --epic {EP-NNN} 2>/dev/null
+python3 ~/.claude/scripts/sweetclaude/cache.py --project-dir . --query epic-stories --epic {EP-NNN} 2>/dev/null
 ```
 
 Propose the first open story (lowest `epic_sequence`). This is the next work item for the active capability area.
@@ -344,7 +344,7 @@ Report: `✓ origin/{branch} deleted` or `✓ origin/{branch} not present — sk
 
 **Step C5 — Move story to `done/` and update frontmatter**:
 ```bash
-python3 scripts/status.py set-terminal --file "{issue_file_path}" --status done --actor go --project-dir .
+python3 ~/.claude/scripts/sweetclaude/status.py set-terminal --file "{issue_file_path}" --status done --actor go --project-dir .
 ```
 Report: `✓ {STORY-ID} → done/{filename}`
 
