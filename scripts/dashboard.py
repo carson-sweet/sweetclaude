@@ -1244,7 +1244,62 @@ body {
   .controls input[type="text"] { width: 100%; }
   .epic-node { padding-left: 24px; }
 }
+.dnd-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.dnd-toast.success { background: var(--green); color: #000; }
+.dnd-toast.error { background: var(--red); color: #fff; }
+.dnd-toast.fade { opacity: 0; }
+
+.backlog-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  cursor: pointer;
+}
+.backlog-row:hover { background: var(--surface-raised); }
+.backlog-row .backlog-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 360px;
+}
+.backlog-row .backlog-epic {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--purple);
+}
+
+.sortable-ghost {
+  opacity: 0.3;
+}
+.sortable-chosen {
+  cursor: grabbing;
+}
+.drag-handle {
+  cursor: grab;
+  opacity: 0.3;
+  font-size: 14px;
+  user-select: none;
+}
+.backlog-row:hover .drag-handle { opacity: 1; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 </head>
 <body>
 <div class="header">
@@ -1663,23 +1718,25 @@ function renderBacklog() {
     if (!horizons[h] || horizons[h].length === 0) continue;
     const label = HORIZON_LABELS[h] || h;
     const group = horizons[h];
-    const visible = group.slice(0, 5);
-    const hidden = group.length - visible.length;
+    group.sort((a, b) => {
+      const sa = a.epic_sequence ?? 9999, sb = b.epic_sequence ?? 9999;
+      return sa - sb || a.id.localeCompare(b.id);
+    });
     html += `<div class="horizon-group">`;
     html += `<div class="horizon-header">${label} <span class="horizon-count">${group.length} items</span></div>`;
-    html += `<table class="item-table"><tbody>`;
-    html += visible.map(i => `
-      <tr onclick="showDetail('${i.id}')">
-        <td class="id-cell">${i.id}</td>
-        <td>${typeBadge(i.type)}</td>
-        <td style="max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.title)}</td>
-        <td>${statusBadge(i.status)}</td>
-        <td>${priorityBadge(i.priority)}</td>
-        <td style="font-family:var(--mono);font-size:11px;color:var(--purple)">${i.epic || ''}</td>
-      </tr>
+    html += `<div class="dnd-container" data-priority="${h}">`;
+    html += group.map(i => `
+      <div class="backlog-row" data-id="${i.id}" onclick="showDetail('${i.id}')">
+        <span class="drag-handle">&#x2630;</span>
+        <span class="id-cell">${i.id}</span>
+        ${typeBadge(i.type)}
+        <span class="backlog-title">${esc(i.title)}</span>
+        ${statusBadge(i.status)}
+        ${priorityBadge(i.priority)}
+        <span class="backlog-epic">${i.epic || ''}</span>
+      </div>
     `).join('');
-    html += `</tbody></table>`;
-    if (hidden > 0) html += `<div style="font-size:11px;color:var(--text-dim);padding:4px 12px">(+${hidden} more)</div>`;
+    html += `</div>`;
     html += `</div>`;
   }
 
@@ -2030,6 +2087,97 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 load();
+
+// --- Drag-and-drop (SortableJS) ---
+
+let dndSortables = [];
+
+function dndInitBacklog() {
+  dndSortables.forEach(s => s.destroy());
+  dndSortables = [];
+  document.querySelectorAll('.dnd-container').forEach(container => {
+    const priority = container.dataset.priority;
+    const s = Sortable.create(container, {
+      group: 'backlog',
+      animation: 150,
+      handle: '.drag-handle',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onEnd: function(evt) {
+        const id = evt.item.dataset.id;
+        const fromPriority = evt.from.dataset.priority;
+        const toPriority = evt.to.dataset.priority;
+        const crossPriority = fromPriority !== toPriority;
+
+        const updates = [];
+
+        if (crossPriority) {
+          const item = DATA.items.find(i => i.id === id);
+          if (item) item.priority = toPriority;
+          updates.push({id, field: 'priority', value: toPriority, actor: 'dashboard-dnd'});
+        }
+
+        const toRows = Array.from(evt.to.querySelectorAll('.backlog-row'));
+        toRows.forEach((row, i) => {
+          const rid = row.dataset.id;
+          const item = DATA.items.find(x => x.id === rid);
+          if (item) item.epic_sequence = i;
+          updates.push({id: rid, field: 'epic_sequence', value: i, actor: 'dashboard-dnd'});
+        });
+
+        if (crossPriority) {
+          const fromRows = Array.from(evt.from.querySelectorAll('.backlog-row'));
+          fromRows.forEach((row, i) => {
+            const rid = row.dataset.id;
+            const item = DATA.items.find(x => x.id === rid);
+            if (item) item.epic_sequence = i;
+            updates.push({id: rid, field: 'epic_sequence', value: i, actor: 'dashboard-dnd'});
+          });
+        }
+
+        dndPersist(updates, crossPriority);
+      }
+    });
+    dndSortables.push(s);
+  });
+}
+
+async function dndPersist(updates, rerender) {
+  try {
+    for (const u of updates) {
+      const r = await fetch('/api/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(u)
+      });
+      const res = await r.json();
+      if (!res.ok) { dndToast('Failed: ' + res.error, 'error'); load(); return; }
+    }
+    dndToast('saved', 'success');
+    if (rerender) renderBacklog();
+  } catch(err) {
+    dndToast('Network error: ' + err.message, 'error');
+    load();
+  }
+}
+
+function dndToast(msg, type) {
+  const existing = document.querySelector('.dnd-toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'dnd-toast ' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  const delay = type === 'error' ? 4000 : 1400;
+  setTimeout(() => el.classList.add('fade'), delay);
+  setTimeout(() => el.remove(), delay + 600);
+}
+
+const origRenderBacklog = renderBacklog;
+renderBacklog = function() {
+  origRenderBacklog();
+  dndInitBacklog();
+};
 </script>
 </body>
 </html>"""
