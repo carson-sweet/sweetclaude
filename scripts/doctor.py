@@ -44,7 +44,13 @@ try:
 except ImportError:
     sys.exit("pyyaml is required: pip install pyyaml")
 
-from schema import normalize_milestone, normalize_status
+from schema import (
+    REQUIRED_FIELDS,
+    VALID_TYPES,
+    normalize_milestone,
+    normalize_status,
+    validate_frontmatter,
+)
 from status import CANONICAL_STATUSES, TERMINAL_STATUSES, derived_status
 
 
@@ -710,6 +716,140 @@ def check_config_compat(state: ProjectState) -> list[Finding]:
     return findings
 
 
+_LEGACY_TYPE_ALIASES: frozenset[str] = frozenset({
+    "story", "bug", "debt", "chore", "release", "feature",
+})
+
+
+def _violation_to_finding(violation: str, p: Path, fm: dict) -> Finding | None:
+    """Convert a validate_frontmatter() violation string into a Finding."""
+    item_type = str(fm.get("type", ""))
+
+    if violation.startswith("missing required field: "):
+        field_name = violation.split("missing required field: ", 1)[1]
+        if field_name == "id":
+            return Finding(
+                id=f"file-diagnostics:missing-field-id:{p.name}",
+                category="file_diagnostics",
+                severity="warning",
+                summary=f"{p.name} has no ID in its frontmatter",
+                detail=f"missing-field:id in {p}",
+                file_paths=[str(p)],
+                fix_type="report-only",
+                fix_recipe={},
+            )
+        if field_name == "title":
+            return Finding(
+                id=f"file-diagnostics:missing-field-title:{p.name}",
+                category="file_diagnostics",
+                severity="warning",
+                summary=f"{p.name} has no title in its frontmatter",
+                detail=f"missing-field:title in {p}",
+                file_paths=[str(p)],
+                fix_type="report-only",
+                fix_recipe={},
+            )
+        if field_name == "type":
+            return Finding(
+                id=f"file-diagnostics:missing-field-type:{p.name}",
+                category="file_diagnostics",
+                severity="warning",
+                summary=f"{p.name} has no type set",
+                detail=f"missing-field:type in {p}",
+                file_paths=[str(p)],
+                fix_type="prompted",
+                fix_recipe={"action": "prompt", "type": "choose_value",
+                            "file": str(p), "field": "type",
+                            "options": sorted(VALID_TYPES)},
+            )
+        if field_name == "status":
+            return Finding(
+                id=f"file-diagnostics:missing-field-status:{p.name}",
+                category="file_diagnostics",
+                severity="warning",
+                summary=f"{p.name} has no status set",
+                detail=f"missing-field:status in {p}",
+                file_paths=[str(p)],
+                fix_type="prompted",
+                fix_recipe={"action": "prompt", "type": "choose_value",
+                            "file": str(p), "field": "status",
+                            "options": sorted(CANONICAL_STATUSES)},
+            )
+        if field_name == "created":
+            today = datetime.date.today().isoformat()
+            return Finding(
+                id=f"file-diagnostics:missing-field-created:{p.name}",
+                category="file_diagnostics",
+                severity="warning",
+                summary=f"{p.name} has no created date",
+                detail=f"missing-field:created in {p}",
+                file_paths=[str(p)],
+                fix_type="auto",
+                fix_recipe={"action": "write_frontmatter_field",
+                            "file": str(p), "key": "created",
+                            "value": today},
+            )
+        return None
+
+    if violation.startswith("missing required field for type"):
+        field_name = violation.rsplit(": ", 1)[1]
+        return Finding(
+            id=f"file-diagnostics:missing-type-field-{field_name}:{p.name}",
+            category="file_diagnostics",
+            severity="warning",
+            summary=f"{p.name} ({item_type}) is missing required field: {field_name}",
+            detail=f"missing-type-field:{field_name} for type={item_type} in {p}",
+            file_paths=[str(p)],
+            fix_type="prompted",
+            fix_recipe={"action": "prompt", "type": "provide_value",
+                        "file": str(p), "field": field_name,
+                        "entity_type": item_type},
+        )
+
+    if violation.startswith("invalid "):
+        parts = violation.split(": ", 1)
+        field_name = parts[0].replace("invalid ", "")
+        bad_value = parts[1] if len(parts) > 1 else "?"
+        if field_name == "status":
+            return Finding(
+                id=f"file-diagnostics:unknown-status:{p.name}",
+                category="file_diagnostics",
+                severity="warning",
+                summary=f"{p.name} has an unrecognized status: {bad_value}",
+                detail=f"unknown-status:{bad_value} in {p}",
+                file_paths=[str(p)],
+                fix_type="prompted",
+                fix_recipe={"action": "prompt", "type": "choose_value",
+                            "file": str(p), "field": "status",
+                            "options": sorted(CANONICAL_STATUSES)},
+            )
+        if field_name == "type":
+            return Finding(
+                id=f"file-diagnostics:unknown-type:{p.name}",
+                category="file_diagnostics",
+                severity="warning",
+                summary=f"{p.name} has an unrecognized type: {bad_value}",
+                detail=f"unknown-type:{bad_value} in {p}",
+                file_paths=[str(p)],
+                fix_type="prompted",
+                fix_recipe={"action": "prompt", "type": "choose_value",
+                            "file": str(p), "field": "type",
+                            "options": sorted(VALID_TYPES)},
+            )
+        return Finding(
+            id=f"file-diagnostics:invalid-{field_name}:{p.name}",
+            category="file_diagnostics",
+            severity="warning",
+            summary=f"{p.name} has an invalid {field_name}: {bad_value}",
+            detail=f"invalid-{field_name}:{bad_value} in {p}",
+            file_paths=[str(p)],
+            fix_type="report-only",
+            fix_recipe={},
+        )
+
+    return None
+
+
 def check_file_diagnostics(state: ProjectState) -> list[Finding]:
     findings: list[Finding] = []
     seen_ids: dict[str, Path] = {}
@@ -721,11 +861,6 @@ def check_file_diagnostics(state: ProjectState) -> list[Finding]:
         dirs_to_scan.append(backlog_dir)
     if roadmap_dir.is_dir():
         dirs_to_scan.append(roadmap_dir)
-
-    valid_statuses = CANONICAL_STATUSES
-    valid_types = {"story", "bug", "bug-fix", "debt", "tech-debt", "chore",
-                   "epic", "release", "spike", "enhancement", "feature",
-                   "net-new-feature", "milestone"}
 
     for scan_dir in dirs_to_scan:
         for p in scan_dir.rglob("*.md"):
@@ -779,86 +914,33 @@ def check_file_diagnostics(state: ProjectState) -> list[Finding]:
                     ))
                 else:
                     seen_ids[item_id] = p
-            else:
-                findings.append(Finding(
-                    id=f"file-diagnostics:missing-field-id:{p.name}",
-                    category="file_diagnostics",
-                    severity="warning",
-                    summary=f"{p.name} has no ID in its frontmatter",
-                    detail=f"missing-field:id in {p}",
-                    file_paths=[str(p)],
-                    fix_type="report-only",
-                    fix_recipe={},
-                ))
 
-            if not fm.get("title"):
-                findings.append(Finding(
-                    id=f"file-diagnostics:missing-field-title:{p.name}",
-                    category="file_diagnostics",
-                    severity="warning",
-                    summary=f"{p.name} has no title in its frontmatter",
-                    detail=f"missing-field:title in {p}",
-                    file_paths=[str(p)],
-                    fix_type="report-only",
-                    fix_recipe={},
-                ))
+            if not fm:
+                for field_name in REQUIRED_FIELDS["_all"]:
+                    finding = _violation_to_finding(
+                        f"missing required field: {field_name}", p, {},
+                    )
+                    if finding:
+                        findings.append(finding)
+                continue
 
-            if not fm.get("type"):
-                findings.append(Finding(
-                    id=f"file-diagnostics:missing-field-type:{p.name}",
-                    category="file_diagnostics",
-                    severity="warning",
-                    summary=f"{p.name} has no type set",
-                    detail=f"missing-field:type in {p}",
-                    file_paths=[str(p)],
-                    fix_type="prompted",
-                    fix_recipe={"action": "prompt", "type": "config_conflict",
-                                "file": str(p), "line": 0,
-                                "options": list(valid_types)},
-                ))
+            fm_normalized = dict(fm)
+            raw_status = fm_normalized.get("status")
+            if raw_status and isinstance(raw_status, str):
+                fm_normalized["status"] = normalize_status(raw_status).lower()
+            raw_type = str(fm.get("type", ""))
+            if raw_type:
+                fm_normalized["type"] = raw_type.lower()
 
-            if not fm.get("status"):
-                findings.append(Finding(
-                    id=f"file-diagnostics:missing-field-status:{p.name}",
-                    category="file_diagnostics",
-                    severity="warning",
-                    summary=f"{p.name} has no status set",
-                    detail=f"missing-field:status in {p}",
-                    file_paths=[str(p)],
-                    fix_type="prompted",
-                    fix_recipe={"action": "prompt", "type": "config_conflict",
-                                "file": str(p), "line": 0,
-                                "options": list(valid_statuses)},
-                ))
-
-            status_raw = str(fm.get("status", "")).lower().strip().strip('"')
-            status = status_raw.split("(")[0].split("—")[0].strip()
-            if status and status not in valid_statuses:
-                findings.append(Finding(
-                    id=f"file-diagnostics:unknown-status:{p.name}",
-                    category="file_diagnostics",
-                    severity="warning",
-                    summary=f"{p.name} has an unrecognized status: {status}",
-                    detail=f"unknown-status:{status} in {p}",
-                    file_paths=[str(p)],
-                    fix_type="prompted",
-                    fix_recipe={"action": "prompt", "type": "config_conflict",
-                                "file": str(p), "line": 0, "options": list(valid_statuses)},
-                ))
-
-            item_type = str(fm.get("type", "")).lower()
-            if item_type and item_type not in valid_types:
-                findings.append(Finding(
-                    id=f"file-diagnostics:unknown-type:{p.name}",
-                    category="file_diagnostics",
-                    severity="warning",
-                    summary=f"{p.name} has an unrecognized type: {item_type}",
-                    detail=f"unknown-type:{item_type} in {p}",
-                    file_paths=[str(p)],
-                    fix_type="prompted",
-                    fix_recipe={"action": "prompt", "type": "config_conflict",
-                                "file": str(p), "line": 0, "options": list(valid_types)},
-                ))
+            violations = validate_frontmatter(fm_normalized)
+            for v in violations:
+                if v.startswith("invalid type:") and raw_type.lower() in _LEGACY_TYPE_ALIASES:
+                    continue
+                finding = _violation_to_finding(v, p, fm)
+                if finding:
+                    if finding.id.endswith(":missing-field-id:" + p.name) and item_id:
+                        continue
+                    findings.append(finding)
 
     return findings
 
@@ -1438,6 +1520,16 @@ def _apply_transform(content: bytes, recipe: dict, project_dir: Path) -> bytes:
         data[recipe["key"]] = recipe["value"]
         return yaml.safe_dump(data, default_flow_style=False).encode("utf-8")
 
+    if action == "write_frontmatter_field":
+        text = content.decode("utf-8")
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            raise ValueError("No frontmatter delimiters found")
+        fm_data = yaml.safe_load(parts[1]) or {}
+        fm_data[recipe["key"]] = recipe["value"]
+        new_fm = yaml.safe_dump(fm_data, default_flow_style=False)
+        return f"---\n{new_fm}---{parts[2]}".encode("utf-8")
+
     if action == "delete_file":
         return b""
 
@@ -1461,6 +1553,17 @@ def _check_precondition(recipe: dict, content: bytes, file_path: Path) -> bool:
         try:
             data = yaml.safe_load(content.decode("utf-8")) or {}
             return data.get(recipe["key"]) == recipe["value"]
+        except (yaml.YAMLError, UnicodeDecodeError):
+            return False
+
+    if action == "write_frontmatter_field":
+        try:
+            text = content.decode("utf-8")
+            parts = text.split("---", 2)
+            if len(parts) < 3:
+                return False
+            fm_data = yaml.safe_load(parts[1]) or {}
+            return fm_data.get(recipe["key"]) == recipe["value"]
         except (yaml.YAMLError, UnicodeDecodeError):
             return False
 
