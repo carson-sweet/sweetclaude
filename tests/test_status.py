@@ -40,6 +40,8 @@ from status import (
     validate_transition,
     write_status,
     set_terminal,
+    sync_parent_status,
+    _reopen_file,
 )
 
 
@@ -1606,3 +1608,287 @@ class TestDerivedStatus:
     def test_all_non_terminal_statuses_appear_in_precedence(self):
         non_terminal = CANONICAL_STATUSES - TERMINAL_STATUSES
         assert non_terminal == set(STATUS_PRECEDENCE)
+
+
+# ---------------------------------------------------------------------------
+# _reopen_file: moves file out of done/archived, clears closed_date
+# ---------------------------------------------------------------------------
+
+class TestReopenFile:
+    def test_moves_file_from_done_to_parent(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        done_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones" / "done"
+        done_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(done_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "done",
+            "type": "milestone", "source": "auto", "closed_date": "2026-05-24T12:00:00Z",
+        })
+        result = _reopen_file(str(ms_file))
+        assert result == done_dir.parent / "MS-001-test.md"
+        assert result.exists()
+        assert not ms_file.exists()
+
+    def test_clears_closed_date(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        done_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones" / "done"
+        done_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(done_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "done",
+            "type": "milestone", "source": "auto", "closed_date": "2026-05-24T12:00:00Z",
+        })
+        result = _reopen_file(str(ms_file))
+        fm = _read_frontmatter(result)
+        assert "closed_date" not in fm
+
+    def test_moves_file_from_archived_to_parent(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        archived_dir = project_dir / ".sweetclaude" / "product" / "backlog" / "archived"
+        archived_dir.mkdir(parents=True)
+        item = _frontmatter_file(archived_dir / "BL-001-test.md", {
+            "id": "BL-001", "title": "Backlog item", "status": "wont-fix",
+            "type": "enhancement", "closed_date": "2026-05-24T12:00:00Z",
+        })
+        result = _reopen_file(str(item))
+        assert result == archived_dir.parent / "BL-001-test.md"
+        assert result.exists()
+        assert not item.exists()
+
+    def test_noop_when_not_in_done_or_archived(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "active",
+            "type": "milestone", "source": "auto",
+        })
+        result = _reopen_file(str(ms_file))
+        assert result == ms_file
+        assert ms_file.exists()
+
+    def test_raises_on_collision(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        done_dir = ms_dir / "done"
+        done_dir.mkdir(parents=True)
+        _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Existing", "status": "active", "type": "milestone",
+        })
+        done_file = _frontmatter_file(done_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Done copy", "status": "done",
+            "type": "milestone", "closed_date": "2026-05-24T12:00:00Z",
+        })
+        with pytest.raises(FileExistsError):
+            _reopen_file(str(done_file))
+
+
+# ---------------------------------------------------------------------------
+# sync_parent_status: auto-close parents without completion_criteria
+# ---------------------------------------------------------------------------
+
+class TestSyncParentAutoClose:
+    def test_auto_closes_milestone_when_all_children_terminal(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "active",
+            "type": "milestone", "source": "auto", "created": "2026-05-20", "target_release": "v1.0",
+        })
+        result = sync_parent_status(
+            str(ms_file), ["done", "done", "done"], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is True
+        assert not ms_file.exists()
+        done_file = ms_dir / "done" / "MS-001-test.md"
+        assert done_file.exists()
+        fm = _read_frontmatter(done_file)
+        assert fm["status"] == "done"
+        assert "closed_date" in fm
+
+    def test_skips_auto_close_when_has_completion_criteria(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "active",
+            "type": "milestone", "source": "auto", "created": "2026-05-20", "target_release": "v1.0",
+            "completion_criteria": [{"description": "manual check", "done": False}],
+        })
+        result = sync_parent_status(
+            str(ms_file), ["done", "done"], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is False
+        assert ms_file.exists()
+        fm = _read_frontmatter(ms_file)
+        assert fm["status"] == "active"
+
+    def test_skips_manual_source_parent(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "active",
+            "type": "milestone", "source": "manual", "created": "2026-05-20",
+        })
+        result = sync_parent_status(
+            str(ms_file), ["done", "done"], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is False
+        fm = _read_frontmatter(ms_file)
+        assert fm["status"] == "active"
+
+    def test_non_terminal_sync_still_works(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "new",
+            "type": "milestone", "source": "auto", "created": "2026-05-20", "target_release": "v1.0",
+        })
+        result = sync_parent_status(
+            str(ms_file), ["active", "new"], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is True
+        fm = _read_frontmatter(ms_file)
+        assert fm["status"] == "active"
+
+    def test_empty_milestone_stays_unchanged(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "new",
+            "type": "milestone", "source": "auto", "created": "2026-05-20", "target_release": "v1.0",
+        })
+        result = sync_parent_status(
+            str(ms_file), [], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is False
+        fm = _read_frontmatter(ms_file)
+        assert fm["status"] == "new"
+
+    def test_mixed_terminal_non_terminal_does_not_close(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "active",
+            "type": "milestone", "source": "auto", "created": "2026-05-20", "target_release": "v1.0",
+        })
+        result = sync_parent_status(
+            str(ms_file), ["done", "active"], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is False
+        fm = _read_frontmatter(ms_file)
+        assert fm["status"] == "active"
+
+    def test_auto_close_uses_auto_sync_actor(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        ms_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(ms_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "active",
+            "type": "milestone", "source": "auto", "created": "2026-05-20", "target_release": "v1.0",
+        })
+        sync_parent_status(
+            str(ms_file), ["done", "done"], "user-who-changed-child",
+            project_dir=str(project_dir),
+        )
+        entries = _read_audit_entries(project_dir)
+        auto_entries = [e for e in entries if e.get("entity") == "MS-001"]
+        assert len(auto_entries) >= 1
+        assert auto_entries[-1]["actor"] == "auto-sync"
+
+
+# ---------------------------------------------------------------------------
+# sync_parent_status: auto-reopen when child reopened
+# ---------------------------------------------------------------------------
+
+class TestSyncParentAutoReopen:
+    def test_auto_reopens_terminal_parent_when_derived_non_terminal(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        done_dir = ms_dir / "done"
+        done_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(done_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "done",
+            "type": "milestone", "source": "auto", "created": "2026-05-20", "target_release": "v1.0",
+            "closed_date": "2026-05-24T12:00:00Z",
+        })
+        result = sync_parent_status(
+            str(ms_file), ["done", "active"], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is True
+        assert not ms_file.exists()
+        reopened = ms_dir / "MS-001-test.md"
+        assert reopened.exists()
+        fm = _read_frontmatter(reopened)
+        assert fm["status"] == "active"
+        assert "closed_date" not in fm
+
+    def test_auto_reopen_skipped_for_manual_source(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        ms_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "milestones"
+        done_dir = ms_dir / "done"
+        done_dir.mkdir(parents=True)
+        ms_file = _frontmatter_file(done_dir / "MS-001-test.md", {
+            "id": "MS-001", "title": "Test milestone", "status": "done",
+            "type": "milestone", "source": "manual", "created": "2026-05-20", "target_release": "v1.0",
+            "closed_date": "2026-05-24T12:00:00Z",
+        })
+        result = sync_parent_status(
+            str(ms_file), ["done", "active"], "auto-sync",
+            project_dir=str(project_dir),
+        )
+        assert result is False
+        assert ms_file.exists()
+
+
+# ---------------------------------------------------------------------------
+# set_terminal: _from_sync skips completion criteria check
+# ---------------------------------------------------------------------------
+
+class TestSetTerminalFromSync:
+    def test_from_sync_skips_completion_criteria(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        epic_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "epics"
+        epic_dir.mkdir(parents=True)
+        epic_file = _frontmatter_file(epic_dir / "EP-099-test.md", {
+            "id": "EP-099", "title": "Test epic", "status": "active",
+            "type": "epic", "source": "auto", "created": "2026-05-20", "milestone": "MS-001",
+            "completion_criteria": [
+                {"description": "not done yet", "done": False},
+            ],
+        })
+        set_terminal(
+            str(epic_file), "done", "auto-sync",
+            project_dir=str(project_dir), source="auto", _from_sync=True,
+        )
+        done_file = epic_dir / "done" / "EP-099-test.md"
+        assert done_file.exists()
+        fm = _read_frontmatter(done_file)
+        assert fm["status"] == "done"
+
+    def test_without_from_sync_enforces_completion_criteria(self, tmp_path):
+        project_dir = _setup_project_dir(tmp_path)
+        epic_dir = project_dir / ".sweetclaude" / "product" / "roadmap" / "epics"
+        epic_dir.mkdir(parents=True)
+        epic_file = _frontmatter_file(epic_dir / "EP-099-test.md", {
+            "id": "EP-099", "title": "Test epic", "status": "active",
+            "type": "epic", "source": "auto", "created": "2026-05-20", "milestone": "MS-001",
+            "completion_criteria": [
+                {"description": "not done yet", "done": False},
+            ],
+        })
+        with pytest.raises(ValueError, match="completion criteria"):
+            set_terminal(
+                str(epic_file), "done", "user",
+                project_dir=str(project_dir),
+            )

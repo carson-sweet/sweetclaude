@@ -177,10 +177,20 @@ def sync_parent_status(filepath: str, child_statuses: list[str], actor: str, pro
     if current == new_derived:
         return False
 
-    if new_derived in TERMINAL_STATUSES:
-        return False
+    has_criteria = bool(fm.get("completion_criteria"))
 
-    write_status(filepath, new_derived, actor, project_dir=project_dir, source="auto", _from_sync=True)
+    if new_derived in TERMINAL_STATUSES:
+        if has_criteria:
+            return False
+        set_terminal(filepath, new_derived, "auto-sync", project_dir=project_dir, source="auto", _from_sync=True)
+        return True
+
+    if current in TERMINAL_STATUSES:
+        actual_path = _reopen_file(filepath)
+        write_status(str(actual_path), new_derived, "auto-sync", project_dir=project_dir, source="auto", reopen=True, _from_sync=True)
+        return True
+
+    write_status(filepath, new_derived, "auto-sync", project_dir=project_dir, source="auto", _from_sync=True)
     return True
 
 
@@ -360,6 +370,49 @@ def _dest_dir_for_terminal(filepath: Path) -> Path:
     return parent / "done"
 
 
+def _reopen_file(filepath: str) -> Path:
+    path = Path(filepath)
+    parent_name = path.parent.name
+    if parent_name not in ("done", "archived"):
+        return path
+
+    dest_dir = path.parent.parent
+    dest_path = dest_dir / path.name
+
+    if dest_path.exists():
+        raise FileExistsError(f"Cannot reopen: destination exists: {dest_path}")
+
+    raw = path.read_text(encoding="utf-8-sig")
+    fm, _fm_text, body = _parse_frontmatter(raw)
+    fm.pop("closed_date", None)
+    fm["updated"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    updated_content = "---\n" + yaml.safe_dump(fm, default_flow_style=False, allow_unicode=True) + "---\n" + body
+
+    fd, tmp = tempfile.mkstemp(dir=dest_dir, suffix=".tmp")
+    try:
+        os.write(fd, updated_content.encode("utf-8"))
+    finally:
+        os.close(fd)
+
+    try:
+        os.replace(tmp, str(dest_path))
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
+
+    try:
+        path.unlink()
+    except OSError as e:
+        try:
+            dest_path.unlink()
+        except OSError:
+            pass
+        raise RuntimeError(f"Reopen move failed; rolled back: {e}") from e
+
+    return dest_path
+
+
 def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None = None, source: str | None = None, _from_sync: bool = False) -> None:
     if status not in TERMINAL_STATUSES:
         raise ValueError(
@@ -390,7 +443,7 @@ def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None
     old_status = fm_check["status"]
     validate_transition(old_status, status, "issue")
 
-    if fm.get("type") == "epic" and status == "done":
+    if not _from_sync and fm.get("type") == "epic" and status == "done":
         _check_completion_criteria(fm, filepath)
 
     dest_dir = _dest_dir_for_terminal(path)
