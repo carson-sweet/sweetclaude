@@ -6,9 +6,11 @@ SweetClaude status module — canonical work-item status lifecycle.
 Public API:
   CANONICAL_STATUSES  frozenset of 11 valid status values
   TERMINAL_STATUSES   frozenset of 4 terminal status values
+  STATUS_PRECEDENCE   tuple of 7 non-terminal statuses in precedence order
   validate(value)     bool
   assert_valid(value) raises ValueError if not canonical
   validate_transition(old, new, entity_type, reopen=False)
+  derived_status(child_statuses)  read-only rollup from children
   write_status(filepath, new_status, actor, project_dir=None)
   set_terminal(filepath, status, actor, project_dir=None)
 """
@@ -35,6 +37,22 @@ CANONICAL_STATUSES: frozenset[str] = frozenset({
 TERMINAL_STATUSES: frozenset[str] = frozenset({
     "done", "declined", "abandoned", "superseded",
 })
+
+STATUS_PRECEDENCE: tuple[str, ...] = (
+    "blocked", "on-hold", "active", "in-review", "ready", "new", "deferred",
+)
+
+
+def derived_status(child_statuses: list[str]) -> str:
+    if not child_statuses:
+        return "new"
+    non_terminal = [s for s in child_statuses if s in CANONICAL_STATUSES and s not in TERMINAL_STATUSES]
+    if not non_terminal:
+        return "done"
+    for status in STATUS_PRECEDENCE:
+        if status in non_terminal:
+            return status
+    return "active"
 
 
 def validate(value) -> bool:
