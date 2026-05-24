@@ -1173,10 +1173,10 @@ class MigrationRunner:
 
     def _write_migration_map(self, directory: Path, mapping: list[dict]) -> None:
         """Write the standardized MIGRATION-MAP.md to the artifact directory."""
-        from datetime import date
+        from datetime import datetime, timezone
         lines = [
             "# v_from → v_to ID Migration Map",
-            f"**Migrated:** {date.today().isoformat()}",
+            f"**Migrated:** {datetime.now(timezone.utc).isoformat(timespec='seconds')}",
             "",
             "| From ID | To ID | Title | Type |",
             "|---|---|---|---|",

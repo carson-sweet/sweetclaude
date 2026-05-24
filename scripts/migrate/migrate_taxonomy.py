@@ -12,7 +12,7 @@ import tempfile
 import time
 import warnings
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -897,7 +897,7 @@ def build_plan(project_dir: str, skip_conflicting: bool = False) -> MigrationPla
             if parsed.get("created"):
                 fm["created"] = parsed["created"]
             else:
-                fm["created"] = datetime.now().strftime("%Y-%m-%d")
+                fm["created"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
             body = parsed.get("body", "")
             dest_dir = product_base / "roadmap" / "milestones"
@@ -947,7 +947,7 @@ def build_plan(project_dir: str, skip_conflicting: bool = False) -> MigrationPla
             if parsed.get("created"):
                 fm["created"] = parsed["created"]
             else:
-                fm["created"] = datetime.now().strftime("%Y-%m-%d")
+                fm["created"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
             body = parsed.get("body", "")
             dest_dir = product_base / "roadmap" / "epics"
@@ -1128,7 +1128,7 @@ def _build_issue_frontmatter(
     if parsed.get("created"):
         fm["created"] = parsed["created"]
     else:
-        fm["created"] = datetime.now().strftime("%Y-%m-%d")
+        fm["created"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     return fm
 

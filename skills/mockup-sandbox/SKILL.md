@@ -208,7 +208,7 @@ mockups:
     file: artifacts/mockup-sandbox/src/components/mockups/{group}/{ComponentName}.tsx
     preview_url: http://localhost:5174/preview/{group}/{ComponentName}
     status: live
-    created: {today}
+    created: {now_utc}
     description: {one-line description}
 ```
 

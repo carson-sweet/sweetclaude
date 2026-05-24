@@ -168,7 +168,7 @@ with open('.sweetclaude/state/performance.yaml') as f:
     state = yaml.safe_load(f)
 
 result = {
-    'recorded_at': datetime.now().isoformat(),
+    'recorded_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
     'type': 'baseline',
     'p50_ms': <p50>,
     'p95_ms': <p95>,

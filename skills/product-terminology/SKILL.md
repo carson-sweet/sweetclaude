@@ -107,7 +107,7 @@ definition = "<definition>"
 rationale = "<rationale>"
 aliases = [a.strip() for a in "<aliases>".split(",") if a.strip()] if "<aliases>" else []
 avoid = [a.strip() for a in "<avoid>".split(",") if a.strip()] if "<avoid>" else []
-today = datetime.now().strftime("%Y-%m-%d")
+today = datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 entry = f"""
 ## {term}

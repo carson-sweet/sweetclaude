@@ -112,6 +112,12 @@ class DependencyMissing(Exception):
 # Constants
 # ---------------------------------------------------------------------------
 
+_DATE_ONLY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+_DATETIME_FIELDS = frozenset({
+    "created", "updated", "completed", "closed_date",
+})
+
 RUN_SCRIPT_ALLOWLIST = {
     "cache.py",
     "generate-session-state.sh",
@@ -776,7 +782,9 @@ def _violation_to_finding(violation: str, p: Path, fm: dict) -> Finding | None:
                             "options": sorted(CANONICAL_STATUSES)},
             )
         if field_name == "created":
-            today = datetime.date.today().isoformat()
+            now_utc = datetime.datetime.now(
+                datetime.timezone.utc,
+            ).isoformat(timespec="seconds")
             return Finding(
                 id=f"file-diagnostics:missing-field-created:{p.name}",
                 category="file_diagnostics",
@@ -787,7 +795,7 @@ def _violation_to_finding(violation: str, p: Path, fm: dict) -> Finding | None:
                 fix_type="auto",
                 fix_recipe={"action": "write_frontmatter_field",
                             "file": str(p), "key": "created",
-                            "value": today},
+                            "value": now_utc},
             )
         return None
 
@@ -941,6 +949,24 @@ def check_file_diagnostics(state: ProjectState) -> list[Finding]:
                     if finding.id.endswith(":missing-field-id:" + p.name) and item_id:
                         continue
                     findings.append(finding)
+
+            for dt_field in _DATETIME_FIELDS:
+                val = fm.get(dt_field)
+                if val is not None and isinstance(val, (str, datetime.date)):
+                    val_str = val.isoformat() if isinstance(val, datetime.date) else str(val)
+                    if _DATE_ONLY_RE.match(val_str):
+                        findings.append(Finding(
+                            id=f"file-diagnostics:date-only-{dt_field}:{p.name}",
+                            category="file_diagnostics",
+                            severity="warning",
+                            summary=f"{p.name} has date-only {dt_field} — needs full datetime with timezone",
+                            detail=f"date-only:{dt_field}={val_str} in {p}",
+                            file_paths=[str(p)],
+                            fix_type="auto",
+                            fix_recipe={"action": "write_frontmatter_field",
+                                        "file": str(p), "key": dt_field,
+                                        "value": f"{val_str}T00:00:00+00:00"},
+                        ))
 
     return findings
 

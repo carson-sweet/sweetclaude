@@ -78,6 +78,8 @@ python3 scripts/cache.py --project-dir . --query next-id --prefix EP
 
 Derive slug from title: lowercase, replace non-alphanumeric with hyphens, collapse consecutive hyphens, trim trailing hyphens, truncate to 40 characters.
 
+Compute `{now_utc}` as the current UTC datetime in ISO 8601 format with seconds precision (e.g. `2026-05-24T15:30:00+00:00`).
+
 Write to `.sweetclaude/product/roadmap/epics/EP-{NNN}-{slug}.md`:
 
 ```yaml
@@ -93,8 +95,8 @@ completion_criteria:
   - "{criterion 2}"
 completion_criteria_done: []
 depends_on: [{dependencies}]
-created: {today}
-updated: {today}
+created: {now_utc}
+updated: {now_utc}
 ---
 
 ## Description

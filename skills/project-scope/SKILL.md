@@ -79,7 +79,7 @@ from datetime import datetime
 scope = {
     'schema_version': 1,
     'version': 1,
-    'last_changed': datetime.now().strftime('%Y-%m-%d'),
+    'last_changed': datetime.now(timezone.utc).isoformat(timespec='seconds'),
     'statement': '''<statement>''',
     'in_scope': <in_scope_list>,
     'out_of_scope': <out_of_scope_list>,
@@ -123,12 +123,12 @@ with open('$PWD/.sweetclaude/state/scope.yaml') as f:
     scope = yaml.safe_load(f)
 
 scope['version'] += 1
-scope['last_changed'] = datetime.now().strftime('%Y-%m-%d')
+scope['last_changed'] = datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 # Apply changes: <update in_scope / out_of_scope / statement as needed>
 
 scope['change_log'].append({
-    'date': datetime.now().strftime('%Y-%m-%d'),
+    'date': datetime.now(timezone.utc).isoformat(timespec='seconds'),
     'change': '<one line description of change>',
     'cascade_triggered': True
 })

@@ -172,7 +172,7 @@ Append to `.sweetclaude/state/mockup-registry.yaml`:
     file: artifacts/mockup-sandbox/src/components/mockups/{group}/Current.tsx
     preview_url: http://localhost:5174/preview/{group}/Current
     status: live
-    created: {today}
+    created: {now_utc}
     description: Extracted from {original file path}
     source_component: {original file path}
 ```

@@ -224,13 +224,13 @@ with open('$PWD/.sweetclaude/state/phase.yaml') as f:
     phase = yaml.safe_load(f)
 
 phase['mode'] = '<target_mode>'
-phase['mode_set_at'] = datetime.now().strftime('%Y-%m-%d')
+phase['mode_set_at'] = datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 if 'mode_history' not in phase:
     phase['mode_history'] = []
 phase['mode_history'].append({
     'mode': '$CURRENT_MODE',
-    'set_at': phase.get('mode_set_at', datetime.now().strftime('%Y-%m-%d')),
+    'set_at': phase.get('mode_set_at', datetime.now(timezone.utc).isoformat(timespec='seconds')),
     'snapshot_id': '$SNAPSHOT_ID'
 })
 

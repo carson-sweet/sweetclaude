@@ -227,7 +227,7 @@ Ask one question at a time. Do not present a form.
 Once all answers collected:
 
 ```python
-today = datetime.date.today().isoformat()
+today = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
 typ = '<type>'  # workflow type key from config/workflow-templates.yaml
 new_id = assign_new_id()
 slug = make_slug('<title>')

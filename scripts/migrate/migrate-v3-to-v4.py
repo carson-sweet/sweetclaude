@@ -467,7 +467,9 @@ def execute(project_dir: pathlib.Path, include_done: bool) -> dict:
     if guard:
         return guard
     plan = build_plan(project_dir, include_done)
-    today = datetime.date.today().isoformat()
+    today = datetime.datetime.now(
+        datetime.timezone.utc,
+    ).isoformat(timespec="seconds")
 
     created_paths: list[str] = []
     migration_map: list[dict] = []
