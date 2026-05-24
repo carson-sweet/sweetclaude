@@ -6497,7 +6497,7 @@ class TestCheckDerivedStatus:
         assert len(findings) == 1
         f = findings[0]
         assert f.category == "derived_status"
-        assert f.severity == "info"
+        assert f.severity == "warning"
         assert "EP-01" in f.id
         assert "'new'" in f.summary
         assert "'active'" in f.summary
@@ -6671,4 +6671,4 @@ class TestCheckDerivedStatus:
                  "created": "2026-01-01", "epic": "EP-01"},
             ])
         findings = check_derived_status(state)
-        assert findings[0].fix_type == "report-only"
+        assert findings[0].fix_type == "auto"

@@ -20,11 +20,14 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
 _ID_PATTERN = re.compile(r"^(ISSUE|EP|MS)-\d{2,}$")
 _MILESTONE_PATTERN = re.compile(r"^MS-\d{2,}$")
 
+VALID_SOURCE_VALUES: frozenset[str] = frozenset({"auto", "manual"})
+
 FIELD_VALIDATORS: dict[str, Any] = {
     "id": lambda v: bool(_ID_PATTERN.match(str(v))),
     "type": lambda v: v in VALID_TYPES,
     "status": lambda v: v in _get_canonical_statuses(),
     "milestone": lambda v: bool(_MILESTONE_PATTERN.match(str(v))),
+    "source": lambda v: v in VALID_SOURCE_VALUES,
 }
 
 

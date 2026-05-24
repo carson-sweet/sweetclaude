@@ -346,7 +346,7 @@ def _write_field(project_dir, item_id, field, value, actor):
 
     old_val = fm.get(field)
     fm[field] = value
-    fm["updated"] = datetime.utcnow().strftime("%Y-%m-%d")
+    fm["updated"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     _atomic_write_frontmatter(source, fm, body)
 
@@ -373,15 +373,15 @@ def handle_update(project_dir, payload):
         return {"error": f"Field '{field}' is not mutable. Allowed: {sorted(MUTABLE_FIELDS)}"}
 
     if field == "status":
-        source = _resolve_source_path(project_dir, item_id)
-        if not source:
+        src_path = _resolve_source_path(project_dir, item_id)
+        if not src_path:
             return {"error": f"Item {item_id} not found"}
         new_status = str(value).strip()
         from status import validate, TERMINAL_STATUSES as TS, write_status, set_terminal
         from status import _parse_frontmatter
         if not validate(new_status):
             return {"error": f"Invalid status: {new_status!r}"}
-        raw = source.read_text(encoding="utf-8-sig")
+        raw = src_path.read_text(encoding="utf-8-sig")
         try:
             fm, _, _ = _parse_frontmatter(raw)
             old_status = fm.get("status", "")
@@ -389,9 +389,9 @@ def handle_update(project_dir, payload):
             old_status = ""
         try:
             if new_status in TS:
-                set_terminal(str(source), new_status, actor, project_dir=str(project_dir))
+                set_terminal(str(src_path), new_status, actor, project_dir=str(project_dir), source="manual")
             else:
-                write_status(str(source), new_status, actor, project_dir=str(project_dir))
+                write_status(str(src_path), new_status, actor, project_dir=str(project_dir), source="manual")
             return {"ok": True, "id": item_id, "field": "status", "old": old_status, "new": new_status}
         except (ValueError, FileNotFoundError, FileExistsError, RuntimeError) as e:
             return {"error": str(e)}
@@ -497,7 +497,11 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
-  min-height: 100vh;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .header {
@@ -507,9 +511,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
   z-index: 100;
+  flex-shrink: 0;
 }
 
 .header h1 {
@@ -538,7 +541,7 @@ body {
   font-size: 11px;
 }
 
-.main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.main { max-width: 100%; padding: 24px; }
 
 .summary-row {
   display: grid;
@@ -745,26 +748,70 @@ body {
 .type-epic { color: var(--purple); }
 .type-milestone { color: var(--green); }
 
+.app-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+.app-layout > .main {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  transition: none;
+}
 .detail-overlay {
   display: none;
-  position: fixed;
-  top: 0; right: 0; bottom: 0;
+  position: relative;
   width: 480px;
+  min-width: 300px;
+  max-width: 70vw;
   background: var(--surface);
   border-left: 1px solid var(--border);
-  z-index: 200;
   overflow-y: auto;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+.detail-overlay.open { display: flex; flex-direction: column; }
+.detail-resize-handle {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  z-index: 210;
+}
+.detail-resize-handle:hover,
+.detail-resize-handle.dragging {
+  background: var(--accent);
 }
 
-.detail-overlay.open { display: block; }
-
 .detail-header {
-  padding: 20px 24px;
+  padding: 16px 24px;
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+}
+
+.detail-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.detail-eyebrow-id {
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.detail-header-title {
+  font-size: 16px;
+  color: var(--text-bright);
+  margin-top: 6px;
+  font-weight: 500;
+  line-height: 1.3;
 }
 
 .detail-close {
@@ -775,14 +822,51 @@ body {
   cursor: pointer;
   padding: 4px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .detail-close:hover { color: var(--text); }
 
-.detail-body { padding: 20px 24px; }
+.detail-body { padding: 0 24px 20px; }
+
+.detail-section {
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-section > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.detail-section > summary::-webkit-details-marker { display: none; }
+
+.detail-section > summary::before {
+  content: '▶';
+  font-size: 9px;
+  color: var(--accent);
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+
+.detail-section[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.detail-section > .section-content {
+  padding: 0 0 12px;
+}
 
 .detail-field {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .detail-field .field-label {
@@ -796,6 +880,12 @@ body {
 .detail-field .field-value {
   font-size: 13px;
   color: var(--text-bright);
+}
+
+.detail-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .criteria-list {
@@ -930,22 +1020,18 @@ body {
   letter-spacing: 0.04em;
 }
 
-.derived-badge {
+.source-badge {
   font-size: 10px;
   font-family: var(--mono);
   padding: 2px 8px;
   border-radius: 10px;
   letter-spacing: 0.04em;
+  color: var(--text-dim);
 }
 
-.derived-match {
-  background: rgba(78,205,196,0.1);
-  color: var(--green-dim);
-}
-
-.derived-mismatch {
-  background: rgba(224,85,85,0.15);
-  color: var(--red);
+.source-manual {
+  background: rgba(224,170,85,0.15);
+  color: var(--yellow, #e0aa55);
 }
 
 .release-meta {
@@ -1079,6 +1165,7 @@ body {
 }
 
 .story-row:hover { color: var(--text-bright); }
+.story-row:hover .drag-handle { opacity: 1; }
 
 .story-row .story-id {
   font-family: var(--mono);
@@ -1239,7 +1326,9 @@ body {
 
 @media (max-width: 768px) {
   .summary-row { grid-template-columns: repeat(2, 1fr); }
-  .detail-overlay { width: 100%; }
+  .app-layout { flex-direction: column; }
+  .detail-overlay { width: 100% !important; max-width: 100%; min-width: 0; border-left: none; border-top: 1px solid var(--border); }
+  .detail-resize-handle { display: none; }
   .controls { flex-direction: column; }
   .controls input[type="text"] { width: 100%; }
   .epic-node { padding-left: 24px; }
@@ -1310,6 +1399,7 @@ body {
   </div>
 </div>
 
+<div class="app-layout">
 <div class="main">
   <div class="summary-row" id="summary-row"></div>
 
@@ -1358,7 +1448,7 @@ body {
           <th>ID</th>
           <th>Title</th>
           <th>Status</th>
-          <th>Derived</th>
+          <th>Source</th>
           <th>Milestone</th>
           <th>Criteria</th>
           <th>Issues</th>
@@ -1382,15 +1472,17 @@ body {
 </div>
 
 <div class="detail-overlay" id="detail-overlay">
+  <div class="detail-resize-handle" id="detail-resize-handle"></div>
   <div class="detail-header">
     <div>
-      <div class="id-cell" id="detail-id"></div>
-      <h2 id="detail-title" style="font-size:16px;color:var(--text-bright);margin-top:4px;font-weight:500;"></h2>
+      <div class="detail-eyebrow" id="detail-eyebrow"></div>
+      <div class="detail-header-title" id="detail-title"></div>
     </div>
     <button class="detail-close" onclick="closeDetail()">&times;</button>
   </div>
   <div class="detail-body" id="detail-body"></div>
 </div>
+</div><!-- /app-layout -->
 
 <script>
 let DATA = null;
@@ -1484,7 +1576,7 @@ function renderRoadmap() {
     html += `<span class="release-id">${ms.id}</span> ${esc(ms.title)}`;
     if (isDone) html += ` <span class="done-check">&#10003;</span>`;
     if (isCurrent) html += ` <span class="current-badge">current</span>`;
-    html += ` ${derivedBadge(ms.status, ms.derived_status)}`;
+    html += ` ${sourceBadge(ms.source, ms.status, ms.derived_status)}`;
     html += `</div>`;
     html += `<div class="release-meta">`;
     html += `${statusBadge(ms.status)}`;
@@ -1546,7 +1638,7 @@ function renderReleases() {
     html += `<div class="release-card">`;
     html += `<div class="release-card-header">`;
     html += `<div class="release-card-title"><span class="id-cell" style="margin-right:8px">${ms.id}</span>${esc(ms.title)}</div>`;
-    html += `<div>${statusBadge(ms.status)} ${derivedBadge(ms.status, ms.derived_status)}</div>`;
+    html += `<div>${statusBadge(ms.status)} ${sourceBadge(ms.source, ms.status, ms.derived_status)}</div>`;
     html += `</div>`;
 
     for (const ep of ms.epics) {
@@ -1598,7 +1690,7 @@ function renderEpicNode(ep, idx, relId) {
   html += `<span class="epic-title-text">${esc(ep.title)}</span>`;
   if (isDone) html += ` <span class="done-check">&#10003;</span>`;
   html += ` ${statusBadge(ep.status)}`;
-  html += ` ${derivedBadge(ep.status, ep.derived_status)}`;
+  html += ` ${sourceBadge(ep.source, ep.status, ep.derived_status)}`;
   html += `</div>`;
 
   html += `<div class="epic-stats">`;
@@ -1618,9 +1710,10 @@ function renderEpicNode(ep, idx, relId) {
     const visibleStories = openStories.slice(0, 20);
     const hiddenOpen = openStories.length - visibleStories.length;
     html += `<span class="story-toggle" onclick="event.stopPropagation(); toggleStories('${uid}')">${ep.stories.length} ${ep.stories.length === 1 ? 'issue' : 'issues'} &rsaquo;</span>`;
-    html += `<div class="story-rows" id="stories-${uid}">`;
+    html += `<div class="story-rows dnd-stories" id="stories-${uid}" data-epic="${ep.id}">`;
     html += visibleStories.map(s => {
-      return `<div class="story-row" onclick="event.stopPropagation(); showDetail('${s.id}')">
+      return `<div class="story-row" data-id="${s.id}" onclick="event.stopPropagation(); showDetail('${s.id}')">
+        <span class="drag-handle" style="font-size:12px">&#x2630;</span>
         <span class="story-id">${s.id}</span>
         <span class="story-title">${esc(s.title)}</span>
         ${statusBadge(s.status)}
@@ -1685,10 +1778,13 @@ function statusBadge(s) {
   return `<span class="status-badge status-${cls}">${s}</span>`;
 }
 
-function derivedBadge(stored, derived) {
-  if (!derived) return '';
-  if (stored === derived) return `<span class="derived-badge derived-match">derived: ${derived}</span>`;
-  return `<span class="derived-badge derived-mismatch">derived: ${derived}</span>`;
+function sourceBadge(source, status, derived) {
+  const s = source || 'auto';
+  if (s === 'manual' && derived && status !== derived) {
+    return `<span class="source-badge source-manual" title="Children suggest: ${derived}">manual</span>`;
+  }
+  if (s === 'manual') return `<span class="source-badge source-manual">manual</span>`;
+  return `<span class="source-badge">auto</span>`;
 }
 
 function priorityBadge(p) {
@@ -1765,7 +1861,7 @@ function renderEpics() {
         <td class="id-cell">${i.id}</td>
         <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.title)}</td>
         <td>${statusBadge(i.status)}</td>
-        <td>${derivedBadge(i.status, i.derived_status)}</td>
+        <td>${sourceBadge(i.source, i.status, i.derived_status)}</td>
         <td style="font-family:var(--mono);font-size:12px">${i.milestone || '-'}</td>
         <td style="font-family:var(--mono);font-size:12px">${i.criteria_done||0}/${i.criteria_total||0}</td>
         <td style="font-family:var(--mono);font-size:12px">${storiesDone}/${storiesTotal}</td>
@@ -1883,82 +1979,111 @@ function renderActivity() {
 function showDetail(id) {
   const item = DATA.items.find(i => i.id === id);
   if (!item) return;
-  document.getElementById('detail-id').textContent = item.id;
+
+  const typeLabel = (item.type || '').toUpperCase().replace('-', ' ');
+  let eyebrow = `<span class="detail-eyebrow-id">${typeLabel}: ${item.id}</span>`;
+  eyebrow += statusBadge(item.status);
+  if (item.type === 'epic' || item.type === 'milestone') {
+    eyebrow += sourceBadge(item.source, item.status, item.derived_status);
+  }
+  if (item.priority) eyebrow += priorityBadge(item.priority);
+  document.getElementById('detail-eyebrow').innerHTML = eyebrow;
   document.getElementById('detail-title').textContent = item.title;
 
-  let html = `
-    <div class="detail-field"><div class="field-label">Status</div><div class="field-value">${statusBadge(item.status)}</div></div>
-    <div class="detail-field"><div class="field-label">Type</div><div class="field-value">${typeBadge(item.type)}</div></div>
-  `;
+  let html = '';
 
-  if (item.derived_status) {
-    html += `<div class="detail-field"><div class="field-label">Derived Status</div><div class="field-value">${derivedBadge(item.status, item.derived_status)}</div></div>`;
-  }
-
-  if (item.priority) html += `<div class="detail-field"><div class="field-label">Priority</div><div class="field-value">${priorityBadge(item.priority)}</div></div>`;
-  if (item.effort) html += `<div class="detail-field"><div class="field-label">Effort</div><div class="field-value" style="font-family:var(--mono)">${item.effort}</div></div>`;
-  if (item.epic) html += `<div class="detail-field"><div class="field-label">Epic</div><div class="field-value"><span class="id-cell" style="cursor:pointer" onclick="showDetail('${item.epic}')">${item.epic}</span></div></div>`;
-  if (item.milestone) html += `<div class="detail-field"><div class="field-label">Milestone</div><div class="field-value" style="font-family:var(--mono)">${item.milestone}</div></div>`;
-  if (item.objective) html += `<div class="detail-field"><div class="field-label">Objective</div><div class="field-value">${esc(item.objective)}</div></div>`;
-
-  if (item.completion_criteria?.length) {
-    html += `<div class="detail-field"><div class="field-label">Completion Criteria (${item.criteria_done}/${item.criteria_total})</div>
-      <ul class="criteria-list">${item.completion_criteria.map(c =>
-        `<li class="${c.done ? 'criteria-done' : 'criteria-pending'}">${esc(c.criterion)}</li>`
-      ).join('')}</ul></div>`;
-  }
-
+  // Details section
+  let detailFields = '';
+  if (item.epic) detailFields += `<div class="detail-field"><div class="field-label">Epic</div><div class="field-value"><span class="id-cell" style="cursor:pointer" onclick="showDetail('${item.epic}')">${item.epic}</span></div></div>`;
+  if (item.milestone) detailFields += `<div class="detail-field"><div class="field-label">Milestone</div><div class="field-value" style="font-family:var(--mono)">${item.milestone}</div></div>`;
   if (item.depends_on?.length) {
-    html += `<div class="detail-field"><div class="field-label">Depends On</div><div class="field-value">${item.depends_on.map(d =>
+    detailFields += `<div class="detail-field"><div class="field-label">Depends On</div><div class="field-value">${item.depends_on.map(d =>
       `<span class="id-cell" style="cursor:pointer;margin-right:8px" onclick="showDetail('${d}')">${d}</span>`
     ).join('')}</div></div>`;
+  }
+  if (item.effort) detailFields += `<div class="detail-field"><div class="field-label">Effort</div><div class="field-value" style="font-family:var(--mono)">${item.effort}</div></div>`;
+  if (item.objective) detailFields += `<div class="detail-field"><div class="field-label">Objective</div><div class="field-value">${esc(item.objective)}</div></div>`;
+  if (item.tags?.length) {
+    detailFields += `<div class="detail-field"><div class="field-label">Tags</div><div class="field-value">${item.tags.map(t =>
+      `<span style="background:var(--surface-raised);border-radius:4px;padding:2px 8px;font-size:11px;font-family:var(--mono);margin-right:4px">${t}</span>`
+    ).join('')}</div></div>`;
+  }
+  function fmtDate(v) {
+    if (!v) return '';
+    if (v.includes('T')) {
+      const d = new Date(v);
+      return d.toISOString().replace('T', ' ').replace(/\\.\\d+Z$/, ' UTC');
+    }
+    return v + ' 00:00 UTC';
+  }
+  function completionTime(created, closed) {
+    if (!created || !closed) return null;
+    const c = new Date(created.includes('T') ? created : created + 'T00:00:00Z');
+    const e = new Date(closed.includes('T') ? closed : closed + 'T00:00:00Z');
+    const ms = e - c;
+    if (ms < 0) return null;
+    const totalMin = Math.floor(ms / 60000);
+    const d = Math.floor(totalMin / 1440);
+    const h = Math.floor((totalMin % 1440) / 60);
+    const m = totalMin % 60;
+    const parts = [];
+    if (d) parts.push(d + 'd');
+    if (h) parts.push(h + 'h');
+    parts.push(m + 'm');
+    return parts.join(', ');
+  }
+  const dateFields = [];
+  if (item.created) dateFields.push(`<div class="detail-field"><div class="field-label">Created</div><div class="field-value" style="font-family:var(--mono);font-size:12px">${fmtDate(item.created)}</div></div>`);
+  if (item.updated) dateFields.push(`<div class="detail-field"><div class="field-label">Updated</div><div class="field-value" style="font-family:var(--mono);font-size:12px">${fmtDate(item.updated)}</div></div>`);
+  if (item.closed_date) dateFields.push(`<div class="detail-field"><div class="field-label">Closed</div><div class="field-value" style="font-family:var(--mono);font-size:12px">${fmtDate(item.closed_date)}</div></div>`);
+  const ct = completionTime(item.created, item.closed_date);
+  if (ct) dateFields.push(`<div class="detail-field"><div class="field-label">Completion Time</div><div class="field-value" style="font-family:var(--mono);font-size:12px">${ct}</div></div>`);
+  if (dateFields.length) detailFields += `<div class="detail-meta-grid">${dateFields.join('')}</div>`;
+
+  if (detailFields) {
+    html += `<details class="detail-section" open><summary>Details</summary><div class="section-content">${detailFields}</div></details>`;
+  }
+
+  if (item.completion_criteria?.length) {
+    html += `<details class="detail-section" open><summary>Completion Criteria (${item.criteria_done}/${item.criteria_total})</summary><div class="section-content">
+      <ul class="criteria-list">${item.completion_criteria.map(c =>
+        `<li class="${c.done ? 'criteria-done' : 'criteria-pending'}">${esc(c.criterion)}</li>`
+      ).join('')}</ul></div></details>`;
   }
 
   if (item.stories?.length) {
     const nonDone = item.stories.filter(s => !TERMINAL.has(s.status));
     const doneCount = item.stories.length - nonDone.length;
-    html += `<div class="detail-field"><div class="field-label">Issues (${item.stories.filter(s=>TERMINAL.has(s.status)).length}/${item.stories.length} done)</div>
-      <table class="item-table" style="margin-top:8px"><tbody>${nonDone.map(s => `
-        <tr onclick="showDetail('${s.id}')">
-          <td class="id-cell" style="padding:6px 8px">${s.id}</td>
-          <td style="padding:6px 8px;font-size:12px">${esc(s.title)}</td>
-          <td style="padding:6px 8px">${statusBadge(s.status)}</td>
-        </tr>`).join('')}</tbody></table>`;
+    html += `<details class="detail-section" open><summary>Issues (${item.stories.filter(s=>TERMINAL.has(s.status)).length}/${item.stories.length} done)</summary><div class="section-content">
+      <div class="dnd-stories" id="detail-stories" data-epic="${item.id}" style="margin-top:4px">${nonDone.map(s => `
+        <div class="story-row" data-id="${s.id}" onclick="showDetail('${s.id}')" style="padding:6px 8px;border-bottom:1px solid var(--border)">
+          <span class="drag-handle" style="font-size:12px">&#x2630;</span>
+          <span class="id-cell">${s.id}</span>
+          <span class="story-title">${esc(s.title)}</span>
+          ${statusBadge(s.status)}
+        </div>`).join('')}</div>`;
     if (doneCount > 0) html += `<div style="font-size:11px;color:var(--green-dim);padding:4px 0">(+${doneCount} done, not shown)</div>`;
-    html += `</div>`;
-  }
-
-  if (item.tags?.length) {
-    html += `<div class="detail-field"><div class="field-label">Tags</div><div class="field-value">${item.tags.map(t =>
-      `<span style="background:var(--surface-raised);border-radius:4px;padding:2px 8px;font-size:11px;font-family:var(--mono);margin-right:4px">${t}</span>`
-    ).join('')}</div></div>`;
+    html += `</div></details>`;
   }
 
   const relatedCommits = DATA.git.commits.filter(c => c.item_ids.includes(item.id));
   if (relatedCommits.length) {
-    html += `<div class="detail-field"><div class="field-label">Git History (${relatedCommits.length})</div>
+    html += `<details class="detail-section" open><summary>Git History (${relatedCommits.length})</summary><div class="section-content">
       <ul class="commit-list">${relatedCommits.map(c => `
         <li class="commit-item">
           <span class="commit-sha">${c.short_sha}</span>
           <span class="commit-date">${formatDate(c.date)}</span>
           <div class="commit-msg">${esc(c.message)}</div>
-        </li>`).join('')}</ul></div>`;
+        </li>`).join('')}</ul></div></details>`;
   }
 
-  if (item.created || item.updated) {
-    html += `<div class="detail-field" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--text-dim);font-family:var(--mono)">
-        ${item.created ? `Created: ${item.created}` : ''} ${item.updated ? `&nbsp;&middot;&nbsp; Updated: ${item.updated}` : ''}
-        ${item.closed_date ? `&nbsp;&middot;&nbsp; Closed: ${item.closed_date}` : ''}
-      </div></div>`;
-  }
-
-  html += `<div id="detail-body-content" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+  html += `<details class="detail-section" open id="detail-desc-section"><summary>Description</summary><div class="section-content" id="detail-body-content">
     <div style="color:var(--text-dim);font-size:12px">Loading...</div>
-  </div>`;
+  </div></details>`;
 
   document.getElementById('detail-body').innerHTML = html;
   document.getElementById('detail-overlay').classList.add('open');
+  dndInitStories();
 
   fetch(`/api/body?id=${encodeURIComponent(id)}`)
     .then(r => r.json())
@@ -1973,11 +2098,12 @@ function showDetail(id) {
         if (data.extra.on_hold_reason) extra += `<div class="detail-field"><div class="field-label">On-Hold Reason</div><div class="field-value" style="color:var(--amber)">${esc(data.extra.on_hold_reason)}</div></div>`;
       }
       if (data.body) {
-        el.innerHTML = extra + `<div class="detail-field"><div class="field-label">Description</div><div class="md-body">${renderMd(data.body)}</div></div>`;
+        el.innerHTML = extra + `<div class="md-body">${renderMd(data.body)}</div>`;
       } else if (extra) {
         el.innerHTML = extra;
       } else {
-        el.innerHTML = '';
+        const section = document.getElementById('detail-desc-section');
+        if (section) section.style.display = 'none';
       }
     })
     .catch(() => {
@@ -2056,9 +2182,28 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeDetail();
 });
 
-document.getElementById('detail-overlay').addEventListener('click', e => {
-  if (e.target.id === 'detail-overlay') closeDetail();
-});
+(function() {
+  const handle = document.getElementById('detail-resize-handle');
+  const panel = document.getElementById('detail-overlay');
+  let startX, startW;
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    startX = e.clientX;
+    startW = panel.offsetWidth;
+    handle.classList.add('dragging');
+    const onMove = ev => {
+      const delta = startX - ev.clientX;
+      panel.style.width = Math.max(300, Math.min(window.innerWidth * 0.7, startW + delta)) + 'px';
+    };
+    const onUp = () => {
+      handle.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+})();
 
 document.getElementById('search').addEventListener('input', () => { renderBacklog(); renderEpics(); });
 document.getElementById('status-filter').addEventListener('change', () => { renderBacklog(); renderEpics(); });
@@ -2173,10 +2318,50 @@ function dndToast(msg, type) {
   setTimeout(() => el.remove(), delay + 600);
 }
 
+let dndStorySortables = [];
+
+function dndInitStories() {
+  dndStorySortables.forEach(s => s.destroy());
+  dndStorySortables = [];
+  document.querySelectorAll('.dnd-stories').forEach(container => {
+    const epicId = container.dataset.epic;
+    if (!epicId) return;
+    const s = Sortable.create(container, {
+      animation: 150,
+      handle: '.drag-handle',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      filter: '[style*="font-size:11px"]',
+      onEnd: function(evt) {
+        const rows = Array.from(container.querySelectorAll('.story-row[data-id]'));
+        const updates = rows.map((row, i) => {
+          const id = row.dataset.id;
+          const item = DATA.items.find(x => x.id === id);
+          if (item) item.epic_sequence = i;
+          const epic = DATA.items.find(x => x.id === epicId);
+          if (epic?.stories) {
+            const story = epic.stories.find(x => x.id === id);
+            if (story) story.epic_sequence = i;
+          }
+          return {id, field: 'epic_sequence', value: i, actor: 'dashboard-dnd'};
+        });
+        dndPersist(updates);
+      }
+    });
+    dndStorySortables.push(s);
+  });
+}
+
 const origRenderBacklog = renderBacklog;
 renderBacklog = function() {
   origRenderBacklog();
   dndInitBacklog();
+};
+
+const origRenderRoadmap = renderRoadmap;
+renderRoadmap = function() {
+  origRenderRoadmap();
+  dndInitStories();
 };
 </script>
 </body>

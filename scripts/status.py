@@ -159,7 +159,114 @@ def _atomic_write_frontmatter(filepath: Path, fm: dict, body: str) -> None:
         raise
 
 
-def write_status(filepath: str, new_status: str, actor: str, project_dir: str | None = None, reopen: bool = False) -> None:
+def sync_parent_status(filepath: str, child_statuses: list[str], actor: str, project_dir: str | None = None) -> bool:
+    path = Path(filepath)
+    if not path.exists():
+        return False
+
+    raw = path.read_text(encoding="utf-8-sig")
+    fm, _fm_text, body = _parse_frontmatter(raw)
+
+    if fm.get("source", "auto") != "auto":
+        return False
+
+    new_derived = derived_status(child_statuses)
+
+    from schema import normalize_status
+    current = normalize_status(str(fm.get("status", "")))
+    if current == new_derived:
+        return False
+
+    if new_derived in TERMINAL_STATUSES:
+        return False
+
+    write_status(filepath, new_derived, actor, project_dir=project_dir, source="auto", _from_sync=True)
+    return True
+
+
+def _sync_parents(child_filepath: str, project_dir: Path, actor: str) -> None:
+    child_path = Path(child_filepath)
+    try:
+        raw = child_path.read_text(encoding="utf-8-sig")
+        child_fm, _, _ = _parse_frontmatter(raw)
+    except (FileNotFoundError, ValueError):
+        return
+
+    _scripts_dir = Path(__file__).resolve().parent
+    if str(_scripts_dir) not in sys.path:
+        sys.path.insert(0, str(_scripts_dir))
+
+    try:
+        from cache import get_conn
+    except ImportError:
+        return
+
+    child_type = child_fm.get("type", "")
+    epic_ref = child_fm.get("epic")
+
+    if epic_ref and child_type not in ("epic", "milestone"):
+        conn = get_conn(str(project_dir))
+        if not conn:
+            return
+        parent_row = conn.execute(
+            "SELECT source_path FROM items WHERE id=?", (epic_ref,)
+        ).fetchone()
+        if not parent_row:
+            conn.close()
+            return
+        siblings = conn.execute(
+            "SELECT status FROM items WHERE epic=? AND type NOT IN ('epic', 'milestone')",
+            (epic_ref,),
+        ).fetchall()
+        conn.close()
+
+        parent_path = project_dir / parent_row["source_path"]
+        sibling_statuses = [r["status"] for r in siblings]
+        changed = sync_parent_status(
+            str(parent_path), sibling_statuses, actor, project_dir=str(project_dir)
+        )
+
+        if changed:
+            _sync_milestone_for_epic(epic_ref, project_dir, actor)
+
+    elif child_type == "epic":
+        ms_ref = child_fm.get("milestone")
+        if ms_ref:
+            _sync_milestone_for_epic(child_fm.get("id", ""), project_dir, actor)
+
+
+def _sync_milestone_for_epic(epic_id: str, project_dir: Path, actor: str) -> None:
+    try:
+        from cache import get_conn
+    except ImportError:
+        return
+
+    conn = get_conn(str(project_dir))
+    if not conn:
+        return
+
+    epic_row = conn.execute("SELECT milestone FROM items WHERE id=?", (epic_id,)).fetchone()
+    if not epic_row or not epic_row["milestone"]:
+        conn.close()
+        return
+
+    ms_id = epic_row["milestone"]
+    ms_row = conn.execute("SELECT source_path FROM items WHERE id=?", (ms_id,)).fetchone()
+    if not ms_row:
+        conn.close()
+        return
+
+    epic_rows = conn.execute(
+        "SELECT status FROM items WHERE type='epic' AND milestone=?", (ms_id,)
+    ).fetchall()
+    conn.close()
+
+    epic_statuses = [r["status"] for r in epic_rows]
+    ms_path = project_dir / ms_row["source_path"]
+    sync_parent_status(str(ms_path), epic_statuses, actor, project_dir=str(project_dir))
+
+
+def write_status(filepath: str, new_status: str, actor: str, project_dir: str | None = None, reopen: bool = False, source: str | None = None, _from_sync: bool = False) -> None:
     path = Path(filepath)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {filepath}")
@@ -203,7 +310,9 @@ def write_status(filepath: str, new_status: str, actor: str, project_dir: str | 
     validate_transition(old_status, new_status, "issue", reopen=reopen)
 
     fm["status"] = new_status
-    fm["updated"] = datetime.date.today().isoformat()
+    if source is not None:
+        fm["source"] = source
+    fm["updated"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     _atomic_write_frontmatter(path, fm, body)
 
     pd = _resolve_project_dir(filepath, project_dir)
@@ -215,6 +324,9 @@ def write_status(filepath: str, new_status: str, actor: str, project_dir: str | 
 
     _append_audit(pd, actor, entity, file_rel, old_status, new_status)
     _trigger_cache_rebuild(pd)
+
+    if not _from_sync:
+        _sync_parents(filepath, pd, actor)
 
 
 def _check_completion_criteria(fm: dict, filepath: str) -> None:
@@ -248,7 +360,7 @@ def _dest_dir_for_terminal(filepath: Path) -> Path:
     return parent / "done"
 
 
-def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None = None) -> None:
+def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None = None, source: str | None = None, _from_sync: bool = False) -> None:
     if status not in TERMINAL_STATUSES:
         raise ValueError(
             f"set_terminal() requires a terminal status; {status!r} is not terminal. "
@@ -292,8 +404,11 @@ def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     fm["status"] = status
-    fm["closed_date"] = datetime.date.today().isoformat()
-    fm["updated"] = datetime.date.today().isoformat()
+    if source is not None:
+        fm["source"] = source
+    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    fm["closed_date"] = now
+    fm["updated"] = now
     updated_content = "---\n" + yaml.safe_dump(fm, default_flow_style=False, allow_unicode=True) + "---\n" + body
 
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
@@ -328,6 +443,9 @@ def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None
     _append_audit(pd, actor, entity, file_rel, old_status, status)
     _trigger_cache_rebuild(pd)
 
+    if not _from_sync:
+        _sync_parents(filepath, pd, actor)
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SweetClaude status CLI")
@@ -339,12 +457,14 @@ def main(argv: list[str] | None = None) -> int:
     p_set.add_argument("--actor", default=None)
     p_set.add_argument("--project-dir", default=None)
     p_set.add_argument("--reopen", action="store_true", default=False)
+    p_set.add_argument("--source", choices=["manual", "auto"], default=None)
 
     p_terminal = sub.add_parser("set-terminal")
     p_terminal.add_argument("--file", required=True)
     p_terminal.add_argument("--status", required=True)
     p_terminal.add_argument("--actor", default=None)
     p_terminal.add_argument("--project-dir", default=None)
+    p_terminal.add_argument("--source", choices=["manual", "auto"], default=None)
 
     p_validate = sub.add_parser("validate")
     p_validate.add_argument("--status", required=True)
@@ -362,7 +482,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "set":
         try:
-            write_status(args.file, args.status, args.actor, project_dir=args.project_dir, reopen=args.reopen)
+            write_status(args.file, args.status, args.actor, project_dir=args.project_dir, reopen=args.reopen, source=args.source)
             print(json.dumps({"status": args.status, "file": args.file}))
             return 0
         except Exception as e:
@@ -371,7 +491,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "set-terminal":
         try:
-            set_terminal(args.file, args.status, args.actor, project_dir=args.project_dir)
+            set_terminal(args.file, args.status, args.actor, project_dir=args.project_dir, source=args.source)
             print(json.dumps({"status": args.status, "file": args.file}))
             return 0
         except Exception as e:

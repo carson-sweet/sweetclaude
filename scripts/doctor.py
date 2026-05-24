@@ -1052,22 +1052,44 @@ def check_derived_status(state: ProjectState) -> list[Finding]:
             continue
 
         parent_path = all_paths[parent_id]
-        findings.append(Finding(
-            id=f"derived-status:discrepancy:{parent_id}",
-            category="derived_status",
-            severity="info",
-            summary=(
-                f"{parent_id} status is {stored!r} but children suggest {derived!r}"
-            ),
-            detail=(
-                f"derived-status-discrepancy: {parent_id} (type={parent_type}) "
-                f"stored={stored}, derived={derived}, "
-                f"children={sorted(child_ids)}"
-            ),
-            file_paths=[str(parent_path)],
-            fix_type="report-only",
-            fix_recipe={},
-        ))
+        parent_source = parent.get("source", "auto")
+
+        if parent_source == "manual":
+            findings.append(Finding(
+                id=f"derived-status:manual-override:{parent_id}",
+                category="derived_status",
+                severity="info",
+                summary=(
+                    f"{parent_id} status is {stored!r} (manual override); "
+                    f"children suggest {derived!r}"
+                ),
+                detail=(
+                    f"derived-status-override: {parent_id} (type={parent_type}) "
+                    f"stored={stored}, derived={derived}, source=manual, "
+                    f"children={sorted(child_ids)}"
+                ),
+                file_paths=[str(parent_path)],
+                fix_type="report-only",
+                fix_recipe={},
+            ))
+        else:
+            findings.append(Finding(
+                id=f"derived-status:stale-auto:{parent_id}",
+                category="derived_status",
+                severity="warning",
+                summary=(
+                    f"{parent_id} status is {stored!r} but children suggest {derived!r} "
+                    f"(source=auto, should auto-sync)"
+                ),
+                detail=(
+                    f"derived-status-stale: {parent_id} (type={parent_type}) "
+                    f"stored={stored}, derived={derived}, source=auto, "
+                    f"children={sorted(child_ids)}"
+                ),
+                file_paths=[str(parent_path)],
+                fix_type="auto",
+                fix_recipe={"action": "sync_parent_status", "file": str(parent_path)},
+            ))
 
     return findings
 

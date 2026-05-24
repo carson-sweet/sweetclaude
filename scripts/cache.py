@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS items (
     epic_sequence INTEGER,
     milestone TEXT,
     objective TEXT,
+    source TEXT,
     source_path TEXT NOT NULL,
     created TEXT,
     updated TEXT,
@@ -179,8 +180,8 @@ def _rebuild_cache(project_dir):
             conn.execute(
                 """INSERT OR REPLACE INTO items
                    (id, type, title, status, priority, effort, epic, epic_sequence,
-                    milestone, objective, source_path, created, updated, closed_date)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    milestone, objective, source, source_path, created, updated, closed_date)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     fm['id'],
                     item_type,
@@ -192,6 +193,7 @@ def _rebuild_cache(project_dir):
                     fm.get('epic_sequence'),
                     milestone,
                     fm.get('objective'),
+                    fm.get('source'),
                     rel_path,
                     fm.get('created'),
                     fm.get('updated'),
@@ -392,13 +394,13 @@ def query_milestones_compact(project_dir):
     """Milestones hierarchy with only the fields needed for big-picture tree rendering."""
     conn = get_conn(project_dir)
     milestones = conn.execute(
-        "SELECT id, title, status FROM items WHERE type='milestone' ORDER BY id"
+        "SELECT id, title, status, source FROM items WHERE type='milestone' ORDER BY id"
     ).fetchall()
     result = []
     for ms in milestones:
-        ms_dict = {'id': ms['id'], 'title': ms['title'], 'status': ms['status'], 'epics': []}
+        ms_dict = {'id': ms['id'], 'title': ms['title'], 'status': ms['status'], 'source': ms['source'], 'epics': []}
         epics = conn.execute(
-            "SELECT id, title, status FROM items WHERE type='epic' AND milestone=? ORDER BY id",
+            "SELECT id, title, status, source FROM items WHERE type='epic' AND milestone=? ORDER BY id",
             (ms_dict['id'],),
         ).fetchall()
         for ep in epics:
@@ -418,6 +420,7 @@ def query_milestones_compact(project_dir):
                 'id': ep['id'],
                 'title': ep['title'],
                 'status': ep['status'],
+                'source': ep['source'],
                 'derived_status': ep_derived,
                 'criteria_done': sum(1 for c in criteria if c['done']),
                 'criteria_total': len(criteria),
