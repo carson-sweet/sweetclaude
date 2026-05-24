@@ -4,7 +4,40 @@ All notable changes to SweetClaude are documented here.
 
 ---
 
-## [Unreleased] — targeting 4.1.0-beta
+## [4.2.0-beta] — 2026-05-24
+
+### New features
+
+**Status system (EP-002)**
+- `scripts/status.py` — canonical status validation module. Single source of truth for the 11-status vocabulary, transition validation, terminal status guards, and parent-child sync. Public API: `validate()`, `assert_valid()`, `validate_transition()`, `derived_status()`, `write_status()`, `set_terminal()`, `sync_parent_status()`.
+- `source` field on epics and milestones: `auto` (status derived from children) or `manual` (human-set, immune to auto-sync). Parents with `source: auto` and no `completion_criteria` auto-close when all children reach terminal status, and auto-reopen when a child is reopened.
+- Status write audit trail — every status change logged to `.sweetclaude/metrics/status-audit.jsonl` with actor, timestamp, old/new status, and file path.
+- Mechanical gates on terminal writes: `set_terminal()` enforces schema validation, transition rules, completion criteria (epics), and atomic file-move to `done/`.
+- `scripts/schema.py` — `source` field validation (`auto` | `manual`), status normalization.
+- `scripts/cache.py` — `source` column added to items table; included in all queries.
+
+**Dashboard enhancements (EP-002)**
+- Detail panel is now a resizable flex sidebar (not a fixed overlay). Resize handle with min/max constraints.
+- Accordion sections use native `<details>/<summary>`, expanded by default.
+- Date fields include times and UTC timezone. Done items show completion time (e.g., "2d, 4h, 41m").
+- Drag-and-drop on roadmap story rows and detail panel issue rows via SortableJS.
+- Source badge (auto/manual) on all roadmap and detail panel items.
+- Status write-back API uses `write_status()` / `set_terminal()` with `source: manual`.
+
+**Dashboard UI regression tests**
+- `tests/test_dashboard_ui.py` — 31 Playwright-based structural and functional tests protecting sidebar layout, drag handles, accordions, dates, resize, and interactions.
+
+**Doctor improvements (EP-001 cleanup)**
+- `--category` flag for focused scanning (ISSUE-178).
+- Health delegation to doctor from bootstrap (ISSUE-179).
+- Source-aware derived status checks: `source: auto` mismatches are auto-fixable warnings; `source: manual` mismatches are informational only.
+- 286 tests across the full doctor test suite (ISSUE-177).
+
+### Changed
+
+- `sweetclaude:big-picture` — discrepancy markers are now source-aware. `source: manual` overrides show muted annotation; `source: auto` mismatches show sync error warning.
+- `sweetclaude:dashboard` — rules updated to reflect read-write status changes via status.py.
+- Milestone auto-close: MS-008 (Release and Roadmap System) auto-closed when both child epics (EP-001, EP-002) reached done status.
 
 ---
 
