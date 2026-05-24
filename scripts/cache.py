@@ -304,13 +304,17 @@ def query_epic_stories(project_dir, epic_id, include_done=False):
     return query_epic_issues(project_dir, epic_id, include_done)
 
 
-def query_backlog(project_dir, unlinked_only=False):
+def query_backlog(project_dir, unlinked_only=False, epic=None):
     conn = get_conn(project_dir)
+    params = []
     sql = """SELECT * FROM items
            WHERE type NOT IN ('epic', 'milestone')
            AND status NOT IN ('done', 'abandoned', 'deferred')"""
     if unlinked_only:
         sql += " AND (epic IS NULL OR epic = '')"
+    if epic:
+        sql += " AND epic = ?"
+        params.append(epic)
     sql += """
            ORDER BY
              CASE priority
@@ -326,7 +330,7 @@ def query_backlog(project_dir, unlinked_only=False):
                ELSE 6
              END,
              id"""
-    rows = conn.execute(sql).fetchall()
+    rows = conn.execute(sql, params).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -583,7 +587,7 @@ def main():
     elif args.query == 'epics':
         result = query_epics(args.project_dir, args.include_done)
     elif args.query == 'backlog':
-        result = query_backlog(args.project_dir, unlinked_only=args.unlinked_only)
+        result = query_backlog(args.project_dir, unlinked_only=args.unlinked_only, epic=args.epic)
     elif args.query == 'next-id':
         if not args.prefix:
             sys.exit("--prefix required for next-id query")

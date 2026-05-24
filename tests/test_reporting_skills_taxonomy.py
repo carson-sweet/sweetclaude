@@ -89,10 +89,14 @@ def _has_product_guard(content):
 
 def _extract_step_4a(content):
     """
-    Extract the Step 4a section from a big-picture SKILL.md.
-    Returns the text between '## Step 4a' and '## Step 4b' (exclusive).
-    Returns empty string if not found.
+    Extract the roadmap rendering section from the status SKILL.md.
+    Looks for '### Step V-roadmap' (consolidated status skill) or
+    '## Step 4a' (legacy big-picture skill).
+    Returns the section text or empty string if not found.
     """
+    m = re.search(r'### Step V-roadmap(.*?)(?=###\s+Step\s+V-)', content, re.DOTALL)
+    if m:
+        return m.group(1)
     m = re.search(r'## Step 4a(.*?)(?=## Step 4b)', content, re.DOTALL)
     return m.group(1) if m else ""
 
@@ -220,10 +224,10 @@ class TestBigPictureNoStoryPrefix:
 
 
 class TestBigPictureHasMsPrefix:
-    """Scenario: big-picture SKILL.md renders MS- prefix for top-level roadmap nodes"""
+    """Scenario: status SKILL.md renders MS- prefix for top-level roadmap nodes"""
 
     def test_has_ms_prefix_in_rendering_template(self):
-        content = read_skill("big-picture")
+        content = read_skill("status")
         # The rendering template must show MS- as an explicit milestone ID placeholder
         # in a code/display block, e.g. "MS-{NNN}", "MS-NNN", or backtick-MS-NNN.
         # A bare MS-*.md file glob in a legacy path does not count.
@@ -241,20 +245,20 @@ class TestBigPictureHasMsPrefix:
 
 
 class TestBigPictureHasIssuePrefix:
-    """Scenario: big-picture SKILL.md renders ISSUE- prefix for work items"""
+    """Scenario: status SKILL.md renders ISSUE- prefix for work items"""
 
     def test_has_issue_prefix(self):
-        content = read_skill("big-picture")
+        content = read_skill("status")
         assert "ISSUE-" in content, (
             "big-picture SKILL.md must reference 'ISSUE-' prefix for work item rendering"
         )
 
 
 class TestBigPictureUsesMilestonesCompactQuery:
-    """Scenario: big-picture SKILL.md uses milestones-compact query"""
+    """Scenario: status SKILL.md uses milestones-compact query"""
 
     def test_uses_milestones_compact(self):
-        content = read_skill("big-picture")
+        content = read_skill("status")
         assert "milestones-compact" in content, (
             "big-picture SKILL.md must use the 'milestones-compact' query "
             "instead of 'releases-compact' for the roadmap tree"
@@ -262,10 +266,10 @@ class TestBigPictureUsesMilestonesCompactQuery:
 
 
 class TestBigPictureSummaryLineUsesMilestones:
-    """Scenario: big-picture SKILL.md summary line says milestones not releases"""
+    """Scenario: status SKILL.md summary line says milestones not releases"""
 
     def test_step4a_summary_line_references_milestones(self):
-        content = read_skill("big-picture")
+        content = read_skill("status")
         # The Step 4a (cache-backed roadmap) section must have a summary line that
         # references milestones. The legacy Step 4b milestone pipeline does NOT count.
         step4a = _extract_step_4a(content)
@@ -285,7 +289,7 @@ class TestBigPictureSummaryLineUsesMilestones:
         )
 
     def test_no_total_releases_phrase(self):
-        content = read_skill("big-picture")
+        content = read_skill("status")
         assert "total releases" not in content, (
             "big-picture SKILL.md must not use the phrase 'total releases' — "
             "the summary line must reference milestones, not releases"
@@ -293,13 +297,17 @@ class TestBigPictureSummaryLineUsesMilestones:
 
 
 class TestBigPictureRoadmapDetectionChecksSweet:
-    """Scenario: big-picture roadmap detection checks .sweetclaude path"""
+    """Scenario: status roadmap view checks .sweetclaude path"""
 
     def test_roadmap_detection_uses_sweetclaude_path(self):
-        content = read_skill("big-picture")
-        assert ".sweetclaude/product/roadmap/epics/" in content, (
-            "big-picture SKILL.md roadmap detection must check "
-            "'.sweetclaude/product/roadmap/epics/' not 'docs/product/roadmap/epics/'"
+        content = read_skill("status")
+        has_sweetclaude_product = (
+            ".sweetclaude/product/roadmap/epics/" in content
+            or ".sweetclaude/product/roadmap/" in content
+        )
+        assert has_sweetclaude_product, (
+            "status SKILL.md roadmap view must reference "
+            "'.sweetclaude/product/roadmap/' not 'docs/product/roadmap/'"
         )
 
 
@@ -454,12 +462,12 @@ class TestStatusCorrectTerminalStatuses:
 # ---------------------------------------------------------------------------
 
 class TestBigPictureHasMigrationGuard:
-    """Scenario: big-picture SKILL.md has migration guard"""
+    """Scenario: status SKILL.md has migration guard"""
 
     def test_has_sweetclaude_product_existence_check(self):
-        content = read_skill("big-picture")
+        content = read_skill("status")
         assert _has_product_guard(content), (
-            "big-picture SKILL.md must contain an explicit conditional guard that checks "
+            "status SKILL.md must contain an explicit conditional guard that checks "
             "for .sweetclaude/product/ existence to detect whether migration has been run — "
             "incidental path reads do not count"
         )
