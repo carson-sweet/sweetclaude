@@ -443,7 +443,8 @@ def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None
     old_status = fm_check["status"]
     validate_transition(old_status, status, "issue")
 
-    if not _from_sync and fm.get("type") == "epic" and status == "done":
+    item_type = fm.get("type")
+    if not _from_sync and item_type in ("epic", "milestone") and status == "done":
         _check_completion_criteria(fm, filepath)
 
     dest_dir = _dest_dir_for_terminal(path)
@@ -497,7 +498,7 @@ def set_terminal(filepath: str, status: str, actor: str, project_dir: str | None
     _trigger_cache_rebuild(pd)
 
     if not _from_sync:
-        _sync_parents(filepath, pd, actor)
+        _sync_parents(str(dest_path), pd, actor)
 
 
 def main(argv: list[str] | None = None) -> int:
