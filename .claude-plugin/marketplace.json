@@ -9,8 +9,8 @@
       "name": "sweetclaude",
       "description": "Legacy SweetClaude 4.x beta channel. Stable users should install sweetclaude@sweetclaude-stable.",
       "source": {
-        "source": "github",
-        "repo": "carson-sweet/sweetclaude",
+        "source": "url",
+        "url": "https://github.com/carson-sweet/sweetclaude.git",
         "ref": "beta-4.x"
       }
     }
