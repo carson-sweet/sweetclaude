@@ -16,7 +16,7 @@ Start Claude Code and run:
 **Beta safety note:** beta releases before `v4.1.2-beta` have been withdrawn.
 Do not install older v4 beta tags on active projects.
 
-To intentionally install the 4.x beta channel:
+To intentionally install the 4.x beta channel, add and install the beta plugin channel explicitly. Do not use `/sweetclaude:update` to move a stable 3.x install onto beta.
 
 ```
 /plugin marketplace add carson-sweet/sweetclaude@beta-4.x
@@ -56,7 +56,7 @@ Start Claude Code in your project folder as you normally would, then inside Clau
 /plugin install sweetclaude@sweetclaude-stable
 ```
 
-For the 4.x beta channel, use:
+For the 4.x beta channel, add and install the beta plugin channel explicitly. Do not use `/sweetclaude:update` to move a stable 3.x install onto beta.
 
 ```
 /plugin marketplace add carson-sweet/sweetclaude@beta-4.x
