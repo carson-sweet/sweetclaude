@@ -1,16 +1,17 @@
 {
   "name": "sweetclaude",
-  "description": "A discipline layer for Claude Code — phase gates, TDD enforcement, and multi-agent review",
+  "description": "Legacy SweetClaude beta marketplace. Stable users should install the stable-3.x marketplace ref.",
   "owner": {
     "name": "Carson Sweet"
   },
   "plugins": [
     {
       "name": "sweetclaude",
-      "description": "A discipline layer for Claude Code — phase gates, TDD enforcement, and multi-agent review that make AI-assisted development reproducible and auditable.",
+      "description": "Legacy SweetClaude 4.x beta channel. Stable users should install sweetclaude@sweetclaude-stable.",
       "source": {
-        "source": "url",
-        "url": "https://github.com/carson-sweet/sweetclaude.git"
+        "source": "github",
+        "repo": "carson-sweet/sweetclaude",
+        "ref": "beta-4.x"
       }
     }
   ]

@@ -8,13 +8,20 @@
 
 Start Claude Code and run:
 ```
-/plugin marketplace add https://github.com/carson-sweet/sweetclaude
-/plugin install sweetclaude@sweetclaude
+/plugin marketplace add carson-sweet/sweetclaude@stable-3.x
+/plugin install sweetclaude@sweetclaude-stable
 /sweetclaude:help
 ```
 
 **Beta safety note:** beta releases before `v4.1.2-beta` have been withdrawn.
 Do not install older v4 beta tags on active projects.
+
+To intentionally install the 4.x beta channel:
+
+```
+/plugin marketplace add carson-sweet/sweetclaude@beta-4.x
+/plugin install sweetclaude@sweetclaude-beta
+```
 
 ## What It Is
 
@@ -45,8 +52,15 @@ There are too many Claude Code plugins to count, so it's important to know if on
 Start Claude Code in your project folder as you normally would, then inside Claude Code run these commands:
 
 ```
-/plugin marketplace add https://github.com/carson-sweet/sweetclaude
-/plugin install sweetclaude@sweetclaude
+/plugin marketplace add carson-sweet/sweetclaude@stable-3.x
+/plugin install sweetclaude@sweetclaude-stable
+```
+
+For the 4.x beta channel, use:
+
+```
+/plugin marketplace add carson-sweet/sweetclaude@beta-4.x
+/plugin install sweetclaude@sweetclaude-beta
 ```
 
 Once install is complete, run:
@@ -220,5 +234,4 @@ Which in reality means you're moving dollars from my coffee budget to [my dog Sm
 Smushford thanks you.
 
 <img src="smushford.png" alt="Smushford Wellington DuBois III" width="400" style="display:block;margin-left:0;">
-
 
