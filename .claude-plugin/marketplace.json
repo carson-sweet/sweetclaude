@@ -8,7 +8,6 @@
     {
       "name": "sweetclaude",
       "description": "A discipline layer for Claude Code — phase gates, TDD enforcement, and multi-agent review that make AI-assisted development reproducible and auditable.",
-      "version": "3.52.14",
       "source": {
         "source": "url",
         "url": "https://github.com/carson-sweet/sweetclaude.git"

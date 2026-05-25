@@ -2,7 +2,7 @@
 
 # SweetClaude
 
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-4.0.0--beta-blue)](https://github.com/carson-sweet/sweetclaude/releases) [![Behavioral Contracts](https://img.shields.io/badge/behavioral_contracts-15%2F15_passing-brightgreen)](docs/user-guide/behavioral-contracts.md)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-4.1.2--beta-blue)](https://github.com/carson-sweet/sweetclaude/releases/tag/v4.1.2-beta) [![Behavioral Contracts](https://img.shields.io/badge/behavioral_contracts-15%2F15_passing-brightgreen)](docs/user-guide/behavioral-contracts.md)
 
 ## TL;DR
 
@@ -12,6 +12,9 @@ Start Claude Code and run:
 /plugin install sweetclaude@sweetclaude
 /sweetclaude:help
 ```
+
+**Beta safety note:** beta releases before `v4.1.2-beta` have been withdrawn.
+Do not install older v4 beta tags on active projects.
 
 ## What It Is
 
@@ -217,6 +220,5 @@ Which in reality means you're moving dollars from my coffee budget to [my dog Sm
 Smushford thanks you.
 
 <img src="smushford.png" alt="Smushford Wellington DuBois III" width="400" style="display:block;margin-left:0;">
-
 
 
