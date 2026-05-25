@@ -20,6 +20,8 @@ restore-config.sh
 !/docs/user-guide/**
 !/docs/internal/
 !/docs/internal/**
+# Internal-only local evaluation workspaces
+/docs/codex-evaluation/
 # docs/product/ contains real project backlog and roadmap data — never public
 /docs/product/
 

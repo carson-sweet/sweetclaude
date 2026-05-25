@@ -118,7 +118,7 @@ Options:
 **On Run migration:**
 
 Delegate to the appropriate migration skill based on `script`:
-- `migrate_taxonomy.py` → invoke `sweetclaude:migrate`
+- `migrate_taxonomy.py` → run the script directly; do **not** invoke `sweetclaude:migrate` because that skill wraps the v3-to-v4 BL migration script
 - `runner.py` → invoke `sweetclaude:_migrate`
 - `migrate-v3-to-v4.py` → invoke `sweetclaude:migrate`
 

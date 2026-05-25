@@ -126,6 +126,16 @@ RUN_SCRIPT_ALLOWLIST = {
 }
 
 
+def _script_has_cli_entrypoint(path: Path) -> bool:
+    if not path.exists():
+        return False
+    try:
+        text = path.read_text()
+    except OSError:
+        return False
+    return "__name__" in text and "__main__" in text
+
+
 # ---------------------------------------------------------------------------
 # Frontmatter helper
 # ---------------------------------------------------------------------------
@@ -538,22 +548,35 @@ def check_migration_currency(state: ProjectState) -> list[Finding]:
 
     backlog_dir = state.product_base / "backlog"
     if backlog_dir.is_dir():
+        taxonomy_script = _SCRIPTS_DIR / "migrate" / "migrate_taxonomy.py"
+        taxonomy_migration_runnable = _script_has_cli_entrypoint(taxonomy_script)
         old_prefixes = {"STORY-", "BUG-", "DEBT-", "CHORE-"}
         old_files = []
         for p in backlog_dir.rglob("*.md"):
             if any(p.name.startswith(pfx) for pfx in old_prefixes):
                 old_files.append(p)
         if old_files:
+            if taxonomy_migration_runnable:
+                fix_type = "prompted"
+                fix_recipe = {"action": "prompt", "type": "migration",
+                              "script": "migrate_taxonomy.py", "args": []}
+                summary = f"{len(old_files)} files still use old naming conventions"
+            else:
+                fix_type = "report-only"
+                fix_recipe = {}
+                summary = (
+                    f"{len(old_files)} files still use old naming conventions, "
+                    "but taxonomy migration is not currently executable"
+                )
             findings.append(Finding(
                 id="migration-currency:taxonomy-drift:old-prefixes",
                 category="migration_currency",
                 severity="warning",
-                summary=f"{len(old_files)} files still use old naming conventions",
+                summary=summary,
                 detail=f"taxonomy-drift: found {', '.join(p.name for p in old_files[:5])}",
                 file_paths=[str(p) for p in old_files[:5]],
-                fix_type="prompted",
-                fix_recipe={"action": "prompt", "type": "migration",
-                            "script": "migrate_taxonomy.py", "args": []},
+                fix_type=fix_type,
+                fix_recipe=fix_recipe,
             ))
 
     orphan_script = _SCRIPTS_DIR / "migrate" / "migrate-v3-to-v4.py"

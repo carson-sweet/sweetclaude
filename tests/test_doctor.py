@@ -1976,7 +1976,40 @@ class TestMigrationCurrency:
 
         f = next(x for x in findings if x.id == "migration-currency:taxonomy-drift:old-prefixes")
         assert f.severity == "warning"
+        assert f.fix_type == "report-only"
+        assert "not currently executable" in f.summary
+
+    def test_story_prefixed_file_with_runnable_taxonomy_cli_is_prompted(
+        self, tmp_path, fake_home, patch_scripts_dir
+    ):
+        migrate_dir = patch_scripts_dir / "migrate"
+        migrate_dir.mkdir(parents=True, exist_ok=True)
+        (migrate_dir / "migrate_taxonomy.py").write_text(
+            "if __name__ == '__main__':\n    pass\n"
+        )
+        project_dir = build_fixture(tmp_path, overrides={
+            "backlog_files": [{"name": "STORY-001-old.md", "content": "# Old story"}],
+        })
+        state = build_project_state(project_dir)
+        findings = check_migration_currency(state)
+
+        f = next(x for x in findings if x.id == "migration-currency:taxonomy-drift:old-prefixes")
         assert f.fix_type == "prompted"
+        assert f.fix_recipe["script"] == "migrate_taxonomy.py"
+
+    def test_unrunnable_taxonomy_migration_is_not_recommended(
+        self, tmp_path, fake_home, patch_scripts_dir
+    ):
+        migrate_dir = patch_scripts_dir / "migrate"
+        migrate_dir.mkdir(parents=True, exist_ok=True)
+        (migrate_dir / "migrate_taxonomy.py").write_text("# library only\n")
+        project_dir = build_fixture(tmp_path, overrides={
+            "backlog_files": [{"name": "STORY-001-old.md", "content": "# Old story"}],
+        })
+        state = build_project_state(project_dir)
+        result = _scan(state, categories=["migration_currency"])
+
+        assert result["migration_recommendations"] == []
 
     # Scenario: BUG-prefixed file in backlog produces taxonomy drift warning
     def test_bug_prefixed_file_produces_taxonomy_drift_warning(

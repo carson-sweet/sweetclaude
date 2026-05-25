@@ -49,26 +49,26 @@ result=$(run_check "3.68.4" "" $'v3.68.0\nv3.68.1\nv3.68.4')
 assert_field "only stable" "$result" "prerelease_available" "null"
 assert_field "only stable" "$result" "should_prompt" "false"
 
-# 3. Beta available, user on stable, never declined
+# 3. Beta available, user on stable — stable channel is not auto-offered prereleases
 echo ""
 echo "Case 3: beta available, user on stable"
 result=$(run_check "3.68.4" "" $'v3.68.4\nv4.0.0-beta')
-assert_field "beta avail" "$result" "prerelease_available" "v4.0.0-beta"
-assert_field "beta avail" "$result" "should_prompt" "true"
+assert_field "stable ignores beta" "$result" "prerelease_available" "null"
+assert_field "stable ignores beta" "$result" "should_prompt" "false"
 
-# 4. Beta available, but user previously declined that specific tag
+# 4. Beta available, stable user previously declined that specific tag
 echo ""
 echo "Case 4: beta available but already declined"
 result=$(run_check "3.68.4" "v4.0.0-beta" $'v3.68.4\nv4.0.0-beta')
-assert_field "declined same" "$result" "prerelease_available" "v4.0.0-beta"
+assert_field "stable declined beta" "$result" "prerelease_available" "null"
 assert_field "declined same" "$result" "should_prompt" "false"
 
-# 5. Beta available, user declined an OLDER prerelease — should prompt
+# 5. Beta available, stable user declined an older prerelease — still no prompt
 echo ""
 echo "Case 5: declined older beta, newer beta now available"
 result=$(run_check "3.68.4" "v4.0.0-beta" $'v4.0.0-beta\nv4.0.0-beta2')
-assert_field "newer beta" "$result" "prerelease_available" "v4.0.0-beta2"
-assert_field "newer beta" "$result" "should_prompt" "true"
+assert_field "stable ignores newer beta" "$result" "prerelease_available" "null"
+assert_field "stable ignores newer beta" "$result" "should_prompt" "false"
 
 # 6. User already on the beta — same tag is "available", should not prompt
 # (because they have it installed; check is against installed_version)
@@ -85,18 +85,25 @@ result=$(run_check "4.0.0-beta" "" $'v4.0.0-beta\nv4.0.0-beta2')
 assert_field "beta → newer beta" "$result" "prerelease_available" "v4.0.0-beta2"
 assert_field "beta → newer beta" "$result" "should_prompt" "true"
 
-# 8. Beta and RC both available — RC wins (higher channel)
+# 8. Beta and RC both available, stable user — still no prompt
 echo ""
-echo "Case 8: beta and rc both available — rc wins"
+echo "Case 8: beta and rc both available — stable user ignores prereleases"
 result=$(run_check "3.68.4" "" $'v4.0.0-beta\nv4.0.0-rc1')
-assert_field "rc beats beta" "$result" "prerelease_available" "v4.0.0-rc1"
-assert_field "rc beats beta" "$result" "should_prompt" "true"
+assert_field "stable ignores rc" "$result" "prerelease_available" "null"
+assert_field "stable ignores rc" "$result" "should_prompt" "false"
 
-# 9. Alpha < beta < rc — beta wins over alpha
+# 9. Alpha and beta available, stable user — still no prompt
 echo ""
-echo "Case 9: alpha and beta — beta wins"
+echo "Case 9: alpha and beta — stable user ignores prereleases"
 result=$(run_check "3.68.4" "" $'v4.0.0-alpha\nv4.0.0-beta')
-assert_field "beta beats alpha" "$result" "prerelease_available" "v4.0.0-beta"
+assert_field "stable ignores alpha beta" "$result" "prerelease_available" "null"
+
+# 9b. User on beta, RC available — RC wins
+echo ""
+echo "Case 9b: beta installed, rc available"
+result=$(run_check "4.0.0-beta" "" $'v4.0.0-beta\nv4.0.0-rc1')
+assert_field "rc beats beta for beta users" "$result" "prerelease_available" "v4.0.0-rc1"
+assert_field "rc beats beta for beta users" "$result" "should_prompt" "true"
 
 # 10. Malformed installed_version
 echo ""

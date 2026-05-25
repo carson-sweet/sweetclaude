@@ -538,14 +538,19 @@ Stray files:
   {file} — {id} — {title} [{status}]
 ```
 
-Then present **AskUserQuestion**:
-- **Question:** `{N} orphaned files found during update. What should I do with them?`
-- **Options:**
-  1. `Include in migration` → copy each orphaned file into the primary backlog directory (`.sweetclaude/product/backlog/`) as `BL-{NNN}-{slug}.md` so Step 6b2's taxonomy scan picks them up. Assign sequential BL IDs starting after the highest existing BL number. For files without frontmatter, create minimal frontmatter from filename.
-  2. `Show me each one` → present each file one at a time with **AskUserQuestion**: `Keep (include in migration)`, `Skip (leave where it is)`, `Delete`. Apply the user's choice per file.
-  3. `Skip all` → proceed without recovering orphaned files. They stay where they are.
+Do not move, copy, delete, or normalize these files from `sweetclaude:update`.
+Report them as a follow-up diagnostic only:
 
-After the user's choice is applied, continue to Step 6b2.
+```
+Found {N} orphaned work item file(s) outside the primary backlog.
+
+No files were changed. Taxonomy/orphan recovery is disabled in this beta
+hotfix because the current migrator does not safely support every v4 project
+layout. Continue using the project as-is; run `sweetclaude:doctor` for a
+read-only diagnostic report.
+```
+
+Then continue to Step 6b2.
 
 ---
 
@@ -570,34 +575,20 @@ echo "OLD_TAXONOMY=$OLD_TAXONOMY"
 
 If `OLD_TAXONOMY` is 0: skip — project is already on the new taxonomy.
 
-If `OLD_TAXONOMY > 0`: present via **AskUserQuestion**:
+If `OLD_TAXONOMY > 0`: do not present a migration prompt and do not invoke
+`migrate_taxonomy.py`. Report the condition as non-blocking:
 
-> "Found {OLD_TAXONOMY} work item(s) using the old taxonomy (BL-/STORY-/BUG-/DEBT-/CHORE- prefixes). These need to be migrated to the ISSUE-NNN format."
->
-> Options:
-> - **Migrate now** — run taxonomy migration with dry-run preview and safety snapshot
-> - **Skip for now** — migrate later with `/sweetclaude:migrate`
+```
+Found {OLD_TAXONOMY} work item(s) using legacy taxonomy prefixes
+(BL-/STORY-/BUG-/DEBT-/CHORE-).
 
-If **Migrate now**: run `python3 ~/.claude/scripts/sweetclaude/migrate/migrate_taxonomy.py --project-dir . --dry-run` first to preview, then on confirmation run without `--dry-run`. Report results. After successful migration, write the doctor prompt marker:
-
-```bash
-python3 -c "
-import json, os, tempfile
-from datetime import datetime, timezone
-marker = {
-    'trigger': 'migration',
-    'created_at': datetime.now(timezone.utc).isoformat(timespec='seconds')
-}
-path = '.sweetclaude/state/doctor-prompt-pending.json'
-os.makedirs(os.path.dirname(path), exist_ok=True)
-with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
-    json.dump(marker, tmp, indent=2)
-    tmp_name = tmp.name
-os.replace(tmp_name, path)
-" 2>/dev/null || true
+No files were changed. The taxonomy migration prompt is disabled in this beta
+hotfix because the current migrator is not safely executable for all supported
+v4 project layouts. Continue using the project as-is; run `sweetclaude:doctor`
+for read-only diagnostics.
 ```
 
-If **Skip for now**: continue to Step 6c. The migration guard in skills will prompt the user when they next invoke a skill that reads work items.
+Then continue to Step 6c. Do not write `doctor-prompt-pending.json`.
 
 ---
 

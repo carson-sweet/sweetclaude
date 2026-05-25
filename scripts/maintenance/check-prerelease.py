@@ -103,6 +103,14 @@ def check_prerelease(installed: str, declined: str, tags: list[str]) -> dict:
             "should_prompt": False,
             "reason": "installed version unknown",
         }
+    if _stable_tuple(installed) is not None:
+        return {
+            "prerelease_available": None,
+            "installed_version": installed,
+            "declined": declined or None,
+            "should_prompt": False,
+            "reason": "stable channel does not auto-offer prereleases",
+        }
     latest = _latest_prerelease(tags, installed)
     if latest is None:
         return {
