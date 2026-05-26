@@ -3,3 +3,4 @@ scripts/bump-version.sh
 tests/
 scratch/
 docs/internal/
+docs/internal/**

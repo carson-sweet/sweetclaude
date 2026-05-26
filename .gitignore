@@ -5,19 +5,25 @@ restore-config.sh
 # macOS metadata
 .DS_Store
 
+# Playwright MCP artifacts (screenshots, page captures, console logs)
+.playwright-mcp/
+
 # SweetClaude dogfood artifacts (internal work, not framework source)
 .sweetclaude/*
+.sweetclaude/state/recovery-runs/
 /strategy/
 /corpus/
 
-# docs/ — only user-guide is public; everything else is internal
+# docs/ — whitelist specific subdirectories
 /docs/*
 !/docs/README.md
 !/docs/user-guide/
 !/docs/user-guide/**
+# Internal-only local evaluation workspaces
+/docs/codex-evaluation/
+# docs/product/ contains real project backlog and roadmap data — never public
+/docs/product/
 
-# Internal strategy, plans, and design docs — never public
-/docs-internal/
 
 # Scratch, session artifacts, and personal setup docs
 /scratch/
@@ -37,6 +43,8 @@ scripts/migration-report.md
 # Python cache
 __pycache__/
 *.pyc
-
 # macOS metadata after docs whitelist
 **/.DS_Store
+# Private review artifacts must not be committed at repo root
+/caucus_checkpoint_*.md
+/caucus_review_*.md
