@@ -355,12 +355,27 @@ Determine the current project version:
 
 After v3.68.2 the three preflight hooks (session-preflight, drift-gate, master-preflight) are plugin-native — Claude Code loads them from `hooks/hooks.json` automatically. The maintenance script's job is to keep `~/.claude/settings.json` clean of broken `${CLAUDE_PLUGIN_ROOT}` literals and stale plugin-version paths left over from earlier versions.
 
-The script lives at `~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py` after a `sweetclaude:update` has run. Plugin-marketplace installs that have never run update only have it under the plugin cache — try both.
+The script lives at `~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py` after a `sweetclaude:update` has run. Plugin-marketplace installs that have never run update only have it under the plugin cache, so resolve the active installed plugin root from Claude Code's `installed_plugins.json` instead of scanning caches.
 
 ```bash
 SCRIPT=~/.claude/scripts/sweetclaude/maintenance/ensure-global-hooks.py
 if [ ! -f "$SCRIPT" ]; then
-  SCRIPT=$(find ~/.claude/plugins/cache/sweetclaude -type f -name 'ensure-global-hooks.py' 2>/dev/null | head -1)
+  PLUGIN_ROOT=$(python3 -c 'import json, os
+p = os.path.expanduser("~/.claude/plugins/installed_plugins.json")
+try:
+    data = json.load(open(p))
+except Exception:
+    raise SystemExit
+entries = []
+for key, versions in data.get("plugins", {}).items():
+    if "sweetclaude" not in key.lower():
+        continue
+    entries.extend(v for v in versions if v.get("scope") == "user")
+entries.sort(key=lambda e: e.get("lastUpdated", ""), reverse=True)
+print(entries[0].get("installPath", "") if entries else "")' 2>/dev/null)
+  if [ -n "$PLUGIN_ROOT" ]; then
+    SCRIPT="$PLUGIN_ROOT/scripts/maintenance/ensure-global-hooks.py"
+  fi
 fi
 if [ -z "$SCRIPT" ] || [ ! -f "$SCRIPT" ]; then
   echo "warning: ensure-global-hooks.py not found; skipping hook reconciliation" >&2

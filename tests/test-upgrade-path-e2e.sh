@@ -1,12 +1,13 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# End-to-end upgrade simulation for v3.67.0 → v3.68.0.
-# Tests that ensure-global-hooks.py correctly adds the new required global
-# hooks (drift-gate.sh, master-preflight.sh) after an upgrade, covering:
-#   1. Fresh add to a pre-v3.68.0 settings.json
-#   2. Idempotency (second run adds no duplicates)
-#   3. Multi-mirror installed_plugins.json: scope=user, newest-first sort
+# End-to-end upgrade simulation for stable 3.x hook maintenance.
+# After v3.68.2, SweetClaude preflight hooks are plugin-native. They are
+# declared in hooks/hooks.json and must not be duplicated in ~/.claude/settings.json.
+# This test covers:
+#   1. Cleanup of old broken ${CLAUDE_PLUGIN_ROOT} global settings entries
+#   2. Idempotency after cleanup
+#   3. Multi-mirror installed_plugins.json uses the newest user-scope install
 #   4. Non-user scope entries are ignored
 
 set -e
@@ -28,25 +29,30 @@ _assert_json() {
   local result
   result=$(printf '%s' "$py_block" | HOME="$TMPROOT" python3 - "$settings_path" 2>/dev/null) || true
   local count
-  count=$(printf '%s\n' "$result" | grep '^COUNT=' | cut -d= -f2)
+  count=$(printf '%s
+' "$result" | grep '^COUNT=' | cut -d= -f2)
   if [ "${count:-0}" -eq 0 ]; then
     pass "$label"
   else
-    printf '%s\n' "$result" | grep -v '^COUNT=' | while read -r line; do
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      case "$line" in
+        COUNT=*) continue ;;
+      esac
       fail "$label: $line"
-    done
+    done <<< "$result"
   fi
 }
 
 # ---------------------------------------------------------------------------
-# Test 1: adds drift-gate.sh and master-preflight.sh to pre-v3.68.0 state
+# Test 1: removes old broken global settings entries for plugin-native hooks
 # ---------------------------------------------------------------------------
-echo "[1] ensure-global-hooks: adds new required hooks to pre-v3.68.0 settings.json"
+echo "[1] ensure-global-hooks: removes plugin-native hooks from global settings"
 
 FX1_HOME="$TMPROOT/home1"
 mkdir -p "$FX1_HOME/.claude"
 
-# Simulate v3.67.0 settings.json: has session-preflight but not the new hooks.
+# Simulate a pre-v3.68.2 settings.json with broken ${CLAUDE_PLUGIN_ROOT} entries.
 cat > "$FX1_HOME/.claude/settings.json" << 'JSONEOF'
 {
   "hooks": {
@@ -58,7 +64,7 @@ cat > "$FX1_HOME/.claude/settings.json" << 'JSONEOF'
     ],
     "PreToolUse": [
       {
-        "matcher": "",
+        "matcher": ".*",
         "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/preflight-guard.sh"}]
       }
     ]
@@ -68,8 +74,7 @@ JSONEOF
 
 HOME="$FX1_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" python3 "$ENSURE_HOOKS" 2>/dev/null
 
-_assert_json "drift-gate.sh and master-preflight.sh added; session-preflight.sh preserved" \
-  "$FX1_HOME/.claude/settings.json" '
+_assert_json "old plugin-native global settings entries removed"   "$FX1_HOME/.claude/settings.json" '
 import sys, json
 errors = []
 s = json.load(open(sys.argv[1]))
@@ -79,23 +84,22 @@ all_cmds = [
     for entry in event
     for h in entry.get("hooks", [])
 ]
-for expected in ["drift-gate.sh", "master-preflight.sh", "session-preflight.sh", "preflight-guard.sh"]:
-    if not any(expected in c for c in all_cmds):
-        errors.append(expected + " missing from settings.json")
+for removed in ["session-preflight.sh", "preflight-guard.sh", "drift-gate.sh", "master-preflight.sh"]:
+    if any(removed in c for c in all_cmds):
+        errors.append(removed + " still present in settings.json")
 print("COUNT=" + str(len(errors)))
 for e in errors:
     print(e)
 '
 
 # ---------------------------------------------------------------------------
-# Test 2: idempotent — second run adds no duplicates
+# Test 2: idempotent after cleanup
 # ---------------------------------------------------------------------------
-echo "[2] ensure-global-hooks: idempotent (second run adds no duplicates)"
+echo "[2] ensure-global-hooks: idempotent after cleanup"
 
 HOME="$FX1_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" python3 "$ENSURE_HOOKS" 2>/dev/null
 
-_assert_json "no duplicates after second run" \
-  "$FX1_HOME/.claude/settings.json" '
+_assert_json "no plugin-native duplicates after second run"   "$FX1_HOME/.claude/settings.json" '
 import sys, json
 errors = []
 s = json.load(open(sys.argv[1]))
@@ -105,24 +109,25 @@ all_cmds = [
     for entry in event
     for h in entry.get("hooks", [])
 ]
-for hook in ["drift-gate.sh", "master-preflight.sh"]:
+for hook in ["session-preflight.sh", "preflight-guard.sh", "drift-gate.sh", "master-preflight.sh"]:
     count = sum(1 for c in all_cmds if hook in c)
-    if count > 1:
-        errors.append(hook + " appears " + str(count) + " times (want 1)")
+    if count > 0:
+        errors.append(hook + " appears " + str(count) + " times (want 0)")
 print("COUNT=" + str(len(errors)))
 for e in errors:
     print(e)
 '
 
 # ---------------------------------------------------------------------------
-# Test 3: multi-mirror installed_plugins.json — picks scope=user, newest first
+# Test 3: multi-mirror installed_plugins.json picks newest user-scope install
 # ---------------------------------------------------------------------------
 echo "[3] ensure-global-hooks: multi-mirror installed_plugins.json picks newest scope=user entry"
 
 FX3_HOME="$TMPROOT/home3"
 mkdir -p "$FX3_HOME/.claude/plugins"
 
-# Stale install: old date, has a fake manifest with a "stale-hook.sh" required hook.
+# Stale install: old date, has a fake global hook. If this install is chosen,
+# stale-hook.sh will be registered and the assertion will fail.
 STALE_INSTALL="$TMPROOT/stale-install"
 mkdir -p "$STALE_INSTALL/hooks"
 cat > "$STALE_INSTALL/hooks/hooks-manifest.json" << 'JSONEOF'
@@ -141,7 +146,8 @@ cat > "$STALE_INSTALL/hooks/hooks-manifest.json" << 'JSONEOF'
 }
 JSONEOF
 
-# Current install: new date, points at the real repo (has drift-gate, master-preflight).
+# Current install: new date, points at the real repo. Its required hooks are
+# plugin-native, so this maintenance script should not add global hook entries.
 cat > "$FX3_HOME/.claude/plugins/installed_plugins.json" << JSONEOF
 {
   "plugins": {
@@ -170,8 +176,7 @@ JSONEOF
 # Run WITHOUT CLAUDE_PLUGIN_ROOT so it falls back to installed_plugins.json.
 HOME="$FX3_HOME" python3 "$ENSURE_HOOKS" 2>/dev/null
 
-_assert_json "newest entry used (drift-gate added, stale-hook not added)" \
-  "$FX3_HOME/.claude/settings.json" '
+_assert_json "newest entry used and no global hook registered"   "$FX3_HOME/.claude/settings.json" '
 import sys, json
 errors = []
 s = json.load(open(sys.argv[1]))
@@ -181,12 +186,11 @@ all_cmds = [
     for entry in event
     for h in entry.get("hooks", [])
 ]
-if not any("drift-gate.sh" in c for c in all_cmds):
-    errors.append("drift-gate.sh not added (newest entry not picked)")
-if not any("master-preflight.sh" in c for c in all_cmds):
-    errors.append("master-preflight.sh not added (newest entry not picked)")
 if any("stale-hook.sh" in c for c in all_cmds):
     errors.append("stale-hook.sh added (stale entry was used instead of newest)")
+for hook in ["drift-gate.sh", "master-preflight.sh", "session-preflight.sh", "preflight-guard.sh"]:
+    if any(hook in c for c in all_cmds):
+        errors.append(hook + " added to global settings (plugin-native hooks should not be global)")
 print("COUNT=" + str(len(errors)))
 for e in errors:
     print(e)
@@ -223,8 +227,7 @@ JSONEOF
 # Should exit cleanly without adding any hooks (no user-scope entry found).
 HOME="$FX4_HOME" python3 "$ENSURE_HOOKS" 2>/dev/null
 
-_assert_json "non-user scope entry ignored; settings.json unchanged" \
-  "$FX4_HOME/.claude/settings.json" '
+_assert_json "non-user scope entry ignored; settings.json unchanged"   "$FX4_HOME/.claude/settings.json" '
 import sys, json
 s = json.load(open(sys.argv[1]))
 all_cmds = [
@@ -234,7 +237,7 @@ all_cmds = [
     for h in entry.get("hooks", [])
 ]
 errors = []
-if any("drift-gate.sh" in c or "master-preflight.sh" in c for c in all_cmds):
+if all_cmds:
     errors.append("hooks added from non-user scope entry (should not happen)")
 print("COUNT=" + str(len(errors)))
 for e in errors:

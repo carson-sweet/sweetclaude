@@ -136,10 +136,12 @@ echo "[3] forbidden pattern: find-based runner/script discovery"
 FIND_VIOLATIONS=0
 for skill in $SKILL_FILES; do
   rel=${skill#$REPO_ROOT/}
-  if grep -q 'find.*~/.claude.*\.\(py\|sh\)' "$skill" 2>/dev/null; then
-    grep -n 'find.*~/.claude.*\.\(py\|sh\)' "$skill" | while read line; do
+  matches=$(grep -n 'find.*~/.claude.*\.\(py\|sh\)' "$skill" 2>/dev/null || true)
+  if [ -n "$matches" ]; then
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
       fail "find-based discovery in $rel: $line"
-    done
+    done <<< "$matches"
     FIND_VIOLATIONS=$((FIND_VIOLATIONS + 1))
   fi
 done
@@ -185,8 +187,8 @@ if not any("master-preflight.sh" in c and m == "Skill" for m, c in pre_entries):
 
 m_hooks = {h["file"]: h for h in manifest.get("hooks", []) if "file" in h}
 for name, want_event, want_scope in [
-    ("drift-gate.sh", "SessionStart", "global"),
-    ("master-preflight.sh", "PreToolUse", "global"),
+    ("drift-gate.sh", "SessionStart", "plugin-native"),
+    ("master-preflight.sh", "PreToolUse", "plugin-native"),
 ]:
     if name not in m_hooks:
         errors.append("hooks-manifest.json: " + name + " missing")
@@ -209,9 +211,13 @@ HOOK_CFG_COUNT=$(printf '%s\n' "$HOOK_CFG_RESULT" | grep '^COUNT=' | cut -d= -f2
 if [ "${HOOK_CFG_COUNT:-0}" -eq 0 ]; then
   pass "drift-gate.sh and master-preflight.sh correctly declared in hooks.json + manifest"
 else
-  printf '%s\n' "$HOOK_CFG_RESULT" | grep -v '^COUNT=' | while read -r line; do
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    case "$line" in
+      COUNT=*) continue ;;
+    esac
     fail "$line"
-  done
+  done <<< "$HOOK_CFG_RESULT"
 fi
 
 echo
