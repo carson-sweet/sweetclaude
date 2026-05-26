@@ -15,6 +15,14 @@ This guide is the long form. The README on the front page sells the idea; these 
 
 ---
 
+## Choose Your Track
+
+This branch documents SweetClaude 3.x stable. Use the [3.x Stable User Guide](3.x/index.md) if your plugin list shows `sweetclaude@sweetclaude-stable` or you installed from `stable-3.x`.
+
+4.x beta is opt-in and should be installed as a separate beta plugin channel. Its migration and rescue docs live on the `beta-4.x` branch.
+
+---
+
 ## Where to Begin
 
 If you are new and want a working install, read [Getting Started](getting-started.md). It walks you through your first session with sample interactions so you know what to expect when SweetClaude pushes back on your concept or asks you to challenge an assumption.

@@ -13,6 +13,13 @@ Start Claude Code and run:
 /sweetclaude:help
 ```
 
+To update stable 3.x later:
+```
+/plugin update sweetclaude@sweetclaude-stable
+```
+
+Restart Claude Code, then run `/sweetclaude:update` inside a SweetClaude project if framework files need syncing. `/sweetclaude:update` stays within the installed stable channel; it does not switch you to 4.x beta.
+
 ## What It Is
 
 A software development partner for the full project lifecycle — from the first idea through design, implementation, testing, and ship. SweetClaude teaches itself about your project and preferences through conversation, then applies those learnings to deal with the less-fun parts of the project.
@@ -45,6 +52,14 @@ Start Claude Code in your project folder as you normally would, then inside Clau
 /plugin marketplace add carson-sweet/sweetclaude@stable-3.x
 /plugin install sweetclaude@sweetclaude-stable
 ```
+
+For an existing stable install, update the Claude Code plugin package first:
+
+```
+/plugin update sweetclaude@sweetclaude-stable
+```
+
+Restart Claude Code, then run `/sweetclaude:update` from a project if framework files need syncing.
 
 Once install is complete, run:
 
@@ -147,7 +162,7 @@ You can invoke skills directly if you know what you want. These are the most com
 |---|---|
 | `/sweetclaude:off` | Suspend SweetClaude — preserves all artifacts, reactivate with `/sweetclaude:go` |
 | `/sweetclaude:purge` | Delete all SweetClaude artifacts — recommends a backup branch, shows all files, requires "I understand". **Taking a branch snapshot before is highly recommended.** |
-| `/sweetclaude:update` | Fetch latest SweetClaude from GitHub and sync to all projects |
+| `/sweetclaude:update` | Sync SweetClaude framework files inside the installed stable channel. Update the plugin package with `/plugin update sweetclaude@sweetclaude-stable` first. |
 | `/sweetclaude:fix-sweetclaude` | Audit and repair SweetClaude configuration |
 
 ### Advanced

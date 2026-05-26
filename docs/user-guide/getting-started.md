@@ -27,11 +27,11 @@ If `gh` is not authenticated yet, run `gh auth login` once.
 Inside Claude Code, run:
 
 ```
-/plugin marketplace add https://github.com/carson-sweet/sweetclaude
-/plugin install sweetclaude@sweetclaude
+/plugin marketplace add carson-sweet/sweetclaude@stable-3.x
+/plugin install sweetclaude@sweetclaude-stable
 ```
 
-After install, every Claude Code session — in any project folder — has over 100 SweetClaude skills available as `/sweetclaude:something` commands.
+After install, every Claude Code session has the stable 3.x SweetClaude skills available as `/sweetclaude:something` commands. Start with `/sweetclaude:help` if you want the guided tour, or `/sweetclaude:go` if you are ready to work.
 
 ---
 
@@ -182,7 +182,7 @@ These cost nothing and surface capabilities that are not obvious from the comman
 
 **Status fired automatically and you did not want it.** Touch `.sweetclaude/disabled` in the project root. The session-start check will not fire until you run `/sweetclaude` again.
 
-**Want to keep SweetClaude updated.** Run `/sweetclaude:update` from any project. Fetches the latest from GitHub, shows what changed, syncs everywhere.
+**Want to keep SweetClaude updated.** Run `/plugin update sweetclaude@sweetclaude-stable` in Claude Code, restart Claude Code, then run `/sweetclaude:update` from a SweetClaude project if framework files need syncing.
 
 ---
 

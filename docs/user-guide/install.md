@@ -2,26 +2,51 @@
 
 ## Marketplace Install (Recommended)
 
-Inside Claude Code, no terminal required:
+Inside Claude Code, no terminal required. Install the stable 3.x channel explicitly:
 
-```
+```text
 /plugin marketplace add carson-sweet/sweetclaude@stable-3.x
 /plugin install sweetclaude@sweetclaude-stable
 ```
 
-All skills are immediately available. Then go to your project and run `/sweetclaude:go` to begin.
+All skills are immediately available. Then go to your project and run `/sweetclaude:help` or `/sweetclaude:go` to begin.
 
----
+## Updating Stable 3.x
 
-## Updating
+Update the Claude Code plugin package first:
 
-```bash
+```text
+/plugin update sweetclaude@sweetclaude-stable
+```
+
+Restart Claude Code so the updated plugin package is loaded. Then, inside a SweetClaude project, run:
+
+```text
 /sweetclaude:update
 ```
 
-Fetches the latest version from GitHub and syncs to all installed locations. Shows what changed, migrates state schemas if needed, and prompts to onboard any skills marked `uninitialized`.
+`/sweetclaude:update` syncs SweetClaude framework files inside the installed stable channel and handles supported 3.x state migrations. It is not the package update mechanism, and it does not move a stable install onto 4.x beta.
 
----
+## Legacy Install Names
+
+Older docs used the unversioned source and plugin key:
+
+```text
+/plugin marketplace add https://github.com/carson-sweet/sweetclaude
+/plugin install sweetclaude@sweetclaude
+```
+
+Do not use those commands for new installs. If `/plugin list` shows `sweetclaude@sweetclaude`, update that exact installed key first:
+
+```text
+/plugin update sweetclaude@sweetclaude
+```
+
+Then add and install the explicit stable channel when you are ready to standardize on the 3.x stable key.
+
+## 4.x Beta Is Opt-In
+
+Do not use `/sweetclaude:update` to move a 3.x stable project onto 4.x beta. If you intentionally want beta, add and install the beta marketplace as a separate channel and follow the beta branch migration docs.
 
 ## Optional Integrations
 

@@ -21,7 +21,7 @@ This page is reference. For why state is structured the way it is, read [How It 
 │   ├── assumption-register.md  ← Assumptions worth checking later
 │   ├── improvement-register.md ← Feedback and learnings from each phase
 │   ├── scope-changes.md        ← Scope additions and removals with justification
-│   └── backups/                ← Pre-migration state snapshots (created by /sweetclaude:update)
+│   └── backups/                ← Pre-migration state snapshots (created by stable sync or migration flows)
 ├── plans/                      ← Claude Code plan files (.sweetclaude/plans is set as plansDirectory)
 │   └── archive/                ← Plans archived at ship time, organized by milestone/sprint
 ├── traceability/               ← Story → requirement → test → code traceability maps
@@ -97,7 +97,7 @@ framework:
 | `project.safety_snapshot` | The git branch created during onboarding (`pre-sweetclaude`). Your insurance. |
 | `work.last_item_id` | Monotonic counter. Persists across work item completions so IDs do not repeat. |
 | `work.active` | The work in flight right now. Fast-moving. Type, workflow, phase, title, start date, entry category. |
-| `features.*` | Per-feature activation state. `not_configured` → `active` or `declined`. Configured at setup and reviewable via fix-sweetclaude or update. |
+| `features.*` | Per-feature activation state. `not_configured` → `active` or `declined`. Configured at setup and reviewable via fix-sweetclaude; stable sync may re-offer newly added features. |
 | `framework.consistency` | Last drift-check result. Updated by the health hook. |
 | `framework.update` | Whether a newer version is available. Updated by the health hook. |
 
