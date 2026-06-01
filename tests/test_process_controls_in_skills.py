@@ -89,6 +89,56 @@ def test_shared_process_controls_define_success_criteria_contract():
     assert "No review, caucus, verification, release, or completion step may add completion criteria" in normalized
 
 
+def test_large_story_4x_canonical_entrypoint_is_john_wick():
+    process_controls = _read("skills/process-controls.md")
+    john_wick = _read("skills/john-wick/SKILL.md")
+    skills_reference = _read("docs/user-guide/4.x-beta/skills-reference.md")
+
+    assert "The production 4.x entrypoint for a complete large/high-rigor story workflow is" in process_controls
+    assert "`/sweetclaude:john-wick`" in process_controls
+    assert "John Wick is the canonical SweetClaude 4.x production entrypoint" in john_wick
+    assert "Canonical 4.x entrypoint for complete large/high-rigor story workflows" in skills_reference
+
+    for path in ("skills/code-tdd/SKILL.md", "skills/code-feature/SKILL.md", "skills/code-issue/SKILL.md"):
+        text = _read(path).lower()
+        assert "canonical 4.x entrypoint" not in text
+        assert "end-to-end large-story entrypoint" not in text
+
+
+def test_large_story_entrypoint_requires_contract_before_downstream_work():
+    process_controls = _normalized("skills/process-controls.md")
+    define_phase = _normalized("skills/john-wick/phase-1-define.md")
+
+    for phrase in (
+        "During Define, create and freeze `success_criteria_contract`",
+        "Run `validate-workflow --stage define-exit` before Plan, Design, Implementation Prep, Implementation, Verify, review, release, or caucus completion evaluation",
+        "At completion, write `success-criteria-ledger.json` and run `validate-workflow --stage completion` before any `done` transition",
+    ):
+        assert phrase in process_controls
+
+    for phrase in (
+        "Create `.sweetclaude/contracts/success-criteria-contract.yaml` from the approved PRD",
+        "Do not continue to Plan with an invalid or stale contract",
+        "No later phase, review, caucus, verification, release, or completion step may add completion criteria",
+    ):
+        assert phrase in define_phase
+
+
+def test_john_wick_state_schema_contains_large_story_contract_surface():
+    text = _read("skills/john-wick/state-schema.md")
+
+    for phrase in (
+        "requires_success_criteria_contract: true",
+        "success_criteria_contract:",
+        "success_criteria_contract_path: string | null",
+        "success_criteria_contract_hash: string | null",
+        "criterion_ids:",
+        "success_criteria_ledger:",
+        "success_criteria_ledger_path: string | null",
+    ):
+        assert phrase in text
+
+
 def test_entry_skills_require_success_criteria_contract_for_large_work():
     for path in ("skills/code-tdd/SKILL.md", "skills/code-feature/SKILL.md", "skills/code-issue/SKILL.md"):
         text = _read(path)

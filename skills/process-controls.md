@@ -29,6 +29,29 @@ The ledger must record:
 - human approvals for extra budget, contract reopen, or resume after stop;
 - current stop disposition, if any.
 
+## Canonical Large-Story Entrypoint
+
+The production 4.x entrypoint for a complete large/high-rigor story workflow is
+`/sweetclaude:john-wick`.
+
+Other skills such as `/sweetclaude:code-feature`, `/sweetclaude:code-issue`,
+and `/sweetclaude:code-tdd` may perform bounded implementation work inside a
+large-story workflow, but they are not the canonical end-to-end large-story
+entrypoint. They must inherit the frozen success criteria contract from the
+calling workflow or stop before implementation begins.
+
+The user flow is:
+
+1. Start or resume with `/sweetclaude:john-wick`.
+2. During Define, create and freeze `success_criteria_contract`.
+3. Store the contract path, `success_criteria_contract_hash`, `criterion_ids`,
+   and terminal ledger path in `.sweetclaude/state/john-wick.yaml`.
+4. Run `validate-workflow --stage define-exit` before Plan, Design,
+   Implementation Prep, Implementation, Verify, review, release, or caucus
+   completion evaluation.
+5. At completion, write `success-criteria-ledger.json` and run
+   `validate-workflow --stage completion` before any `done` transition.
+
 ## Success Criteria Contract Controls
 
 Large/high-rigor story workflows must begin with a frozen
