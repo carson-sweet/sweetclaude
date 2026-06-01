@@ -32,7 +32,7 @@ The ledger must record:
 ## Canonical Large-Story Entrypoint
 
 The production 4.x entrypoint for a complete large/high-rigor story workflow is
-`/sweetclaude:john-wick`.
+`/sweetclaude:large-story`.
 
 Other skills such as `/sweetclaude:code-feature`, `/sweetclaude:code-issue`,
 and `/sweetclaude:code-tdd` may perform bounded implementation work inside a
@@ -42,10 +42,11 @@ calling workflow or stop before implementation begins.
 
 The user flow is:
 
-1. Start or resume with `/sweetclaude:john-wick`.
+1. Start or resume with `/sweetclaude:large-story`.
 2. During Define, create and freeze `success_criteria_contract`.
 3. Store the contract path, `success_criteria_contract_hash`, `criterion_ids`,
-   and terminal ledger path in `.sweetclaude/state/john-wick.yaml`.
+   and terminal ledger path in `.sweetclaude/state/large-story.yaml` or
+   `.sweetclaude/state/workflows/{workflow_id}.yaml`.
 4. Run `validate-workflow --stage define-exit` before Plan, Design,
    Implementation Prep, Implementation, Verify, review, release, or caucus
    completion evaluation.

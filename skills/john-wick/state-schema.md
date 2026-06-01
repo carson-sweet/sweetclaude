@@ -9,7 +9,6 @@ feature_name: string
 feature_branch: string
 github_mode: boolean
 phase_checkins: boolean
-requires_success_criteria_contract: true
 
 current_phase: BOOTSTRAP | DEFINE | PLAN | DESIGN | IMPLEMENT_PREP | IMPLEMENT | VERIFY
 current_step: string
@@ -36,13 +35,6 @@ success_criteria_ledger:
   all_success_criteria_passed: boolean | null
   missing_or_failed_criterion_ids:
     - string
-
-# Runtime compatibility fields for shared workflow validators.
-success_criteria_contract_path: string | null
-success_criteria_contract_hash: string | null
-criterion_ids:
-  - string
-success_criteria_ledger_path: string | null
 
 created_artifacts:
   - step: string

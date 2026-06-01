@@ -89,25 +89,37 @@ def test_shared_process_controls_define_success_criteria_contract():
     assert "No review, caucus, verification, release, or completion step may add completion criteria" in normalized
 
 
-def test_large_story_4x_canonical_entrypoint_is_john_wick():
+def test_large_story_4x_canonical_entrypoint_is_large_story_skill():
     process_controls = _read("skills/process-controls.md")
+    large_story = _read("skills/large-story/SKILL.md")
     john_wick = _read("skills/john-wick/SKILL.md")
     skills_reference = _read("docs/user-guide/4.x-beta/skills-reference.md")
+    route = _read("skills/_route/SKILL.md")
 
     assert "The production 4.x entrypoint for a complete large/high-rigor story workflow is" in process_controls
-    assert "`/sweetclaude:john-wick`" in process_controls
-    assert "John Wick is the canonical SweetClaude 4.x production entrypoint" in john_wick
+    assert "`/sweetclaude:large-story`" in process_controls
+    assert "`/sweetclaude:large-story`" in large_story
+    assert "user-invocable: true" in large_story
     assert "Canonical 4.x entrypoint for complete large/high-rigor story workflows" in skills_reference
+    assert "| **Large Story** | `/sweetclaude:large-story` |" in skills_reference
+    assert "`large-story`" in route
+    assert "`sweetclaude:large-story`" in route
+
+    for forbidden in ("john-wick", "John Wick", "sweetclaude:john-wick"):
+        assert forbidden not in large_story
 
     for path in ("skills/code-tdd/SKILL.md", "skills/code-feature/SKILL.md", "skills/code-issue/SKILL.md"):
         text = _read(path).lower()
         assert "canonical 4.x entrypoint" not in text
         assert "end-to-end large-story entrypoint" not in text
 
+    assert "canonical SweetClaude 4.x production entrypoint" not in john_wick
+    assert "end-to-end large-story entrypoint" not in john_wick
+
 
 def test_large_story_entrypoint_requires_contract_before_downstream_work():
     process_controls = _normalized("skills/process-controls.md")
-    define_phase = _normalized("skills/john-wick/phase-1-define.md")
+    large_story = _normalized("skills/large-story/SKILL.md")
 
     for phrase in (
         "During Define, create and freeze `success_criteria_contract`",
@@ -117,24 +129,25 @@ def test_large_story_entrypoint_requires_contract_before_downstream_work():
         assert phrase in process_controls
 
     for phrase in (
-        "Create `.sweetclaude/contracts/success-criteria-contract.yaml` from the approved PRD",
-        "Do not continue to Plan with an invalid or stale contract",
-        "No later phase, review, caucus, verification, release, or completion step may add completion criteria",
+        "Create or locate a frozen `success_criteria_contract`",
+        "Run `python3 scripts/success_criteria_contracts.py validate-workflow --stage define-exit`",
+        "If validation fails, stop. Do not continue downstream",
+        "No review, caucus, verification, release, or completion step may add completion criteria",
     ):
-        assert phrase in define_phase
+        assert phrase in large_story
 
 
-def test_john_wick_state_schema_contains_large_story_contract_surface():
-    text = _read("skills/john-wick/state-schema.md")
+def test_large_story_state_schema_contains_contract_surface():
+    text = _read("skills/large-story/state-schema.md")
 
     for phrase in (
         "requires_success_criteria_contract: true",
-        "success_criteria_contract:",
         "success_criteria_contract_path: string | null",
         "success_criteria_contract_hash: string | null",
         "criterion_ids:",
-        "success_criteria_ledger:",
         "success_criteria_ledger_path: string | null",
+        ".sweetclaude/state/large-story.yaml",
+        ".sweetclaude/state/workflows/{workflow_id}.yaml",
     ):
         assert phrase in text
 

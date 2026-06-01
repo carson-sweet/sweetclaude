@@ -16,11 +16,6 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 Fully autonomous, resumable SDLC pipeline. Runs from discovery artifacts to merged PR with minimal human involvement. Interactive gates are pre-defined and infrequent.
 
-John Wick is the canonical SweetClaude 4.x production entrypoint for complete
-large/high-rigor story workflows. Start and resume these workflows with
-`/sweetclaude:john-wick`; bounded code skills may participate inside the
-workflow, but they are not the end-to-end large-story entrypoint.
-
 **Phase contents (read on demand — see Phase Router below):**
 - [phase-0-bootstrap.md](phase-0-bootstrap.md) — B1, B2, B3, B4
 - [phase-1-define.md](phase-1-define.md) — D1, D2, D3, D4, CK1
