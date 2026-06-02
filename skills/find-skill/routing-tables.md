@@ -44,6 +44,7 @@ Eight buckets. Each row maps a work type to the skill that handles it, plus the 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
 | Net-new feature | DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:product-discovery` |
+| Large story / high-rigor story | DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:large-story` |
 | Enhancement / iteration | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:product-prd` |
 | Product brief | DEFINE | `sweetclaude:product-brief` |
 | Requirements / PRD | DEFINE | `sweetclaude:product-prd` |

@@ -29,10 +29,11 @@ The ledger must record:
 - human approvals for extra budget, contract reopen, or resume after stop;
 - current stop disposition, if any.
 
-## Canonical Large-Story Entrypoint
+## Large-Story Workflow Routing
 
-The production 4.x entrypoint for a complete large/high-rigor story workflow is
-`/sweetclaude:large-story`.
+Users start complete large/high-rigor story workflows through `/sweetclaude:go`
+using natural language. `/sweetclaude:go` routes matching requests to the
+internal `sweetclaude:large-story` workflow.
 
 Other skills such as `/sweetclaude:code-feature`, `/sweetclaude:code-issue`,
 and `/sweetclaude:code-tdd` may perform bounded implementation work inside a
@@ -42,7 +43,7 @@ calling workflow or stop before implementation begins.
 
 The user flow is:
 
-1. Start or resume with `/sweetclaude:large-story`.
+1. Start or resume with `/sweetclaude:go <natural-language request>`.
 2. During Define, create and freeze `success_criteria_contract`.
 3. Store the contract path, `success_criteria_contract_hash`, `criterion_ids`,
    and terminal ledger path in `.sweetclaude/state/large-story.yaml` or

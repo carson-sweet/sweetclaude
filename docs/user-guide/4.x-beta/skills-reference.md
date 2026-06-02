@@ -206,7 +206,7 @@ Deployment and incident response.
 
 ---
 
-## Documents and Strategy Specialists (15 skills)
+## Documents and Strategy Specialists (14 skills)
 
 Long-form document work, corpus management, and specialized strategy capabilities.
 
@@ -217,7 +217,6 @@ Long-form document work, corpus management, and specialized strategy capabilitie
 | **Documents Academic Research** | `/sweetclaude:documents-academic-research` | Six-phase pipeline for academic papers: thesis through submission. Includes peer review simulation. |
 | **Documents Narrative Arc** | `/sweetclaude:documents-narrative-arc` | Knowledge graph connecting your claims, evidence, and strategic objectives. Query later: "What evidence supports claim X?" |
 | **Misc Meeting Prep** | `/sweetclaude:misc-meeting-prep` | Prepare for a specific meeting. Drafts agenda, talking points with confidence levels, anticipated questions with prepared responses, and leave-behinds. Captures debrief afterward. |
-| **Large Story** | `/sweetclaude:large-story` | Canonical 4.x entrypoint for complete large/high-rigor story workflows. Starts or resumes bounded, evidence-gated work with a frozen binary success criteria contract before downstream execution. |
 | **John Wick** | `/sweetclaude:john-wick` | Autonomous multi-session SDLC pipeline. Runs the full pipeline without stopping at every sub-step, using phase check-ins to validate exit criteria. For when you want maximum autonomy. |
 | **John Wick Check-In** | `/sweetclaude:john-wick-checkin` | Phase check-in subagent used internally by John Wick. Available standalone for drift detection. |
 

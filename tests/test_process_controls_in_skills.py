@@ -91,19 +91,20 @@ def test_shared_process_controls_define_success_criteria_contract():
 
 def test_large_story_4x_canonical_entrypoint_is_large_story_skill():
     process_controls = _read("skills/process-controls.md")
+    go = _read("skills/go/SKILL.md")
     large_story = _read("skills/large-story/SKILL.md")
     john_wick = _read("skills/john-wick/SKILL.md")
     skills_reference = _read("docs/user-guide/4.x-beta/skills-reference.md")
-    route = _read("skills/_route/SKILL.md")
+    find_skill_routes = _read("skills/find-skill/routing-tables.md")
 
-    assert "The production 4.x entrypoint for a complete large/high-rigor story workflow is" in process_controls
-    assert "`/sweetclaude:large-story`" in process_controls
-    assert "`/sweetclaude:large-story`" in large_story
-    assert "user-invocable: true" in large_story
-    assert "Canonical 4.x entrypoint for complete large/high-rigor story workflows" in skills_reference
-    assert "| **Large Story** | `/sweetclaude:large-story` |" in skills_reference
-    assert "`large-story`" in route
-    assert "`sweetclaude:large-story`" in route
+    assert "Users start complete large/high-rigor story workflows through `/sweetclaude:go`" in process_controls
+    assert "internal `sweetclaude:large-story` workflow" in process_controls
+    assert "Invoke `sweetclaude:find-skill` with the user's request as context" in go
+    assert "user-invocable: false" in large_story
+    assert "Users start this through `/sweetclaude:go` using natural language." in large_story
+    assert "| **Large Story** |" not in skills_reference
+    assert "`/sweetclaude:large-story`" not in skills_reference
+    assert "| Large story / high-rigor story | DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:large-story` |" in find_skill_routes
 
     for forbidden in ("john-wick", "John Wick", "sweetclaude:john-wick"):
         assert forbidden not in large_story

@@ -14,6 +14,31 @@ Assess. Propose. Wait. Do not act until the user says proceed.
 
 ---
 
+## Step 0: Natural-language request path
+
+If the user passes a request after `/sweetclaude:go`, treat it as natural
+language. Do not require the user to know a skill name, work-type slug, or route
+command.
+
+For `/sweetclaude:go <request>`:
+
+1. Skip the backlog-first proposal flow below.
+2. Invoke `sweetclaude:find-skill` with the user's request as context.
+3. Let `find-skill` classify, confirm, write work state when appropriate, and
+   invoke the matched skill.
+
+Examples:
+
+- `/sweetclaude:go I need to fix the auth bug`
+- `/sweetclaude:go start a large story for the billing rewrite`
+- `/sweetclaude:go set up corpus search for these architecture notes`
+- `/sweetclaude:go review this PR for security issues`
+
+Use the state-driven proposal flow below only when `/sweetclaude:go` is invoked
+without a request.
+
+---
+
 ## Step 1: Read state directly
 
 Session state is pre-loaded above. Use `active_work_item`, `deference`, `active_milestone`, `improvement_register_count`, `checkpoint_next`, and `paths.product_base` from there directly.
@@ -416,7 +441,10 @@ Done. {STORY-ID} — {title} — closed.
 List the next 2–3 candidates from the priority tiers, in order. For each: name it, say which tier it came from, and say which skill would handle it. Then call AskUserQuestion again with one option per candidate plus a "None of these" escape.
 
 **Something else:**
-Follow the user's direction immediately per Adaptive Flow. Track the current proposal internally so you can offer to return to it when the detour completes.
+Ask the user for the natural-language direction if it is not already present,
+then invoke `sweetclaude:find-skill` with that request as context. Track the
+current proposal internally so you can offer to return to it when the detour
+completes.
 
 ---
 
@@ -471,4 +499,4 @@ Apply per mode:
 - **One paragraph, not a list.** The proposal explanation is prose, not bullet points.
 - **Use AskUserQuestion, not text-imitation menus.** Never write a text line like "Proceed · Review · Something else" — that looks like a menu but isn't interactive. Always present choices via AskUserQuestion.
 - **Wait after proposing.** Do not continue until the user selects an option.
-- **If the user passes arguments** (e.g., `/sweetclaude:go I need to fix the auth bug`): skip Steps 1–3. Use the user's direction as the proposal, confirm it in the PROPOSED NEXT WORK format, and present the same AskUserQuestion menu before acting.
+- **If the user passes arguments** (e.g., `/sweetclaude:go I need to fix the auth bug`): use Step 0. Natural-language requests delegate to `sweetclaude:find-skill`; users do not need to know skill names or route commands.

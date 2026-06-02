@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
-user-invocable: true
-description: "Bounded, evidence-gated large-story workflow."
+user-invocable: false
+description: "Internal bounded, evidence-gated large-story workflow."
 ---
 
 !`bash ~/.claude/hooks/sweetclaude/record-event.sh skill_invoked "sweetclaude:large-story" 2>/dev/null || true`
@@ -14,16 +14,16 @@ STOP. Before executing this skill, check: does .sweetclaude/state/phase.yaml exi
 
 # Large Story
 
-Canonical SweetClaude 4.x entrypoint for complete large/high-rigor story
-workflows.
+Internal SweetClaude 4.x workflow for complete large/high-rigor story
+workflows. Users start this through `/sweetclaude:go` using natural language.
 
 This workflow is bounded, evidence-gated, and human-approved at explicit gates.
 It must not delegate entrypoint authority to any other workflow.
 
 ## Scope
 
-Use `/sweetclaude:large-story` when a work item is too large or high-risk for a
-single bounded `/sweetclaude:code-feature`, `/sweetclaude:code-issue`, or
+Use this workflow when a work item is too large or high-risk for a single
+bounded `/sweetclaude:code-feature`, `/sweetclaude:code-issue`, or
 `/sweetclaude:code-tdd` pass.
 
 ## Current Product Surface
