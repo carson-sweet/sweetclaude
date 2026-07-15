@@ -4,6 +4,26 @@ All notable changes to SweetClaude are documented here. SweetClaude has separate
 
 ---
 
+## [4.5.1-beta] — 2026-07-15 (4.x beta channel — transition release)
+
+**The beta channel is being retired.** The 4.x line has graduated to the
+stable channel, and this build is functionally identical to the 4.5.0 stable
+release — it carries no new features, only the tools to move you across.
+
+- **Switch to stable.** Run `/sweetclaude:update` after installing this build:
+  on the beta channel it now detects that stable 4.5.0 exists and prints the
+  one-time switch (add + install `sweetclaude-stable@main`, then remove the
+  beta marketplace, in that order so you are never double-installed).
+- **Why you're seeing a "new commit, same feature set."** Beta and stable now
+  share the same code; the difference is the channel, not the functionality.
+  Moving to stable is how you keep receiving updates — future releases land on
+  the stable channel only.
+- Update notes now fall back to these CHANGELOG entries when a shallow clone
+  can't compute a commit range, so an update never again shows a blank
+  changelog.
+
+---
+
 ## [4.5.0] — 2026-07-15 (stable channel)
 
 The first stable 4.x release. SweetClaude 4.x, in beta since May, is promoted to

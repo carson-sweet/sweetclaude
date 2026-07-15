@@ -56,3 +56,25 @@ def test_update_skill_surfaces_beta_migration():
     assert "beta_stable_migration_notice" in skill or "beta-migration" in skill, (
         "update SKILL.md must surface the beta->stable migration notice"
     )
+
+
+def test_changelog_fallback_reads_top_section(tmp_path):
+    """ISSUE-246: a shallow clone can't compute a git range, so update notes
+    must fall back to the top CHANGELOG.md section instead of showing blank."""
+    import update as u
+    (tmp_path / "CHANGELOG.md").write_text(
+        "# Changelog\n\n---\n\n"
+        "## [4.5.1-beta] — 2026-07-15 (transition release)\n\n"
+        "The beta channel is being retired. Switch to stable.\n\n"
+        "---\n\n## [4.5.0] — 2026-07-15\n\nolder.\n",
+        encoding="utf-8",
+    )
+    out = u._top_changelog_section(str(tmp_path))
+    assert "4.5.1-beta" in out
+    assert "beta channel is being retired" in out
+    assert "4.5.0" not in out  # only the top section
+
+
+def test_changelog_fallback_empty_when_no_file(tmp_path):
+    import update as u
+    assert u._top_changelog_section(str(tmp_path)) == ""

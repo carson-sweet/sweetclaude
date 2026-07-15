@@ -207,6 +207,28 @@ def cmd_preflight(args: argparse.Namespace) -> int:
 # check
 # ---------------------------------------------------------------------------
 
+def _top_changelog_section(source_dir) -> str:
+    """Return the first release section of CHANGELOG.md (heading + body up to
+    the next section) as fallback update notes. Empty string if unavailable."""
+    try:
+        text = Path(source_dir, "CHANGELOG.md").read_text(encoding="utf-8")
+    except Exception:
+        return ""
+    lines = text.splitlines()
+    out: list[str] = []
+    started = False
+    for line in lines:
+        if line.startswith("## ["):
+            if started:
+                break
+            started = True
+        if started:
+            if line.strip() == "---":
+                continue
+            out.append(line)
+    return "\n".join(out).strip()
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     """Clone latest from GitHub and compare versions."""
     tmpdir = tempfile.mkdtemp(prefix="sweetclaude-update-")
@@ -253,13 +275,19 @@ def cmd_check(args: argparse.Namespace) -> int:
 
     up_to_date = effective_sha == args.installed_sha
 
-    # Changelog since installed
+    # Changelog since installed. The clone is shallow (--depth 1), so a
+    # git-range log fails whenever the installed commit is not in the shallow
+    # tip's history (the common case) — leaving the changelog blank, which
+    # reads like an error. Fall back to the top CHANGELOG.md section so the
+    # user always gets human-readable notes for the version being offered.
     changelog = ""
     if not up_to_date and args.installed_sha:
         log = _run(["git", "-C", source_dir, "log", "--oneline",
                      f"{args.installed_sha}..{effective_sha}"])
         if log.returncode == 0:
             changelog = log.stdout.strip()
+    if not up_to_date and not changelog:
+        changelog = _top_changelog_section(source_dir)
 
     # Diff summary
     diff_summary = {}
