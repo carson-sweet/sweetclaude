@@ -77,6 +77,46 @@ def _semver_tuple(v):
     return tuple(int(p) for p in m.groups()) if m else None
 
 
+def _is_prerelease(v) -> bool:
+    return bool(re.search(r"-(?:beta|rc|alpha)", str(v or ""), re.IGNORECASE))
+
+
+def beta_stable_migration_notice(*, channel, installed_version, stable_tags):
+    """Advisory-only (ISSUE-244): when a beta-channel user's major now has a
+    published stable release, return a notice guiding the one-time switch to the
+    stable channel. Returns None otherwise. Does not touch the stale-beta guard.
+
+    stable_tags: iterable of published release tags (e.g. from git ls-remote).
+    """
+    if channel != "beta":
+        return None
+    installed_major = _major_version(installed_version)
+    stable_versions = []
+    for tag in stable_tags or []:
+        t = str(tag).strip()
+        if not t or _is_prerelease(t):
+            continue
+        if _major_version(t) >= installed_major and _semver_tuple(t):
+            stable_versions.append(t.lstrip("v"))
+    if not stable_versions:
+        return None
+    latest = max(stable_versions, key=lambda s: _semver_tuple(s))
+    return (
+        f"SweetClaude {latest} is available on the stable channel.\n"
+        "You are on the beta channel, which is being retired. Your installed "
+        "code already matches the stable release, but future stable updates "
+        "will not reach the beta channel.\n\n"
+        "One-time switch to stable — run in this order so you are never "
+        "double-installed (both channels' skills and hooks load at once):\n"
+        "  /plugin marketplace add carson-sweet/sweetclaude@main\n"
+        "  /plugin install sweetclaude@sweetclaude-stable\n"
+        "  /plugin marketplace remove sweetclaude-beta\n\n"
+        "(Removing the beta marketplace uninstalls its plugin, so add and "
+        "install stable first.) Then run /sweetclaude:update on the stable "
+        "channel; your project data migrates normally."
+    )
+
+
 # ---------------------------------------------------------------------------
 # preflight
 # ---------------------------------------------------------------------------
@@ -646,6 +686,27 @@ def cmd_cleanup(args: argparse.Namespace) -> int:
 # CLI
 # ---------------------------------------------------------------------------
 
+def cmd_channel_migration(args: argparse.Namespace) -> int:
+    """Advisory beta->stable nudge (ISSUE-244). Queries published stable tags
+    and returns a migration notice when the beta user's major has a stable
+    release. Never fails the update flow — advisory only."""
+    repo_url = args.repo or "https://github.com/carson-sweet/sweetclaude"
+    stable_tags: list[str] = []
+    ret = _run(["git", "ls-remote", "--tags", repo_url])
+    if ret.returncode == 0:
+        for line in ret.stdout.splitlines():
+            ref = line.split("refs/tags/")[-1].strip() if "refs/tags/" in line else ""
+            if ref and not ref.endswith("^{}"):
+                stable_tags.append(ref)
+    notice = beta_stable_migration_notice(
+        channel=args.channel,
+        installed_version=args.installed_version,
+        stable_tags=stable_tags,
+    )
+    _json_out({"ok": True, "migrate": notice is not None, "notice": notice})
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SweetClaude update orchestrator")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -699,6 +760,12 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("cleanup")
     p.add_argument("--tmpdir", required=True)
 
+    # channel-migration (ISSUE-244): advisory beta->stable nudge
+    p = sub.add_parser("channel-migration")
+    p.add_argument("--channel", required=True)
+    p.add_argument("--installed-version", required=True)
+    p.add_argument("--repo", default="")
+
     args = parser.parse_args(argv)
 
     dispatch = {
@@ -710,6 +777,7 @@ def main(argv: list[str] | None = None) -> int:
         "metadata": cmd_metadata,
         "project-check": cmd_project_check,
         "cleanup": cmd_cleanup,
+        "channel-migration": cmd_channel_migration,
     }
 
     try:

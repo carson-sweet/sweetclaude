@@ -126,6 +126,19 @@ If `ok` is false:
 - Otherwise: report the error from `detail`.
 - Stop.
 
+**Beta → stable migration check (ISSUE-244).** If `CHANNEL` is `beta`, before
+reporting up-to-date, run the advisory nudge:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/update.py" channel-migration \
+  --channel "$CHANNEL" --installed-version "$INSTALLED_VERSION"
+```
+
+If the JSON `migrate` is `true`, print the `notice` verbatim before anything
+else — the beta channel is being retired and the user needs the one-time
+switch to the stable channel. This is advisory: never block or fail the update
+on it. (The helper is `beta_stable_migration_notice` in `scripts/update.py`.)
+
 If `up_to_date` is true: "Already up to date." **Jump to Step 5** — even when
 framework is current, the project may have pending migrations.
 
