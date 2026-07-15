@@ -1,13 +1,13 @@
 {
-  "name": "sweetclaude-stable",
-  "description": "Stable SweetClaude 3.x channel — bug fixes and very selective minor enhancements only",
+  "name": "sweetclaude-legacy",
+  "description": "Stable SweetClaude 3.x channel \u2014 bug fixes and very selective minor enhancements only",
   "owner": {
     "name": "Carson Sweet"
   },
   "plugins": [
     {
       "name": "sweetclaude",
-      "description": "Stable SweetClaude 3.x channel. Does not auto-install 4.x beta releases.",
+      "description": "SweetClaude 3.x legacy channel. New users should install the stable 4.x line: sweetclaude-stable @ main.",
       "source": {
         "source": "url",
         "url": "https://github.com/carson-sweet/sweetclaude.git",
