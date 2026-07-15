@@ -1068,8 +1068,11 @@ _ISSUE_PATTERN = re.compile(r"ISSUE-\d+")
 def _extract_issue_ids_from_commits(
     project_dir: Path, from_ref: str, to_ref: str
 ) -> set[str]:
+    # Only the commit SUBJECT (%s) counts as "delivered" — that is where the
+    # conventional (ISSUE-NNN) ref lives. IDs mentioned only in the body are
+    # related/future references (ISSUE-242) and must not gate the release.
     result = _git(
-        project_dir, "log", "--format=%s%n%b", f"{from_ref}..{to_ref}", check=False
+        project_dir, "log", "--format=%s", f"{from_ref}..{to_ref}", check=False
     )
     if result.returncode != 0:
         return set()

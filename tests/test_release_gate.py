@@ -1251,6 +1251,30 @@ def test_extract_issue_ids_from_commits(tmp_path):
     assert ids == {"ISSUE-208", "ISSUE-207", "ISSUE-211", "ISSUE-213"}
 
 
+def test_extract_ignores_body_only_mentions(tmp_path):
+    """ISSUE-242: an issue merely mentioned in a commit BODY (related/future
+    work) is not a delivered issue and must not gate the release. Only IDs in
+    the commit subject count as delivered."""
+    _git(tmp_path, "init")
+    _git(tmp_path, "config", "user.email", "t@t.local")
+    _git(tmp_path, "config", "user.name", "T")
+    _git(tmp_path, "checkout", "-b", "main")
+    (tmp_path / "base.txt").write_text("base\n", encoding="utf-8")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-m", "initial")
+    _git(tmp_path, "tag", "v4.5.0")
+    (tmp_path / "f.txt").write_text("x\n", encoding="utf-8")
+    _git(tmp_path, "add", ".")
+    # delivered ID in subject; a future-work ID only in the body
+    _git(tmp_path, "commit",
+         "-m", "fix(x): real change (ISSUE-244)",
+         "-m", "Also noted for the ISSUE-242 gate-faithfulness family.")
+    _git(tmp_path, "tag", "v4.5.1")
+    ids = _extract_issue_ids_from_commits(tmp_path, "v4.5.0", "v4.5.1")
+    assert "ISSUE-244" in ids, "delivered subject ID must be extracted"
+    assert "ISSUE-242" not in ids, "body-only mention must NOT gate the release"
+
+
 def test_previous_tag_finds_beta_predecessor(tmp_path):
     _init_closeout_git(tmp_path, prev_tag="v4.2.0-beta", messages=["next"], tag="v4.2.1-beta")
     assert _previous_tag(tmp_path, "v4.2.1-beta", "beta") == "v4.2.0-beta"
