@@ -3252,6 +3252,77 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_cache_taxonomy.py -q
+  quality.artifact_lint:
+    title: Check a produced artifact against its mechanical quality criteria
+    delegate_skill: null
+    command_entrypoint:
+      slash_command: null
+      script: scripts/artifact_lint.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - config/artifact-criteria.yaml defines the artifact type
+    postconditions:
+    - id: binary-per-criterion
+      check: each criterion reports pass or fail by name, with no composite score
+    - id: no-silent-skips
+      check: judgment and blocked criteria are reported, not omitted
+    rollback_support:
+      supported: true
+      command: not applicable — reads only
+      limitations: []
+    unsupported_states:
+    - condition: unknown_artifact_type
+      behavior: block
+    - condition: criterion_definition_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.5.3
+      deprecated_in: null
+    verification_commands:
+    - python3 -m pytest tests/test_artifact_quality.py -q
+  quality.rubric_judge:
+    title: Score the semantic artifact criteria a linter cannot reach
+    delegate_skill: null
+    command_entrypoint:
+      slash_command: null
+      script: scripts/artifact_judge.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - config/artifact-rubrics.yaml defines a rubric for the criterion
+    - the judge has been measured against the falsification corpus and discriminates
+    postconditions:
+    - id: citation-required
+      check: a verdict without a verbatim citation is discarded, not counted
+    - id: one-criterion-at-a-time
+      check: each verdict answers exactly one criterion
+    - id: discrimination-proven
+      check: discriminate reports true for the configured backend
+    rollback_support:
+      supported: true
+      command: not applicable — reads only
+      limitations: []
+    unsupported_states:
+    - condition: backend_unavailable
+      behavior: block
+    - condition: judge_does_not_discriminate
+      behavior: block
+    version_metadata:
+      introduced_in: 4.5.3
+      deprecated_in: null
+    verification_commands:
+    - python3 -m pytest tests/test_artifact_judge.py -q
+    - python3 scripts/artifact_judge.py discriminate --backend stub
+    verification_tier: tier-3-behavioral
 project_shapes:
   recovery_required:
     guard_status: run-recover

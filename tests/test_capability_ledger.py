@@ -287,3 +287,49 @@ def test_the_shipped_manifest_produces_a_ledger() -> None:
     )
     assert all(r["status"] in {led.WORKS, led.COMPROMISED, led.BROKEN, led.UNVERIFIABLE}
                for r in ledger["rows"])
+
+
+# --- explicit verification tier (ISSUE-273) ------------------------------
+
+def test_an_explicit_verification_tier_overrides_inference(tmp_path: Path) -> None:
+    """Inferring tier from "has a script" cannot express a capability that is
+    non-deterministic by nature. The rubric judge has an executable and is
+    still Tier 3."""
+    entry = dict(FULL, verification_tier=led.TIER_BEHAVIORAL)
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["tier"] == led.TIER_BEHAVIORAL
+
+
+def test_a_tier_three_capability_never_reports_as_working(tmp_path: Path) -> None:
+    """The over-claim this ledger exists to prevent: CI certifying something
+    only a live model can judge."""
+    entry = dict(FULL, verification_tier=led.TIER_BEHAVIORAL)
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    row = ledger["rows"][0]
+    assert row["status"] == led.UNVERIFIABLE
+    assert any("Tier 3" in r for r in row["reasons"])
+
+
+def test_a_tier_three_capability_still_reports_real_defects(tmp_path: Path) -> None:
+    """Downgrading Tier 3 from works must not also mask a genuine problem."""
+    entry = dict(FULL, verification_tier=led.TIER_BEHAVIORAL)
+    entry.pop("verification_commands")
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["status"] == led.BROKEN
+
+
+def test_an_invalid_declared_tier_falls_back_to_inference(tmp_path: Path) -> None:
+    entry = dict(FULL, verification_tier="tier-99-nonsense")
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["tier"] == led.TIER_EXECUTABLE
+
+
+def test_the_shipped_rubric_judge_is_declared_tier_three() -> None:
+    ledger = led.build_ledger(include_behavioral=False)
+    row = next(r for r in ledger["rows"] if r["capability"] == "quality.rubric_judge")
+    assert row["tier"] == led.TIER_BEHAVIORAL
+    assert row["status"] == led.UNVERIFIABLE

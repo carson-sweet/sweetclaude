@@ -1,0 +1,46 @@
+# Rubrics for the judgment-tier artifact criteria (ISSUE-273)
+#
+# These are the criteria scripts/artifact_lint.py cannot reach. Each rubric is
+# evaluated one criterion at a time — never as a batch — so a verdict is
+# attributable to a single claim.
+#
+# Every rubric demands a citation: the span of the artifact that justifies the
+# verdict. A verdict with no citation is discarded by the harness rather than
+# counted, because an uncited judgment is indistinguishable from a guess.
+schema_version: 1
+
+rubrics:
+  BRIEF-CONCRETE-SCENARIO:
+    artifact_type: product-brief
+    section: Problem Statement
+    question: >-
+      Does this problem statement describe a specific person or role doing a
+      specific thing in a specific situation?
+    passes_when: >-
+      There is an identifiable actor, an identifiable action, and enough
+      concrete detail that a reader could recognise the situation if they saw
+      it happen. A named version number, a sequence of steps, or a described
+      moment of failure all count.
+    fails_when: >-
+      The statement describes a category of problem, a general frustration, or
+      an industry-wide observation, with no particular situation a reader could
+      picture. Phrases like "users often", "it can be difficult", or "this is a
+      common problem" with nothing behind them are the signal.
+    citation_required: true
+
+  BRIEF-MEASURABLE-ALL:
+    artifact_type: product-brief
+    section: Success Criteria
+    question: >-
+      Can every one of these success criteria be evaluated true or false after
+      the thing ships?
+    passes_when: >-
+      Each criterion names an observable outcome. Someone who did not write the
+      brief could look at the shipped product and say yes or no without
+      needing to ask the author what they meant.
+    fails_when: >-
+      Any single criterion depends on a judgment the criterion does not define
+      — "better", "high quality", "users are happy", "improved experience".
+      One unmeasurable criterion fails the whole set, because the gate says
+      every criterion.
+    citation_required: true

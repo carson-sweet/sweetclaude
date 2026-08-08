@@ -133,6 +133,16 @@ def _classify(entry: dict, coverage: dict | None, min_coverage: float) -> tuple[
 
 
 def _tier_for(entry: dict) -> str:
+    """An explicit verification_tier always wins.
+
+    Inferring the tier from "does it have a script" cannot express a
+    capability that is non-deterministic by nature. The rubric judge has an
+    executable and is still Tier 3: it needs a live model, so CI can never
+    report it as passing. Declaring the tier is the only way to say that.
+    """
+    declared = entry.get("verification_tier")
+    if declared in {TIER_STRUCTURAL, TIER_EXECUTABLE, TIER_BEHAVIORAL}:
+        return declared
     ep = entry.get("command_entrypoint") or {}
     if ep.get("script") or entry.get("executable"):
         return TIER_EXECUTABLE
@@ -177,10 +187,17 @@ def build_ledger(
     rows = []
     for name, entry in sorted(capabilities.items()):
         status, reasons = _classify(entry, coverage, min_coverage)
+        tier = _tier_for(entry)
+        if tier == TIER_BEHAVIORAL and status == WORKS:
+            # A live-model capability cannot be certified by a CI run. Reporting
+            # it as working would be the exact over-claim this ledger exists to
+            # prevent. A genuine defect (broken/compromised) still shows.
+            status = UNVERIFIABLE
+            reasons = reasons + ["Tier 3: scored only against a live model"]
         rows.append({
             "capability": name,
             "title": entry.get("title", ""),
-            "tier": _tier_for(entry),
+            "tier": tier,
             "status": status,
             "reasons": reasons,
             "delegate_skill": entry.get("delegate_skill"),
