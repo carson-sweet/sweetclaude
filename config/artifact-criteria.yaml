@@ -1,0 +1,95 @@
+# SweetClaude artifact quality criteria (ISSUE-271)
+#
+# rules/phase-gates.md states the quality bar in prose. Nothing checked it,
+# partly because several criteria referenced definitions that did not exist —
+# the DEFINE gate demands "all 11 sections" while skills/product-brief/SKILL.md
+# proposes an outline of 9 and the one real brief in the repo has 8. This file
+# is where those definitions live.
+#
+# tier:
+#   mechanical — countable with no model; enforced by scripts/artifact_lint.py
+#   judgment   — needs semantic evaluation; ISSUE-273's rubric judge
+#   blocked    — cannot be checked until a definition or convention is agreed
+#
+# Every criterion carries `gate_text`: the phrase in phase-gates.md it comes
+# from, so the two cannot drift apart silently.
+schema_version: 1
+
+artifact_types:
+  product-brief:
+    description: "Strategic document describing what is being built, for whom, and why."
+    # Canonical section list. Names are matched case-insensitively against
+    # markdown headings, ignoring any leading "N." numbering.
+    required_sections:
+      - Problem Statement
+      - Target Audience
+      - Core Value Proposition
+      - Feature Set
+      - Success Criteria
+      - Scope
+    optional_sections:
+      - Executive Summary
+      - User Experience
+      - Business Objectives
+      - Dependencies
+      - Risks and Assumptions
+      - Additional Development
+
+    criteria:
+      - id: BRIEF-SECTIONS
+        tier: mechanical
+        gate_text: "Product brief: all 11 sections substantively populated"
+        description: "Every required section is present."
+
+      - id: BRIEF-SUBSTANTIVE
+        tier: mechanical
+        gate_text: "no single-sentence sections"
+        description: "No required section is a single sentence."
+        min_sentences: 2
+
+      - id: BRIEF-NO-PLACEHOLDER
+        tier: mechanical
+        gate_text: "no TBD"
+        description: "No placeholder text stands in for content."
+        placeholder_patterns: ["TBD", "TODO", "FIXME", "XXX", "to be determined"]
+
+      - id: BRIEF-OUT-OF-SCOPE-3
+        tier: mechanical
+        gate_text: "Scope section has 3+ explicit out-of-scope items"
+        description: "At least three items are declared out of scope."
+        min_items: 3
+        subsection: "Out of scope"
+
+      - id: BRIEF-MEASURABLE-CRITERIA
+        tier: mechanical
+        gate_text: "Every success criterion is measurable (true/false evaluable post-ship)"
+        description: >-
+          At least one success criterion carries a countable signal — a number,
+          a date, or a binary verb. The mechanical check is deliberately weaker
+          than the gate: proving *every* criterion is post-ship evaluable needs
+          judgment, so BRIEF-MEASURABLE-ALL covers the full claim.
+        min_measurable: 1
+
+      - id: BRIEF-CONCRETE-SCENARIO
+        tier: judgment
+        gate_text: "Problem statement includes a specific scenario or real-world example"
+        description: >-
+          The problem statement grounds the problem in a specific person doing
+          a specific thing, not a category of problem.
+
+      - id: BRIEF-MEASURABLE-ALL
+        tier: judgment
+        gate_text: "Every success criterion is measurable (true/false evaluable post-ship)"
+        description: >-
+          Every success criterion, not merely one, can be evaluated true or
+          false after shipping.
+
+      - id: BRIEF-ASSUMPTION-CHALLENGED
+        tier: blocked
+        gate_text: "At least one assumption challenged or alternative framing raised"
+        description: >-
+          Blocked: the DISCOVER gate requires this, but a brief has no
+          designated place to record a challenged assumption. Either the
+          artifact needs a section for it or the criterion belongs to the
+          decision log rather than the brief. Not checkable until that is
+          decided.
