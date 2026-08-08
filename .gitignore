@@ -59,3 +59,7 @@ __pycache__/
 .coverage.*
 htmlcov/
 coverage.json
+
+# Capability ledger build artifact (ISSUE-266) — repo root only; the
+# user-guide page of the same name is tracked.
+/capability-ledger.md

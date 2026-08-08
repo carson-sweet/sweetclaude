@@ -43,4 +43,22 @@ jobs:
       - name: Run test suite with coverage gate
         # Threshold and source scope live in .coveragerc; the gate is
         # ratcheted by tests/test_coverage_gate.py.
-        run: python3 -m pytest tests/ -q --cov --cov-report=term
+        run: python3 -m pytest tests/ -q --cov --cov-report=term --cov-report=json:coverage.json
+
+      - name: Generate capability ledger
+        # Reports every declared capability as works / compromised /
+        # broken / not-mechanically-verifiable. Does not gate the build —
+        # it reports reality, including capabilities that are not yet
+        # fully declared.
+        run: |
+          python3 scripts/capability_ledger.py \
+            --coverage coverage.json \
+            --out capability-ledger.md
+          cat capability-ledger.md
+
+      - name: Upload capability ledger
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
+        with:
+          name: capability-ledger
+          path: capability-ledger.md

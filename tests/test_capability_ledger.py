@@ -1,0 +1,272 @@
+"""The capability ledger reports every capability, honestly (ISSUE-266).
+
+The ledger is EP-004's deliverable: every declared capability, its
+verification tier, and whether it works. The property that matters most is
+that nothing can be silently left out — an omitted capability looks exactly
+like a working one to whoever reads the table.
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+import yaml
+
+REPO_ROOT = Path(__file__).parents[1]
+SCRIPT = REPO_ROOT / "scripts" / "capability_ledger.py"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+import capability_ledger as led  # noqa: E402
+
+
+def _manifest(tmp_path: Path, capabilities: dict) -> Path:
+    p = tmp_path / "manifest.yaml"
+    p.write_text(yaml.safe_dump({"schema_version": 1, "capabilities": capabilities}),
+                 encoding="utf-8")
+    return p
+
+
+FULL = {
+    "title": "A working capability",
+    "delegate_skill": "sweetclaude:doctor",
+    "command_entrypoint": {"script": "scripts/doctor.py"},
+    "mutates_project": False,
+    "verification_commands": ["python3 scripts/doctor.py scan"],
+}
+
+
+# --- the no-omission property -------------------------------------------
+
+def test_every_declared_capability_appears_exactly_once(tmp_path: Path) -> None:
+    manifest = _manifest(tmp_path, {f"cap.{i}": dict(FULL) for i in range(5)})
+    ledger = led.build_ledger(manifest_path=manifest, include_behavioral=False)
+
+    names = [r["capability"] for r in ledger["rows"]]
+    assert sorted(names) == sorted(f"cap.{i}" for i in range(5))
+    assert len(names) == len(set(names))
+
+
+def test_a_capability_with_no_verification_is_broken_not_omitted(tmp_path: Path) -> None:
+    """The whole point. Dropping it from the table would read as working."""
+    entry = dict(FULL)
+    entry.pop("verification_commands")
+    manifest = _manifest(tmp_path, {"cap.undeclared": entry})
+
+    ledger = led.build_ledger(manifest_path=manifest, include_behavioral=False)
+
+    assert len(ledger["rows"]) == 1
+    row = ledger["rows"][0]
+    assert row["status"] == led.BROKEN
+    assert "no verification_commands" in " ".join(row["reasons"])
+
+
+def test_counts_sum_to_the_row_total(tmp_path: Path) -> None:
+    caps = {"a": dict(FULL), "b": dict(FULL)}
+    caps["b"].pop("verification_commands")
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, caps),
+                              include_behavioral=False)
+    assert sum(ledger["counts"].values()) == len(ledger["rows"])
+
+
+# --- classification ------------------------------------------------------
+
+def test_a_fully_declared_capability_works(tmp_path: Path) -> None:
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.ok": dict(FULL)}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["status"] == led.WORKS
+    assert ledger["rows"][0]["reasons"] == []
+
+
+def test_an_unresolvable_delegate_skill_is_broken(tmp_path: Path) -> None:
+    entry = dict(FULL, delegate_skill="sweetclaude:does-not-exist")
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    row = ledger["rows"][0]
+    assert row["status"] == led.BROKEN
+    assert "does not resolve" in " ".join(row["reasons"])
+
+
+def test_a_missing_entrypoint_script_is_broken(tmp_path: Path) -> None:
+    entry = dict(FULL, command_entrypoint={"script": "scripts/not-a-real-file.py"})
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["status"] == led.BROKEN
+
+
+def test_a_mutating_capability_without_rollback_is_broken(tmp_path: Path) -> None:
+    """The manifest's own rule, enforced in the report rather than only at
+    schema-validation time."""
+    entry = dict(FULL, mutates_project=True)
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    row = ledger["rows"][0]
+    assert row["status"] == led.BROKEN
+    assert "rollback" in " ".join(row["reasons"])
+
+
+def test_rollback_limitations_make_a_capability_compromised(tmp_path: Path) -> None:
+    entry = dict(FULL, mutates_project=True,
+                 rollback_support={"supported": True, "limitations": ["no data restore"]})
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    row = ledger["rows"][0]
+    assert row["status"] == led.COMPROMISED
+    assert "no data restore" in " ".join(row["reasons"])
+
+
+def test_unsupported_states_make_a_capability_compromised(tmp_path: Path) -> None:
+    entry = dict(FULL, unsupported_states=[{"condition": "weird_layout",
+                                            "behavior": "escalate"}])
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    row = ledger["rows"][0]
+    assert row["status"] == led.COMPROMISED
+    assert "weird_layout" in " ".join(row["reasons"])
+
+
+def test_low_entrypoint_coverage_makes_a_capability_compromised(tmp_path: Path) -> None:
+    coverage = tmp_path / "coverage.json"
+    coverage.write_text(json.dumps({"files": {
+        "scripts/doctor.py": {"summary": {"percent_covered": 12.0}}}}), encoding="utf-8")
+
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": dict(FULL)}),
+                              coverage_path=coverage, min_coverage=80.0,
+                              include_behavioral=False)
+    row = ledger["rows"][0]
+    assert row["status"] == led.COMPROMISED
+    assert "12%" in " ".join(row["reasons"])
+    assert row["coverage"] == 12.0
+
+
+def test_high_entrypoint_coverage_leaves_a_capability_working(tmp_path: Path) -> None:
+    coverage = tmp_path / "coverage.json"
+    coverage.write_text(json.dumps({"files": {
+        "scripts/doctor.py": {"summary": {"percent_covered": 95.0}}}}), encoding="utf-8")
+
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": dict(FULL)}),
+                              coverage_path=coverage, include_behavioral=False)
+    assert ledger["rows"][0]["status"] == led.WORKS
+
+
+# --- tiers ---------------------------------------------------------------
+
+def test_a_capability_with_an_executable_is_tier_two(tmp_path: Path) -> None:
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": dict(FULL)}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["tier"] == led.TIER_EXECUTABLE
+
+
+def test_a_capability_without_an_executable_is_tier_one(tmp_path: Path) -> None:
+    entry = dict(FULL)
+    entry.pop("command_entrypoint")
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["tier"] == led.TIER_STRUCTURAL
+
+
+def test_behavioral_rows_are_never_reported_as_passing(tmp_path: Path) -> None:
+    """Tier 3 needs a live model. Reporting it as `works` from CI would be a
+    claim the ledger cannot support."""
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": dict(FULL)}),
+                              include_behavioral=True)
+    behavioral = [r for r in ledger["rows"] if r["tier"] == led.TIER_BEHAVIORAL]
+
+    assert behavioral, "no behavioral rows emitted"
+    for row in behavioral:
+        assert row["status"] == led.UNVERIFIABLE
+        assert row["contracts"], f"{row['capability']} lists no contracts"
+
+
+def test_behavioral_rows_cover_every_interaction_model_section() -> None:
+    import re
+
+    sections = re.findall(
+        r"^##\s+(.+?)\s*$",
+        (REPO_ROOT / "rules" / "interaction-model.md").read_text(encoding="utf-8"),
+        re.M)
+    rows = led._behavioral_rows()
+    covered = {r["title"] for r in rows}
+    assert covered == set(sections)
+
+
+# --- rendering -----------------------------------------------------------
+
+def test_markdown_lists_every_row(tmp_path: Path) -> None:
+    caps = {f"cap.{i}": dict(FULL) for i in range(4)}
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, caps),
+                              include_behavioral=False)
+    md = led.render_markdown(ledger)
+    for name in caps:
+        assert f"`{name}`" in md
+
+
+def test_markdown_states_the_no_omission_rule(tmp_path: Path) -> None:
+    """The reader has to know an absent row would be a bug, not a pass."""
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": dict(FULL)}),
+                              include_behavioral=False)
+    assert "never" in led.render_markdown(ledger).lower()
+
+
+# --- CLI -----------------------------------------------------------------
+
+def _run(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run([sys.executable, str(SCRIPT), *args],
+                          capture_output=True, text=True, timeout=120)
+
+
+def test_cli_emits_valid_json() -> None:
+    r = _run("--format", "json", "--no-behavioral")
+    assert r.returncode == 0, r.stderr
+    payload = json.loads(r.stdout)
+    assert payload["declared_capabilities"] >= 1
+
+
+def test_cli_emits_markdown_by_default() -> None:
+    r = _run("--no-behavioral")
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.startswith("# SweetClaude Capability Ledger")
+
+
+def test_cli_writes_to_a_file(tmp_path: Path) -> None:
+    out = tmp_path / "nested" / "ledger.md"
+    r = _run("--no-behavioral", "--out", str(out))
+    assert r.returncode == 0, r.stderr
+    assert out.is_file()
+
+
+def test_cli_reports_a_missing_manifest(tmp_path: Path) -> None:
+    r = _run("--manifest", str(tmp_path / "nope.yaml"))
+    assert r.returncode == 2
+    assert "not found" in r.stderr
+
+
+def test_cli_fail_on_broken_exits_nonzero(tmp_path: Path) -> None:
+    entry = dict(FULL)
+    entry.pop("verification_commands")
+    manifest = _manifest(tmp_path, {"cap.undeclared": entry})
+
+    r = _run("--manifest", str(manifest), "--no-behavioral", "--fail-on-broken")
+
+    assert r.returncode == 1
+    assert "broken capabilities" in r.stderr
+
+
+def test_cli_fail_on_broken_passes_when_all_declared(tmp_path: Path) -> None:
+    manifest = _manifest(tmp_path, {"cap.ok": dict(FULL)})
+    r = _run("--manifest", str(manifest), "--no-behavioral", "--fail-on-broken")
+    assert r.returncode == 0, r.stderr
+
+
+# --- the real manifest ---------------------------------------------------
+
+def test_the_shipped_manifest_produces_a_ledger() -> None:
+    ledger = led.build_ledger()
+    assert ledger["declared_capabilities"] == len(
+        (yaml.safe_load(led.MANIFEST.read_text(encoding="utf-8")) or {})["capabilities"]
+    )
+    assert all(r["status"] in {led.WORKS, led.COMPROMISED, led.BROKEN, led.UNVERIFIABLE}
+               for r in ledger["rows"])

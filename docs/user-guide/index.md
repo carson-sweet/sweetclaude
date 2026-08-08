@@ -88,6 +88,7 @@ If you have it installed and want to understand the design decisions, read
 | [Corpus and RAG](corpus-system.md) | Document pipeline and local semantic search. |
 | [Platform Dependencies](platform-dependencies.md) | Claude Code dependency risks and contingency posture. |
 | [Behavioral Contracts](behavioral-contracts.md) | Model behavior contracts and current status. |
+| [Capability Ledger](capability-ledger.md) | Which capabilities work, which are compromised, and which are broken. Generated in CI. |
 | [Evidence and Success-Criteria Contracts](evidence-and-contracts.md) | Frozen success-criteria contracts, implementation evidence, and the fail-closed verify gate. |
 | [FAQ](faq.md) | Honest answers and troubleshooting. |
 | [Glossary](glossary.md) | SweetClaude terminology. |
