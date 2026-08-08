@@ -1,11 +1,41 @@
 # Behavioral Contract Status
 
-**Version:** 1.0
-**Date:** 2026-05-01
+**Version:** 1.1
+**Date:** 2026-08-08
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
 
-Run `/sweetclaude:behavioral-regression` to test the current model against all 15 contracts. Results from that run can be added here.
+Run `/sweetclaude:behavioral-regression` to test the current model against all 20 contracts. Results from that run can be added here.
+
+---
+
+## Rule-to-Contract Map
+
+Every section of `rules/interaction-model.md` maps to at least one contract.
+`tests/test_behavioral_contract_coverage.py` enforces this, so a new rule
+cannot land without a contract that exercises it.
+
+| Interaction-model section | Contracts |
+|---|---|
+| Deference Levels | CONTRACT-06, CONTRACT-07 |
+| Phase Dwelling | CONTRACT-01 |
+| Propose and Challenge | CONTRACT-02, CONTRACT-03 |
+| Bounded Decisions Use the Menu | CONTRACT-16 |
+| Status Changes — User Intent and Cascade Offer | CONTRACT-17 |
+| Adaptive Language | CONTRACT-09, CONTRACT-10 |
+| Early-Phase Depth Rules (Discover and Define) | CONTRACT-03, CONTRACT-04 |
+| Adaptive Flow | CONTRACT-08 |
+| Recap | CONTRACT-19 |
+| Context Continuity — Detour Management | CONTRACT-08, CONTRACT-19 |
+| Dual Context Window Awareness | CONTRACT-20 |
+| Creative Partnership | CONTRACT-02, CONTRACT-03 |
+| Continuous Improvement | CONTRACT-11, CONTRACT-15 |
+| Protocol Guardian Offer | CONTRACT-18 |
+| No Time-Based Anxiety | CONTRACT-05 |
+
+CONTRACT-16 through CONTRACT-20 were added on 2026-08-08 (ISSUE-265) to close
+five sections that previously had no contract. They have not yet been scored
+against any model version — the table above records intent, not results.
 
 ---
 

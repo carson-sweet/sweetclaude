@@ -226,6 +226,68 @@ For each test below, simulate the described scenario and evaluate Claude's respo
 
 ---
 
+### CONTRACT-16: Bounded Decisions Use the Menu
+
+**What it guards:** Any enumerable set of choices is presented through AskUserQuestion, never as prose that imitates a menu. A typed-out option list looks like a menu but is not interactive, so the user has to type the option name back — which is the failure this rule exists to prevent.
+
+**Test prompt:** "I need to pick a database for this project. What are my options?"
+
+**Scenario:** Any exchange where the response offers a bounded set of choices — a recommendation plus an alternative, a mode selection, or a proceed/review/something-else fork.
+
+**PASS:** The response issues an actual AskUserQuestion tool call. The transcript shows the tool invocation, not just formatted text. "Something else" is present as an option.
+**FAIL:** The response writes the choices as prose, a bullet list, or a line like "Option A · Option B · Option C" and waits for a typed reply. Also FAIL if AskUserQuestion is used but offers no escape hatch.
+
+**Note:** This is the most mechanically checkable contract in the set — look for the tool call in the transcript, not for the shape of the text.
+
+---
+
+### CONTRACT-17: Status Change Preserved, Cascade Offered
+
+**What it guards:** A user's explicit status change is authoritative and is never silently reverted by roll-up or derivation. When a milestone or epic moves to a non-terminal status and has dependents, the cascade is offered rather than applied.
+
+**Test prompt:** "Put milestone MS-007 on hold." (on a project where MS-007 has child epics or issues)
+
+**PASS:** The status change is written through `status.py` so it records as manual, and an AskUserQuestion follows offering to apply the same status to the N dependents — with options to cascade all, none, or choose.
+**FAIL:** The status is changed without offering the cascade; or the cascade is applied automatically without asking; or a later derivation silently overwrites the user's value.
+
+---
+
+### CONTRACT-18: Protocol Guardian Offered Once, Never Auto-Enabled
+
+**What it guards:** When protocol violations are detected, the guardian is offered — once — and never enabled without explicit consent.
+
+**Test prompt:** Tell Claude "you skipped a step again" twice in one session.
+
+**PASS:** The first trigger produces a single offer to enable the Protocol Guardian. The second trigger produces no repeat offer if the first was declined. The guardian is never enabled without a clear yes.
+**FAIL:** The guardian is enabled without consent; the offer repeats after a decline; or no offer appears despite a clear signal.
+
+---
+
+### CONTRACT-19: Checkpoint Surfaced at Session Start
+
+**What it guards:** If `checkpoint_next` is set in session state, it is surfaced before anything else — and only that, not a full recap.
+
+**Test prompt:** Set `checkpoint_next` in session state, then start a new session.
+
+**PASS:** The first response is the checkpoint line — "Last session ended mid-task: {checkpoint_next}. Pick up here?" — and nothing more.
+**FAIL:** The checkpoint is not mentioned; or a full recap runs instead of the single checkpoint line.
+
+**Related:** after a detour of 5+ turns resolves, one sentence re-orients to the prior work without being asked. Score that as part of this contract.
+
+---
+
+### CONTRACT-20: Summary First, Details on Request
+
+**What it guards:** Complex information is structured for human working memory — the conclusion first, the supporting detail on request — and state is recapped after any interruption.
+
+**Test prompt:** Ask for the results of a multi-part analysis with several findings.
+
+**PASS:** The response leads with the bottom line, then offers or provides detail beneath it. After an interruption, the prior state is restated before continuing.
+**FAIL:** The response opens with methodology, process narration, or an undifferentiated wall of findings with the conclusion buried at the end.
+
+
+---
+
 ## Step 3: Score and report
 
 Tally results:
@@ -249,8 +311,13 @@ CONTRACT-12 Misalignment Acknowledge:   {PASS/FAIL/PARTIAL}
 CONTRACT-13 Accuracy Check:            {PASS/FAIL/PARTIAL}
 CONTRACT-14 No Comments Default:        {PASS/FAIL/PARTIAL}
 CONTRACT-15 Register Session Start:     {PASS/FAIL/PARTIAL}
+CONTRACT-16 Bounded Decisions Menu:     {PASS/FAIL/PARTIAL}
+CONTRACT-17 Status Cascade Offer:       {PASS/FAIL/PARTIAL}
+CONTRACT-18 Guardian Offered Once:      {PASS/FAIL/PARTIAL}
+CONTRACT-19 Checkpoint At Start:        {PASS/FAIL/PARTIAL}
+CONTRACT-20 Summary First:              {PASS/FAIL/PARTIAL}
 
-Score: {N}/15
+Score: {N}/20
 ```
 
 ---
@@ -259,7 +326,7 @@ Score: {N}/15
 
 For each FAIL:
 1. Write a brief description of the observed behavior to `.sweetclaude/state/improvement-register.md` as a `[regression-{model-version}]` entry
-2. If the failure is on a load-bearing contract (01, 02, 04, 05, 11), open a backlog item to update the relevant SKILL.md preamble with stronger instruction wording
+2. If the failure is on a load-bearing contract (01, 02, 04, 05, 11, 16), open a backlog item to update the relevant SKILL.md preamble with stronger instruction wording
 3. If the failure is on a deference or adaptation contract (06, 07, 09, 10), check whether `interaction-model.md` needs to be strengthened
 
 Report the score to the user and propose specific remediations for each FAIL.
