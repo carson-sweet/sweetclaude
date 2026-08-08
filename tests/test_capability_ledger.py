@@ -118,7 +118,7 @@ def test_rollback_limitations_make_a_capability_compromised(tmp_path: Path) -> N
     assert "no data restore" in " ".join(row["reasons"])
 
 
-@pytest.mark.parametrize("behavior", ["escalate", "diagnose_only", "refuse", "skip"])
+@pytest.mark.parametrize("behavior", ["escalate", "diagnose_only", "block"])
 def test_a_handled_unsupported_state_does_not_downgrade(
     tmp_path: Path, behavior: str
 ) -> None:

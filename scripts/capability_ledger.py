@@ -112,7 +112,9 @@ def _classify(entry: dict, coverage: dict | None, min_coverage: float) -> tuple[
     # handling, not a compromise. Penalising it would discourage the honest
     # declaration this ledger exists to reward. Only an undeclared behavior,
     # or one that admits data risk, downgrades the capability.
-    HANDLED = {"escalate", "diagnose_only", "refuse", "skip"}
+    # Vocabulary is fixed by the manifest schema (block / diagnose_only /
+    # escalate) and validated by tests/test_capability_manifest.py.
+    HANDLED = {"escalate", "diagnose_only", "block"}
     unhandled = [
         u for u in (entry.get("unsupported_states") or [])
         if str(u.get("behavior") or "") not in HANDLED

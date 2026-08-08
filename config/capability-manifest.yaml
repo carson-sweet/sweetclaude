@@ -2,7 +2,6 @@
 # Central source for release-channel facts and safety gates that should be
 # shared by update, doctor, migrate, recover, status, and release tooling.
 schema_version: 1
-
 channels:
   stable:
     branch: main
@@ -13,7 +12,6 @@ channels:
     # ISSUE-241: control-lint moved here from the retired beta channel —
     # stable is now the active development channel and keeps the gate.
     control_lint_required: true
-
   beta:
     branch: beta-4.x
     major_version: 4
@@ -27,27 +25,25 @@ channels:
     retired: true
     retirement_target_channel: stable
     control_lint_required: true
-
   legacy:
     branch: stable-3.x
     major_version: 3
     expected_marketplace: sweetclaude-legacy
     prerelease_required: false
     prerelease_allowed: false
-
 release:
   required_evidence_checks:
-    - tests
-    - channel-isolation
-    - installation-smoke
-    - static-checks
-    - release-metadata
-    - manifest-validation
-    - release-identity
-    - docs-capability
-    - public-distribution
-
+  - tests
+  - channel-isolation
+  - installation-smoke
+  - static-checks
+  - release-metadata
+  - manifest-validation
+  - release-identity
+  - docs-capability
+  - public-distribution
 capabilities:
+  # --- maintenance domain ---
   recover.stabilize_without_migration:
     title: Stabilize recoverable legacy layout without taxonomy migration
     delegate_skill: sweetclaude:recover
@@ -56,46 +52,45 @@ capabilities:
       script: scripts/recovery/recover_project.py
       module: recovery.recover_project
     supports_project_shapes:
-      - recovery_required
+    - recovery_required
     mutation_class: planned_write
     mutates_project: true
     requires_approval: true
     required_preconditions:
-      - project guard status is run-recover
-      - recovery plan exists before execute
+    - project guard status is run-recover
+    - recovery plan exists before execute
     snapshot_scope_hints:
-      - .sweetclaude/
-      - docs/product/
+    - .sweetclaude/
+    - docs/product/
     postconditions:
-      - id: recovery-postconditions
-        check: recovery verifier reports stabilized state
+    - id: recovery-postconditions
+      check: recovery verifier reports stabilized state
     rollback_support:
       supported: true
-      command: "python3 scripts/recovery/recover_project.py rollback --project-dir <project>"
+      command: python3 scripts/recovery/recover_project.py rollback --project-dir <project>
       limitations: []
     unsupported_states:
-      - condition: manual_escalation
-        behavior: escalate
-      - condition: missing_product_base
-        behavior: diagnose_only
+    - condition: manual_escalation
+      behavior: escalate
+    - condition: missing_product_base
+      behavior: diagnose_only
     version_metadata:
       introduced_in: 4.1.0-beta
       deprecated_in: null
     safety_contract:
-      - diagnose
-      - plan
-      - snapshot
-      - verify-snapshot
-      - approve
-      - execute
-      - record-progress
-      - resume
-      - verify-postconditions
-      - rollback
+    - diagnose
+    - plan
+    - snapshot
+    - verify-snapshot
+    - approve
+    - execute
+    - record-progress
+    - resume
+    - verify-postconditions
+    - rollback
     verification_commands:
-      - "python3 scripts/recovery/recover_project.py diagnose --project-dir <project>"
-      - "python3 scripts/recovery/recover_project.py plan --project-dir <project>"
-
+    - python3 scripts/recovery/recover_project.py diagnose --project-dir <project>
+    - python3 scripts/recovery/recover_project.py plan --project-dir <project>
   migrate.flat_bl_to_issue:
     title: Migrate flat BL-NNN backlog to ISSUE taxonomy
     delegate_skill: sweetclaude:migrate
@@ -105,49 +100,48 @@ capabilities:
       script: scripts/migrate/migrate-v3-to-v4.py
       module: null
     supports_project_shapes:
-      - flat_bl_backlog
+    - flat_bl_backlog
     mutation_class: planned_write
     mutates_project: true
     requires_approval: true
     preflight_required: true
     required_preconditions:
-      - project shape is flat_bl_backlog
-      - migration preflight passes
-      - user approval is bound to current plan
+    - project shape is flat_bl_backlog
+    - migration preflight passes
+    - user approval is bound to current plan
     snapshot_scope_hints:
-      - .sweetclaude/product/backlog/
-      - .sweetclaude/state/
+    - .sweetclaude/product/backlog/
+    - .sweetclaude/state/
     postconditions:
-      - id: issue-taxonomy-created
-        check: migrated ISSUE files and migration map exist
-      - id: migration-integrity
-        check: execution manifest contains source and created file integrity
+    - id: issue-taxonomy-created
+      check: migrated ISSUE files and migration map exist
+    - id: migration-integrity
+      check: execution manifest contains source and created file integrity
     rollback_support:
       supported: true
-      command: "python3 scripts/migrations/run_rollback.py --project-dir <project>"
+      command: python3 scripts/migrations/run_rollback.py --project-dir <project>
       limitations: []
     unsupported_states:
-      - condition: typed_legacy_backlog
-        behavior: block
-      - condition: recovery_required
-        behavior: diagnose_only
-      - condition: manual_escalation
-        behavior: escalate
+    - condition: typed_legacy_backlog
+      behavior: block
+    - condition: recovery_required
+      behavior: diagnose_only
+    - condition: manual_escalation
+      behavior: escalate
     version_metadata:
       introduced_in: 4.0.0-beta
       deprecated_in: null
     safety_contract:
-      - diagnose
-      - preflight
-      - plan
-      - snapshot
-      - approve
-      - execute
-      - verify-postconditions
-      - rollback
+    - diagnose
+    - preflight
+    - plan
+    - snapshot
+    - approve
+    - execute
+    - verify-postconditions
+    - rollback
     verification_commands:
-      - "python3 scripts/migrate/migrate-v3-to-v4.py preflight --project-dir <project>"
-
+    - python3 scripts/migrate/migrate-v3-to-v4.py preflight --project-dir <project>
   migrate.typed_legacy_backlog:
     title: Typed legacy backlog migration
     supported: true
@@ -157,38 +151,37 @@ capabilities:
       script: scripts/migrate/migrate_taxonomy.py
       module: migrate.migrate_taxonomy
     supports_project_shapes:
-      - typed_legacy_backlog
-      - accepted_legacy_taxonomy
+    - typed_legacy_backlog
+    - accepted_legacy_taxonomy
     mutation_class: planned_write
     mutates_project: true
     requires_approval: true
     rollback_support:
       supported: true
-      command: "python3 scripts/migrate/migrate_taxonomy.py --rollback --project-dir <project>"
+      command: python3 scripts/migrate/migrate_taxonomy.py --rollback --project-dir <project>
       limitations: []
     required_preconditions:
-      - project shape is typed_legacy_backlog or accepted_legacy_taxonomy
-      - no real duplicate ids present
+    - project shape is typed_legacy_backlog or accepted_legacy_taxonomy
+    - no real duplicate ids present
     snapshot_scope_hints:
-      - docs/product/
-      - .sweetclaude/product/
+    - docs/product/
+    - .sweetclaude/product/
     postconditions:
-      - id: old-prefix-files-removed
-        check: no old-prefix files remain on disk
+    - id: old-prefix-files-removed
+      check: no old-prefix files remain on disk
     version_metadata:
       introduced_in: 4.3.0-beta
       deprecated_in: null
     safety_contract:
-      - diagnose
-      - dry-run
-      - snapshot
-      - approve
-      - execute
-      - verify-postconditions
-      - rollback
+    - diagnose
+    - dry-run
+    - snapshot
+    - approve
+    - execute
+    - verify-postconditions
+    - rollback
     verification_commands:
-      - "python3 scripts/migrate/migrate_taxonomy.py --dry-run --project-dir <project>"
-
+    - python3 scripts/migrate/migrate_taxonomy.py --dry-run --project-dir <project>
   recover.graduate_from_compatibility:
     title: Graduate from compatibility mode
     supported: true
@@ -198,52 +191,50 @@ capabilities:
       script: scripts/recovery/recover_project.py
       module: recovery.recover_project
     supports_project_shapes:
-      - accepted_legacy_taxonomy
-      - typed_legacy_backlog
-      - graduation_candidate
+    - accepted_legacy_taxonomy
+    - typed_legacy_backlog
+    - graduation_candidate
     mutation_class: planned_write
     mutates_project: true
     requires_approval: true
     required_preconditions:
-      - project is in compatibility mode or accepted legacy taxonomy
-      - graduation-check passes (v4-compliant)
+    - project is in compatibility mode or accepted legacy taxonomy
+    - graduation-check passes (v4-compliant)
     snapshot_scope_hints:
-      - .sweetclaude/state/sweetclaude.yaml
+    - .sweetclaude/state/sweetclaude.yaml
     postconditions:
-      - id: graduation-state-written
-        check: recovery.taxonomy.status is graduated and framework.migration_status is complete
+    - id: graduation-state-written
+      check: recovery.taxonomy.status is graduated and framework.migration_status is complete
     rollback_support:
       supported: true
-      command: "python3 scripts/recovery/recover_project.py rollback-graduation --project-dir <project>"
+      command: python3 scripts/recovery/recover_project.py rollback-graduation --project-dir <project>
       limitations: []
     unsupported_states:
-      - condition: old_prefix_files_remain
-        behavior: block
-      - condition: duplicate_ids
-        behavior: block
-      - condition: frontmatter_parse_errors
-        behavior: block
+    - condition: old_prefix_files_remain
+      behavior: block
+    - condition: duplicate_ids
+      behavior: block
+    - condition: frontmatter_parse_errors
+      behavior: block
     version_metadata:
       introduced_in: 4.2.6-beta
       deprecated_in: null
     safety_contract:
-      - diagnose
-      - validate
-      - snapshot
-      - approve
-      - execute
-      - verify-postconditions
-      - rollback
+    - diagnose
+    - validate
+    - snapshot
+    - approve
+    - execute
+    - verify-postconditions
+    - rollback
     verification_commands:
-      - "python3 scripts/recovery/recover_project.py graduation-check --project-dir <project>"
-
+    - python3 scripts/recovery/recover_project.py graduation-check --project-dir <project>
   doctor.compatibility_mode:
     title: Continue in compatibility mode
     supports_project_shapes:
-      - accepted_legacy_taxonomy
+    - accepted_legacy_taxonomy
     mutates_project: false
     requires_approval: false
-
   doctor.fix_graduation_blockers:
     title: Fix graduation blockers
     supported: true
@@ -253,57 +244,54 @@ capabilities:
       script: scripts/recovery/recover_project.py
       module: recovery.recover_project
     supports_project_shapes:
-      - graduation_blocked
+    - graduation_blocked
     mutation_class: planned_write
     mutates_project: true
     requires_approval: true
     required_preconditions:
-      - project is in compatibility mode or accepted legacy taxonomy
-      - graduation-check reports validation-failures with resolvable blockers
+    - project is in compatibility mode or accepted legacy taxonomy
+    - graduation-check reports validation-failures with resolvable blockers
     snapshot_scope_hints:
-      - product work-item files named in each blocker resolution
+    - product work-item files named in each blocker resolution
     postconditions:
-      - id: graduation-unblocked
-        check: graduation-check reports graduation_allowed true
+    - id: graduation-unblocked
+      check: graduation-check reports graduation_allowed true
     rollback_support:
       supported: true
-      command: "python3 scripts/doctor.py restore --project-dir <project> --archive-dir <archive>"
+      command: python3 scripts/doctor.py restore --project-dir <project> --archive-dir <archive>
       limitations: []
     version_metadata:
       introduced_in: 4.2.8-beta
       deprecated_in: null
     safety_contract:
-      - diagnose
-      - validate
-      - snapshot
-      - approve
-      - execute
-      - verify-postconditions
-      - rollback
+    - diagnose
+    - validate
+    - snapshot
+    - approve
+    - execute
+    - verify-postconditions
+    - rollback
     verification_commands:
-      - "python3 scripts/recovery/recover_project.py graduation-check --project-dir <project>"
-
+    - python3 scripts/recovery/recover_project.py graduation-check --project-dir <project>
   doctor.manual_review:
     title: Manual maintenance review
     supports_project_shapes:
-      - manual_escalation
-      - missing_product_base
+    - manual_escalation
+    - missing_product_base
     mutates_project: false
     requires_approval: false
-
   update.framework_sync:
     title: Framework/plugin update without project artifact migration
     supports_project_shapes:
-      - current_layout
-      - accepted_legacy_taxonomy
-      - flat_bl_backlog
-      - recovery_required
-      - manual_escalation
-      - missing_product_base
+    - current_layout
+    - accepted_legacy_taxonomy
+    - flat_bl_backlog
+    - recovery_required
+    - manual_escalation
+    - missing_product_base
     mutates_project: false
     mutates_global_config: true
     requires_approval: true
-
   # --- system domain (ISSUE-257) ---
   doctor.scan:
     title: Read-only diagnostic scan across all check categories
@@ -583,60 +571,1654 @@ capabilities:
     verification_commands:
     - python3 scripts/backfill_work_item_artifacts.py --project-dir <project> --dry-run
     - python3 -m pytest tests/test_backfill_work_item_artifacts.py -q
+  # --- product / design / documents / testing / corpus domains
+  # (ISSUE-258, 259, 262, 263, 264) ---
+  product.brief:
+    title: Write a product brief
+    delegate_skill: sweetclaude:product-brief
+    command_entrypoint:
+      slash_command: /sweetclaude:product-brief
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.brief-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: &id001
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_preflight_guard_state_file.py -q
+  product.prd:
+    title: Write a Product Requirements Document
+    delegate_skill: sweetclaude:product-prd
+    command_entrypoint:
+      slash_command: /sweetclaude:product-prd
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.prd-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.discovery:
+    title: Establish what is being built, for whom, and why
+    delegate_skill: sweetclaude:product-discovery
+    command_entrypoint:
+      slash_command: /sweetclaude:product-discovery
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.discovery-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.research:
+    title: Survey the commercial and open-source solution field
+    delegate_skill: sweetclaude:product-research
+    command_entrypoint:
+      slash_command: /sweetclaude:product-research
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.research-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.competition:
+    title: Competitive analysis at three depth levels
+    delegate_skill: sweetclaude:product-competition
+    command_entrypoint:
+      slash_command: /sweetclaude:product-competition
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.competition-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.milestones:
+    title: Manage roadmap milestones
+    delegate_skill: sweetclaude:product-milestones
+    command_entrypoint:
+      slash_command: /sweetclaude:product-milestones
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.milestones-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.milestone_planning:
+    title: Guided milestone planning workshop
+    delegate_skill: sweetclaude:product-milestone-planning
+    command_entrypoint:
+      slash_command: /sweetclaude:product-milestone-planning
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.milestone_planning-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.roadmap:
+    title: Manage the product roadmap and priority stack
+    delegate_skill: sweetclaude:product-roadmap
+    command_entrypoint:
+      slash_command: /sweetclaude:product-roadmap
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.roadmap-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.roadmap_analysis:
+    title: RICE scoring and stack-rank analysis
+    delegate_skill: sweetclaude:product-roadmap-analysis
+    command_entrypoint:
+      slash_command: /sweetclaude:product-roadmap-analysis
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: true
+    postconditions:
+    - id: product.roadmap_analysis-read-only
+      check: no project files are modified
+    rollback_support:
+      supported: true
+      command: not applicable — writes nothing
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+    required_preconditions:
+    - project is configured
+  product.user_stories:
+    title: Write user stories for a defined scope
+    delegate_skill: sweetclaude:product-user-stories
+    command_entrypoint:
+      slash_command: /sweetclaude:product-user-stories
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.user_stories-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.user_tdd_tests:
+    title: Transition user stories into Gherkin feature files
+    delegate_skill: sweetclaude:product-user-tdd-tests
+    command_entrypoint:
+      slash_command: /sweetclaude:product-user-tdd-tests
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.user_tdd_tests-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.focus_group:
+    title: Synthetic panel research using persona archetypes
+    delegate_skill: sweetclaude:product-user-focus-group
+    command_entrypoint:
+      slash_command: /sweetclaude:product-user-focus-group
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.focus_group-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.positioning:
+    title: Define product positioning
+    delegate_skill: sweetclaude:product-positioning-statement
+    command_entrypoint:
+      slash_command: /sweetclaude:product-positioning-statement
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.positioning-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.market_messaging:
+    title: Craft external messaging
+    delegate_skill: sweetclaude:product-market-messaging
+    command_entrypoint:
+      slash_command: /sweetclaude:product-market-messaging
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.market_messaging-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.terminology:
+    title: Maintain a shared domain glossary
+    delegate_skill: sweetclaude:product-terminology
+    command_entrypoint:
+      slash_command: /sweetclaude:product-terminology
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.terminology-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.manage_scope:
+    title: Track scope changes in and out
+    delegate_skill: sweetclaude:product-manage-scope
+    command_entrypoint:
+      slash_command: /sweetclaude:product-manage-scope
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.manage_scope-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.parking_lot:
+    title: Manage deferred work
+    delegate_skill: sweetclaude:product-parking-lot
+    command_entrypoint:
+      slash_command: /sweetclaude:product-parking-lot
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.parking_lot-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.sprint_plan:
+    title: Plan a sprint and produce a commitment
+    delegate_skill: sweetclaude:product-sprint-plan
+    command_entrypoint:
+      slash_command: /sweetclaude:product-sprint-plan
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.sprint_plan-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  product.personas:
+    title: Define product users and their success criteria
+    delegate_skill: sweetclaude:user-personas
+    command_entrypoint:
+      slash_command: /sweetclaude:user-personas
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: product.personas-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.architecture:
+    title: Define system architecture
+    delegate_skill: sweetclaude:design-architecture
+    command_entrypoint:
+      slash_command: /sweetclaude:design-architecture
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.architecture-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.tech_spec:
+    title: Write the technical specification
+    delegate_skill: sweetclaude:design-tech-spec
+    command_entrypoint:
+      slash_command: /sweetclaude:design-tech-spec
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.tech_spec-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.data_model:
+    title: Design the data model
+    delegate_skill: sweetclaude:design-data-model
+    command_entrypoint:
+      slash_command: /sweetclaude:design-data-model
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.data_model-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.api_design:
+    title: Design API endpoints and contracts
+    delegate_skill: sweetclaude:design-api-design
+    command_entrypoint:
+      slash_command: /sweetclaude:design-api-design
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.api_design-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.ux:
+    title: Define the visual and interaction design
+    delegate_skill: sweetclaude:design-ux
+    command_entrypoint:
+      slash_command: /sweetclaude:design-ux
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.ux-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.ux_review:
+    title: Virtual UX review session
+    delegate_skill: sweetclaude:design-ux-review
+    command_entrypoint:
+      slash_command: /sweetclaude:design-ux-review
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.ux_review-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.user_flows:
+    title: Convert user stories into UX flows
+    delegate_skill: sweetclaude:design-user-flows
+    command_entrypoint:
+      slash_command: /sweetclaude:design-user-flows
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.user_flows-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.wireframes:
+    title: Generate HTML/CSS wireframes from user flows
+    delegate_skill: sweetclaude:design-wireframes
+    command_entrypoint:
+      slash_command: /sweetclaude:design-wireframes
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.wireframes-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.solutioning_gate:
+    title: Validate the proposed solution before implementation
+    delegate_skill: sweetclaude:design-solutioning-gate
+    command_entrypoint:
+      slash_command: /sweetclaude:design-solutioning-gate
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: true
+    postconditions:
+    - id: design.solutioning_gate-read-only
+      check: no project files are modified
+    rollback_support:
+      supported: true
+      command: not applicable — writes nothing
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+    required_preconditions:
+    - project is configured
+  design.change_impact:
+    title: Ripple-effect analysis for changes to existing code
+    delegate_skill: sweetclaude:design-change-impact-analysis
+    command_entrypoint:
+      slash_command: /sweetclaude:design-change-impact-analysis
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: true
+    postconditions:
+    - id: design.change_impact-read-only
+      check: no project files are modified
+    rollback_support:
+      supported: true
+      command: not applicable — writes nothing
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+    required_preconditions:
+    - project is configured
+  design.decisions:
+    title: Record and track design decisions
+    delegate_skill: sweetclaude:design-manage-decisions
+    command_entrypoint:
+      slash_command: /sweetclaude:design-manage-decisions
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.decisions-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.mockup_sandbox:
+    title: Create and iterate on interactive UI mockups
+    delegate_skill: sweetclaude:mockup-sandbox
+    command_entrypoint:
+      slash_command: /sweetclaude:mockup-sandbox
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.mockup_sandbox-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.mockup_extract:
+    title: Pull a production component into the mockup sandbox
+    delegate_skill: sweetclaude:mockup-extract
+    command_entrypoint:
+      slash_command: /sweetclaude:mockup-extract
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.mockup_extract-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  design.mockup_graduate:
+    title: Move an approved mockup into the application
+    delegate_skill: sweetclaude:mockup-graduate
+    command_entrypoint:
+      slash_command: /sweetclaude:mockup-graduate
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: design.mockup_graduate-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  documents.update_docs:
+    title: Update documentation when behavior changes
+    delegate_skill: sweetclaude:documents-update-docs
+    command_entrypoint:
+      slash_command: /sweetclaude:documents-update-docs
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: documents.update_docs-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  documents.narrative_arc:
+    title: Build and query the strategic claim graph
+    delegate_skill: sweetclaude:documents-narrative-arc
+    command_entrypoint:
+      slash_command: /sweetclaude:documents-narrative-arc
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: documents.narrative_arc-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  documents.academic:
+    title: Academic paper development
+    delegate_skill: sweetclaude:documents-academic-research
+    command_entrypoint:
+      slash_command: /sweetclaude:documents-academic-research
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: documents.academic-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  documents.meeting_prep:
+    title: Prepare for a specific meeting
+    delegate_skill: sweetclaude:misc-meeting-prep
+    command_entrypoint:
+      slash_command: /sweetclaude:misc-meeting-prep
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: documents.meeting_prep-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  documents.session_export:
+    title: Export a session as a portable package
+    delegate_skill: sweetclaude:session-export
+    command_entrypoint:
+      slash_command: /sweetclaude:session-export
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: documents.session_export-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  documents.report_failure:
+    title: Write a structured failure report
+    delegate_skill: sweetclaude:report-failure
+    command_entrypoint:
+      slash_command: /sweetclaude:report-failure
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: documents.report_failure-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  testing.plan:
+    title: Define and maintain a test strategy
+    delegate_skill: sweetclaude:testing-plan
+    command_entrypoint:
+      slash_command: /sweetclaude:testing-plan
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: testing.plan-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  testing.security:
+    title: Structured security review
+    delegate_skill: sweetclaude:testing-security
+    command_entrypoint:
+      slash_command: /sweetclaude:testing-security
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: testing.security-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  testing.performance:
+    title: Define load scenarios and performance baselines
+    delegate_skill: sweetclaude:testing-performance
+    command_entrypoint:
+      slash_command: /sweetclaude:testing-performance
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: testing.performance-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  testing.accessibility:
+    title: WCAG 2.1 Level AA audit
+    delegate_skill: sweetclaude:testing-accessibility
+    command_entrypoint:
+      slash_command: /sweetclaude:testing-accessibility
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: testing.accessibility-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  testing.compliance:
+    title: Compliance control testing and evidence collection
+    delegate_skill: sweetclaude:testing-compliance
+    command_entrypoint:
+      slash_command: /sweetclaude:testing-compliance
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: testing.compliance-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  testing.session:
+    title: Run a manual QA session
+    delegate_skill: sweetclaude:testing-session
+    command_entrypoint:
+      slash_command: /sweetclaude:testing-session
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: testing.session-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  corpus.consolidate:
+    title: Deduplicate and stage source files into the corpus inbox
+    delegate_skill: sweetclaude:corpus-consolidate
+    command_entrypoint:
+      slash_command: /sweetclaude:corpus-consolidate
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: corpus.consolidate-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  corpus.triage:
+    title: Classify inbox files for keep, reconcile, discard, or defer
+    delegate_skill: sweetclaude:corpus-triage
+    command_entrypoint:
+      slash_command: /sweetclaude:corpus-triage
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: corpus.triage-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  corpus.reconcile:
+    title: Produce approved canonical documents from staged files
+    delegate_skill: sweetclaude:corpus-reconcile
+    command_entrypoint:
+      slash_command: /sweetclaude:corpus-reconcile
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: corpus.reconcile-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  corpus.promote:
+    title: Finalize approved documents into the canonical corpus
+    delegate_skill: sweetclaude:corpus-promote
+    command_entrypoint:
+      slash_command: /sweetclaude:corpus-promote
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: corpus.promote-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  corpus.status:
+    title: Report corpus pipeline state
+    delegate_skill: sweetclaude:corpus-status
+    command_entrypoint:
+      slash_command: /sweetclaude:corpus-status
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: true
+    postconditions:
+    - id: corpus.status-read-only
+      check: no project files are modified
+    rollback_support:
+      supported: true
+      command: not applicable — writes nothing
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+    required_preconditions:
+    - project is configured
+  corpus.rag_setup:
+    title: Configure local semantic search over project documents
+    delegate_skill: sweetclaude:corpus-rag-setup
+    command_entrypoint:
+      slash_command: /sweetclaude:corpus-rag-setup
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: corpus.rag_setup-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  corpus.rag_reindex:
+    title: Rebuild RAG collections from source files
+    delegate_skill: sweetclaude:corpus-rag-reindex
+    command_entrypoint:
+      slash_command: /sweetclaude:corpus-rag-reindex
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: corpus.rag_reindex-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  corpus.pipeline:
+    title: Run the full document corpus pipeline
+    delegate_skill: sweetclaude:document-corpus
+    command_entrypoint:
+      slash_command: /sweetclaude:document-corpus
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - artifact-privacy.yaml resolves categories.product.base_path
+    - artifact path is tracked in git, so a checkout can restore it
+    postconditions:
+    - id: corpus.pipeline-artifact-written
+      check: the artifact exists at the configured base_path
+    rollback_support:
+      supported: true
+      command: git checkout -- <artifact-path>
+      limitations: []
+    unsupported_states:
+    - condition: artifact_privacy_manifest_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands: *id001
+  testing.behavioral_regression:
+    title: Score the model against the interaction-model behavioral contracts
+    delegate_skill: sweetclaude:behavioral-regression
+    command_entrypoint:
+      slash_command: /sweetclaude:behavioral-regression
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - a live model session
+    postconditions:
+    - id: scorecard-complete
+      check: every declared contract appears on the scorecard
+    rollback_support:
+      supported: true
+      command: not applicable — scoring writes no project files
+      limitations: []
+    unsupported_states:
+    - condition: no_live_model
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands:
+    - python3 -m pytest tests/test_behavioral_contract_coverage.py -q
+  testing.mode_regression:
+    title: Validate mode enforcement across all four project modes
+    delegate_skill: sweetclaude:sweetclaude-behavioral-regression
+    command_entrypoint:
+      slash_command: /sweetclaude:sweetclaude-behavioral-regression
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - effective-gates.yaml compiled
+    postconditions:
+    - id: all-modes-checked
+      check: each of the four modes is exercised
+    rollback_support:
+      supported: true
+      command: not applicable — validation writes no project files
+      limitations: []
+    unsupported_states:
+    - condition: mode_unset
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.2.0
+      deprecated_in: null
+    verification_commands:
+    - python3 -m pytest tests/test_capability_manifest.py -q
 project_shapes:
   recovery_required:
     guard_status: run-recover
     migrate_allowed: false
-    message: "This project is in a recoverable SweetClaude migration/update state. Run /sweetclaude:recover before any taxonomy migration."
+    message: This project is in a recoverable SweetClaude migration/update state. Run /sweetclaude:recover
+      before any taxonomy migration.
     recovery_route: stabilize-without-migration
     recovery_capability: recover.stabilize_without_migration
-
   manual_escalation:
     guard_status: manual-review
     migrate_allowed: false
-    message: "This project needs manual SweetClaude recovery review before migration or other maintenance commands."
+    message: This project needs manual SweetClaude recovery review before migration or other maintenance
+      commands.
     doctor_capability: doctor.manual_review
-
   accepted_legacy_taxonomy:
     guard_status: compatibility-mode
     migrate_allowed: true
-    message: "This project has a legacy taxonomy layout. Run /sweetclaude:migrate to convert to v4, or /sweetclaude:recover to check graduation eligibility."
+    message: This project has a legacy taxonomy layout. Run /sweetclaude:migrate to convert to v4, or
+      /sweetclaude:recover to check graduation eligibility.
     migration_capability: migrate.typed_legacy_backlog
     graduation_capability: recover.graduate_from_compatibility
-
   graduation_candidate:
     guard_status: graduation-available
     migrate_allowed: false
-    message: "This project is v4-compliant and can graduate from compatibility mode."
+    message: This project is v4-compliant and can graduate from compatibility mode.
     graduation_capability: recover.graduate_from_compatibility
-
   graduation_blocked:
     guard_status: graduation-blocked
     migrate_allowed: false
-    message: "This project could graduate from compatibility mode, but validation blockers must be fixed first. Each blocker carries its resolution."
+    message: This project could graduate from compatibility mode, but validation blockers must be fixed
+      first. Each blocker carries its resolution.
     blocker_fix_capability: doctor.fix_graduation_blockers
     graduation_capability: recover.graduate_from_compatibility
-
   flat_bl_backlog:
     migration: flat_bl_to_issue
     guard_status: migration-may-be-needed
     migrate_allowed: true
-    message: "Old-format work items were found and no recovery-only state was detected. Review /sweetclaude:migrate before executing it."
+    message: Old-format work items were found and no recovery-only state was detected. Review /sweetclaude:migrate
+      before executing it.
     migration_capability: migrate.flat_bl_to_issue
-
   typed_legacy_backlog:
     guard_status: supported-migration-available
     migrate_allowed: true
     migration_capability: migrate.typed_legacy_backlog
-    message: "This project has a typed legacy backlog layout. Run /sweetclaude:migrate to migrate to the unified ISSUE-NNN taxonomy."
-
+    message: This project has a typed legacy backlog layout. Run /sweetclaude:migrate to migrate to the
+      unified ISSUE-NNN taxonomy.
   missing_product_base:
     guard_status: missing-product-base
     migrate_allowed: false
-    message: "SweetClaude product artifacts were not found. Run /sweetclaude:doctor or /sweetclaude:setup instead of migration."
+    message: SweetClaude product artifacts were not found. Run /sweetclaude:doctor or /sweetclaude:setup
+      instead of migration.
     doctor_capability: doctor.manual_review
-
   current_layout:
     guard_status: ok
     migrate_allowed: false
-    message: "No SweetClaude migration or recovery guard is currently active."
+    message: No SweetClaude migration or recovery guard is currently active.
