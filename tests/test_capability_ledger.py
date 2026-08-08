@@ -118,9 +118,26 @@ def test_rollback_limitations_make_a_capability_compromised(tmp_path: Path) -> N
     assert "no data restore" in " ".join(row["reasons"])
 
 
-def test_unsupported_states_make_a_capability_compromised(tmp_path: Path) -> None:
+@pytest.mark.parametrize("behavior", ["escalate", "diagnose_only", "refuse", "skip"])
+def test_a_handled_unsupported_state_does_not_downgrade(
+    tmp_path: Path, behavior: str
+) -> None:
+    """Declaring how an edge case is handled is good practice. Marking it as a
+    compromise would penalise honest declaration, which is backwards for a
+    ledger whose whole purpose is to reward it."""
     entry = dict(FULL, unsupported_states=[{"condition": "weird_layout",
-                                            "behavior": "escalate"}])
+                                            "behavior": behavior}])
+    ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
+                              include_behavioral=False)
+    assert ledger["rows"][0]["status"] == led.WORKS
+
+
+def test_an_unhandled_unsupported_state_makes_a_capability_compromised(
+    tmp_path: Path,
+) -> None:
+    """A state listed with no defined behavior is a real gap — the capability
+    admits it can reach a condition nobody decided what to do about."""
+    entry = dict(FULL, unsupported_states=[{"condition": "weird_layout"}])
     ledger = led.build_ledger(manifest_path=_manifest(tmp_path, {"cap.x": entry}),
                               include_behavioral=False)
     row = ledger["rows"][0]

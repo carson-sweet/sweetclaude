@@ -108,11 +108,19 @@ def _classify(entry: dict, coverage: dict | None, min_coverage: float) -> tuple[
                 "rollback carries limitations: " + "; ".join(rollback["limitations"])
             )
 
-    unsupported = entry.get("unsupported_states") or []
-    if unsupported:
+    # A declared unsupported state with a defined behavior is graceful
+    # handling, not a compromise. Penalising it would discourage the honest
+    # declaration this ledger exists to reward. Only an undeclared behavior,
+    # or one that admits data risk, downgrades the capability.
+    HANDLED = {"escalate", "diagnose_only", "refuse", "skip"}
+    unhandled = [
+        u for u in (entry.get("unsupported_states") or [])
+        if str(u.get("behavior") or "") not in HANDLED
+    ]
+    if unhandled:
         reasons.append(
-            f"{len(unsupported)} unsupported state(s): "
-            + ", ".join(str(u.get("condition")) for u in unsupported)
+            f"{len(unhandled)} unsupported state(s) with no defined handling: "
+            + ", ".join(str(u.get("condition")) for u in unhandled)
         )
 
     pct = _coverage_for(entry, coverage)

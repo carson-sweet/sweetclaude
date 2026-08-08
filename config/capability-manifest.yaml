@@ -304,6 +304,285 @@ capabilities:
     mutates_global_config: true
     requires_approval: true
 
+  # --- system domain (ISSUE-257) ---
+  doctor.scan:
+    title: Read-only diagnostic scan across all check categories
+    delegate_skill: sweetclaude:doctor
+    command_entrypoint:
+      slash_command: /sweetclaude:doctor
+      script: scripts/doctor.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    - graduation_candidate
+    - graduation_blocked
+    - accepted_legacy_taxonomy
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude.yaml exists
+    postconditions:
+    - id: scan-emits-findings
+      check: scan returns a findings payload without writing to the project
+    rollback_support:
+      supported: true
+      command: not applicable — scan writes nothing
+      limitations: []
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands:
+    - python3 scripts/doctor.py scan --project-dir <project>
+  doctor.auto_fix:
+    title: Apply safe automatic repairs through the archived, reversible pipeline
+    delegate_skill: sweetclaude:doctor
+    command_entrypoint:
+      slash_command: /sweetclaude:doctor
+      script: scripts/doctor.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    - graduation_blocked
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - scan has run
+    - archive created before any write
+    snapshot_scope_hints:
+    - .sweetclaude/
+    postconditions:
+    - id: post-fix-rescan
+      check: post-fix-rescan reports the addressed findings resolved
+    rollback_support:
+      supported: true
+      command: python3 scripts/doctor.py restore --archive-dir <archive> --all
+      limitations: []
+    unsupported_states:
+    - condition: manual_review
+      behavior: escalate
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    safety_contract:
+    - scan
+    - plan
+    - archive
+    - approve
+    - execute
+    - post-fix-rescan
+    - restore
+    verification_commands:
+    - python3 scripts/doctor.py scan --project-dir <project>
+    - python3 scripts/doctor.py dry-run --project-dir <project>
+  doctor.restore:
+    title: Roll back the file changes a previous doctor run made
+    delegate_skill: sweetclaude:doctor
+    command_entrypoint:
+      slash_command: /sweetclaude:doctor
+      script: scripts/doctor.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - an archive directory from a prior doctor run exists
+    snapshot_scope_hints:
+    - .sweetclaude/
+    postconditions:
+    - id: restore-verified
+      check: restored files match the archived originals
+    rollback_support:
+      supported: true
+      command: re-run doctor auto-fix; each run is separately archived
+      limitations:
+      - restores only files a doctor run itself changed
+    unsupported_states:
+    - condition: archive_missing
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands:
+    - python3 scripts/doctor.py prune-archives --project-dir <project>
+  init.dispatch:
+    title: Route a project to the right onboarding, migration, or repair path
+    delegate_skill: sweetclaude:init
+    command_entrypoint:
+      slash_command: /sweetclaude:init
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    - flat_bl_backlog
+    - typed_legacy_backlog
+    - recovery_required
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - plugin install is healthy (preflight.sh reports ok)
+    postconditions:
+    - id: init-creates-nothing
+      check: no files or state written by init itself (ISSUE-249)
+    rollback_support:
+      supported: true
+      command: not applicable — init writes nothing
+      limitations: []
+    unsupported_states:
+    - condition: damaged_state
+      behavior: escalate
+    - condition: plugin_unhealthy
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.5.3
+      deprecated_in: null
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_canonical_state_reads.py -q
+  setup.onboard_project:
+    title: Onboard a project — detect shape, write sweetclaude.yaml, build v4 storage
+    delegate_skill: sweetclaude:setup
+    command_entrypoint:
+      slash_command: null
+      script: scripts/sweetclaude-yaml-template.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - no existing sweetclaude.yaml
+    snapshot_scope_hints:
+    - .sweetclaude/
+    postconditions:
+    - id: state-written
+      check: sweetclaude.yaml parses and schema_version is known
+    - id: storage-built
+      check: v4 backlog tree and traceability maps exist
+    rollback_support:
+      supported: true
+      command: /sweetclaude:purge
+      limitations:
+      - purge removes all SweetClaude artifacts, not just this run's
+    unsupported_states:
+    - condition: already_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands:
+    - python3 scripts/doctor.py scan --project-dir <project>
+    - python3 -m pytest tests/test_migrate_to_sweetclaude_yaml.py -q
+  purge.remove_all:
+    title: Delete every SweetClaude artifact from a project
+    delegate_skill: sweetclaude:purge
+    command_entrypoint:
+      slash_command: /sweetclaude:purge
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    - accepted_legacy_taxonomy
+    - flat_bl_backlog
+    - typed_legacy_backlog
+    mutation_class: destructive
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - typed confirmation from the user
+    - backup branch recommended before execution
+    snapshot_scope_hints:
+    - .sweetclaude/
+    - docs/product/
+    postconditions:
+    - id: artifacts-removed
+      check: no .sweetclaude/ directory remains
+    rollback_support:
+      supported: true
+      command: git checkout <backup-branch> -- .sweetclaude/
+      limitations:
+      - only if the recommended backup branch was created first
+      - gitignored content is not recoverable from git alone
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands:
+    - python3 scripts/doctor.py scan --project-dir <project>
+  update.check:
+    title: Channel-aware check for a newer framework version
+    delegate_skill: sweetclaude:update
+    command_entrypoint:
+      slash_command: /sweetclaude:update
+      script: scripts/update.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - network access to the release channel
+    postconditions:
+    - id: no-prerelease-to-stable
+      check: a stable install is never offered a prerelease (ISSUE-248)
+    rollback_support:
+      supported: true
+      command: not applicable — check writes nothing to the project
+      limitations: []
+    unsupported_states:
+    - condition: network_unavailable
+      behavior: diagnose_only
+    - condition: retired_channel
+      behavior: escalate
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_commands:
+    - python3 -m pytest tests/test_update_commands.py -q
+    - python3 -m pytest tests/test_beta_channel_retirement.py -q
+  work_item_artifacts.backfill:
+    title: Backfill per-work-item artifact directories with symlinked artifacts
+    delegate_skill: sweetclaude:work-item-artifacts
+    command_entrypoint:
+      slash_command: /sweetclaude:work-item-artifacts
+      script: scripts/backfill_work_item_artifacts.py
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - dry-run reviewed before execution
+    snapshot_scope_hints:
+    - .sweetclaude/work/
+    postconditions:
+    - id: non-destructive
+      check: no pre-existing file is replaced and no dangling symlink is left
+    rollback_support:
+      supported: true
+      command: rm -rf .sweetclaude/work/<ITEM-ID>
+      limitations: []
+    unsupported_states:
+    - condition: existing_work_dir
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.3.0
+      deprecated_in: null
+    verification_commands:
+    - python3 scripts/backfill_work_item_artifacts.py --project-dir <project> --dry-run
+    - python3 -m pytest tests/test_backfill_work_item_artifacts.py -q
 project_shapes:
   recovery_required:
     guard_status: run-recover
