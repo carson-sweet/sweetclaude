@@ -809,13 +809,13 @@ def test_a_genuinely_absent_id_reads_as_empty(tmp_path: Path) -> None:
     assert r.stdout.strip() == "{}"
 
 
-@pytest.mark.xfail(strict=True, reason="ISSUE-289: the type map points issues "
-                                       "at product/issues; they live under "
-                                       "roadmap/issues")
 def test_the_adapter_reads_an_issue(tmp_path: Path) -> None:
-    """Reads as empty, which is the same answer as 'no such issue' — so 14
-    skills sourcing this adapter cannot tell a missing issue from a broken
-    lookup."""
+    """Was xfail(strict) against ISSUE-289 and is now a live assertion.
+
+    The adapter read every issue as empty, which is the same answer as "no such
+    issue", so 14 skills sourcing it could not tell a missing issue from a
+    broken lookup.
+    """
     project = _configured(tmp_path / "p")
     _write_artifact(project, "roadmap/issues", "ISSUE-1")
 
