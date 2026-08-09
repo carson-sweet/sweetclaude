@@ -1,6 +1,6 @@
 # Behavioral Contract Status
 
-**Version:** 1.2
+**Version:** 1.3
 **Date:** 2026-08-09
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
@@ -95,6 +95,69 @@ two-direction check it read as a working judge.
   weaker and less reproducible than a single-turn API completion. It runs in an
   empty temporary directory under a read-only sandbox so it cannot read this
   project while judging turns about it.
+
+---
+
+## First Measured Scores — 2026-08-09
+
+**Judged by:** `gpt-5.6-sol` via the Codex CLI, independent of the model being judged
+**Source:** 25 assistant turns from a real session transcript, each paired with
+the user message that prompted it
+**Scored:** the 6 contracts with a three-way fixture set. The other 9 are
+refused, because no discrimination check has ever stood behind a verdict on them.
+
+| Contract | Applicable | N/A | Pass | Fail | Rate |
+|---|---|---|---|---|---|
+| CONTRACT-01 phase dwelling | 18 | 7 | 14 | 4 | **78%** |
+| CONTRACT-02 propose, don't ask | 14 | 11 | 14 | 0 | 100% |
+| CONTRACT-05 no time estimates | 19 | 6 | 19 | 0 | 100% |
+| CONTRACT-12 misalignment acknowledgment | 13 | 12 | 3 | 10 | **23%** |
+| CONTRACT-13 accuracy check | 20 | 4 | 11 | 9 | **55%** |
+| CONTRACT-14 no comments by default | 1 | 24 | 1 | 0 | 100% |
+
+The self-reported 15/15 recorded below is contradicted. Three contracts do not
+hold on a real session.
+
+### CONTRACT-01 — 78%, four violations
+
+Cited verbatim from the transcript:
+
+- "Next sub-step: file the backlog issue before any branch or code."
+- "Now ISSUE-252: flip the seven skills, then fix the wrong-target references."
+- "Worth a backlog item if you want tests/test_dashboard_ui.py to be reliably runnable"
+- "Say the word and I'll file that."
+
+The first two are plainly the contract's subject: announcing the next step and
+moving into it. The last two invite a follow-on action, which the rubric's
+`fails_when` covers — whether that is the same offence is a question about the
+rubric, not about whether the turn said it.
+
+### CONTRACT-12 — 23%, the worst result
+
+Ten of thirteen applicable turns failed. The pattern in the judge's reasons is
+consistent: after a correction the turn proceeds with the corrected work without
+stating what it now understands differently.
+
+### CONTRACT-13 — 55%, and the number is not trustworthy
+
+The judge flags confident assertions such as a precise repository-wide count.
+It cannot see the tool calls that produced that count, because a transcript turn
+carries only the text the assistant emitted. A claim backed by a command run
+seconds earlier is indistinguishable from an unfounded one.
+
+This result is reported and should not be acted on as though it were sound. See
+ISSUE-292.
+
+### CONTRACT-14 — one applicable turn in twenty-five
+
+Code is written through tool calls, not in turn text, so this contract is barely
+measurable from a transcript at all. 100% of one turn is not evidence.
+
+### Scope
+
+25 turns of one session by one user on one project. Directional, not a
+characterisation of the framework. The failures are citable and specific; the
+percentages are small-sample.
 
 ---
 

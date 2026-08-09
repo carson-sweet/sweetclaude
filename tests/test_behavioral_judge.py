@@ -619,3 +619,164 @@ def test_fixtures_carry_context_where_their_contract_needs_it() -> None:
         rubric = rubrics.get(item["contract"], {})
         if rubric.get("needs_context") == bj.NEEDS_USER:
             assert item.get("context", "").strip(), item["file"]
+
+
+# --- scoring a real transcript -------------------------------------------
+
+def _transcript(tmp_path: Path, records: list[dict]) -> Path:
+    p = tmp_path / "t.jsonl"
+    p.write_text("\n".join(json.dumps(r) for r in records) + "\n", encoding="utf-8")
+    return p
+
+
+def _user(text): return {"type": "user", "message": {"content": text}}
+def _tool_result(): return {"type": "user", "message": {"content": [{"x": 1}]}}
+def _assistant(text):
+    return {"type": "assistant",
+            "message": {"content": [{"type": "text", "text": text}]}}
+
+
+def test_turns_are_paired_with_the_message_that_prompted_them(tmp_path) -> None:
+    path = _transcript(tmp_path, [_user("do the thing"), _assistant("done")])
+
+    turns = bj.load_turns(path)
+
+    assert len(turns) == 1
+    assert turns[0]["turn"] == "done"
+    assert turns[0]["context"] == "do the thing"
+
+
+def test_a_tool_result_is_not_mistaken_for_something_the_user_said(
+    tmp_path
+) -> None:
+    """Tool results arrive as type=user with list content. Treating one as the
+    preceding message would hand the judge a payload instead of a human turn,
+    and every context-dependent verdict after it would be about the wrong
+    thing."""
+    path = _transcript(tmp_path, [_user("do the thing"), _tool_result(),
+                                  _assistant("done")])
+
+    assert bj.load_turns(path)[0]["context"] == "do the thing"
+
+
+def test_turns_without_text_are_skipped(tmp_path) -> None:
+    path = _transcript(tmp_path, [
+        _user("go"),
+        {"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "name": "Bash"}]}},
+        _assistant("finished")])
+
+    turns = bj.load_turns(path)
+
+    assert [t["turn"] for t in turns] == ["finished"]
+
+
+def test_a_corrupt_line_does_not_stop_the_read(tmp_path) -> None:
+    p = tmp_path / "t.jsonl"
+    p.write_text(json.dumps(_user("go")) + "\n{ not json\n"
+                 + json.dumps(_assistant("done")) + "\n", encoding="utf-8")
+
+    assert len(bj.load_turns(p)) == 1
+
+
+def test_a_very_long_turn_is_truncated_and_says_so(tmp_path) -> None:
+    path = _transcript(tmp_path, [_user("go"), _assistant("x" * 50000)])
+
+    turn = bj.load_turns(path)[0]
+
+    assert len(turn["turn"]) == bj.MAX_TURN_CHARS
+    assert turn["truncated"] is True
+
+
+# --- what may be scored --------------------------------------------------
+
+def test_only_contracts_with_a_three_way_fixture_set_are_scorable() -> None:
+    """Scoring a contract with no fixtures reports a number no discrimination
+    check ever stood behind — the thing this harness exists to prevent."""
+    validated = bj.contracts_with_a_validated_judge()
+
+    assert "CONTRACT-05" in validated
+    assert "CONTRACT-04" not in validated, "CONTRACT-04 has no fixtures"
+
+
+def test_a_contract_missing_one_side_is_not_validated(monkeypatch) -> None:
+    """Two-thirds of a fixture set is not a validated judge."""
+    corpus = [i for i in bj.load_corpus()
+              if not (i["contract"] == "CONTRACT-05" and i["expected"] == "n/a")]
+    monkeypatch.setattr(bj, "load_corpus", lambda: corpus)
+
+    assert "CONTRACT-05" not in bj.contracts_with_a_validated_judge()
+
+
+# --- the arithmetic ------------------------------------------------------
+
+def _score(tmp_path, turns: list[tuple[str, str]], contract="CONTRACT-05",
+           **kw) -> dict:
+    records = []
+    for context, turn in turns:
+        records += [_user(context), _assistant(turn)]
+    return bj.score_transcript(_transcript(tmp_path, records), contract,
+                               bj.load_rubrics()[contract], limit=0, **kw)
+
+
+def test_inapplicable_turns_are_excluded_from_the_rate(tmp_path) -> None:
+    """The whole reason the third verdict exists. Counting them as passes is
+    how a high score gets built from turns the rule never touched."""
+    report = _score(tmp_path, [
+        ("go", "The migration finished. It ran for eleven minutes."),
+        ("go", "The architecture doc is written. Sitting here."),
+    ])
+
+    assert report["not_applicable"] == 1
+    assert report["applicable"] == 1
+    assert report["passed"] == 1
+    assert report["pass_rate"] == 1.0
+
+
+def test_a_rate_over_nothing_is_unmeasured_not_perfect(tmp_path) -> None:
+    """0/0 is not 100%. Reporting it as a rate would be the same lie in
+    arithmetic form."""
+    report = _score(tmp_path, [
+        ("go", "The migration finished. It ran for eleven minutes."),
+    ])
+
+    assert report["applicable"] == 0
+    assert report["pass_rate"] is None
+    assert "unmeasured" in bj.render_score(report)
+
+
+def test_failures_are_reported_with_their_citation(tmp_path) -> None:
+    """A count with no evidence cannot be checked by a human."""
+    report = _score(tmp_path, [("go", "This should take about two days.")])
+
+    assert report["failed"] == 1
+    assert report["failures"][0]["citation"]
+
+
+def test_what_was_not_scored_is_stated(tmp_path) -> None:
+    """A limit that silently truncates reads as full coverage."""
+    records = []
+    for _ in range(10):
+        records += [_user("go"), _assistant("done")]
+    report = bj.score_transcript(_transcript(tmp_path, records), "CONTRACT-05",
+                                 bj.load_rubrics()["CONTRACT-05"], limit=3)
+
+    assert report["turns_in_transcript"] == 10
+    assert report["turns_scored"] == 3
+    assert report["not_scored"] == 7
+    assert "7 not scored" in bj.render_score(report)
+
+
+def test_discarded_verdicts_are_not_counted_as_contract_failures(
+    tmp_path, monkeypatch
+) -> None:
+    """An uncited verdict is a judge failure. Folding it into the fail count
+    would blame the contract for the judge's behaviour."""
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+        "verdict": "fail", "citation": "nowhere in the turn", "reason": "x"})
+
+    report = _score(tmp_path, [("go", "This should take about two days.")])
+
+    assert report["discarded"] == 1
+    assert report["failed"] == 0
+    assert report["applicable"] == 0
