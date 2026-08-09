@@ -657,7 +657,10 @@ class TestCreateProducesYAML:
                      project_dir=project_dir)
         rebuild(str(project_dir))
         items = get_all_items(str(project_dir))
-        issue_items = [i for i in items if i["id"].startswith("I-")]
+        # ISSUE-, not I-: create emits the current prefix (ISSUE-289). "I-"
+        # would not even match it as a substring test, so this read as zero
+        # issues rather than as a wrong id.
+        issue_items = [i for i in items if i["id"].startswith("ISSUE-")]
         assert len(issue_items) == 1
         assert issue_items[0]["epic"] == "EP-001"
 
@@ -1101,7 +1104,9 @@ class TestEndToEndPropagationChain:
         fm = parse_artifact(epic_file.read_text())
         assert fm["status"] != "done", "Epic should reopen after child created"
 
-        issue_files = list((product_base / "issues").glob("I-*.md"))
+        # backlog/, not issues/: new issues are created untriaged, and
+        # product/issues holds only an index file (ISSUE-289).
+        issue_files = list((product_base / "backlog").glob("ISSUE-*.md"))
         assert len(issue_files) == 1
         issue_id = parse_artifact(issue_files[0].read_text())["id"]
 

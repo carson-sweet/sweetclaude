@@ -32,6 +32,9 @@ TODAY = datetime.now().strftime("%Y-%m-%d")
 # ---------------------------------------------------------------------------
 
 PREFIX_TO_TYPE = {
+    "ISSUE": "issue",
+    # Pre-unification ids. 37 of them survive in backlog/archived/; they are
+    # terminal, but a lookup by id must still resolve one (ISSUE-289).
     "I":     "issue",
     "EP":    "epic",
     "SP":    "sprint",
@@ -43,19 +46,70 @@ PREFIX_TO_TYPE = {
     "TH":    "theme",
 }
 
-TYPE_TO_PREFIX = {v: k for k, v in PREFIX_TO_TYPE.items()}
+# The prefix `create` assigns. Declared rather than derived by inverting
+# PREFIX_TO_TYPE, which would silently hand `issue` whichever alias happened to
+# be declared last.
+TYPE_TO_PREFIX = {
+    "issue": "ISSUE", "epic": "EP", "sprint": "SP", "roadmap_item": "RM",
+    "release": "REL", "milestone": "MS", "pitch": "PITCH", "cycle": "CYC",
+    "theme": "TH",
+}
 
+# Every prefix a type answers to, for listing and querying. Deriving the glob
+# from TYPE_TO_PREFIX alone would drop the legacy ids entirely.
+TYPE_TO_PREFIXES = {
+    t: tuple(p for p, pt in PREFIX_TO_TYPE.items() if pt == t)
+    for t in TYPE_TO_PREFIX
+}
+
+# Where `create` writes a new artifact of each type. Issues begin life in
+# backlog/ and move to roadmap/issues/ at triage, so backlog is the create
+# target even though most existing issues are found elsewhere (ISSUE-289).
 TYPE_TO_DIR = {
-    "issue":        "issues",
+    "issue":        "backlog",
     "epic":         "roadmap/epics",
     "sprint":       "sprints",
     "roadmap_item": "roadmap",
     "release":      "roadmap/releases",
-    "milestone":    "milestones",
+    "milestone":    "roadmap/milestones",
     "pitch":        "pitches",
     "cycle":        "cycles",
     "theme":        "themes",
 }
+
+# Where reads, queries and lists look. Issues live across three trees at once
+# and move between them over their lifetime; the type map named a fourth
+# directory (`issues`) that holds only an index file, so every issue lookup
+# returned empty — indistinguishable from "no such issue" (ISSUE-289).
+#
+# Milestones had the same defect against `milestones/`, which onboarding no
+# longer creates. Both legacy directories stay in the search list so a project
+# that predates the move still resolves.
+TYPE_SEARCH_DIRS = {
+    "issue": ("roadmap/issues", "backlog", "issues"),
+    "milestone": ("roadmap/milestones", "milestones"),
+}
+
+
+def _prefixes_for(entity_type: str) -> tuple[str, ...]:
+    """Every id prefix a type answers to, current first."""
+    known = TYPE_TO_PREFIXES.get(entity_type)
+    if known:
+        return known
+    prefix = TYPE_TO_PREFIX.get(entity_type, "")
+    return (prefix,) if prefix else ()
+
+
+def _search_dirs(product_base: Path, entity_type: str) -> list[Path]:
+    """Existing roots to search for an entity type, most specific first.
+
+    Searched recursively by the callers: every type has terminal subdirectories
+    (done/, archived/) that a single-level glob cannot see.
+    """
+    rels = TYPE_SEARCH_DIRS.get(entity_type)
+    if rels is None:
+        rels = (TYPE_TO_DIR.get(entity_type, entity_type),)
+    return [product_base / rel for rel in rels if (product_base / rel).is_dir()]
 
 
 # Metadata key → field name mapping (handles **Key:** → key normalisation)
@@ -120,14 +174,23 @@ def _find_file(product_base: Path, entity_id: str) -> Path | None:
     entity_type = PREFIX_TO_TYPE.get(prefix)
     if not entity_type:
         return None
-    type_dir = product_base / TYPE_TO_DIR[entity_type]
-    if not type_dir.exists():
-        return None
     pattern = re.compile(rf"^{re.escape(entity_id)}-.*\.md$", re.IGNORECASE)
-    for f in type_dir.iterdir():
-        if pattern.match(f.name):
-            return f
+    for type_dir in _search_dirs(product_base, entity_type):
+        for f in sorted(type_dir.rglob("*.md")):
+            if pattern.match(f.name):
+                return f
     return None
+
+
+def _artifact_files(product_base: Path, entity_type: str, prefix: str) -> list[Path]:
+    """Every artifact of a type, across all its roots and subdirectories."""
+    prefixes = TYPE_TO_PREFIXES.get(entity_type) or ((prefix,) if prefix else ())
+    seen: dict[str, Path] = {}
+    for type_dir in _search_dirs(product_base, entity_type):
+        for p in prefixes:
+            for f in sorted(type_dir.rglob(f"{p}-*.md")):
+                seen.setdefault(f.name, f)
+    return [seen[name] for name in sorted(seen)]
 
 
 def _parse_metadata(content: str) -> dict:
@@ -250,6 +313,21 @@ def _update_metadata_block(content: str, updates: dict) -> str:
 def op_read(product_base: Path, state_base: Path, entity_id: str) -> None:
     f = _find_file(product_base, entity_id)
     if not f:
+        # An empty result is the right answer for an id that does not exist,
+        # and the wrong answer for a lookup that had nowhere to look. Those
+        # were the same output for every issue in the project until ISSUE-289,
+        # so nobody could see the difference. Still {} on stdout so callers
+        # parse unchanged; the distinction goes to stderr.
+        entity_type = PREFIX_TO_TYPE.get(_id_to_prefix(entity_id))
+        if entity_type is None:
+            print(f"sc-artifact: unknown id prefix in {entity_id!r}; known "
+                  f"prefixes: {', '.join(sorted(PREFIX_TO_TYPE))}", file=sys.stderr)
+        elif not _search_dirs(product_base, entity_type):
+            searched = TYPE_SEARCH_DIRS.get(
+                entity_type, (TYPE_TO_DIR.get(entity_type, entity_type),))
+            print(f"sc-artifact: no {entity_type} directory exists under "
+                  f"{product_base} (looked for {', '.join(searched)}); this is "
+                  f"a layout problem, not a missing {entity_id}", file=sys.stderr)
         print("{}", end="")
         return
     content = f.read_text(encoding="utf-8")
@@ -259,11 +337,8 @@ def op_read(product_base: Path, state_base: Path, entity_id: str) -> None:
 
 def _calculate_sprint_velocity(product_base: Path, sprint_id: str) -> int:
     import glob as _glob
-    issues_dir = product_base / TYPE_TO_DIR["issue"]
-    if not issues_dir.exists():
-        return 0
     total = 0
-    for fname in _glob.glob(str(issues_dir / "*.md")):
+    for fname in _artifact_files(product_base, "issue", TYPE_TO_PREFIX["issue"]):
         with open(fname, encoding="utf-8") as fh:
             issue = _parse_metadata(fh.read())
         if issue and (issue.get("sprint") == sprint_id or issue.get("sprint_id") == sprint_id) and issue.get("status") == "done":
@@ -465,13 +540,17 @@ def op_query(product_base: Path, state_base: Path, entity_type: str, *filters,
         except Exception:
             pass
 
-    type_dir = product_base / TYPE_TO_DIR.get(entity_type, entity_type)
     prefix = TYPE_TO_PREFIX.get(entity_type, "")
     results = []
-    if type_dir.exists():
-        for f in sorted(type_dir.glob(f"{prefix}-*.md")):
+    if True:
+        for f in _artifact_files(product_base, entity_type, prefix):
             content = f.read_text(encoding="utf-8")
-            id_match = re.match(rf"({re.escape(prefix)}-\d+)", f.name)
+            # Any prefix the type answers to, not just the one `create`
+            # assigns — otherwise legacy ids are globbed and then dropped
+            # here, which is worse than never finding them (ISSUE-289).
+            id_match = re.match(
+                rf"((?:{'|'.join(re.escape(p) for p in TYPE_TO_PREFIXES.get(entity_type, (prefix,)))})-\d+)",
+                f.name)
             if not id_match:
                 continue
             entity_id = id_match.group(1)
@@ -495,9 +574,12 @@ def op_query(product_base: Path, state_base: Path, entity_type: str, *filters,
 
 
 def _query_sqlite(conn, product_base: Path, entity_type: str, filters: dict) -> list[dict]:
-    prefix = TYPE_TO_PREFIX.get(entity_type, "")
-    where_parts = ["id LIKE ?"]
-    params: list = [f"{prefix}-%"]
+    # Every prefix the type answers to. Matching only the one `create`
+    # assigns silently excludes pre-unification ids from every query
+    # (ISSUE-289).
+    prefixes = _prefixes_for(entity_type)
+    where_parts = ["(" + " OR ".join("id LIKE ?" for _ in prefixes) + ")"]
+    params: list = [f"{p}-%" for p in prefixes]
 
     if "status" not in filters:
         where_parts.append("status != 'declined'")
@@ -554,10 +636,12 @@ def op_list(product_base: Path, state_base: Path, entity_type: str,
             from cache import get_conn
             conn = get_conn(str(project_dir))
             if conn:
-                prefix = TYPE_TO_PREFIX.get(entity_type, "")
+                prefixes = _prefixes_for(entity_type)
+                like = " OR ".join("id LIKE ?" for _ in prefixes)
                 rows = conn.execute(
-                    "SELECT id FROM items WHERE id LIKE ? AND status != 'declined' ORDER BY id",
-                    (f"{prefix}-%",),
+                    f"SELECT id FROM items WHERE ({like}) "
+                    "AND status != 'declined' ORDER BY id",
+                    tuple(f"{p}-%" for p in prefixes),
                 ).fetchall()
                 conn.close()
                 results = []
@@ -572,13 +656,17 @@ def op_list(product_base: Path, state_base: Path, entity_type: str,
         except Exception:
             pass
 
-    type_dir = product_base / TYPE_TO_DIR.get(entity_type, entity_type)
     prefix = TYPE_TO_PREFIX.get(entity_type, "")
     results = []
-    if type_dir.exists():
-        for f in sorted(type_dir.glob(f"{prefix}-*.md")):
+    if True:
+        for f in _artifact_files(product_base, entity_type, prefix):
             content = f.read_text(encoding="utf-8")
-            id_match = re.match(rf"({re.escape(prefix)}-\d+)", f.name)
+            # Any prefix the type answers to, not just the one `create`
+            # assigns — otherwise legacy ids are globbed and then dropped
+            # here, which is worse than never finding them (ISSUE-289).
+            id_match = re.match(
+                rf"((?:{'|'.join(re.escape(p) for p in TYPE_TO_PREFIXES.get(entity_type, (prefix,)))})-\d+)",
+                f.name)
             if not id_match:
                 continue
             entity_id = id_match.group(1)

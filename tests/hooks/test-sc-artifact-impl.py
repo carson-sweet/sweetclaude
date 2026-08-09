@@ -71,7 +71,7 @@ def test_create_cycle_artifact(project_dir):
     assert out['id'].startswith('CYC-'), f"Expected CYC- prefix, got {out['id']}"
 
 
-@pytest.mark.xfail(reason="pre-existing (not doctor work): sc-artifact hook omits completed_at/velocity; surfaced by enabling test-*.py collection — tracked for follow-up", strict=False)
+@pytest.mark.xfail(strict=True, reason="the create templates omit completed_at and velocity; the lookup faults that also broke these were fixed in ISSUE-289, this half is not")
 def test_issue_has_completed_at_field(project_dir):
     r = run_create(project_dir, 'issue', {'title': 'Test issue'})
     assert r.returncode == 0, r.stderr
@@ -84,7 +84,7 @@ def test_issue_has_completed_at_field(project_dir):
     assert out['completed_at'] is None
 
 
-@pytest.mark.xfail(reason="pre-existing (not doctor work): sc-artifact hook omits completed_at/velocity; surfaced by enabling test-*.py collection — tracked for follow-up", strict=False)
+@pytest.mark.xfail(strict=True, reason="the create templates omit completed_at and velocity; the lookup faults that also broke these were fixed in ISSUE-289, this half is not")
 def test_sprint_has_velocity_field(project_dir):
     r = run_create(project_dir, 'sprint', {'title': 'Sprint 1', 'goal': 'Ship'})
     assert r.returncode == 0, r.stderr
@@ -97,7 +97,6 @@ def test_sprint_has_velocity_field(project_dir):
     assert out['velocity'] is None
 
 
-@pytest.mark.xfail(reason="pre-existing (not doctor work): sc-artifact hook omits completed_at/velocity; surfaced by enabling test-*.py collection — tracked for follow-up", strict=False)
 def test_close_issue_sets_completed_at(project_dir):
     create = run_create(project_dir, 'issue', {'title': 'Test'})
     assert create.returncode == 0, create.stderr
@@ -110,7 +109,6 @@ def test_close_issue_sets_completed_at(project_dir):
     assert out['completed_at'] is not None, "completed_at not set when issue closed"
 
 
-@pytest.mark.xfail(reason="pre-existing (not doctor work): sc-artifact hook omits completed_at/velocity; surfaced by enabling test-*.py collection — tracked for follow-up", strict=False)
 def test_close_sprint_calculates_velocity(project_dir):
     sprint = run_create(project_dir, 'sprint', {'title': 'Sprint 1', 'goal': 'Ship'})
     assert sprint.returncode == 0, sprint.stderr
@@ -128,7 +126,6 @@ def test_close_sprint_calculates_velocity(project_dir):
     assert out['velocity'] == 6, f"Expected velocity=6, got {out['velocity']}"
 
 
-@pytest.mark.xfail(reason="pre-existing (not doctor work): sc-artifact hook omits completed_at/velocity; surfaced by enabling test-*.py collection — tracked for follow-up", strict=False)
 def test_velocity_counts_issues_linked_via_op_write(project_dir):
     sprint = run_create(project_dir, 'sprint', {'title': 'Sprint 2', 'goal': 'Ship'})
     assert sprint.returncode == 0, sprint.stderr
@@ -161,7 +158,6 @@ def test_create_done_issue_sets_completed_at(project_dir):
         f"completed_at should be set when issue created with status=done, got {out.get('completed_at')}"
 
 
-@pytest.mark.xfail(reason="pre-existing (not doctor work): sc-artifact hook omits completed_at/velocity; surfaced by enabling test-*.py collection — tracked for follow-up", strict=False)
 def test_velocity_counts_sprint_id_key(project_dir):
     sprint = run_create(project_dir, 'sprint', {'title': 'Sprint Sprint-Id-Key', 'goal': 'Ship'})
     assert sprint.returncode == 0, sprint.stderr
