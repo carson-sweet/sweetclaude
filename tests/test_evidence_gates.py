@@ -15,7 +15,23 @@ def test_code_verify_writes_completion_evidence_receipts():
     assert "--receipt-type completion" in skill
     assert "--subject-id {WORK_ITEM_ID}" in skill
     assert "--evidence-receipt {receipt}" in skill
-    assert "do not write a passing receipt" in skill
+
+
+def test_code_verify_runs_the_command_rather_than_asserting_its_result():
+    """This replaced an assertion that the skill said "do not write a passing
+    receipt" for a failed command (ISSUE-283).
+
+    That instruction was the defect. It asked the model to be honest about a
+    run instead of having the script perform the run, so a receipt reading
+    `status: pass, command: "npm test"` could be written by a project with no
+    test script — which is how this was found. `--run` executes the command and
+    records the exit code, so there is nothing left to be honest about.
+    """
+    skill = _skill("code-verify")
+
+    write_block = skill[skill.index("evidence.py write"):]
+    write_block = write_block[:write_block.index("```")]
+    assert "--run" in write_block
 
 
 def test_project_issue_close_requires_evidence_receipt_for_done():

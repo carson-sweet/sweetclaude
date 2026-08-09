@@ -143,6 +143,11 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.py write \
   --summary "{brief description of what was tested}"
 ```
 
+This receipt has no `--run` and is recorded unverified, which is accurate — a
+human performed the check and reported the result. It records the ship, not the
+completion, and cannot close a work item on its own; closing requires the
+verified completion receipt from `sweetclaude:code-verify`.
+
 
 ---
 

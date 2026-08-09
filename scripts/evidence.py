@@ -51,6 +51,7 @@ def validate_receipt(
     *,
     subject_id: str | None = None,
     receipt_type: str | None = None,
+    require_verified: bool = False,
 ) -> dict:
     """Validate a receipt and return the parsed receipt.
 
@@ -105,7 +106,50 @@ def validate_receipt(
                 f"Evidence check {name!r} needs command, summary, or evidence_path"
             )
 
+    # Last, so a receipt that is wrong in a more specific way — wrong subject,
+    # wrong type, failing status — reports that instead. "Re-run with --run" is
+    # unhelpful advice when the real problem is that this is another item's
+    # receipt.
+    if require_verified and not data.get("verified"):
+        raise ValueError(
+            "Evidence receipt was not verified: its command was recorded but "
+            "never executed. Re-run with `evidence.py write --run`, or via "
+            "sweetclaude:code-verify, so the result is observed rather than "
+            "asserted."
+        )
+
     return data
+
+
+OUTPUT_TAIL_CHARS = 2000
+
+
+def run_check(command: str, project_dir: Path, timeout: int = 1800) -> dict:
+    """Execute a check and report what actually happened (ISSUE-283).
+
+    Until this existed, a receipt recorded whatever it was told. A passing
+    receipt for `npm test` was written against a project with no test script
+    and nothing objected — the completion gate accepted an assertion.
+    """
+    import subprocess
+
+    try:
+        proc = subprocess.run(command, shell=True, cwd=str(project_dir),
+                              capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return {"status": "fail", "verified": True, "exit_code": None,
+                "output_tail": f"timed out after {timeout}s"}
+    except OSError as exc:
+        return {"status": "fail", "verified": True, "exit_code": None,
+                "output_tail": f"could not execute: {exc}"}
+
+    combined = (proc.stdout or "") + (proc.stderr or "")
+    return {
+        "status": "pass" if proc.returncode == 0 else "fail",
+        "verified": True,
+        "exit_code": proc.returncode,
+        "output_tail": combined[-OUTPUT_TAIL_CHARS:],
+    }
 
 
 def write_receipt(
@@ -118,24 +162,42 @@ def write_receipt(
     command: str | None = None,
     summary: str | None = None,
     evidence_path: str | None = None,
+    run: bool = False,
 ) -> Path:
     if receipt_type not in SUPPORTED_RECEIPT_TYPES:
         raise ValueError(
             f"Unsupported evidence receipt_type {receipt_type!r}; "
             f"supported: {sorted(SUPPORTED_RECEIPT_TYPES)}"
         )
+    executed = None
+    if run:
+        if not command:
+            raise ValueError("--run needs a --command to execute")
+        executed = run_check(command, project_dir)
+        # What happened wins over what was claimed. Preserving a caller's
+        # optimistic status here would defeat the entire point of running it.
+        status = executed["status"]
+
     check = {
         "name": check_name,
         "status": status,
         "command": command,
         "summary": summary,
         "evidence_path": evidence_path,
+        # False means nobody watched this run. It is the difference between
+        # evidence and a claim, and it is recorded rather than assumed.
+        "verified": bool(executed),
     }
+    if executed:
+        check["exit_code"] = executed["exit_code"]
+        check["output_tail"] = executed["output_tail"]
+
     receipt = {
         "schema_version": 1,
         "receipt_type": receipt_type,
         "subject_id": subject_id,
         "status": status,
+        "verified": bool(executed),
         "created_at": _now(),
         "checks": [{k: v for k, v in check.items() if v is not None}],
     }
@@ -155,6 +217,8 @@ def main(argv: list[str] | None = None) -> int:
     p_validate.add_argument("--receipt", required=True)
     p_validate.add_argument("--subject-id", default=None)
     p_validate.add_argument("--receipt-type", default=None)
+    p_validate.add_argument("--require-verified", action="store_true",
+                            help="reject a receipt whose command was never executed")
 
     p_write = sub.add_parser("write")
     p_write.add_argument("--project-dir", required=True, type=Path)
@@ -165,6 +229,9 @@ def main(argv: list[str] | None = None) -> int:
     p_write.add_argument("--command", default=None)
     p_write.add_argument("--summary", default=None)
     p_write.add_argument("--evidence-path", default=None)
+    p_write.add_argument("--run", action="store_true",
+                         help="execute --command and record the real result; "
+                              "without this the receipt is marked unverified")
 
     args = parser.parse_args(argv)
 
@@ -174,11 +241,13 @@ def main(argv: list[str] | None = None) -> int:
                 args.receipt,
                 subject_id=args.subject_id,
                 receipt_type=args.receipt_type,
+                require_verified=args.require_verified,
             )
             print(json.dumps({
                 "ok": True,
                 "subject_id": receipt.get("subject_id"),
                 "receipt_type": receipt.get("receipt_type"),
+                "verified": receipt.get("verified", False),
             }))
             return 0
 
@@ -192,8 +261,12 @@ def main(argv: list[str] | None = None) -> int:
                 command=args.command,
                 summary=args.summary,
                 evidence_path=args.evidence_path,
+                run=args.run,
             )
-            print(json.dumps({"ok": True, "receipt": str(path)}))
+            receipt = json.loads(path.read_text(encoding="utf-8"))
+            print(json.dumps({"ok": True, "receipt": str(path),
+                              "verified": receipt.get("verified", False),
+                              "status": receipt.get("status")}))
             return 0
     except Exception as exc:
         print(json.dumps({"ok": False, "error": str(exc)}))

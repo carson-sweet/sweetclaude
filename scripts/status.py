@@ -391,7 +391,10 @@ def _validate_completion_receipt(receipt_path: str | None, subject_id: str) -> N
         from evidence import validate_receipt
     except ImportError as exc:
         raise ValueError("Evidence validator unavailable; cannot mark done safely") from exc
-    validate_receipt(receipt_path, subject_id=subject_id)
+    # require_verified: a receipt whose command was recorded but never executed
+    # is an assertion, not evidence. Accepting one makes this a formality rather
+    # than a gate (ISSUE-283).
+    validate_receipt(receipt_path, subject_id=subject_id, require_verified=True)
 
 
 def _success_criteria_required(fm: dict) -> bool:

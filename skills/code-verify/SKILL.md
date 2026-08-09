@@ -52,8 +52,10 @@ The distinction: "tests ran" is a mechanical fact. "the feature is done" is a cl
 
 ## Evidence Receipt
 
-When every required check passes for a concrete work item, write a completion
-evidence receipt before making any completion, close, ship, or release claim:
+Before making any completion, close, ship, or release claim on a concrete work
+item, write a completion evidence receipt. `--run` executes the command and
+records what it actually did — exit code and output — rather than recording an
+assertion about a run that happened earlier in the conversation:
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.py write \
@@ -63,14 +65,21 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.py write \
   --check verification \
   --status pass \
   --command "{exact verification command}" \
-  --summary "{short result summary}"
+  --summary "{short result summary}" \
+  --run
 ```
 
-Keep the returned `receipt` path and pass it to closeout commands with
-`--evidence-receipt {receipt}`.
+If the command fails, the write is refused. That is the gate working: there is
+nothing to decide and nothing to be honest about, because the receipt reports
+the run rather than your account of it.
 
-do not write a passing receipt for partial verification, stale output, failed
-commands, unrelated test runs, or an unspecified work item.
+Keep the returned `receipt` path and pass it to closeout commands with
+`--evidence-receipt {receipt}`. Closing an issue requires a verified receipt —
+one written without `--run` is refused there.
+
+Give `--command` a single command that verifies the whole item. If verification
+genuinely cannot be reduced to one command, run each one with its own `--run`
+receipt rather than picking the one that passes.
 
 ## Record the outcome
 

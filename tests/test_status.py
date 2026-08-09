@@ -103,14 +103,18 @@ def _make_issue(project_dir: Path, rel_path: str, status: str, issue_id: str = N
 
 
 def _write_completion_receipt(project_dir: Path, subject_id: str) -> Path:
+    # run=True because closing an issue now requires a receipt whose command
+    # was actually executed (ISSUE-283). The command is trivially true rather
+    # than a real suite so these tests exercise the status gate, not pytest.
     return write_receipt(
         project_dir,
         subject_id=subject_id,
         receipt_type="completion",
         check_name="tests",
         status="pass",
-        command="pytest -q",
+        command="true",
         summary="focused verification passed",
+        run=True,
     )
 
 
