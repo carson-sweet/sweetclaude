@@ -321,13 +321,12 @@ def test_every_hook_has_a_behavior_test_or_is_declared_untested() -> None:
         for p in (REPO_ROOT / "tests").rglob("*")
         if p.is_file() and p.suffix in {".py", ".sh"})
 
-    # Hooks with no behavior test yet. Shrink this list; do not grow it.
-    UNTESTED = {
-        "auto-reindex.sh", "new-skill-lint.sh", "plan-tracker.sh",
-        "state-regenerator.sh", "sc-artifact.sh", "artifact-guardian.sh",
-        "git-checkpoint.sh", "migration-decision-reminder.sh",
-        "small-story-gate.sh",
-    }
+    # Empty, and it stays empty (ISSUE-277). Every hook now has a test that
+    # drives the script and asserts both directions of what it does — allow and
+    # block for the gates, acts and stands down for the rest. A new hook landing
+    # with no test fails here rather than being waved through by an entry
+    # nobody revisits.
+    UNTESTED: set[str] = set()
     missing = [h for h in ALL_HOOKS
                if h not in tests_text and h not in UNTESTED]
     assert not missing, f"hooks with no test and not declared untested: {missing}"
