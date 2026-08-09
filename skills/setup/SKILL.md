@@ -161,14 +161,21 @@ if ignore_entry not in existing_lines:
             f.write('\n')
         f.write(f'{ignore_comment}\n{ignore_entry}\n')
 
-# 1. Write artifact-privacy.yaml with v4 base_path
-privacy_path = pathlib.Path('.sweetclaude/state/artifact-privacy.yaml')
+# 1. Write artifact-privacy.yaml with v4 base_path.
+# The path here must be the one readers resolve — 37 references across skills,
+# hooks and scripts read .sweetclaude/artifact-privacy.yaml, and none read it
+# under state/. Writing it there made the setting inert (ISSUE-286).
+# The default is .sweetclaude/product, which is where step 2 builds the tree.
+# Relocating the product base into a user's documentation tree is their call to
+# make, not a default to inherit.
+privacy_path = pathlib.Path('.sweetclaude/artifact-privacy.yaml')
 privacy_path.parent.mkdir(parents=True, exist_ok=True)
 if privacy_path.exists():
     d = yaml.safe_load(privacy_path.read_text()) or {}
 else:
     d = {}
-d.setdefault('categories', {}).setdefault('product', {})['base_path'] = 'docs/product'
+d.setdefault('categories', {}).setdefault('product', {}).setdefault(
+    'base_path', '.sweetclaude/product')
 with tempfile.NamedTemporaryFile('w', dir=str(privacy_path.parent), suffix='.tmp', delete=False) as tmp:
     yaml.safe_dump(d, tmp, default_flow_style=False, sort_keys=False)
     tmp_name = tmp.name

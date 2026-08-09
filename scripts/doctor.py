@@ -1049,6 +1049,48 @@ def check_migration_currency(state: ProjectState) -> list[Finding]:
     return findings
 
 
+def check_artifact_privacy_location(state: ProjectState) -> list[Finding]:
+    """Report a product base setting written where no reader resolves it.
+
+    Onboarding wrote artifact-privacy.yaml under state/ while every reader looks
+    for it one level up, so the base_path never took effect and the fallback
+    silently matched where the tree was built. Nothing was visibly wrong, which
+    is exactly why it survived (ISSUE-286).
+
+    Removing the stray file cannot change behaviour — it is by definition not
+    read — so the fix is safe in every case, and doctor archives before it runs.
+    The detail names what the file declares against what is actually in effect,
+    so a user who meant to relocate their product base can act on it.
+    """
+    stray = state.project_dir / ".sweetclaude" / "state" / "artifact-privacy.yaml"
+    if not stray.is_file():
+        return []
+
+    declared = (
+        ((_read_yaml(stray) or {}).get("categories") or {})
+        .get("product", {})
+        .get("base_path", "")
+    ) or "(none)"
+    effective = state.product_base
+
+    return [Finding(
+        id="config-compat:unread-location:artifact-privacy.yaml",
+        category="config_compat",
+        severity="warning",
+        summary="Product base setting is in a location nothing reads",
+        detail=(
+            f"{stray} declares base_path={declared}, but readers resolve "
+            f".sweetclaude/artifact-privacy.yaml, so the setting has no effect. "
+            f"Product artifacts are actually at {effective}. Removing the unread "
+            f"file changes nothing; to relocate the product base, write the "
+            f"setting to .sweetclaude/artifact-privacy.yaml and move the tree."
+        ),
+        file_paths=[str(stray)],
+        fix_type="auto",
+        fix_recipe={"action": "delete_file", "file": str(stray)},
+    )]
+
+
 def check_config_compat(state: ProjectState) -> list[Finding]:
     findings: list[Finding] = []
 
@@ -1216,6 +1258,8 @@ def check_config_compat(state: ProjectState) -> list[Finding]:
                                 "options": ["adopt", "keep", "both"]}
                     if sev != "info" else {},
                 ))
+
+    findings.extend(check_artifact_privacy_location(state))
 
     return findings
 
