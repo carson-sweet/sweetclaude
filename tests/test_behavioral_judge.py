@@ -307,81 +307,94 @@ def test_cli_judge_reports_a_single_verdict(tmp_path: Path) -> None:
 
 # --- the codex backend, without calling it -------------------------------
 
+@pytest.fixture
+def fake_codex(monkeypatch):
+    """Stub both the CLI-presence check and the call.
+
+    Patching only subprocess.run passes on a machine with codex installed and
+    fails on one without it — which is how these first went red in CI.
+    """
+    import shutil
+    calls = {}
+
+    class _Proc:
+        returncode = 0
+        stdout = '{"verdict": "pass", "citation": "x", "reason": "y"}'
+        stderr = ""
+
+    def run(cmd, **kwargs):
+        calls["cmd"] = cmd
+        calls["kwargs"] = kwargs
+        proc = _Proc()
+        proc.returncode = calls.get("returncode", 0)
+        proc.stdout = calls.get("stdout", _Proc.stdout)
+        proc.stderr = calls.get("stderr", "")
+        return proc
+
+    monkeypatch.setattr(shutil, "which", lambda name: f"/usr/local/bin/{name}")
+    monkeypatch.setattr("subprocess.run", run)
+    return calls
+
+
 def test_codex_backend_reports_a_missing_cli(monkeypatch) -> None:
     """The failure a user without the CLI actually hits, and it must name the
     alternative rather than just failing."""
     import shutil
     monkeypatch.setattr(shutil, "which", lambda name: None)
+
     with pytest.raises(bj.JudgeError, match="codex CLI not found"):
         bj._codex("turn", "CONTRACT-05", _rubric(), None)
 
 
-def test_codex_judges_in_a_scratch_directory_not_the_repository(monkeypatch) -> None:
+def test_codex_judges_in_a_scratch_directory_not_the_repository(fake_codex) -> None:
     """Codex is an agent with filesystem access. Pointed at this repo it could
     grade something other than the turn it was handed, so the working root must
     be an empty temporary directory."""
-    seen = {}
-
-    class _Proc:
-        returncode = 0
-        stdout = '{"verdict": "pass", "citation": "x", "reason": "y"}'
-        stderr = ""
-
-    def fake_run(cmd, **kwargs):
-        seen["cmd"] = cmd
-        return _Proc()
-
-    monkeypatch.setattr("subprocess.run", fake_run)
     bj._codex("turn", "CONTRACT-05", _rubric(), None)
 
-    cmd = seen["cmd"]
+    cmd = fake_codex["cmd"]
     workdir = Path(cmd[cmd.index("-C") + 1])
+
     assert workdir != REPO_ROOT
     assert str(REPO_ROOT) not in str(workdir)
 
 
-def test_codex_runs_read_only(monkeypatch) -> None:
-    seen = {}
-
-    class _Proc:
-        returncode = 0
-        stdout = '{"verdict": "pass", "citation": "x", "reason": "y"}'
-        stderr = ""
-
-    monkeypatch.setattr("subprocess.run",
-                        lambda cmd, **kw: (seen.update(cmd=cmd), _Proc())[1])
+def test_codex_runs_read_only(fake_codex) -> None:
     bj._codex("turn", "CONTRACT-05", _rubric(), None)
 
-    assert "--sandbox" in seen["cmd"]
-    assert seen["cmd"][seen["cmd"].index("--sandbox") + 1] == "read-only"
+    cmd = fake_codex["cmd"]
+    assert cmd[cmd.index("--sandbox") + 1] == "read-only"
 
 
-def test_codex_reports_a_nonzero_exit(monkeypatch) -> None:
-    class _Proc:
-        returncode = 2
-        stdout = ""
-        stderr = "not authenticated"
+def test_codex_reports_a_nonzero_exit(fake_codex) -> None:
+    fake_codex["returncode"] = 2
+    fake_codex["stderr"] = "not authenticated"
 
-    monkeypatch.setattr("subprocess.run", lambda cmd, **kw: _Proc())
     with pytest.raises(bj.JudgeError, match="not authenticated"):
         bj._codex("turn", "CONTRACT-05", _rubric(), None)
 
 
-def test_codex_omits_the_model_flag_unless_asked(monkeypatch) -> None:
+def test_codex_omits_the_model_flag_unless_asked(fake_codex) -> None:
     """The API default (gpt-4o) is not a name the CLI wants; passing it would
     silently pick a different judge than the one being measured."""
-    seen = {}
-
-    class _Proc:
-        returncode = 0
-        stdout = '{"verdict": "pass", "citation": "x", "reason": "y"}'
-        stderr = ""
-
-    monkeypatch.setattr("subprocess.run",
-                        lambda cmd, **kw: (seen.update(cmd=cmd), _Proc())[1])
     bj._codex("turn", "CONTRACT-05", _rubric(), None)
 
-    assert "--model" not in seen["cmd"]
+    assert "--model" not in fake_codex["cmd"]
+
+
+def test_codex_passes_an_explicit_model_through(fake_codex) -> None:
+    bj._codex("turn", "CONTRACT-05", _rubric(), "o3")
+
+    cmd = fake_codex["cmd"]
+    assert cmd[cmd.index("--model") + 1] == "o3"
+
+
+def test_codex_sends_the_prompt_on_stdin(fake_codex) -> None:
+    """The rubric has to reach the judge. Asserting the command shape alone
+    would pass while sending nothing."""
+    bj._codex("a turn about time", "CONTRACT-05", _rubric(), None)
+
+    assert "CONTRACT-05" in fake_codex["kwargs"]["input"]
 
 
 # --- verdict extraction --------------------------------------------------
