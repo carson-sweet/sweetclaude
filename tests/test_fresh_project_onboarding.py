@@ -105,14 +105,37 @@ def _onboard(project: Path, *, name: str = "fixture", ptype: str = "new",
     for fn in ("requirements-map.md", "ripple-map.md"):
         (trace / fn).write_text("# map\n\n| a | b |\n|---|---|\n", encoding="utf-8")
 
+    # Steps 4 and 6 of the storage block. Both used to be missing from this
+    # branch of onboarding: the plans directory was written only by Branch C,
+    # and session state not at all since init stopped doing it (ISSUE-284).
+    (project / ".sweetclaude" / "plans").mkdir(parents=True, exist_ok=True)
+    claude = project / ".claude"
+    claude.mkdir(exist_ok=True)
+    for fn in ("settings.json", "settings.local.json"):
+        (claude / fn).write_text(
+            json.dumps({"plansDirectory": ".sweetclaude/plans"}, indent=2),
+            encoding="utf-8")
+
+    subprocess.run(["bash", str(SESSION_STATE)], cwd=str(project),
+                   capture_output=True, text=True, timeout=120)
+
 
 # --- the four project shapes --------------------------------------------
+
+def _git_init(project: Path) -> Path:
+    """The session-state generator resolves the root with `git rev-parse` and
+    exits silently outside a repository, so a non-repo fixture would make every
+    assertion about it vacuous."""
+    subprocess.run(["git", "init", "-q", "-b", "main", str(project)],
+                   capture_output=True, timeout=30)
+    return project
+
 
 @pytest.fixture
 def empty_project(tmp_path: Path) -> Path:
     p = tmp_path / "empty"
     p.mkdir()
-    return p
+    return _git_init(p)
 
 
 @pytest.fixture
@@ -121,7 +144,7 @@ def existing_codebase(tmp_path: Path) -> Path:
     (p / "src").mkdir(parents=True)
     (p / "src" / "main.py").write_text("print('hi')\n", encoding="utf-8")
     (p / "package.json").write_text('{"name": "thing"}\n', encoding="utf-8")
-    return p
+    return _git_init(p)
 
 
 @pytest.fixture
@@ -179,18 +202,52 @@ def test_onboarded_project_is_configured_on_the_next_session(fixture_name, reque
 
 
 @pytest.mark.parametrize("fixture_name", ["empty_project", "existing_codebase"])
-def test_onboarded_state_is_readable_by_the_session_state_hook(fixture_name, request) -> None:
-    """47 skills preload session state. Configured-but-unreadable is still broken."""
+def test_onboarding_produces_session_state(fixture_name, request) -> None:
+    """47 skills preload session state, and doctor warns when it is absent.
+
+    init's old Step 8 generated it; rewriting init as a dispatcher dropped that,
+    and setup never had it, so every freshly onboarded project carried a warning
+    until its next session (ISSUE-284).
+
+    This assertion used to be wrapped in `if ss.exists()`, which meant the file
+    never being written read as a pass — and the fixtures were not git repos, so
+    the generator exited early every time and the test proved nothing.
+    """
     project = request.getfixturevalue(fixture_name)
     _onboard(project, name="readable", stage="GA")
 
-    subprocess.run(["bash", str(SESSION_STATE)], cwd=str(project),
-                   capture_output=True, text=True, timeout=120)
     ss = project / ".sweetclaude" / "state" / "session-state.yaml"
-    if ss.exists():
-        data = yaml.safe_load(ss.read_text(encoding="utf-8")) or {}
-        assert data.get("version_stage") == "GA"
-        assert data.get("project_name") == "readable"
+    assert ss.exists(), "onboarding did not produce session-state.yaml"
+
+    data = yaml.safe_load(ss.read_text(encoding="utf-8")) or {}
+    assert data.get("version_stage") == "GA"
+    assert data.get("project_name") == "readable"
+
+
+@pytest.mark.parametrize("fixture_name", ["empty_project", "existing_codebase"])
+def test_a_freshly_onboarded_project_scans_clean(fixture_name, request) -> None:
+    """The check that catches the next onboarding step to go missing.
+
+    Three findings survived onboarding when this was written: session state was
+    never generated, the plans directory was created only by Branch C, and
+    doctor flagged a skills.yaml that v4 never writes. Each was individually
+    small; together they meant nobody could tell a healthy new project from a
+    broken one by running doctor (ISSUE-284).
+    """
+    project = request.getfixturevalue(fixture_name)
+    _onboard(project)
+
+    r = subprocess.run([sys.executable, str(DOCTOR), "scan",
+                        "--project-dir", str(project)],
+                       capture_output=True, text=True, timeout=300)
+    payload = json.loads(r.stdout)
+
+    # Defaulting to [] would let an error payload — not-configured, a crash —
+    # read as a clean scan, which is the same mistake this test exists to catch.
+    assert "error" not in payload, payload["error"]
+    assert "findings" in payload, payload
+
+    assert payload["findings"] == [], [f["id"] for f in payload["findings"]]
 
 
 @pytest.mark.parametrize("fixture_name", ["empty_project", "existing_codebase"])

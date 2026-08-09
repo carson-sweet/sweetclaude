@@ -135,26 +135,7 @@ Run the full ASSESS → DIAGNOSE → PLAN → SCAFFOLD flow for existing codebas
 **ASSESS:** Understand what exists — architecture, dependencies, test coverage, naming conventions, tech debt surface area.
 **DIAGNOSE:** Identify the highest-impact problems. Prioritize by: broken builds > no tests > no structure > style issues.
 **PLAN:** Propose a scaffolding plan. Show the user what will be created/changed before touching anything.
-**SCAFFOLD:** With user approval, create `.sweetclaude/` structure (including `.sweetclaude/plans/`), generate CLAUDE.md reflecting actual codebase patterns, write `sweetclaude.yaml`. Also configure `plansDirectory`:
-
-```bash
-mkdir -p .sweetclaude/plans
-python3 - << 'PY'
-import json, os, tempfile
-os.makedirs('.claude', exist_ok=True)
-for path in ['.claude/settings.json', '.claude/settings.local.json']:
-    try:
-        d = json.load(open(path))
-    except:
-        d = {}
-    if d.get('plansDirectory') != '.sweetclaude/plans':
-        d['plansDirectory'] = '.sweetclaude/plans'
-        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
-            json.dump(d, tmp, indent=2)
-            tmp_name = tmp.name
-        os.replace(tmp_name, path)
-PY
-```
+**SCAFFOLD:** With user approval, create `.sweetclaude/` structure, generate CLAUDE.md reflecting actual codebase patterns, write `sweetclaude.yaml`. The plans directory and `plansDirectory` setting are created by the shared **v4 Storage Setup** block below, which every branch runs — they used to be written only here, so projects onboarded through Branch A or B never got them (ISSUE-284).
 
 Handoff: "SweetClaude is set up. Given what I found, here's what I'd suggest tackling first: [top recommendation from DIAGNOSE]."
 
@@ -210,9 +191,36 @@ for name, header in [
     if not p.exists():
         p.write_text(header, encoding='utf-8')
 
-# 4. Build initial cache (INDEX.md is no longer created — cache provides all views)
+# 4. Create the plans directory and point Claude Code at it
+import json
+plans = pathlib.Path('.sweetclaude/plans')
+plans.mkdir(parents=True, exist_ok=True)
+pathlib.Path('.claude').mkdir(exist_ok=True)
+for path in ['.claude/settings.json', '.claude/settings.local.json']:
+    try:
+        d = json.loads(pathlib.Path(path).read_text())
+    except Exception:
+        d = {}
+    if d.get('plansDirectory') != '.sweetclaude/plans':
+        d['plansDirectory'] = '.sweetclaude/plans'
+        with tempfile.NamedTemporaryFile('w', dir='.claude', suffix='.tmp', delete=False) as tmp:
+            json.dump(d, tmp, indent=2)
+            tmp_name = tmp.name
+        os.replace(tmp_name, path)
+
+# 5. Build initial cache (INDEX.md is no longer created — cache provides all views)
 import subprocess, os
 subprocess.run(['python3', os.path.expanduser('${CLAUDE_PLUGIN_ROOT}/scripts/cache.py'), '--project-dir', '.', '--rebuild'], capture_output=True)
+
+# 6. Generate session state last, once everything it snapshots exists.
+# session-preflight.sh regenerates this every session, so skipping it here only
+# ever left one doctor warning in the window before the next session — but it
+# was a regression from init's old Step 8 and nothing caught it (ISSUE-284).
+subprocess.run(['bash', os.path.expanduser('${CLAUDE_PLUGIN_ROOT}/hooks/generate-session-state.sh')], capture_output=True)
 ```
+
+The session-state generator resolves the project root with `git rev-parse`. In a
+directory that is not a git repository it exits without writing, and the file is
+created at the first session instead.
 
 Whether these files end up tracked in the user's git tree depends on the user's `.gitignore`. In this dogfooding repo they are gitignored; the skill is verified against fixture projects for testing.

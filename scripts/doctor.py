@@ -1568,34 +1568,13 @@ def check_onboarding_state(state: ProjectState) -> list[Finding]:
     findings: list[Finding] = []
     skills_path = state.project_dir / ".sweetclaude" / "state" / "skills.yaml"
 
-    if not state.skills_yaml:
-        if skills_path.parent.is_dir():
-            generator = (
-                Path(__file__).resolve().parent
-                / "maintenance" / "generate-skills-state.py"
-            )
-            findings.append(Finding(
-                id="onboarding-state:missing:skills.yaml",
-                category="onboarding_state",
-                severity="info",
-                summary=(
-                    "Optional-feature state file is missing (skills all work; "
-                    "this ledger only tracks feature onboarding)"
-                ),
-                detail=(
-                    f"skills.yaml missing at {skills_path}. Feature skills "
-                    "tolerate its absence; the auto-fix creates the v2 stub "
-                    "init normally writes."
-                ),
-                file_paths=[str(skills_path)],
-                fix_type="auto",
-                fix_recipe={"action": "run_script",
-                            "cmd": [sys.executable, str(generator),
-                                    "--project-dir", str(state.project_dir)],
-                            "args": [],
-                            "regenerates": [str(skills_path)]},
-            ))
-    elif state.skills_yaml:
+    # No missing-skills.yaml finding. v4 onboarding never writes this file —
+    # the six data-owning skills create it the first time one of them is used,
+    # the same lazy lifecycle as phase.yaml, which is deliberately not flagged
+    # either. Reporting it made every correctly configured project carry a
+    # permanent finding, and noise in a diagnostic is how real findings get
+    # skimmed past (ISSUE-284).
+    if state.skills_yaml:
         schema = state.skills_yaml.get("schema_version")
         if schema is not None and schema < 2:
             if state.migration_runner_path:

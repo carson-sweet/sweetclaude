@@ -372,53 +372,25 @@ def test_misnamed_file_resolves_by_rename_not_renumber(tmp_path):
     assert _guard(project)["status"] == "ok"
 
 
-def test_missing_skills_yaml_auto_fixes_end_to_end(tmp_path):
-    """A finding doctor shows every user must carry a fix that actually runs.
-    Missing skills.yaml was report-only with guidance pointing at a generator
-    that did not exist."""
+def test_missing_skills_yaml_is_not_reported_at_all(tmp_path):
+    """This asserted the finding auto-fixed. Now it asserts there is no finding.
+
+    The dead end was real — the fix pointed at a generator that did not exist —
+    but giving it a working auto-fix treated the symptom. v4 onboarding never
+    writes skills.yaml; the six data-owning skills create it on first use, the
+    same lazy lifecycle as phase.yaml, which doctor does not flag. So a healthy
+    project was being told to run a repair for a file that was correctly absent
+    (ISSUE-284).
+
+    Removing a detection is a resolution to a dead end, and a better one than a
+    fix that reconciles the user to noise.
+    """
     project = _make_healthy_project(tmp_path)
-    state_dir = project / ".sweetclaude" / "state"
-    assert not (state_dir / "skills.yaml").exists()
+    assert not (project / ".sweetclaude" / "state" / "skills.yaml").exists()
 
-    scan = _scan(project)
-    finding = next(
-        (f for f in scan["findings"]
-         if f["id"] == "onboarding-state:missing:skills.yaml"),
-        None,
-    )
-    assert finding is not None
-    assert finding["fix_type"] == "auto", (
-        "missing skills.yaml must auto-fix — report-only with a pointer to a "
-        "nonexistent generator is a dead end"
-    )
-    summary = finding["summary"].lower()
-    assert "skills configuration hasn't been set up" not in summary, (
-        "summary must not imply skills are broken — the file is the "
-        "optional-feature onboarding ledger"
-    )
+    ids = [f["id"] for f in _scan(project)["findings"]]
 
-    archive = _run_json(DOCTOR, "create-archive", "--project-dir", str(project))
-    fix = subprocess.run(
-        [sys.executable, str(DOCTOR), "auto-fix",
-         "--project-dir", str(project),
-         "--archive-dir", archive["archive_dir"]],
-        input=json.dumps([finding]),
-        capture_output=True, text=True,
-    )
-    assert fix.returncode == 0, fix.stderr
-    actions = json.loads(fix.stdout)["actions"]
-    assert actions and all(a["action"] == "auto-fix" for a in actions), actions
-
-    skills_path = state_dir / "skills.yaml"
-    assert skills_path.is_file(), "auto-fix must create the file"
-    data = yaml.safe_load(skills_path.read_text())
-    assert data["schema_version"] == 2
-
-    rescan = _scan(project)
-    assert not any(
-        f["id"] == "onboarding-state:missing:skills.yaml"
-        for f in rescan["findings"]
-    ), "finding must clear after the fix"
+    assert "onboarding-state:missing:skills.yaml" not in ids, ids
 
 
 # --- characterization locks: paths that already work must keep working ---

@@ -3388,36 +3388,24 @@ class TestOnboardingState:
         )
 
     # ------------------------------------------------------------------
-    # Scenario: skills.yaml missing when state directory exists produces
-    #           info finding
+    # Scenario: skills.yaml missing produces no finding — v4 never writes it
     # ------------------------------------------------------------------
 
-    def test_skills_yaml_missing_when_state_dir_exists_produces_info_finding(
-        self, tmp_path, fake_home
-    ):
+    def test_skills_yaml_missing_produces_no_finding(self, tmp_path, fake_home):
+        """This asserted the opposite until ISSUE-284.
+
+        v4 onboarding never writes skills.yaml — the six data-owning skills
+        create it the first time one of them is used, the same lazy lifecycle
+        as phase.yaml, which doctor deliberately does not flag. Reporting it
+        put a permanent finding on every correctly configured project, and
+        noise in a diagnostic is how real findings get skimmed past.
+        """
         project_dir = build_fixture(tmp_path, overrides={"skills_yaml": None})
         state = build_project_state(project_dir)
-        findings = check_onboarding_state(state)
 
-        ids = [f.id for f in findings]
-        assert "onboarding-state:missing:skills.yaml" in ids, (
-            f"Expected 'onboarding-state:missing:skills.yaml' in {ids}"
-        )
+        ids = [f.id for f in check_onboarding_state(state)]
 
-        f = next(x for x in findings if x.id == "onboarding-state:missing:skills.yaml")
-        assert f.severity == "info", (
-            f"Expected severity 'info', got: {f.severity}"
-        )
-        # Auto-fix via generate-skills-state.py — report-only with guidance
-        # pointing at a nonexistent generator was a user-facing dead end.
-        assert f.fix_type == "auto", (
-            f"Expected fix_type 'auto', got: {f.fix_type}"
-        )
-        assert f.fix_recipe.get("action") == "run_script"
-        assert "generate-skills-state.py" in f.fix_recipe["cmd"][1]
-        assert "hasn't been set up" not in f.summary, (
-            "summary must not imply plugin skills are broken"
-        )
+        assert "onboarding-state:missing:skills.yaml" not in ids, ids
 
     # ------------------------------------------------------------------
     # Scenario: skills.yaml missing when state directory absent produces
@@ -3512,25 +3500,20 @@ class TestOnboardingState:
         )
 
     # ------------------------------------------------------------------
-    # Scenario: skills.yaml that is empty (parsed as None) produces
-    #           missing finding
+    # Scenario: an empty skills.yaml is treated as absent, not as damaged
     # ------------------------------------------------------------------
 
-    def test_skills_yaml_empty_parsed_as_none_produces_missing_finding(
+    def test_skills_yaml_empty_parsed_as_none_produces_no_finding(
         self, tmp_path, fake_home
     ):
+        """An empty file parses to None and is indistinguishable from absent.
+        Neither is a fault (ISSUE-284)."""
         project_dir = build_fixture(tmp_path, overrides={"skills_yaml": None})
-        skills_path = project_dir / ".sweetclaude" / "state" / "skills.yaml"
-        skills_path.write_text("")
+        (project_dir / ".sweetclaude" / "state" / "skills.yaml").write_text("")
 
-        state = build_project_state(project_dir)
-        findings = check_onboarding_state(state)
+        ids = [f.id for f in check_onboarding_state(build_project_state(project_dir))]
 
-        ids = [f.id for f in findings]
-        assert "onboarding-state:missing:skills.yaml" in ids, (
-            f"Empty skills.yaml (parsed as None) should produce missing finding, "
-            f"got: {ids}"
-        )
+        assert "onboarding-state:missing:skills.yaml" not in ids, ids
 
 
 # ---------------------------------------------------------------------------
