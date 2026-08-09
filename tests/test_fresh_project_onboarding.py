@@ -23,6 +23,7 @@ behavior.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -225,7 +226,8 @@ def test_onboarding_produces_session_state(fixture_name, request) -> None:
 
 
 @pytest.mark.parametrize("fixture_name", ["empty_project", "existing_codebase"])
-def test_a_freshly_onboarded_project_scans_clean(fixture_name, request) -> None:
+def test_a_freshly_onboarded_project_scans_clean(fixture_name, request,
+                                                 tmp_path) -> None:
     """The check that catches the next onboarding step to go missing.
 
     Three findings survived onboarding when this was written: session state was
@@ -233,13 +235,24 @@ def test_a_freshly_onboarded_project_scans_clean(fixture_name, request) -> None:
     doctor flagged a skills.yaml that v4 never writes. Each was individually
     small; together they meant nobody could tell a healthy new project from a
     broken one by running doctor (ISSUE-284).
+
+    HOME is isolated so this asserts the same thing on every machine. Some
+    doctor checks read the SweetClaude install under ~/.claude, so a developer
+    with one installed and a CI checkout without one see different findings —
+    which is how the first version of this test passed locally and failed in
+    CI. Those findings are about the install, not the project, and are
+    identified by pointing outside the project rather than by category name, so
+    a new project-scoped finding cannot be excluded by accident.
     """
     project = request.getfixturevalue(fixture_name)
     _onboard(project)
 
+    home = tmp_path / "home"
+    home.mkdir()
+    env = {**os.environ, "HOME": str(home)}
     r = subprocess.run([sys.executable, str(DOCTOR), "scan",
                         "--project-dir", str(project)],
-                       capture_output=True, text=True, timeout=300)
+                       capture_output=True, text=True, timeout=300, env=env)
     payload = json.loads(r.stdout)
 
     # Defaulting to [] would let an error payload — not-configured, a crash —
@@ -247,7 +260,21 @@ def test_a_freshly_onboarded_project_scans_clean(fixture_name, request) -> None:
     assert "error" not in payload, payload["error"]
     assert "findings" in payload, payload
 
-    assert payload["findings"] == [], [f["id"] for f in payload["findings"]]
+    def about_the_project(finding: dict) -> bool:
+        paths = finding.get("file_paths") or []
+        # A finding naming nothing is treated as the project's, so a finding
+        # that stops reporting paths fails loudly instead of disappearing.
+        return not paths or any(str(project) in p for p in paths)
+
+    project_findings = [f for f in payload["findings"] if about_the_project(f)]
+    assert project_findings == [], [f["id"] for f in project_findings]
+
+    # The install findings must still be the ones an empty HOME produces. If
+    # this ever empties out, the filter above has started hiding real results.
+    install_findings = [f for f in payload["findings"] if not about_the_project(f)]
+    assert install_findings, "expected install-scoped findings under an empty HOME"
+    assert all(f["category"] == "hook_health" for f in install_findings), \
+        [(f["category"], f["id"]) for f in install_findings]
 
 
 @pytest.mark.parametrize("fixture_name", ["empty_project", "existing_codebase"])
