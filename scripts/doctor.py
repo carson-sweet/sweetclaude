@@ -698,10 +698,49 @@ def _duplicate_files_identical(file_a: Path, file_b: Path) -> bool:
     return a == b
 
 
+def check_unindexed_work_items(state: ProjectState) -> list[Finding]:
+    """Work items on disk that the cache refused, and therefore nobody can see.
+
+    A rebuild that cannot validate an item's frontmatter skips it and carries
+    on. The item keeps existing as a file and stops existing everywhere else —
+    every list, every query, every backlog view. Nine were invisible for months,
+    one of them titled "Cache taxonomy rebuild indexes zero items" (ISSUE-290).
+    """
+    if not (state.project_dir / ".sweetclaude").is_dir():
+        return []
+    try:
+        sys.path.insert(0, str(_SCRIPTS_DIR))
+        from cache import _rebuild_cache
+        result = _rebuild_cache(str(state.project_dir))
+    except Exception:
+        return []
+
+    skipped = result.get("skipped") or []
+    if not skipped:
+        return []
+
+    detail = "; ".join(
+        f"{Path(e.get('path', '?')).name}: {', '.join(e.get('reasons', []))}"
+        for e in skipped[:6])
+    return [Finding(
+        id="storage-lint:unindexed:work-items",
+        category="storage_lint",
+        severity="warning",
+        summary=(f"{len(skipped)} work item(s) exist on disk but are missing "
+                 f"from the index, so no list or query can see them"),
+        detail=detail,
+        file_paths=[e.get("path", "") for e in skipped],
+        fix_type="report-only",
+        fix_recipe={},
+    )]
+
+
 def check_storage_lint(state: ProjectState) -> list[Finding]:
     findings: list[Finding] = []
     backlog_dir = state.product_base / "backlog"
     roadmap_dir = state.product_base / "roadmap"
+
+    findings.extend(check_unindexed_work_items(state))
 
     if backlog_dir.is_dir() and roadmap_dir.is_dir():
         backlog_files: dict[str, Path] = {}

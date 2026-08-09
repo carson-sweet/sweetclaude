@@ -643,6 +643,18 @@ def main():
     if args.rebuild:
         result = rebuild(args.project_dir)
         print(json.dumps(result))
+        # A skipped item is absent from every list, query and backlog view, and
+        # the JSON above was the only record of it — which callers capture and
+        # discard. Nine items were invisible for months this way (ISSUE-290).
+        if result.get("skipped"):
+            print(f"WARNING: {len(result['skipped'])} work item(s) were not "
+                  f"indexed and are invisible to every query:", file=sys.stderr)
+            for entry in result["skipped"]:
+                name = os.path.basename(entry.get("path", "?"))
+                reasons = "; ".join(entry.get("reasons", []))
+                print(f"  {name}: {reasons}", file=sys.stderr)
+            print("Run /sweetclaude:doctor for the same finding with a fix.",
+                  file=sys.stderr)
         return
 
     if not args.query:
