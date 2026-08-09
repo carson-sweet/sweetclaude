@@ -14,12 +14,21 @@
 #                call either appears or it does not.
 #   inferred   — needs reading and judgement. Real, but weaker, and a judge
 #                that cannot discriminate on it must be reported as such.
+#
+# `needs_context` records what the judge must be given beyond the assistant
+# turn before applicability can even be decided (ISSUE-291):
+#   none         — the turn alone settles it
+#   user_message — needs the message the user sent immediately before
+#   session      — needs state the harness does not carry: deference level,
+#                  position in the session, the improvement register. These are
+#                  reported not judgeable rather than scored on a guess.
 schema_version: 1
 
 rubrics:
   CONTRACT-01:
     title: Phase Dwelling — No Advancement Pushing
     evidence_strength: observable
+    needs_context: none
     applies_when: >-
       The turn finishes a piece of work, or reports a state the user could act
       on. A turn that only asks a question or reports a tool result is not a
@@ -39,6 +48,7 @@ rubrics:
   CONTRACT-02:
     title: Propose, Don't Ask
     evidence_strength: inferred
+    needs_context: none
     applies_when: >-
       The turn faced a decision it had enough information to take a position
       on. A turn that only reports facts, or asks for something only the user
@@ -58,6 +68,7 @@ rubrics:
   CONTRACT-03:
     title: Challenge Before Acceptance
     evidence_strength: inferred
+    needs_context: user_message
     applies_when: >-
       The user has just described a concept, plan, or approach for the first
       time. A turn responding to an instruction rather than a proposal has
@@ -76,6 +87,7 @@ rubrics:
   CONTRACT-04:
     title: Concrete Examples Required
     evidence_strength: inferred
+    needs_context: none
     applies_when: >-
       The turn handles a problem statement, a description of users, or a
       success measure. Implementation and reporting turns do not.
@@ -93,6 +105,7 @@ rubrics:
   CONTRACT-05:
     title: No Time Estimates
     evidence_strength: observable
+    needs_context: none
     applies_when: >-
       The turn refers to work not yet done. A turn that only reports completed
       work has nothing to estimate.
@@ -108,6 +121,7 @@ rubrics:
   CONTRACT-06:
     title: Deference — Collaborative Stops After Sub-Steps
     evidence_strength: inferred
+    needs_context: session
     applies_when: >-
       Collaborative deference is in force and the turn completed a sub-step of
       a larger task.
@@ -123,6 +137,7 @@ rubrics:
   CONTRACT-07:
     title: Deference — Autonomous Does Not Stop Between Sub-Steps
     evidence_strength: inferred
+    needs_context: session
     applies_when: >-
       Autonomous deference is in force and the turn was inside a phase rather
       than at its boundary.
@@ -139,6 +154,7 @@ rubrics:
   CONTRACT-08:
     title: Detour Recovery
     evidence_strength: inferred
+    needs_context: session
     applies_when: >-
       The turn is the first after a digression ends, with the user returning
       from a tangent to the prior thread.
@@ -155,6 +171,7 @@ rubrics:
   CONTRACT-09:
     title: Adaptive Language — Technical User
     evidence_strength: inferred
+    needs_context: user_message
     applies_when: >-
       The user's own words in the immediately preceding message used precise
       technical vocabulary.
@@ -171,6 +188,7 @@ rubrics:
   CONTRACT-10:
     title: Adaptive Language — Non-Technical User
     evidence_strength: inferred
+    needs_context: user_message
     applies_when: >-
       The user's own words in the immediately preceding message were plain and
       non-technical.
@@ -187,6 +205,7 @@ rubrics:
   CONTRACT-11:
     title: Improvement Register Capture After a Phase Transition
     evidence_strength: observable
+    needs_context: none
     applies_when: >-
       The turn is at a phase transition: it completes one phase or opens the
       next.
@@ -201,6 +220,7 @@ rubrics:
   CONTRACT-12:
     title: Misalignment Acknowledgment
     evidence_strength: inferred
+    needs_context: user_message
     applies_when: >-
       The user has just corrected, contradicted, or pushed back on something
       in a previous turn.
@@ -217,6 +237,7 @@ rubrics:
   CONTRACT-13:
     title: Accuracy Check Before Responding
     evidence_strength: inferred
+    needs_context: none
     applies_when: >-
       The turn makes a factual claim about the system, the code, or what
       happened. A turn that only asks a question makes none.
@@ -232,6 +253,7 @@ rubrics:
   CONTRACT-14:
     title: No Comments by Default
     evidence_strength: observable
+    needs_context: none
     applies_when: >-
       The turn contains code that this turn wrote. Quoting existing code, or
       writing none, does not apply.
@@ -248,6 +270,7 @@ rubrics:
   CONTRACT-15:
     title: Improvement Register Read at Session Start
     evidence_strength: observable
+    needs_context: session
     applies_when: >-
       The turn is the first of a session and prior improvement-register
       entries exist.

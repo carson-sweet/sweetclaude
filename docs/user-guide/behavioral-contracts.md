@@ -1,6 +1,6 @@
 # Behavioral Contract Status
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-08-09
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
@@ -29,40 +29,56 @@ contract.** It scores the judge.
 **Judge:** `gpt-5.6-sol` via the Codex CLI (`provider: openai`)
 **Harness:** `scripts/behavioral_judge.py discriminate --backend codex`
 **Corpus:** 18 fixtures — for each of 6 contracts, a turn that plainly honours,
-one that plainly breaks, and one the contract does not apply to
-**Run:** 2026-08-09, 97 seconds
+one that plainly breaks, and one the contract does not apply to. Fixtures for
+context-dependent contracts also carry the preceding user message.
+**Run:** 2026-08-09, 105 seconds
 
 | Contract | Evidence | Pass | Fail | N/A | Wrong | Discarded | Verdict |
 |---|---|---|---|---|---|---|---|
 | CONTRACT-01 | observable | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
 | CONTRACT-02 | inferred | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
 | CONTRACT-05 | observable | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
-| CONTRACT-12 | inferred | 1 | 1 | 0 | 1 | 0 | CANNOT TELL APART |
+| CONTRACT-12 | inferred | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
 | CONTRACT-13 | inferred | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
 | CONTRACT-14 | observable | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
 
-**5 of 6 scorable.** CONTRACT-12 is reported unscorable and is not counted.
+**6 of 6 scorable.**
 
-### The earlier 6/6 in this document was measuring less
+### Two earlier results on the same day, both measuring less
 
-An earlier run the same day reported all six contracts discriminating. That run
-asked only whether the judge could separate honouring from breaking. It never
-asked whether the rule was in play, so a turn the contract never touched would
-have been scored as compliance — the mechanism by which a 97% score gets built
-out of turns the rule had nothing to say about.
+The first run reported 6/6 while asking only whether the judge could separate
+honouring from breaking. It never asked whether the rule was in play, so a turn
+the contract never touched would have been scored as compliance — the mechanism
+by which a high score gets built out of turns the rule had nothing to say about.
 
-Adding the third verdict cost one contract on the first run, which is the check
-working. CONTRACT-12's applicability clause is "the user has just corrected
-something", and the judge is handed the assistant turn alone, so it cannot tell
-a correction from a plain instruction. That is a harness limitation, not a judge
-failure, and it affects 8 of the 15 contracts (ISSUE-291).
+Adding a third verdict dropped it to 5/6. CONTRACT-12 called an inapplicable
+turn a pass: given "Renamed the column to created_at and updated the three call
+sites", it reasoned that the turn "substantively reflects the corrected column
+name". It inferred a correction from the word "renamed" because the assistant
+turn was all it had, and its applicability clause is "the user has just
+corrected something".
+
+Supplying the preceding user message restored 6/6. That is the result above.
+
+### What the harness now refuses to judge
+
+Each rubric declares what it needs beyond the assistant turn:
+
+| Needs | Contracts | Handling |
+|---|---|---|
+| nothing | 01, 02, 04, 05, 11, 13, 14 | judged from the turn |
+| the preceding user message | 03, 09, 10, 12 | judged only when it is supplied |
+| session state | 06, 07, 08, 15 | **reported not judgeable, never scored** |
+
+Deference level, position in the session and the improvement register are not
+present in any turn. Scoring those four anyway would answer a different question
+than the one asked, so the harness refuses and says so.
 
 ### Falsification
 
 Three degenerate judges are reported unscorable by the same harness:
-`always-pass`, `always-fail`, and `never-applicable` — the mode the third
-verdict introduces, where answering "not applicable" to everything measures
-nothing while looking careful.
+`always-pass`, `always-fail`, and `never-applicable` — answering "not
+applicable" to everything measures nothing while looking careful.
 
 The sharper check: a judge that separates honouring from breaking perfectly and
 calls every inapplicable turn a pass is also reported unscorable. Under the

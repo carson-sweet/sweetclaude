@@ -176,7 +176,7 @@ def test_a_judge_that_never_ran_is_reported_separately(monkeypatch) -> None:
     """Found while running this for real: with no API credit, every call
     errored and the report read CANNOT TELL APART — a billing problem looking
     like a verdict about the contracts."""
-    def boom(turn, contract, rubric, model):
+    def boom(turn, contract, rubric, model, context=None):
         raise bj.JudgeError("openai call failed: no credits remaining")
     monkeypatch.setattr(bj, "_openai", boom)
 
@@ -190,7 +190,7 @@ def test_a_judge_that_never_ran_is_reported_separately(monkeypatch) -> None:
 
 
 def test_the_unavailable_case_says_so_in_the_report(monkeypatch) -> None:
-    def boom(turn, contract, rubric, model):
+    def boom(turn, contract, rubric, model, context=None):
         raise bj.JudgeError("openai call failed: no credits remaining")
     monkeypatch.setattr(bj, "_openai", boom)
 
@@ -521,3 +521,101 @@ def test_the_report_shows_all_three_columns() -> None:
     text = bj.render(bj.discriminate(backend="stub"))
 
     assert "n/a=" in text
+
+
+# --- context the judge cannot infer --------------------------------------
+
+def test_every_rubric_declares_what_context_it_needs() -> None:
+    for contract, rubric in bj.load_rubrics().items():
+        assert rubric.get("needs_context") in {
+            bj.NEEDS_NONE, bj.NEEDS_USER, bj.NEEDS_SESSION}, contract
+
+
+def test_a_contract_needing_the_user_message_is_not_judged_without_it() -> None:
+    """The defect: given only "Renamed the column to created_at", the judge read
+    the word "renamed" as evidence the user had corrected something, and scored
+    an inapplicable turn as compliance. It had nothing else to go on
+    (ISSUE-291)."""
+    rubric = bj.load_rubrics()["CONTRACT-12"]
+
+    with pytest.raises(bj.NotJudgeable, match="preceding user message"):
+        bj.evaluate("Renamed the column to created_at.", "CONTRACT-12", rubric)
+
+
+def test_supplying_the_context_makes_it_judgeable() -> None:
+    rubric = bj.load_rubrics()["CONTRACT-12"]
+
+    result = bj.evaluate("Renamed the column to created_at.", "CONTRACT-12",
+                         rubric, context="Rename the column to created_at.")
+
+    assert result["verdict"] in bj.VERDICTS
+
+
+@pytest.mark.parametrize("contract", ["CONTRACT-06", "CONTRACT-07",
+                                      "CONTRACT-08", "CONTRACT-15"])
+def test_session_bound_contracts_are_refused_not_guessed(contract: str) -> None:
+    """Deference level, session position and the register are not in any turn.
+    Scoring these anyway would produce a number about the wrong question."""
+    rubric = bj.load_rubrics()[contract]
+
+    with pytest.raises(bj.NotJudgeable, match="session state"):
+        bj.evaluate("a turn", contract, rubric, context="anything")
+
+
+def test_a_turn_only_contract_needs_no_context() -> None:
+    """The refusal must not spread to contracts that are decidable alone, or
+    nothing gets scored at all."""
+    rubric = bj.load_rubrics()["CONTRACT-05"]
+
+    assert bj.evaluate("about two days", "CONTRACT-05", rubric)["verdict"]
+
+
+def test_the_context_reaches_the_prompt() -> None:
+    prompt = bj.build_prompt("a turn", "CONTRACT-12",
+                             bj.load_rubrics()["CONTRACT-12"],
+                             context="you got that wrong")
+
+    assert "you got that wrong" in prompt
+    assert "WHAT THE USER SAID IMMEDIATELY BEFORE" in prompt
+
+
+def test_the_prompt_says_to_judge_the_turn_not_the_context() -> None:
+    """Without this the judge can drift into grading the user's message."""
+    prompt = bj.build_prompt("a turn", "CONTRACT-12",
+                             bj.load_rubrics()["CONTRACT-12"], context="x")
+
+    assert "Judge the assistant turn, not this" in prompt
+
+
+def test_no_context_block_appears_when_there_is_none() -> None:
+    prompt = bj.build_prompt("a turn", "CONTRACT-05",
+                             bj.load_rubrics()["CONTRACT-05"])
+
+    assert "WHAT THE USER SAID" not in prompt
+
+
+def test_a_not_judgeable_contract_is_reported_not_scored() -> None:
+    """Distinct from an errored judge and from a judge that cannot
+    discriminate. Silence here would be the third way to read absence as a
+    pass."""
+    rubrics = bj.load_rubrics()
+    rubrics = {**rubrics, "CONTRACT-05": {**rubrics["CONTRACT-05"],
+                                          "needs_context": bj.NEEDS_SESSION}}
+
+    report = bj.discriminate(backend="stub", rubrics=rubrics)
+
+    stats = report["per_contract"]["CONTRACT-05"]
+    assert stats["not_judgeable"]
+    assert stats["scorable"] is False
+    assert "CONTRACT-05" not in report["scorable_contracts"]
+    assert "NOT JUDGEABLE FROM A TURN" in bj.render(report)
+
+
+def test_fixtures_carry_context_where_their_contract_needs_it() -> None:
+    """A fixture for a context-dependent contract with no context cannot be
+    judged, so the corpus would silently shrink."""
+    rubrics = bj.load_rubrics()
+    for item in bj.load_corpus():
+        rubric = rubrics.get(item["contract"], {})
+        if rubric.get("needs_context") == bj.NEEDS_USER:
+            assert item.get("context", "").strip(), item["file"]

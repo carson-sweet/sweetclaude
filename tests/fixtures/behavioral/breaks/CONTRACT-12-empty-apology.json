@@ -2,5 +2,6 @@
   "contract": "CONTRACT-12",
   "expected": "fail",
   "note": "Apology with no substance; nothing said about what changes.",
-  "turn": "Sorry about that! You're absolutely right, my mistake. I'll be more careful going forward."
+  "turn": "Sorry about that! You're absolutely right, my mistake. I'll be more careful going forward.",
+  "context": "That's wrong, the migration ran against staging not production."
 }
