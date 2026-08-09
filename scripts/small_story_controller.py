@@ -1263,6 +1263,25 @@ def gate_tool_use(
 ) -> dict[str, Any]:
     """Deterministic allow/deny decision for a tool use under small-story discipline."""
     project = Path(project_dir).expanduser().resolve(strict=False)
+    unreadable = _unreadable_workflow_files(project)
+    if unreadable:
+        # Fail closed. A state file that will not parse means the phase cannot
+        # be determined, and allowing on that basis lets one corrupt file
+        # switch the whole discipline off silently (ISSUE-288).
+        return {
+            "allow": False,
+            "ok": False,
+            "decision": "deny",
+            "reason": (
+                "Small-story gate failed closed: workflow state is unreadable "
+                f"({', '.join(unreadable)}). This is a damaged state file, not "
+                "a phase violation — repair or remove it, then retry. Run "
+                "'python3 scripts/small_story_controller.py render-status' to "
+                "inspect."
+            ),
+            "workflow_id": None,
+            "phase": None,
+        }
     actives = _active_small_story_workflows(project)
     if not actives:
         if _any_small_story_workflow_exists(project):
@@ -1854,6 +1873,31 @@ def amend_contract(
         "receipt_path": _rel(project, audit_path),
         "message": "Contract amended, re-frozen, and workflow rebound; audit recorded.",
     }
+
+
+def _unreadable_workflow_files(project: Path) -> list[str]:
+    """Workflow state files that exist but cannot be parsed.
+
+    `_load_yaml_dict` returns {} on a YAML error, so a corrupt file reads as
+    an inactive workflow and the gate stands down — the file is present, the
+    fast path in the hook has already proved that, and yet nothing is enforced.
+    The header promises the opposite: an active workflow fails closed on any
+    error. This closes the gap between the glob that proves a workflow exists
+    and the parse that decides whether it is active (ISSUE-288).
+    """
+    workflows_dir = project / ".sweetclaude" / "state" / "workflows"
+    if not workflows_dir.exists():
+        return []
+    bad = []
+    for candidate in sorted(workflows_dir.glob("*.yaml")):
+        try:
+            data = yaml.safe_load(candidate.read_text(encoding="utf-8"))
+        except (yaml.YAMLError, OSError, UnicodeDecodeError):
+            bad.append(candidate.name)
+            continue
+        if data is not None and not isinstance(data, dict):
+            bad.append(candidate.name)
+    return bad
 
 
 def _any_small_story_workflow_exists(project: Path) -> bool:

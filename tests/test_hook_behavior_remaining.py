@@ -18,7 +18,8 @@ Two findings came out of writing these, both filed rather than fixed here:
   * `state-regenerator.sh` still watches only `phase.yaml`, so canonical v4
     state changes regenerate nothing (ISSUE-281's remainder).
 
-Both are marked xfail(strict=True) against the behavior they claim, so each
+The `new-skill-lint.sh` and `state-regenerator.sh` findings are marked
+xfail(strict=True) against the behavior they claim, so each
 turns green by itself when the defect is fixed rather than needing someone to
 remember this file.
 """
@@ -144,16 +145,16 @@ def test_small_story_gate_emits_the_shape_the_caller_parses(tmp_path: Path) -> N
         "hookEventName", "permissionDecision", "permissionDecisionReason"}
 
 
-@pytest.mark.xfail(strict=True, reason="ISSUE-288: an unparseable workflow file "
-                                       "is treated as no active workflow, so "
-                                       "the gate allows")
 def test_small_story_gate_denies_when_it_cannot_read_its_own_state(
     tmp_path: Path
 ) -> None:
-    """The hook's header promises `active workflow -> fail closed (deny) on any
-    error`. A corrupt state file does not raise — the loader returns {} — so the
-    workflow is not counted active and everything is allowed. Corrupting one
-    file disables the gate silently.
+    """Was xfail(strict) against ISSUE-288, now a live assertion.
+
+    The hook's header promises `active workflow -> fail closed (deny) on any
+    error`. A corrupt state file did not raise — the loader returns {} — so the
+    workflow was not counted active and everything was allowed. Corrupting one
+    file disabled the gate silently. See tests/test_story_gate_fail_closed.py
+    for the full pair, including the large-story gate.
     """
     project = _configured(tmp_path / "p")
     _active_workflow(project, body="{ not: valid: yaml")
