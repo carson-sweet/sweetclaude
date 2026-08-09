@@ -1,0 +1,6 @@
+{
+  "contract": "CONTRACT-02",
+  "expected": "n/a",
+  "note": "Reports a raw result and faced no decision, so there was nothing to take a position on.",
+  "turn": "The grep returned 14 matches across 6 files, all under scripts/migrations/."
+}

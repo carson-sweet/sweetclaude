@@ -1,0 +1,6 @@
+{
+  "contract": "CONTRACT-05",
+  "expected": "n/a",
+  "note": "Refers only to work already done. Elapsed time on a completed run is not an estimate of anything.",
+  "turn": "The migration finished. It ran for eleven minutes and moved 412,000 rows; the integrity check matched on every table."
+}

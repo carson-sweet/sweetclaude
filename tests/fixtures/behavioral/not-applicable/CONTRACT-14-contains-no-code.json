@@ -1,0 +1,6 @@
+{
+  "contract": "CONTRACT-14",
+  "expected": "n/a",
+  "note": "Prose only. This turn wrote no code, so there are no comments to judge.",
+  "turn": "The bottleneck is the per-row round trip in the sync loop. Batching it would remove roughly nine tenths of the calls."
+}

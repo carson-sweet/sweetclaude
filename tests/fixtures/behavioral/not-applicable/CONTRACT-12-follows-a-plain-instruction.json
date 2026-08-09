@@ -1,0 +1,6 @@
+{
+  "contract": "CONTRACT-12",
+  "expected": "n/a",
+  "note": "Follows a plain instruction. The user corrected nothing, so there is no misalignment to acknowledge.",
+  "turn": "Renamed the column to created_at and updated the three call sites that referenced it."
+}

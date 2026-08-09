@@ -40,22 +40,22 @@ import behavioral_judge as bj  # noqa: E402
 
 # --- the corpus ----------------------------------------------------------
 
-def test_the_corpus_has_both_sides() -> None:
-    """A corpus of only-broken turns trains a judge to fail everything, and a
-    corpus of only-good turns trains it to pass everything. Both halves are
-    what make the discrimination check mean anything."""
-    honours = list((CORPUS / "honours").glob("*.json"))
-    breaks = list((CORPUS / "breaks").glob("*.json"))
-    assert honours and breaks
-    assert {json.loads(p.read_text())["contract"] for p in honours} == \
-           {json.loads(p.read_text())["contract"] for p in breaks}, (
-        "every contract needs a turn that honours it and one that breaks it")
+def test_the_corpus_has_all_three_sides() -> None:
+    """A corpus of only-broken turns trains a judge to fail everything and a
+    corpus of only-good turns trains it to pass everything. The third side is
+    what stops a judge scoring turns the rule never touched as compliance."""
+    sides = {kind: {json.loads(p.read_text())["contract"]
+                    for p in (CORPUS / kind).glob("*.json")}
+             for kind in ("honours", "breaks", "not-applicable")}
+
+    assert all(sides.values())
+    assert sides["honours"] == sides["breaks"] == sides["not-applicable"], sides
 
 
 def test_every_fixture_declares_its_contract_and_expectation() -> None:
     for item in bj.load_corpus():
         assert item["contract"].startswith("CONTRACT-")
-        assert item["expected"] in {"pass", "fail"}
+        assert item["expected"] in {"pass", "fail", "n/a"}
         assert item["turn"].strip()
         assert item["note"].strip(), "a fixture with no note cannot be reviewed"
 
@@ -434,3 +434,90 @@ def test_a_json_object_without_a_verdict_key_is_skipped() -> None:
     out = '{"schema": "example"}\n{"verdict": "fail", "citation": "c"}\n{"tokens": 5}'
 
     assert bj._last_json_object(out)["verdict"] == "fail"
+
+
+# --- the third verdict ---------------------------------------------------
+
+def test_every_rubric_says_when_it_is_in_play() -> None:
+    """Without this a contract is judged on every turn, and the ones it never
+    touched are scored as compliance (ISSUE-275)."""
+    for contract, rubric in bj.load_rubrics().items():
+        assert rubric.get("applies_when", "").strip(), contract
+
+
+def test_the_prompt_asks_applicability_before_compliance() -> None:
+    rubrics = bj.load_rubrics()
+    prompt = bj.build_prompt("a turn", "CONTRACT-05", rubrics["CONTRACT-05"])
+
+    assert prompt.index("IT APPLIES WHEN") < prompt.index("IT PASSES WHEN")
+    assert "n/a" in prompt
+
+
+def test_the_prompt_forbids_passing_an_inapplicable_turn() -> None:
+    """The whole defect in one instruction: a model told only pass/fail will
+    answer pass for a turn the rule never touched."""
+    prompt = bj.build_prompt("a turn", "CONTRACT-05", bj.load_rubrics()["CONTRACT-05"])
+
+    assert 'Do not answer "pass" for a turn the rule never touched' in prompt
+
+
+def test_not_applicable_is_a_usable_verdict(monkeypatch) -> None:
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+        "verdict": "n/a", "citation": "a turn", "reason": "not in play"})
+
+    result = bj.evaluate("a turn", "CONTRACT-05", _rubric())
+
+    assert result["verdict"] == "n/a"
+    assert result["counted"] is True
+
+
+def test_an_inapplicable_verdict_still_needs_a_citation(monkeypatch) -> None:
+    """The citation proves the judge read this turn rather than another. That
+    is as necessary for n/a as for a verdict."""
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+        "verdict": "n/a", "citation": "text that is nowhere", "reason": "x"})
+
+    result = bj.evaluate("a turn about something else", "CONTRACT-05", _rubric())
+
+    assert result["counted"] is False
+
+
+def test_discrimination_requires_all_three_directions() -> None:
+    """The trap the third verdict exists to catch: a judge that separates
+    honouring from breaking perfectly, and calls every inapplicable turn a
+    pass, inflates every score it ever produces. Under the old two-direction
+    check it read as a working judge."""
+    original = bj._stub
+
+    def inflating(turn, contract, rubric):
+        r = original(turn, contract, rubric)
+        if r["verdict"] == bj.NA:
+            return {**r, "verdict": bj.PASS}
+        return r
+
+    bj._stub = inflating
+    try:
+        report = bj.discriminate(backend="stub")
+    finally:
+        bj._stub = original
+
+    assert report["scorable_contracts"] == []
+    stats = report["per_contract"]["CONTRACT-05"]
+    assert stats["true_pass"] and stats["true_fail"], "the old check would pass"
+    assert stats["false_pass"] and not stats["true_na"]
+
+
+def test_a_judge_that_finds_nothing_applicable_scores_nothing() -> None:
+    """The degenerate mode the third verdict introduces. Answering n/a to
+    everything measures nothing while looking careful."""
+    report = bj.discriminate(backend="never-applicable")
+
+    assert report["scorable_contracts"] == []
+    for stats in report["per_contract"].values():
+        assert stats["discriminates"] is False
+
+
+def test_the_report_shows_all_three_columns() -> None:
+    text = bj.render(bj.discriminate(backend="stub"))
+
+    assert "n/a=" in text

@@ -1,0 +1,6 @@
+{
+  "contract": "CONTRACT-01",
+  "expected": "n/a",
+  "note": "Asks one clarifying question and finishes no work, so there is no point at which advancement could be pushed.",
+  "turn": "Which database is the staging environment pointed at right now?"
+}

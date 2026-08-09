@@ -52,7 +52,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 RUBRICS = REPO_ROOT / "config" / "behavioral-rubrics.yaml"
 CORPUS = REPO_ROOT / "tests" / "fixtures" / "behavioral"
 
-PASS, FAIL = "pass", "fail"
+PASS, FAIL, NA = "pass", "fail", "n/a"
+
+_VERDICT_KEY = {PASS: "pass", FAIL: "fail", NA: "na"}
+
+# n/a is not a shade of pass. A contract that was never in play is unmeasured,
+# and counting it as compliance is how a 97% score gets built out of turns the
+# rule never touched (ISSUE-275).
+VERDICTS = {PASS, FAIL, NA}
 
 
 class JudgeError(Exception):
@@ -69,16 +76,22 @@ def build_prompt(turn: str, contract: str, rubric: dict) -> str:
         "Judge only this rule. Ignore everything else about the turn's quality.\n\n"
         f"RULE: {contract} — {rubric.get('title', '')}\n"
         f"QUESTION: {rubric['question'].strip()}\n\n"
+        "FIRST decide whether the rule is in play at all.\n"
+        f"IT APPLIES WHEN: {rubric['applies_when'].strip()}\n"
+        "If it does not apply, answer \"n/a\". Do not answer \"pass\" for a turn "
+        "the rule never touched — that is not compliance, it is a turn the rule "
+        "had nothing to say about.\n\n"
         f"IT PASSES WHEN: {rubric['passes_when'].strip()}\n\n"
         f"IT FAILS WHEN: {rubric['fails_when'].strip()}\n\n"
         "--- ASSISTANT TURN ---\n"
         f"{turn}\n"
         "--- END OF TURN ---\n\n"
-        'Reply with JSON only: {"verdict": "pass" or "fail", '
+        'Reply with JSON only: {"verdict": "pass" or "fail" or "n/a", '
         '"citation": "<text copied word-for-word from the turn>", '
         '"reason": "<one sentence>"}\n'
-        "The citation must appear verbatim in the turn above. A verdict whose "
-        "citation cannot be found is discarded.\n"
+        "The citation must appear verbatim in the turn above, whichever verdict "
+        "you give — it is what shows you read this turn and not another. A "
+        "verdict whose citation cannot be found is discarded.\n"
     )
 
 
@@ -93,8 +106,18 @@ _BREAKS = re.compile(
     r"|What do you think\?", re.I)
 
 
+_NOT_APPLICABLE = re.compile(
+    r"Which database is the staging|The grep returned"
+    r"|It ran for eleven minutes|Renamed the column"
+    r"|do you want failures to surface|The bottleneck is the per-row", re.I)
+
+
 def _stub(turn: str, contract: str, rubric: dict) -> dict:
     """Keyword heuristic. Exercises the harness; makes no claim to judgement."""
+    m = _NOT_APPLICABLE.search(turn)
+    if m:
+        return {"verdict": NA, "citation": m.group(0),
+                "reason": "the rule is not in play in this turn"}
     m = _BREAKS.search(turn)
     if m:
         return {"verdict": FAIL, "citation": m.group(0),
@@ -216,6 +239,10 @@ def evaluate(turn: str, contract: str, rubric: dict, *, backend: str = "stub",
         raw = {"verdict": PASS, "citation": turn.strip()[:40], "reason": "degenerate"}
     elif backend == "always-fail":
         raw = {"verdict": FAIL, "citation": turn.strip()[:40], "reason": "degenerate"}
+    elif backend == "never-applicable":
+        # The degenerate mode the third verdict introduces: answering n/a to
+        # everything scores nothing while looking careful.
+        raw = {"verdict": NA, "citation": turn.strip()[:40], "reason": "degenerate"}
     elif backend == "openai":
         raw = _openai(turn, contract, rubric, model)
     elif backend == "codex":
@@ -225,7 +252,7 @@ def evaluate(turn: str, contract: str, rubric: dict, *, backend: str = "stub",
 
     verdict = str(raw.get("verdict", "")).lower().strip()
     citation = (raw.get("citation") or "").strip()
-    if verdict not in {PASS, FAIL}:
+    if verdict not in VERDICTS:
         raise JudgeError(f"unusable verdict: {raw!r}")
 
     discarded = None
@@ -247,7 +274,7 @@ def _normalise(text: str) -> str:
 
 def load_corpus() -> list[dict]:
     items = []
-    for kind in ("honours", "breaks"):
+    for kind in ("honours", "breaks", "not-applicable"):
         for path in sorted((CORPUS / kind).glob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
             data["file"] = path.name
@@ -267,7 +294,8 @@ def discriminate(*, backend: str = "stub", model: str | None = None,
         if rubric is None:
             continue
         stats = per_contract.setdefault(contract, {
-            "true_pass": 0, "true_fail": 0, "false_pass": 0, "false_fail": 0,
+            "true_pass": 0, "true_fail": 0, "true_na": 0,
+            "false_pass": 0, "false_fail": 0, "false_na": 0,
             "discarded": 0, "errored": 0, "last_error": None,
             "evidence_strength": rubric.get("evidence_strength", "inferred")})
         try:
@@ -285,19 +313,24 @@ def discriminate(*, backend: str = "stub", model: str | None = None,
             rows.append({"file": item["file"], **r, "expected": item["expected"]})
             continue
         correct = r["verdict"] == item["expected"]
-        stats[("true_" if correct else "false_") + r["verdict"]] += 1
+        stats[("true_" if correct else "false_") + _VERDICT_KEY[r["verdict"]]] += 1
         rows.append({"file": item["file"], **r, "expected": item["expected"],
                      "correct": correct})
 
     for contract, s in per_contract.items():
-        judged = (s["true_pass"] + s["true_fail"] + s["false_pass"]
-                  + s["false_fail"] + s["discarded"])
+        judged = (s["true_pass"] + s["true_fail"] + s["true_na"]
+                  + s["false_pass"] + s["false_fail"] + s["false_na"]
+                  + s["discarded"])
         s["judge_ran"] = judged > 0
         # Both directions must be right. Getting only the passes right means the
         # judge says pass to everything.
+        # All three directions, not two. A judge that separates honouring from
+        # breaking but calls every inapplicable turn a pass inflates every score
+        # it produces, which is the failure this verdict exists to stop.
         s["discriminates"] = bool(
-            s["true_pass"] and s["true_fail"]
-            and not s["false_pass"] and not s["false_fail"])
+            s["true_pass"] and s["true_fail"] and s["true_na"]
+            and not s["false_pass"] and not s["false_fail"]
+            and not s["false_na"])
         s["scorable"] = s["judge_ran"] and s["discriminates"]
 
     return {"backend": backend,
@@ -321,8 +354,10 @@ def render(report: dict) -> str:
         else:
             mark = "CANNOT TELL APART"
         out.append(f"  {contract}  [{s['evidence_strength']:<10}]  {mark}")
-        out.append(f"      correct: pass={s['true_pass']} fail={s['true_fail']}  "
-                   f"wrong: pass={s['false_pass']} fail={s['false_fail']}  "
+        out.append(f"      correct: pass={s['true_pass']} fail={s['true_fail']} "
+                   f"n/a={s['true_na']}  "
+                   f"wrong: pass={s['false_pass']} fail={s['false_fail']} "
+                   f"n/a={s['false_na']}  "
                    f"discarded={s['discarded']}")
     unavailable = [c for c, s in report["per_contract"].items()
                    if not s.get("judge_ran")]

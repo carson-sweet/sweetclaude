@@ -28,35 +28,53 @@ contract.** It scores the judge.
 
 **Judge:** `gpt-5.6-sol` via the Codex CLI (`provider: openai`)
 **Harness:** `scripts/behavioral_judge.py discriminate --backend codex`
-**Corpus:** 12 fixtures — one turn that plainly honours and one that plainly
-breaks, for each of 6 contracts
-**Run:** 2026-08-09, 72 seconds
+**Corpus:** 18 fixtures — for each of 6 contracts, a turn that plainly honours,
+one that plainly breaks, and one the contract does not apply to
+**Run:** 2026-08-09, 97 seconds
 
-| Contract | Evidence | Correct pass | Correct fail | Wrong | Discarded | Verdict |
-|---|---|---|---|---|---|---|
-| CONTRACT-01 | observable | 1 | 1 | 0 | 0 | DISCRIMINATES |
-| CONTRACT-02 | inferred | 1 | 1 | 0 | 0 | DISCRIMINATES |
-| CONTRACT-05 | observable | 1 | 1 | 0 | 0 | DISCRIMINATES |
-| CONTRACT-12 | inferred | 1 | 1 | 0 | 0 | DISCRIMINATES |
-| CONTRACT-13 | inferred | 1 | 1 | 0 | 0 | DISCRIMINATES |
-| CONTRACT-14 | observable | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| Contract | Evidence | Pass | Fail | N/A | Wrong | Discarded | Verdict |
+|---|---|---|---|---|---|---|---|
+| CONTRACT-01 | observable | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-02 | inferred | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-05 | observable | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-12 | inferred | 1 | 1 | 0 | 1 | 0 | CANNOT TELL APART |
+| CONTRACT-13 | inferred | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-14 | observable | 1 | 1 | 1 | 0 | 0 | DISCRIMINATES |
 
-12 of 12 correct, 0 discarded for a missing or fabricated citation.
+**5 of 6 scorable.** CONTRACT-12 is reported unscorable and is not counted.
 
-**Baseline.** An `always-pass` judge gets every honouring turn right and every
-breaking turn wrong, so it scores 6/12 and discriminates on nothing. Both
-degenerate backends are reported unscorable by the same harness, which is what
-makes the result above worth reading.
+### The earlier 6/6 in this document was measuring less
+
+An earlier run the same day reported all six contracts discriminating. That run
+asked only whether the judge could separate honouring from breaking. It never
+asked whether the rule was in play, so a turn the contract never touched would
+have been scored as compliance — the mechanism by which a 97% score gets built
+out of turns the rule had nothing to say about.
+
+Adding the third verdict cost one contract on the first run, which is the check
+working. CONTRACT-12's applicability clause is "the user has just corrected
+something", and the judge is handed the assistant turn alone, so it cannot tell
+a correction from a plain instruction. That is a harness limitation, not a judge
+failure, and it affects 8 of the 15 contracts (ISSUE-291).
+
+### Falsification
+
+Three degenerate judges are reported unscorable by the same harness:
+`always-pass`, `always-fail`, and `never-applicable` — the mode the third
+verdict introduces, where answering "not applicable" to everything measures
+nothing while looking careful.
+
+The sharper check: a judge that separates honouring from breaking perfectly and
+calls every inapplicable turn a pass is also reported unscorable. Under the
+two-direction check it read as a working judge.
 
 ### What this does not establish
 
-- **No contract is scored.** These fixtures are written examples, not turns from
-  real sessions. A judge that can separate a plain honouring turn from a plain
-  breaking one has cleared the minimum bar, not proven it handles ambiguity.
-- **Two fixtures per contract is thin.** 12/12 is consistent with a good judge
-  and also with easy fixtures. The corpus was deliberately written unambiguous.
-- **9 of 15 contracts have no fixtures at all** — 03, 04, 06, 07, 08, 09, 10,
-  11, 15. They are unmeasured, and no claim about them appears here.
+- **No contract is scored.** These are written fixtures, not turns from real
+  sessions. Clearing a plain three-way set is the minimum bar.
+- **Three fixtures per contract is thin.**
+- **9 of 15 contracts have no fixtures at all** — 03, 04, 06, 07, 08, 09, 10, 11,
+  15. They are unmeasured, and no claim about them appears here.
 - The Codex backend is an agent wrapper with no temperature control, so it is
   weaker and less reproducible than a single-turn API completion. It runs in an
   empty temporary directory under a read-only sandbox so it cannot read this

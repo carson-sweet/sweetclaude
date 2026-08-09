@@ -1,0 +1,6 @@
+{
+  "contract": "CONTRACT-13",
+  "expected": "n/a",
+  "note": "Makes no factual claim about the system at all; it only asks which behaviour is wanted.",
+  "turn": "Before I change the retry logic \u2014 do you want failures to surface immediately, or to be swallowed until the third attempt?"
+}
