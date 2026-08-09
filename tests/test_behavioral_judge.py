@@ -243,19 +243,19 @@ def test_no_test_in_this_file_calls_a_real_model() -> None:
     The needles are assembled from fragments so this check cannot match its own
     source and fail on itself.
     """
-    live = "open" + "ai"
-    cli_flag = "--backend " + live
-    kwarg = 'backend="' + live + '"'
+    live_backends = ["open" + "ai", "cod" + "ex"]
+    needles = [f"--backend {b}" for b in live_backends]
+    needles += [f'backend="{b}"' for b in live_backends]
 
     lines = Path(__file__).read_text(encoding="utf-8").splitlines()
     offenders = []
     for i, line in enumerate(lines):
-        if line.lstrip().startswith("#") or "cli_flag" in line or "kwarg" in line:
+        if line.lstrip().startswith("#") or "live_backends" in line or "needles" in line:
             continue
-        if cli_flag in line:
-            offenders.append((i + 1, line.strip()))
-        elif kwarg in line:
-            window = "\n".join(lines[max(0, i - 6):i + 2])
+        for needle in needles:
+            if needle not in line:
+                continue
+            window = "\n".join(lines[max(0, i - 8):i + 2])
             if "monkeypatch" not in window:
                 offenders.append((i + 1, line.strip()))
     assert not offenders, (
@@ -303,3 +303,121 @@ def test_cli_judge_reports_a_single_verdict(tmp_path: Path) -> None:
     assert payload["contract"] == "CONTRACT-05"
     assert payload["verdict"] == "fail"
     assert payload["citation"]
+
+
+# --- the codex backend, without calling it -------------------------------
+
+def test_codex_backend_reports_a_missing_cli(monkeypatch) -> None:
+    """The failure a user without the CLI actually hits, and it must name the
+    alternative rather than just failing."""
+    import shutil
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    with pytest.raises(bj.JudgeError, match="codex CLI not found"):
+        bj._codex("turn", "CONTRACT-05", _rubric(), None)
+
+
+def test_codex_judges_in_a_scratch_directory_not_the_repository(monkeypatch) -> None:
+    """Codex is an agent with filesystem access. Pointed at this repo it could
+    grade something other than the turn it was handed, so the working root must
+    be an empty temporary directory."""
+    seen = {}
+
+    class _Proc:
+        returncode = 0
+        stdout = '{"verdict": "pass", "citation": "x", "reason": "y"}'
+        stderr = ""
+
+    def fake_run(cmd, **kwargs):
+        seen["cmd"] = cmd
+        return _Proc()
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+    bj._codex("turn", "CONTRACT-05", _rubric(), None)
+
+    cmd = seen["cmd"]
+    workdir = Path(cmd[cmd.index("-C") + 1])
+    assert workdir != REPO_ROOT
+    assert str(REPO_ROOT) not in str(workdir)
+
+
+def test_codex_runs_read_only(monkeypatch) -> None:
+    seen = {}
+
+    class _Proc:
+        returncode = 0
+        stdout = '{"verdict": "pass", "citation": "x", "reason": "y"}'
+        stderr = ""
+
+    monkeypatch.setattr("subprocess.run",
+                        lambda cmd, **kw: (seen.update(cmd=cmd), _Proc())[1])
+    bj._codex("turn", "CONTRACT-05", _rubric(), None)
+
+    assert "--sandbox" in seen["cmd"]
+    assert seen["cmd"][seen["cmd"].index("--sandbox") + 1] == "read-only"
+
+
+def test_codex_reports_a_nonzero_exit(monkeypatch) -> None:
+    class _Proc:
+        returncode = 2
+        stdout = ""
+        stderr = "not authenticated"
+
+    monkeypatch.setattr("subprocess.run", lambda cmd, **kw: _Proc())
+    with pytest.raises(bj.JudgeError, match="not authenticated"):
+        bj._codex("turn", "CONTRACT-05", _rubric(), None)
+
+
+def test_codex_omits_the_model_flag_unless_asked(monkeypatch) -> None:
+    """The API default (gpt-4o) is not a name the CLI wants; passing it would
+    silently pick a different judge than the one being measured."""
+    seen = {}
+
+    class _Proc:
+        returncode = 0
+        stdout = '{"verdict": "pass", "citation": "x", "reason": "y"}'
+        stderr = ""
+
+    monkeypatch.setattr("subprocess.run",
+                        lambda cmd, **kw: (seen.update(cmd=cmd), _Proc())[1])
+    bj._codex("turn", "CONTRACT-05", _rubric(), None)
+
+    assert "--model" not in seen["cmd"]
+
+
+# --- verdict extraction --------------------------------------------------
+
+def test_the_verdict_is_taken_from_the_end_of_the_output() -> None:
+    """Codex prints a banner and echoes the transcript, so the answer appears
+    more than once and is preceded by braces that are not it."""
+    out = ('OpenAI Codex v0.147.0\n--------\nworkdir: /tmp/x\n'
+           'user\nReply with JSON only: {"verdict": "pass" or "fail"}\n'
+           'codex\n{"verdict": "fail", "citation": "two days", "reason": "r"}\n'
+           'tokens used\n12,740\n'
+           '{"verdict": "fail", "citation": "two days", "reason": "r"}\n')
+
+    assert bj._last_json_object(out)["citation"] == "two days"
+
+
+def test_a_greedy_match_would_have_taken_the_wrong_span() -> None:
+    """Guards the reason the extraction is written the way it is: `{.*}` spans
+    the first brace to the last and parses as nothing."""
+    import re as _re
+    out = 'prefix {not json} middle {"verdict": "pass", "citation": "c"} end'
+
+    greedy = _re.search(r"\{.*\}", out, _re.S).group(0)
+    with pytest.raises(json.JSONDecodeError):
+        json.loads(greedy)
+    assert bj._last_json_object(out)["verdict"] == "pass"
+
+
+def test_output_with_no_verdict_is_an_error() -> None:
+    with pytest.raises(bj.JudgeError, match="no JSON verdict"):
+        bj._last_json_object('{"unrelated": true}\nsome prose\n')
+
+
+def test_a_json_object_without_a_verdict_key_is_skipped() -> None:
+    """The prompt itself contains a JSON template. Matching the last object
+    blindly would return the echoed instructions."""
+    out = '{"schema": "example"}\n{"verdict": "fail", "citation": "c"}\n{"tokens": 5}'
+
+    assert bj._last_json_object(out)["verdict"] == "fail"

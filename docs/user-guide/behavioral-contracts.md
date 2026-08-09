@@ -1,7 +1,7 @@
 # Behavioral Contract Status
 
-**Version:** 1.0
-**Date:** 2026-05-01
+**Version:** 1.1
+**Date:** 2026-08-09
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
 
@@ -20,6 +20,50 @@ This page tracks the instruction-guided tier.
 
 ---
 
+## Judge Validation — 2026-08-09
+
+Before a contract result means anything, the thing producing it has to be shown
+capable of being wrong. This section records that check. **It does not score any
+contract.** It scores the judge.
+
+**Judge:** `gpt-5.6-sol` via the Codex CLI (`provider: openai`)
+**Harness:** `scripts/behavioral_judge.py discriminate --backend codex`
+**Corpus:** 12 fixtures — one turn that plainly honours and one that plainly
+breaks, for each of 6 contracts
+**Run:** 2026-08-09, 72 seconds
+
+| Contract | Evidence | Correct pass | Correct fail | Wrong | Discarded | Verdict |
+|---|---|---|---|---|---|---|
+| CONTRACT-01 | observable | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-02 | inferred | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-05 | observable | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-12 | inferred | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-13 | inferred | 1 | 1 | 0 | 0 | DISCRIMINATES |
+| CONTRACT-14 | observable | 1 | 1 | 0 | 0 | DISCRIMINATES |
+
+12 of 12 correct, 0 discarded for a missing or fabricated citation.
+
+**Baseline.** An `always-pass` judge gets every honouring turn right and every
+breaking turn wrong, so it scores 6/12 and discriminates on nothing. Both
+degenerate backends are reported unscorable by the same harness, which is what
+makes the result above worth reading.
+
+### What this does not establish
+
+- **No contract is scored.** These fixtures are written examples, not turns from
+  real sessions. A judge that can separate a plain honouring turn from a plain
+  breaking one has cleared the minimum bar, not proven it handles ambiguity.
+- **Two fixtures per contract is thin.** 12/12 is consistent with a good judge
+  and also with easy fixtures. The corpus was deliberately written unambiguous.
+- **9 of 15 contracts have no fixtures at all** — 03, 04, 06, 07, 08, 09, 10,
+  11, 15. They are unmeasured, and no claim about them appears here.
+- The Codex backend is an agent wrapper with no temperature control, so it is
+  weaker and less reproducible than a single-turn API completion. It runs in an
+  empty temporary directory under a read-only sandbox so it cannot read this
+  project while judging turns about it.
+
+---
+
 ## Contract Status by Model Version
 
 ### claude-sonnet-4-6
@@ -27,6 +71,10 @@ This page tracks the instruction-guided tier.
 **Tested:** 2026-05-01
 **Tested by:** Carson Sweet
 **Score:** 15/15
+**Evidence quality: self-reported.** This run predates the independent judge and
+records the model's own assessment of whether it followed its own instructions.
+Read it as a claim, not a measurement — it is the weak evidence ISSUE-275 exists
+to replace. It also predates the current model.
 
 | Contract | Description | Result | Notes |
 |---|---|---|---|

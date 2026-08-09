@@ -20,6 +20,11 @@ discarded rather than counted.
 
 Backends:
     openai        — the real judge. Reads OPENAI_API_KEY. Sends the turn.
+    codex         — the same independence via the Codex CLI, which authenticates
+                    separately from the API balance. An agent wrapper, so weaker
+                    than a single-turn completion; discriminate decides whether
+                    it is usable. Runs in an empty temp dir, read-only sandbox,
+                    so it cannot read the project it is judging turns about.
     stub          — deterministic keyword heuristic, for exercising the harness
                     without network or cost. Never for real scoring.
     always-pass   — degenerate, exists so discrimination can prove it catches one
@@ -28,6 +33,7 @@ Backends:
 Usage:
     python3 scripts/behavioral_judge.py discriminate --backend stub
     python3 scripts/behavioral_judge.py discriminate --backend openai --model gpt-4o
+    python3 scripts/behavioral_judge.py discriminate --backend codex
     python3 scripts/behavioral_judge.py judge --contract CONTRACT-05 --turn-file t.txt
 """
 
@@ -97,7 +103,11 @@ def _stub(turn: str, contract: str, rubric: dict) -> dict:
             "reason": "no failing phrase present"}
 
 
-def _openai(turn: str, contract: str, rubric: dict, model: str) -> dict:
+OPENAI_DEFAULT_MODEL = "gpt-4o"
+
+
+def _openai(turn: str, contract: str, rubric: dict, model: str | None) -> dict:
+    model = model or OPENAI_DEFAULT_MODEL
     # Configuration before dependencies: importing an optional package to tell
     # someone they forgot a key gives them the wrong error, and makes the check
     # behave differently on a machine that happens to have the package.
@@ -127,8 +137,79 @@ def _openai(turn: str, contract: str, rubric: dict, model: str) -> dict:
     return json.loads(m.group(0))
 
 
+CODEX_TIMEOUT = 300
+
+
+def _last_json_object(text: str) -> dict:
+    """The last parseable JSON object in the output.
+
+    A greedy `{.*}` spans from the first brace to the last, which a banner or a
+    reasoning trace breaks. Scanning backwards for the last complete object is
+    what actually finds the answer.
+    """
+    candidates = re.findall(r"\{.*?\}", text, re.S)
+    for raw in reversed(candidates):
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, dict) and "verdict" in data:
+            return data
+    raise JudgeError(f"judge returned no JSON verdict: {text[-300:]}")
+
+
+def _codex(turn: str, contract: str, rubric: dict, model: str | None) -> dict:
+    """Judge through the Codex CLI instead of the API.
+
+    Same independence property as the openai backend — an OpenAI model judging
+    a Claude turn — without needing API credit, which is what actually blocked
+    this from ever running (ISSUE-275).
+
+    Two things this deliberately does:
+
+    * runs in an empty temporary directory, not the repository. Codex is an
+      agent with filesystem access, and a judge that can go read the project
+      might grade something other than the turn it was handed.
+    * read-only sandbox, so a prompt that talks it into running something
+      cannot write.
+
+    It remains an agent wrapper around a model, with no temperature control, so
+    it is weaker evidence than a single-turn completion. `discriminate` is what
+    decides whether it is usable; nothing here assumes it.
+    """
+    import shutil
+    import subprocess
+    import tempfile
+
+    if shutil.which("codex") is None:
+        raise JudgeError(
+            "codex CLI not found on PATH. Install it, or use --backend openai "
+            "with OPENAI_API_KEY set.")
+
+    cmd = ["codex", "exec", "--sandbox", "read-only", "--skip-git-repo-check"]
+    if model:
+        cmd += ["--model", model]
+
+    with tempfile.TemporaryDirectory(prefix="sc-judge-") as workdir:
+        cmd += ["-C", workdir, "-"]
+        try:
+            proc = subprocess.run(
+                cmd, input=build_prompt(turn, contract, rubric),
+                capture_output=True, text=True, timeout=CODEX_TIMEOUT)
+        except subprocess.TimeoutExpired as exc:
+            raise JudgeError(
+                f"codex call timed out after {CODEX_TIMEOUT}s") from exc
+        except OSError as exc:
+            raise JudgeError(f"codex call failed: {exc}") from exc
+
+    if proc.returncode != 0:
+        tail = (proc.stderr or proc.stdout or "").strip()[-300:]
+        raise JudgeError(f"codex exited {proc.returncode}: {tail}")
+    return _last_json_object(proc.stdout)
+
+
 def evaluate(turn: str, contract: str, rubric: dict, *, backend: str = "stub",
-             model: str = "gpt-4o") -> dict:
+             model: str | None = None) -> dict:
     if backend == "stub":
         raw = _stub(turn, contract, rubric)
     elif backend == "always-pass":
@@ -137,6 +218,8 @@ def evaluate(turn: str, contract: str, rubric: dict, *, backend: str = "stub",
         raw = {"verdict": FAIL, "citation": turn.strip()[:40], "reason": "degenerate"}
     elif backend == "openai":
         raw = _openai(turn, contract, rubric, model)
+    elif backend == "codex":
+        raw = _codex(turn, contract, rubric, model)
     else:
         raise JudgeError(f"unknown backend: {backend}")
 
@@ -172,7 +255,7 @@ def load_corpus() -> list[dict]:
     return items
 
 
-def discriminate(*, backend: str = "stub", model: str = "gpt-4o",
+def discriminate(*, backend: str = "stub", model: str | None = None,
                  rubrics: dict | None = None) -> dict:
     rubrics = rubrics or load_rubrics()
     per_contract: dict[str, dict] = {}
@@ -217,7 +300,8 @@ def discriminate(*, backend: str = "stub", model: str = "gpt-4o",
             and not s["false_pass"] and not s["false_fail"])
         s["scorable"] = s["judge_ran"] and s["discriminates"]
 
-    return {"backend": backend, "model": model if backend == "openai" else None,
+    return {"backend": backend,
+            "model": model if backend in {"openai", "codex"} else None,
             "judge_available": any(s.get("judge_ran") for s in per_contract.values()),
             "per_contract": per_contract, "rows": rows,
             "scorable_contracts": sorted(c for c, s in per_contract.items()
@@ -266,14 +350,16 @@ def main(argv: list[str] | None = None) -> int:
 
     d = sub.add_parser("discriminate")
     d.add_argument("--backend", default="stub")
-    d.add_argument("--model", default="gpt-4o")
+    d.add_argument("--model", default=None,
+                   help="override the backend's own default model")
     d.add_argument("--format", choices=["text", "json"], default="text")
 
     j = sub.add_parser("judge")
     j.add_argument("--contract", required=True)
     j.add_argument("--turn-file", type=Path, required=True)
     j.add_argument("--backend", default="stub")
-    j.add_argument("--model", default="gpt-4o")
+    j.add_argument("--model", default=None,
+                   help="override the backend's own default model")
 
     args = p.parse_args(argv)
     rubrics = load_rubrics()
