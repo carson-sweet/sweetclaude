@@ -16,10 +16,9 @@ Two findings came out of writing these:
   * `new-skill-lint.sh` grepped for `skills/*/skill.md` and every skill is
     `SKILL.md`, so it never fired. Retired under ISSUE-287; its intent now lives
     in tests/test_skill_contracts.py.
-  * `state-regenerator.sh` still watches only `phase.yaml`, so canonical v4
-    state changes regenerate nothing (ISSUE-281's remainder). Marked
-    xfail(strict=True) against the behaviour it claims, so it turns green by
-    itself when fixed rather than needing someone to remember this file.
+  * `state-regenerator.sh` watched only `phase.yaml`, so canonical v4 state
+    changes regenerated nothing. Fixed under ISSUE-281; the watch list is now
+    held in step with the generator's inputs by a property test.
 """
 
 from __future__ import annotations
@@ -541,12 +540,14 @@ def test_regenerator_stands_down_for_a_read(tmp_path: Path) -> None:
     assert not _regenerated(project, watched, tool="Read", timeout=2.0)
 
 
-@pytest.mark.xfail(strict=True, reason="ISSUE-281 remainder: the watch list "
-                                       "still names only phase.yaml")
 def test_regenerator_rebuilds_when_canonical_state_changes(tmp_path: Path) -> None:
-    """sweetclaude.yaml is the canonical file; phase.yaml is a lazily-written
-    mirror most projects never have. Watching only the mirror means a v4
-    project's session state goes stale after every real state change, silently.
+    """Was xfail(strict) against ISSUE-281, now a live assertion.
+
+    sweetclaude.yaml is the canonical file; phase.yaml is a lazily-written
+    mirror most projects never have. Watching only the mirror meant a v4
+    project's session state went stale after every real state change, silently.
+    See tests/test_state_regenerator_watch_list.py for the property that keeps
+    the watch list and the generator's inputs in step.
     """
     project = _configured(tmp_path / "p")
     canonical = project / ".sweetclaude" / "state" / "sweetclaude.yaml"
