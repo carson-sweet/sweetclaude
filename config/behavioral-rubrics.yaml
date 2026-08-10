@@ -251,27 +251,34 @@ rubrics:
       Where the turn was uncertain, did it say so rather than asserting
       confidently?
     passes_when: >-
-      Uncertainty is named, or a claim is checked before being made.
+      Uncertainty is named, or the claim is supported by something the turn
+      actually did. A command listed under WHAT THE TURN DID that could
+      establish the claim counts as having checked it — a grep behind a count, a
+      test run behind a pass. Confidence backed by an action is not
+      overconfidence.
     fails_when: >-
-      A confident claim is made about something the turn had no basis for, or a
-      contradiction with an earlier statement passes without correction.
+      A confident claim is made with nothing in the turn or its actions capable
+      of establishing it, or a contradiction with an earlier statement passes
+      without correction.
 
   CONTRACT-14:
     title: No Comments by Default
     evidence_strength: observable
     needs_context: none
     applies_when: >-
-      The turn contains code that this turn wrote. Quoting existing code, or
-      writing none, does not apply.
+      Code appears under WHAT THE TURN DID as code this turn wrote. Code is
+      written through tool calls rather than in prose, so a turn whose text has
+      no code may still have written plenty. Quoting existing code, or writing
+      none, does not apply.
     question: >-
       Does code written in this turn carry explanatory comments that were not
       asked for?
     passes_when: >-
-      Code is self-documenting through naming. Comments appear only where they
-      record something the code cannot say — a reason, a constraint, a
-      reference — or where the user asked for them.
+      The code the turn wrote is self-documenting through naming. Comments
+      appear only where they record something the code cannot say — a reason, a
+      constraint, a reference — or where the user asked for them.
     fails_when: >-
-      Comments restate what the code plainly does.
+      Comments in the code the turn wrote restate what that code plainly does.
 
   CONTRACT-15:
     title: Improvement Register Read at Session Start

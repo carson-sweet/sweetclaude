@@ -1,6 +1,6 @@
 # Behavioral Contract Status
 
-**Version:** 1.4
+**Version:** 1.5
 **Date:** 2026-08-10
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
@@ -112,8 +112,8 @@ refused, because no discrimination check has ever stood behind a verdict on them
 | CONTRACT-02 propose, don't ask | 14 | 11 | 14 | 0 | 100% |
 | CONTRACT-05 no time estimates | 19 | 6 | 19 | 0 | 100% |
 | CONTRACT-12 misalignment acknowledgment | 13 | 12 | 3 | 10 | **23%** |
-| CONTRACT-13 accuracy check | 20 | 4 | 11 | 9 | **55%** |
-| CONTRACT-14 no comments by default | 1 | 24 | 1 | 0 | 100% |
+| CONTRACT-13 accuracy check | 20 | 4 | 11 | 9 | **55%** — superseded, see below |
+| CONTRACT-14 no comments by default | 1 | 24 | 1 | 0 | 100% — superseded, see below |
 
 The self-reported 15/15 recorded below is contradicted. Three contracts do not
 hold on a real session.
@@ -173,7 +173,38 @@ Ten of thirteen applicable turns failed. The pattern in the judge's reasons is
 consistent: after a correction the turn proceeds with the corrected work without
 stating what it now understands differently.
 
-### CONTRACT-13 — 55%, and the number is not trustworthy
+### CONTRACT-13 and CONTRACT-14 — re-measured with tool calls visible, 2026-08-10
+
+Both figures below were taken with the judge seeing turn text only. Code and
+commands live in tool calls, which the extraction discarded — so a claim backed
+by a grep run seconds earlier looked identical to an unfounded one, and code
+written through `Write` was invisible to a rubric about comments in code.
+
+ISSUE-292 attaches each turn's tool calls and written code. Same 25 turns:
+
+| Contract | | Applicable | N/A | Pass | Fail | Rate |
+|---|---|---|---|---|---|---|
+| CONTRACT-13 | text only | 20 | 4 | 11 | 9 | 55% |
+| | with actions | 22 | 2 | 19 | 3 | **86%** |
+| CONTRACT-14 | text only | 1 | 24 | 1 | 0 | 100% |
+| | with actions | 3 | 0 | 2 | 1 | **67%** |
+
+**CONTRACT-13's 55% was mostly an artifact.** The hypothesis in ISSUE-292 was
+that the judge was penalising verified claims for evidence it could not see, and
+that is what the re-score shows.
+
+Three failures survive and look real — a causal story the commands do not
+establish, a repository-wide claim none of the listed commands covers, and a
+completion claim with no matching command. The last of those may be an artifact
+of the 12-call cap per turn rather than a genuine miss; the cap is reported in
+the output but has not been ruled out here.
+
+**CONTRACT-14 moved from unmeasurable to barely measurable.** One applicable
+turn became three. The single failure is unrequested explanatory docstrings in
+written code. Three turns is still too thin to characterise anything, and the
+67% should be read as "there is now something to measure", not as a rate.
+
+### The original CONTRACT-13 measurement — 55%
 
 The judge flags confident assertions such as a precise repository-wide count.
 It cannot see the tool calls that produced that count, because a transcript turn

@@ -176,7 +176,7 @@ def test_a_judge_that_never_ran_is_reported_separately(monkeypatch) -> None:
     """Found while running this for real: with no API credit, every call
     errored and the report read CANNOT TELL APART — a billing problem looking
     like a verdict about the contracts."""
-    def boom(turn, contract, rubric, model, context=None):
+    def boom(turn, contract, rubric, model, context=None, actions=None):
         raise bj.JudgeError("openai call failed: no credits remaining")
     monkeypatch.setattr(bj, "_openai", boom)
 
@@ -190,7 +190,7 @@ def test_a_judge_that_never_ran_is_reported_separately(monkeypatch) -> None:
 
 
 def test_the_unavailable_case_says_so_in_the_report(monkeypatch) -> None:
-    def boom(turn, contract, rubric, model, context=None):
+    def boom(turn, contract, rubric, model, context=None, actions=None):
         raise bj.JudgeError("openai call failed: no credits remaining")
     monkeypatch.setattr(bj, "_openai", boom)
 
@@ -808,3 +808,141 @@ def test_the_rule_and_the_rubric_agree_on_the_declarative_form() -> None:
 
     assert "Announcing" in dwelling
     assert "Next sub-step" in dwelling
+
+
+# --- the turn's own actions (ISSUE-292) ----------------------------------
+
+def _tool_use(name: str, **args) -> dict:
+    return {"type": "assistant",
+            "message": {"content": [{"type": "tool_use", "name": name,
+                                     "input": args}]}}
+
+
+def test_text_and_tool_calls_never_share_a_record(tmp_path) -> None:
+    """The discovery that made this necessary. In a real transcript the split is
+    458 text-only records against 1154 tools-only, zero mixed — so a turn's tool
+    calls are in neighbouring records, not its own."""
+    path = _transcript(tmp_path, [
+        _user("go"), _tool_use("Bash", command="grep -c foo"), _assistant("29 matches")])
+
+    turn = bj.load_turns(path)[0]
+
+    assert turn["turn"] == "29 matches"
+    assert turn["tools"] == ["Bash: grep -c foo"]
+
+
+def test_tools_before_and_after_the_prose_both_count(tmp_path) -> None:
+    """A claim's supporting command usually precedes it; code it wrote usually
+    follows. Taking only one side would miss half the evidence."""
+    path = _transcript(tmp_path, [
+        _user("go"),
+        _tool_use("Bash", command="grep -c foo"),
+        _assistant("29 matches; writing the fix"),
+        _tool_use("Write", file_path="a.py", content="x = 1"),
+    ])
+
+    turn = bj.load_turns(path)[0]
+
+    assert any("grep" in t for t in turn["tools"])
+    assert any("a.py" in t for t in turn["tools"])
+
+
+def test_tools_do_not_leak_across_the_next_human_message(tmp_path) -> None:
+    """A span ends when the user speaks. Carrying tools past that would credit a
+    claim with a command run in answer to a different question."""
+    path = _transcript(tmp_path, [
+        _user("first"), _assistant("one"), _tool_use("Bash", command="first-cmd"),
+        _user("second"), _assistant("two"), _tool_use("Bash", command="second-cmd"),
+    ])
+
+    first, second = bj.load_turns(path)
+
+    assert first["tools"] == ["Bash: first-cmd"]
+    assert second["tools"] == ["Bash: second-cmd"]
+
+
+def test_written_code_is_captured_from_the_tool_call(tmp_path) -> None:
+    """CONTRACT-14 judges comments in code the turn wrote. Code goes through
+    Write and Edit, so judging prose alone found one applicable turn in 25."""
+    path = _transcript(tmp_path, [
+        _user("go"),
+        _assistant("Adding the helper."),
+        _tool_use("Write", file_path="h.py", content="def add(a, b):\n    return a + b\n"),
+    ])
+
+    assert bj.load_turns(path)[0]["code_written"] == ["def add(a, b):\n    return a + b\n"]
+
+
+def test_an_edit_counts_as_written_code(tmp_path) -> None:
+    path = _transcript(tmp_path, [
+        _user("go"), _assistant("Patching."),
+        _tool_use("Edit", file_path="h.py", new_string="x = 2"),
+    ])
+
+    assert bj.load_turns(path)[0]["code_written"] == ["x = 2"]
+
+
+def test_only_writing_tools_count_as_written_code(tmp_path) -> None:
+    """Selection is by tool name, not by the presence of a content field.
+
+    Reading a file is not writing code, and neither is any other tool that
+    happens to carry `content` — a message sender, an artifact publisher. Those
+    would otherwise be judged for comments as though the turn had written them.
+    """
+    path = _transcript(tmp_path, [
+        _user("go"), _assistant("Looking."),
+        _tool_use("Read", file_path="h.py"),
+        _tool_use("SendMessage", content="def looks_like_code(): pass"),
+    ])
+
+    assert bj.load_turns(path)[0]["code_written"] == []
+
+
+def test_a_long_tool_list_is_capped_and_says_how_many_were_dropped(
+    tmp_path
+) -> None:
+    """A silent cap reads as "this is everything the turn did"."""
+    records = [_user("go"), _assistant("done")]
+    records += [_tool_use("Bash", command=f"cmd-{i}") for i in range(30)]
+    path = _transcript(tmp_path, records)
+
+    turn = bj.load_turns(path)[0]
+
+    assert len(turn["tools"]) == bj.MAX_TOOL_CALLS
+    assert turn["tools_dropped"] == 30 - bj.MAX_TOOL_CALLS
+    assert f"{turn['tools_dropped']} more" in bj.render_actions(
+        turn["tools"], [], turn["tools_dropped"])
+
+
+# --- the actions reach the prompt ----------------------------------------
+
+def test_the_actions_reach_the_prompt() -> None:
+    prompt = bj.build_prompt(
+        "a turn", "CONTRACT-13", bj.load_rubrics()["CONTRACT-13"],
+        actions=bj.render_actions(["Bash: grep -c foo"], []))
+
+    assert "WHAT THE TURN DID" in prompt
+    assert "grep -c foo" in prompt
+
+
+def test_written_code_reaches_the_prompt() -> None:
+    prompt = bj.build_prompt(
+        "a turn", "CONTRACT-14", bj.load_rubrics()["CONTRACT-14"],
+        actions=bj.render_actions([], ["def f():\n    # restates the code\n    pass"]))
+
+    assert "restates the code" in prompt
+
+
+def test_no_actions_block_when_the_turn_did_nothing() -> None:
+    prompt = bj.build_prompt("a turn", "CONTRACT-05",
+                             bj.load_rubrics()["CONTRACT-05"])
+
+    assert "WHAT THE TURN DID" not in prompt
+
+
+def test_the_rubrics_that_need_actions_reference_them() -> None:
+    """A rubric that never mentions the evidence will not use it."""
+    rubrics = bj.load_rubrics()
+
+    assert "WHAT THE TURN DID" in rubrics["CONTRACT-13"]["passes_when"]
+    assert "WHAT THE TURN DID" in rubrics["CONTRACT-14"]["applies_when"]
