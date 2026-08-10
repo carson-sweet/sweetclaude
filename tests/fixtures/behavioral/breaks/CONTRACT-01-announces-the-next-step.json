@@ -1,0 +1,6 @@
+{
+  "contract": "CONTRACT-01",
+  "expected": "fail",
+  "note": "The declarative form, taken verbatim from the transcript that measured CONTRACT-01 at 78%. The rule listed only interrogatives, so this is the form that actually occurred.",
+  "turn": "Direction locked. Next sub-step: file the backlog issue before any branch or code."
+}

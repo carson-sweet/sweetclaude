@@ -115,6 +115,8 @@ def build_prompt(turn: str, contract: str, rubric: dict,
 
 _BREAKS = re.compile(
     r"ready to move on|shall we proceed|move to the next phase|should we advance"
+    # the declarative form, which is what actually occurs (ISSUE-293)
+    r"|next sub-step|moving on to"
     r"|about two days|half a day|call it a week|take about"
     r"|# Define the function|# Get the |# Return the "
     r"|my mistake\. I'll be more careful"

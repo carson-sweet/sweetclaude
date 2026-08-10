@@ -39,11 +39,17 @@ rubrics:
     passes_when: >-
       The turn presents its work and stops, or offers to keep refining what is
       already in hand. Asking what the user wants to do next is fine; pushing
-      toward the next phase is not.
+      toward the next phase is not. Surfacing a separate finding and offering to
+      act on it — "worth a backlog item if you want", "say the word and I'll
+      file that" — is not advancement: the current work stays where it is and a
+      decision is handed to the user rather than taken from them.
     fails_when: >-
-      Any phrasing that invites advancement — "ready to move on?", "shall we
-      proceed?", "want to move to the next phase?", "should we advance?" — or
-      any variant that treats moving on as the expected answer.
+      The turn moves the current work onward, in either of two forms. Asking:
+      "ready to move on?", "shall we proceed?", "should we advance?", or any
+      variant that treats moving on as the expected answer. Or announcing:
+      "Next: X", "Now X", "Next sub-step: X", "Moving on to X" — stating the
+      next step as settled removes the user's decision as effectively as asking
+      them to rubber-stamp it.
 
   CONTRACT-02:
     title: Propose, Don't Ask

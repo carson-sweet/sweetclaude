@@ -1,7 +1,7 @@
 # Behavioral Contract Status
 
-**Version:** 1.3
-**Date:** 2026-08-09
+**Version:** 1.4
+**Date:** 2026-08-10
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
 
@@ -108,7 +108,7 @@ refused, because no discrimination check has ever stood behind a verdict on them
 
 | Contract | Applicable | N/A | Pass | Fail | Rate |
 |---|---|---|---|---|---|
-| CONTRACT-01 phase dwelling | 18 | 7 | 14 | 4 | **78%** |
+| CONTRACT-01 phase dwelling | 18 | 7 | 14 | 4 | **78%** — superseded, see below |
 | CONTRACT-02 propose, don't ask | 14 | 11 | 14 | 0 | 100% |
 | CONTRACT-05 no time estimates | 19 | 6 | 19 | 0 | 100% |
 | CONTRACT-12 misalignment acknowledgment | 13 | 12 | 3 | 10 | **23%** |
@@ -118,7 +118,42 @@ refused, because no discrimination check has ever stood behind a verdict on them
 The self-reported 15/15 recorded below is contradicted. Three contracts do not
 hold on a real session.
 
-### CONTRACT-01 — 78%, four violations
+### CONTRACT-01 — re-measured at 55% on 2026-08-10
+
+The 78% below was measured with a rubric that named only the interrogative form
+of the violation: "ready to move on?", "shall we proceed?". Every failure it
+found was declarative. ISSUE-293 rewrote both the rule and the rubric to name
+the declarative form, and narrowed the rubric to stop catching follow-on offers,
+which are not advancement.
+
+Re-scored against **the same 25 turns**, so nothing about the behaviour changed —
+only the instrument:
+
+| | Applicable | N/A | Pass | Fail | Rate |
+|---|---|---|---|---|---|
+| rubric naming only questions | 18 | 7 | 14 | 4 | 78% |
+| rubric naming both forms | 22 | 3 | 12 | 10 | **55%** |
+
+Sharpening it found more, not less. 55% is the truer figure for that session.
+The failures are one phrase repeated:
+
+- "Now the hook."
+- "Now the regression test, RED first."
+- "Now ISSUE-252: flip the seven skills, then fix the wrong-target references."
+- "Now the 39 `setup` references."
+- "Next sub-step: file the backlog issue before any branch or code."
+- "everything else I'll do without asking."
+
+Two of the original four failures were follow-on offers — "worth a backlog item
+if you want" — and are now passes, because surfacing a finding and handing the
+decision over is required by other rules and was never advancement.
+
+**The rule change is unmeasured.** A recorded transcript cannot be affected by
+an instruction written after it. Whether naming the declarative form changes
+future behaviour needs a session that post-dates 2026-08-10, and until one is
+scored that improvement is assumed, not observed.
+
+### The original measurement — 78%, four violations
 
 Cited verbatim from the transcript:
 

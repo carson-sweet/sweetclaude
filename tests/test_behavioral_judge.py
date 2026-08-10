@@ -780,3 +780,31 @@ def test_discarded_verdicts_are_not_counted_as_contract_failures(
     assert report["discarded"] == 1
     assert report["failed"] == 0
     assert report["applicable"] == 0
+
+
+def test_the_phase_dwelling_rubric_names_both_forms() -> None:
+    """It named only questions. Every measured failure was declarative — "Now
+    X", "Next sub-step: X" — and sharpening it moved the score from 78% to 55%
+    on the same transcript (ISSUE-293)."""
+    fails = bj.load_rubrics()["CONTRACT-01"]["fails_when"].lower()
+
+    assert "ready to move on" in fails, "the interrogative form"
+    assert "next sub-step" in fails or "moving on to" in fails, "the declarative form"
+
+
+def test_the_phase_dwelling_rubric_excludes_follow_on_offers() -> None:
+    """Surfacing a separate finding and offering to act on it hands the decision
+    to the user. Other rules require it; this one used to catch it."""
+    passes = bj.load_rubrics()["CONTRACT-01"]["passes_when"].lower()
+
+    assert "backlog item" in passes or "separate finding" in passes
+
+
+def test_the_rule_and_the_rubric_agree_on_the_declarative_form() -> None:
+    """A rule the rubric does not encode is a rule nothing measures."""
+    rule = (REPO_ROOT / "rules" / "interaction-model.md").read_text(encoding="utf-8")
+    dwelling = rule[rule.index("## Phase Dwelling"):]
+    dwelling = dwelling[:dwelling.index("\n## ", 1)]
+
+    assert "Announcing" in dwelling
+    assert "Next sub-step" in dwelling

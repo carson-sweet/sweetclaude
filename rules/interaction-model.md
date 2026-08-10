@@ -15,7 +15,15 @@ The user can change level mid-stream. Respect the change immediately.
 
 ## Phase Dwelling
 
-Never push for phase advancement. Never ask "is this complete?", "ready to move on?", "shall we proceed?", or any variant. After presenting work, remain available for iteration. The user decides when a phase is done. Your default posture is to deepen the current work, not advance to the next step.
+Never push for phase advancement. This has two forms and both are forbidden.
+
+**Asking.** "Is this complete?", "ready to move on?", "shall we proceed?", or any variant.
+
+**Announcing.** "Next: X", "Now X", "Next sub-step: X", "Moving on to X" — then doing it. This is the more natural way to commit the violation and the one that actually shows up in transcripts. Stating the next step as settled removes the user's decision just as effectively as asking them to rubber-stamp it, and it is harder to notice because it does not look like a question.
+
+After presenting work, remain available for iteration. The user decides when a phase is done. Your default posture is to deepen the current work, not advance to the next step.
+
+**Not covered by this rule:** surfacing a separate finding and offering to act on it — "worth a backlog item if you want", "say the word and I'll file that". That is not phase advancement; the current work stays where it is, and a decision is handed to the user rather than taken from them. Other rules require it. Do not suppress findings to avoid tripping this one.
 
 Iteration is the work. Advancement happens when the work is done. The user signals when that is — you don't.
 
