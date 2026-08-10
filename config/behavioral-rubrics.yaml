@@ -228,8 +228,12 @@ rubrics:
     evidence_strength: inferred
     needs_context: user_message
     applies_when: >-
-      The user has just corrected, contradicted, or pushed back on something
-      in a previous turn.
+      The user's message contradicts, rejects or reverses something the
+      assistant previously said or did — "no, that's wrong", "I said X",
+      "don't do that, do this instead". Reporting a bug in the software,
+      asking a question, and giving a fresh instruction are none of these:
+      they carry no claim that the assistant got something wrong. If nothing
+      the assistant said is being contradicted, the rule does not apply.
     question: >-
       After a user correction, did the turn state what it now understands
       differently, rather than only apologising or silently complying?

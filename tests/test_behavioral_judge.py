@@ -713,8 +713,10 @@ def test_a_contract_missing_one_side_is_not_validated(monkeypatch) -> None:
 def _score(tmp_path, turns: list[tuple[str, str]], contract="CONTRACT-05",
            **kw) -> dict:
     records = []
-    for context, turn in turns:
-        records += [_user(context), _assistant(turn)]
+    # distinct contexts: identical ones now collapse to a single observation,
+    # which is the point of ISSUE-295 and would silently shrink these fixtures
+    for i, (context, turn) in enumerate(turns):
+        records += [_user(f"{context} #{i}"), _assistant(turn)]
     return bj.score_transcript(_transcript(tmp_path, records), contract,
                                bj.load_rubrics()[contract], limit=0, **kw)
 
@@ -756,8 +758,8 @@ def test_failures_are_reported_with_their_citation(tmp_path) -> None:
 def test_what_was_not_scored_is_stated(tmp_path) -> None:
     """A limit that silently truncates reads as full coverage."""
     records = []
-    for _ in range(10):
-        records += [_user("go"), _assistant("done")]
+    for i in range(10):
+        records += [_user(f"go #{i}"), _assistant("done")]
     report = bj.score_transcript(_transcript(tmp_path, records), "CONTRACT-05",
                                  bj.load_rubrics()["CONTRACT-05"], limit=3)
 
@@ -946,3 +948,79 @@ def test_the_rubrics_that_need_actions_reference_them() -> None:
 
     assert "WHAT THE TURN DID" in rubrics["CONTRACT-13"]["passes_when"]
     assert "WHAT THE TURN DID" in rubrics["CONTRACT-14"]["applies_when"]
+
+
+# --- one observation per situation (ISSUE-295) ---------------------------
+
+def test_ten_turns_from_one_message_are_one_observation(tmp_path) -> None:
+    """The defect. "25 turns" was 9 distinct user messages, one of them
+    producing ten. A rule whose applicability depends on what the user said had
+    that one message classified once and counted ten times."""
+    records = [_user("do the thing")]
+    for i in range(10):
+        records.append(_assistant(f"step {i}"))
+    path = _transcript(tmp_path, records)
+
+    assert len(bj.load_turns(path)) == 10
+    assert len(bj.one_per_message(bj.load_turns(path))) == 1
+
+
+def test_each_distinct_message_contributes_one(tmp_path) -> None:
+    path = _transcript(tmp_path, [
+        _user("first"), _assistant("a"), _assistant("b"),
+        _user("second"), _assistant("c"),
+    ])
+
+    kept = bj.one_per_message(bj.load_turns(path))
+
+    assert [t["context"] for t in kept] == ["first", "second"]
+
+
+def test_the_first_turn_of_a_span_is_kept(tmp_path) -> None:
+    """Where a claim or a decision usually lands."""
+    path = _transcript(tmp_path, [
+        _user("go"), _assistant("the decision"), _assistant("the follow-up")])
+
+    assert bj.one_per_message(bj.load_turns(path))[0]["turn"] == "the decision"
+
+
+def test_scoring_samples_one_per_message_by_default(tmp_path) -> None:
+    records = [_user("go")] + [_assistant(f"s{i}") for i in range(6)]
+    report = bj.score_transcript(_transcript(tmp_path, records), "CONTRACT-05",
+                                 bj.load_rubrics()["CONTRACT-05"], limit=0)
+
+    assert report["turns_scored"] == 1
+    assert report["sampling"] == "one turn per user message"
+
+
+def test_every_turn_stays_available_behind_a_flag(tmp_path) -> None:
+    records = [_user("go")] + [_assistant(f"s{i}") for i in range(6)]
+    report = bj.score_transcript(_transcript(tmp_path, records), "CONTRACT-05",
+                                 bj.load_rubrics()["CONTRACT-05"], limit=0,
+                                 per_message=False)
+
+    assert report["turns_scored"] == 6
+    assert report["sampling"] == "every turn"
+
+
+def test_the_report_states_how_many_situations_it_covers(tmp_path) -> None:
+    """A turn count alone reads as a sample size it is not."""
+    records = []
+    for i in range(3):
+        records += [_user(f"msg {i}"), _assistant("a"), _assistant("b")]
+    report = bj.score_transcript(_transcript(tmp_path, records), "CONTRACT-05",
+                                 bj.load_rubrics()["CONTRACT-05"], limit=0)
+
+    assert report["assistant_turns"] == 6
+    assert report["distinct_user_messages"] == 3
+    assert "3 distinct user messages" in bj.render_score(report)
+
+
+def test_the_correction_rubric_excludes_instructions_and_bug_reports() -> None:
+    """It marked 13 of 25 turns as following a correction. Reading those 25,
+    exactly one was — "don't file it, just fix it". The rest were bug reports,
+    instructions and questions (ISSUE-295)."""
+    applies = bj.load_rubrics()["CONTRACT-12"]["applies_when"].lower()
+
+    assert "bug" in applies and "instruction" in applies
+    assert "contradicts" in applies or "reverses" in applies

@@ -574,10 +574,32 @@ def contracts_with_a_validated_judge() -> set[str]:
     return {c for c, seen in by_contract.items() if seen >= {PASS, FAIL, NA}}
 
 
+def one_per_message(turns: list[dict]) -> list[dict]:
+    """One observation per user message.
+
+    A user message frequently produces many assistant turns — prose, tool
+    calls, more prose — and each inherits the same context. Counting them
+    separately treats one situation as ten observations, which is what made
+    "25 turns" mean 9 messages (ISSUE-295). The first turn of a span is kept:
+    that is where a claim or a decision usually lands.
+    """
+    seen: set[str] = set()
+    out = []
+    for turn in turns:
+        key = turn.get("context") or ""
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(turn)
+    return out
+
+
 def score_transcript(path: Path, contract: str, rubric: dict, *,
                      backend: str = "stub", model: str | None = None,
-                     limit: int = 25) -> dict:
-    turns = load_turns(path)
+                     limit: int = 25, per_message: bool = True) -> dict:
+    all_turns = load_turns(path)
+    distinct_messages = len({t.get("context") or "" for t in all_turns})
+    turns = one_per_message(all_turns) if per_message else all_turns
     total = len(turns)
     scored = turns if limit <= 0 else turns[:limit]
 
@@ -608,6 +630,9 @@ def score_transcript(path: Path, contract: str, rubric: dict, *,
     applicable = counts[PASS] + counts[FAIL]
     return {
         "contract": contract, "transcript": str(path), "backend": backend,
+        "sampling": "one turn per user message" if per_message else "every turn",
+        "assistant_turns": len(all_turns),
+        "distinct_user_messages": distinct_messages,
         "turns_in_transcript": total, "turns_scored": len(scored),
         "not_scored": total - len(scored),
         "applicable": applicable, "not_applicable": counts[NA],
@@ -622,7 +647,10 @@ def score_transcript(path: Path, contract: str, rubric: dict, *,
 
 def render_score(report: dict) -> str:
     out = [f"{report['contract']} — {report['transcript']}",
-           f"  backend: {report['backend']}", ""]
+           f"  backend: {report['backend']}",
+           f"  sampling: {report['sampling']}",
+           f"  {report['assistant_turns']} assistant turns from "
+           f"{report['distinct_user_messages']} distinct user messages", ""]
     if report["not_scored"]:
         out.append(f"  scored {report['turns_scored']} of "
                    f"{report['turns_in_transcript']} turns; "
@@ -677,6 +705,9 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--contract", required=True)
     sc.add_argument("--backend", default="stub")
     sc.add_argument("--model", default=None)
+    sc.add_argument("--every-turn", action="store_true",
+                    help="score every assistant turn instead of one per user "
+                         "message; inflates the count, see ISSUE-295")
     sc.add_argument("--limit", type=int, default=25,
                     help="turns to score; 0 for all. The report always states "
                          "how many were left out.")
@@ -702,7 +733,8 @@ def main(argv: list[str] | None = None) -> int:
         try:
             report = score_transcript(
                 args.transcript, args.contract, rubrics[args.contract],
-                backend=args.backend, model=args.model, limit=args.limit)
+                backend=args.backend, model=args.model, limit=args.limit,
+                per_message=not args.every_turn)
         except NotJudgeable as exc:
             print(str(exc), file=sys.stderr)
             return 2

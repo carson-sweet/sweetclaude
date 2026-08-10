@@ -1,6 +1,6 @@
 # Behavioral Contract Status
 
-**Version:** 1.5
+**Version:** 1.6
 **Date:** 2026-08-10
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
@@ -95,6 +95,68 @@ two-direction check it read as a working judge.
   weaker and less reproducible than a single-turn API completion. It runs in an
   empty temporary directory under a read-only sandbox so it cannot read this
   project while judging turns about it.
+
+---
+
+## Current Scores — 2026-08-10
+
+**Judged by:** `gpt-5.6-sol` via the Codex CLI, independent of the model judged
+**Sample:** 25 distinct user messages from one session, one assistant turn each
+
+| Rule | Applicable | N/A | Pass | Fail | Rate |
+|---|---|---|---|---|---|
+| propose a position, don't hand the decision back | 17 | 8 | 17 | 0 | 100% |
+| never give time estimates | 22 | 3 | 22 | 0 | 100% |
+| don't write comments unless asked | 4 | 21 | 4 | 0 | 100% |
+| check before asserting confidently | 24 | 1 | 16 | 8 | **67%** |
+| say what changed after a correction | 5 | 20 | 3 | 2 | **60%** |
+| don't push toward the next phase | 16 | 9 | 9 | 7 | **56%** |
+
+Nine of the fifteen rules are absent from this table. Five have no fixtures, so
+no judge has been validated for them. Four cannot be judged from a transcript at
+all — they depend on the deference level, position in the session, or the
+improvement register, none of which appear in a turn.
+
+### These numbers replace every earlier figure
+
+Every score recorded before today counted assistant turns as independent
+observations. They are not. One user message routinely produces several turns —
+prose, tool calls, more prose — and each inherits the same context. What was
+reported as "25 turns" was **9 distinct user messages**, one of them accounting
+for ten (ISSUE-295).
+
+The distortion was not uniform, which is worth stating rather than condemning
+everything equally:
+
+| Rule | Before | After | Moved by |
+|---|---|---|---|
+| don't push toward the next phase | 55% | 56% | nothing |
+| propose, don't ask | 100% | 100% | nothing |
+| never give time estimates | 100% | 100% | nothing |
+| check before asserting | 86% | 67% | sampling |
+| don't write comments unless asked | 67% (3 turns) | 100% (4) | sampling |
+| say what changed after a correction | 23% | **60%** | rubric and sampling |
+
+Rules decidable from the turn alone were barely affected: consecutive turns in
+one span really are separate observations of whether that turn pushed
+advancement. Rules whose applicability depends on what the user said were
+distorted badly, because the same message was classified once and counted many
+times.
+
+### The 23% was mostly wrong
+
+It was the worst figure recorded and it did not survive checking. The rubric
+asked whether the user "corrected, contradicted, or pushed back", and the judge
+read bug reports, questions and fresh instructions as corrections — marking 13
+of 25 applicable. Reading those 25 messages by hand, **one** is a correction:
+"don't file it, just fix it".
+
+The rubric now requires the message to contradict, reject or reverse something
+the assistant said, and names the three things that do not count. Applicable
+fell to 5 and the rate is 60%.
+
+Two failures survive and look real: a correction carried out without stating
+what the prior understanding had been, twice.
 
 ---
 
