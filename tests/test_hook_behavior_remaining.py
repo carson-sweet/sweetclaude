@@ -11,17 +11,15 @@ stayed off for months before ISSUE-281.
 
 So every hook here gets both directions asserted, whichever shape it takes.
 
-Two findings came out of writing these, both filed rather than fixed here:
+Two findings came out of writing these:
 
-  * `new-skill-lint.sh` greps for `skills/*/skill.md` and every skill is
-    `SKILL.md`. It has never fired (ISSUE-287).
+  * `new-skill-lint.sh` grepped for `skills/*/skill.md` and every skill is
+    `SKILL.md`, so it never fired. Retired under ISSUE-287; its intent now lives
+    in tests/test_skill_contracts.py.
   * `state-regenerator.sh` still watches only `phase.yaml`, so canonical v4
-    state changes regenerate nothing (ISSUE-281's remainder).
-
-The `new-skill-lint.sh` and `state-regenerator.sh` findings are marked
-xfail(strict=True) against the behavior they claim, so each
-turns green by itself when the defect is fixed rather than needing someone to
-remember this file.
+    state changes regenerate nothing (ISSUE-281's remainder). Marked
+    xfail(strict=True) against the behaviour it claims, so it turns green by
+    itself when fixed rather than needing someone to remember this file.
 """
 
 from __future__ import annotations
@@ -624,110 +622,30 @@ def test_reindex_stands_down_outside_the_indexed_paths(tmp_path: Path) -> None:
 
 
 # =========================================================================
-# new-skill-lint.sh — the ambient-injection commit gate
+# new-skill-lint.sh — retired (ISSUE-287)
 # =========================================================================
-
-LINT = "new-skill-lint.sh"
-
-
-def _skill_repo(tmp_path: Path, filename: str, frontmatter: str) -> Path:
-    repo = tmp_path / "r"
-    (repo / "skills" / "mynewskill").mkdir(parents=True)
-    _git_init(repo)
-    _git_identity(repo)
-    (repo / "skills" / "mynewskill" / filename).write_text(
-        f"---\nname: mynewskill\ndescription: x\n{frontmatter}---\n\nbody\n",
-        encoding="utf-8")
-    subprocess.run(["git", "-C", str(repo), "add", "-A"],
-                   capture_output=True, timeout=30)
-    return repo
+#
+# It grepped `skills/*/skill.md`; every skill is `SKILL.md`, so it never matched
+# and never ran once in its life. It also required `disable-model-invocation`,
+# a key no skill in the corpus sets. Both halves were dead.
+#
+# Its intent — a skill must not advertise that it invokes itself — is asserted
+# in tests/test_skill_contracts.py, where it runs in CI for everyone instead of
+# per-clone, and where `--no-verify` cannot skip it. That check found a live
+# violation on its first run (`big-picture` advertised trigger phrases), which
+# the hook could never have caught.
 
 
-def _lint(repo: Path) -> subprocess.CompletedProcess:
-    return subprocess.run(["bash", str(HOOKS / LINT)], cwd=str(repo),
-                          capture_output=True, text=True, timeout=60,
-                          env={**os.environ, "HOME": str(repo)})
+def test_the_retired_lint_is_not_still_registered() -> None:
+    """A dead gate left in place reads as a control. Nothing should invoke it."""
+    referenced = [
+        p for p in (REPO_ROOT / "hooks").glob("*")
+        if p.is_file() and "new-skill-lint" in p.read_text(
+            encoding="utf-8", errors="ignore")
+    ]
 
-
-def test_lint_permits_a_skill_that_declares_explicit_invocation(
-    tmp_path: Path
-) -> None:
-    repo = _skill_repo(tmp_path, "skill.md", "disable-model-invocation: true\n")
-
-    assert _lint(repo).returncode == 0
-
-
-def test_lint_refuses_a_skill_claiming_ambient_injection(tmp_path: Path) -> None:
-    repo = _skill_repo(tmp_path, "skill.md", "")
-
-    r = _lint(repo)
-
-    assert r.returncode == 1
-    assert "disable-model-invocation" in r.stdout
-
-
-def test_lint_names_both_ways_out_when_it_refuses(tmp_path: Path) -> None:
-    """A commit gate that says no without saying how to proceed stops work."""
-    repo = _skill_repo(tmp_path, "skill.md", "")
-
-    out = _lint(repo).stdout
-
-    assert "disable-model-invocation: true" in out
-    assert "AMBIENT_CORE" in out
-
-
-def test_lint_permits_an_ambient_core_skill(tmp_path: Path) -> None:
-    repo = tmp_path / "core"
-    (repo / "skills" / "bootstrap").mkdir(parents=True)
-    _git_init(repo)
-    _git_identity(repo)
-    (repo / "skills" / "bootstrap" / "skill.md").write_text(
-        "---\nname: bootstrap\n---\n\nbody\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(repo), "add", "-A"],
-                   capture_output=True, timeout=30)
-
-    assert _lint(repo).returncode == 0
-
-
-def test_lint_is_silent_when_no_skill_is_staged(tmp_path: Path) -> None:
-    repo = tmp_path / "plain"
-    repo.mkdir()
-    _git_init(repo)
-    _git_identity(repo)
-    (repo / "app.py").write_text("x\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(repo), "add", "-A"],
-                   capture_output=True, timeout=30)
-
-    assert _lint(repo).returncode == 0
-
-
-@pytest.mark.xfail(strict=True, reason="ISSUE-287: the pattern matches "
-                                       "skills/*/skill.md and every skill in "
-                                       "this repo is SKILL.md")
-def test_lint_refuses_a_non_conforming_skill_named_as_skills_actually_are(
-    tmp_path: Path
-) -> None:
-    """The lint is registered as a pre-commit hook and has never fired.
-
-    All 122 skills are SKILL.md; the grep is case-sensitive, so the loop never
-    runs and the hook exits 0 on every commit. 110 skills lack the flag it
-    exists to require.
-    """
-    repo = _skill_repo(tmp_path, "SKILL.md", "")
-
-    assert _lint(repo).returncode == 1
-
-
-def test_the_lint_pattern_matches_the_filenames_the_corpus_uses() -> None:
-    """States the mismatch as a fact about this repo, so ISSUE-287 cannot be
-    closed by editing the test instead of the hook."""
-    body = (HOOKS / LINT).read_text(encoding="utf-8")
-    real = {p.name for p in (REPO_ROOT / "skills").glob("*/*.md")}
-
-    assert "SKILL.md" in real
-    assert "skill\\.md" in body, "pattern moved; re-derive this assertion"
-    assert "skill.md" not in real, (
-        "corpus now uses lowercase; ISSUE-287 may be resolvable by rename")
+    assert not (HOOKS / "new-skill-lint.sh").exists()
+    assert referenced == [], referenced
 
 
 # =========================================================================

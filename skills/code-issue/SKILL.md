@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Implement a GitHub issue end-to-end."
+user-invocable: true
 ---
 
 

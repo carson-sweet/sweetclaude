@@ -1,6 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 description: "Build a new feature end-to-end."
+user-invocable: true
 ---
 
 

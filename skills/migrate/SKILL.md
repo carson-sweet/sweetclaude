@@ -2,6 +2,7 @@
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:migrate
 description: Migrate legacy work items to unified ISSUE-NNN format. Supports flat BL-NNN layouts and typed legacy backlog layouts (stories/, bugs/, debt/).
+user-invocable: true
 ---
 
 This skill is a thin orchestrator that dispatches to the correct migrator based

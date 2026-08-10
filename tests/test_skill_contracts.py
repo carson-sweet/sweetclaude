@@ -240,3 +240,85 @@ def test_privacy_aware_skills_handle_a_missing_manifest(skill_md: Path) -> None:
         f"{skill_md.parent.name} resolves base_path but neither documents nor "
         "guards the manifest being absent"
     )
+
+
+# --- invocation policy (ISSUE-287) ---------------------------------------
+#
+# hooks/new-skill-lint.sh was a pre-commit gate meant to stop a skill claiming
+# ambient invocation. It grepped `skills/*/skill.md`; every skill is `SKILL.md`,
+# so it never matched and never ran once. It also required
+# `disable-model-invocation: true`, a key no skill in the corpus sets.
+#
+# These replace it, in CI where they run for everyone rather than per-clone and
+# where --no-verify cannot skip them.
+
+@pytest.mark.parametrize("skill_md", SKILL_MDS, ids=lambda p: p.parent.name)
+def test_user_invocable_is_declared(skill_md: Path) -> None:
+    """Whether a skill is user-facing or internal should be stated, not left to
+    a default. Four skills had never declared it."""
+    fm = _frontmatter(skill_md.read_text(encoding="utf-8"))
+
+    assert re.search(r"^user-invocable:\s*(true|false)\s*$", fm, re.M), (
+        f"{skill_md.parent.name} does not declare user-invocable")
+
+
+# Phrasings that assert a skill activates without the user asking. Negated
+# forms are excluded deliberately: report-failure's description ends "Never
+# auto-invoke", which is the policy being honoured, and a pattern that flagged
+# it would have to be weakened until it caught nothing.
+_SELF_INVOKING = re.compile(
+    r"(?<!never )(?<!not )(?<!don't )(?<!do not )"
+    r"(auto-invoke[sd]?\b"
+    r"|automatically (?:invoke|trigger|activate|run|fire)"
+    r"|(?:invoked|triggered|activated|run|fired) automatically"
+    r"|triggers? (?:on|when)\b"
+    r"|fires? when\b"
+    r"|use (?:this )?proactively)",
+    re.I)
+
+
+def _description(text: str) -> str:
+    fm = _frontmatter(text)
+    m = re.search(r"^description:\s*(.+?)(?=\n[a-z-]+:|\Z)", fm, re.S | re.M)
+    return " ".join(m.group(1).split()) if m else ""
+
+
+@pytest.mark.parametrize("skill_md", SKILL_MDS, ids=lambda p: p.parent.name)
+def test_no_description_advertises_self_invocation(skill_md: Path) -> None:
+    """The actual failure mode: a description saying a skill triggers on some
+    condition gets it invoked in the wrong context, unasked."""
+    description = _description(skill_md.read_text(encoding="utf-8"))
+    match = _SELF_INVOKING.search(description)
+
+    assert not match, (
+        f"{skill_md.parent.name} description claims self-invocation "
+        f"({match.group(0)!r}). Skills are invoked explicitly; describe what "
+        f"it does, not when it fires.")
+
+
+def test_the_pattern_catches_what_it_is_for() -> None:
+    """A pattern that matches nothing would pass the whole corpus and mean
+    nothing. These are the phrasings that caused the problem."""
+    for bad in ("Triggers on any commit to main.",
+                "This skill is invoked automatically at session start.",
+                "Automatically runs when a test fails.",
+                "Use proactively whenever the user edits a config file.",
+                "Will auto-invoke on phase transitions."):
+        assert _SELF_INVOKING.search(bad), bad
+
+
+def test_the_pattern_leaves_the_negated_forms_alone() -> None:
+    """report-failure says "Never auto-invoke" — the policy being stated, not
+    broken. project-epics says "Redirects automatically", which describes where
+    it sends you, not when it starts."""
+    for fine in ("Invoke ONLY when the user explicitly asks. Never auto-invoke.",
+                 "DEPRECATED — use /sweetclaude:epics instead. Redirects automatically.",
+                 "Build a new feature end-to-end.",
+                 "Run the full test suite and report failures."):
+        assert not _SELF_INVOKING.search(fine), fine
+
+
+def test_the_retired_hook_is_gone() -> None:
+    """Leaving a dead pre-commit gate in place is worse than having none: it
+    reads as a control that has never once executed."""
+    assert not (REPO_ROOT / "hooks" / "new-skill-lint.sh").exists()
