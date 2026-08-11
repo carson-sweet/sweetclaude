@@ -1,7 +1,7 @@
 # SweetClaude 4.x User Guide
 
-**Version:** 1.3
-**Date:** 2026-08-03
+**Version:** 1.4
+**Date:** 2026-08-11
 
 SweetClaude 4.x is the stable channel, tracked on `main`. Plugin update,
 framework sync, project recovery, and taxonomy migration are separate
@@ -87,6 +87,8 @@ If you have it installed and want to understand the design decisions, read
 | [Hook Development](hook-development.md) | Hook repair and emergency recovery. |
 | [Corpus and RAG](corpus-system.md) | Document pipeline and local semantic search. |
 | [Platform Dependencies](platform-dependencies.md) | Claude Code dependency risks and contingency posture. |
+| [Capability Ledger](capability-ledger.md) | How every capability is classified as works, compromised, broken, or not mechanically verifiable. |
+| [Capability Ledger — Current Table](capability-ledger-table.md) | The generated truth table: which capabilities work right now, and why the others do not. |
 | [Behavioral Contracts](behavioral-contracts.md) | Model behavior contracts and current status. |
 | [Evidence and Success-Criteria Contracts](evidence-and-contracts.md) | Frozen success-criteria contracts, implementation evidence, and the fail-closed verify gate. |
 | [FAQ](faq.md) | Honest answers and troubleshooting. |

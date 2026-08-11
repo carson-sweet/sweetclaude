@@ -481,3 +481,55 @@ def test_redirects_are_declared_read_only() -> None:
         if key.endswith("_redirect"):
             assert entry["mutates_project"] is False, key
             assert entry["mutation_class"] == "read_only", key
+
+
+# --- discoverability and CI (ISSUE-266) ----------------------------------
+
+INDEX = REPO_ROOT / "docs" / "user-guide" / "index.md"
+WORKFLOW = REPO_ROOT / ".github" / "workflows" / "test.yml"
+
+
+def test_the_guide_index_links_the_ledger() -> None:
+    """A page nobody can find is internal-only. The ledger is the answer to
+    "what actually works", which is the question a user arrives with."""
+    text = INDEX.read_text(encoding="utf-8")
+
+    assert "capability-ledger.md" in text
+    assert "capability-ledger-table.md" in text
+
+
+def test_ci_generates_the_ledger() -> None:
+    """The committed table is a snapshot. Without CI regenerating it, its
+    verdicts drift from the code the moment coverage moves and nobody notices —
+    the failure this whole epic keeps finding."""
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "capability_ledger.py" in workflow
+
+
+def test_ci_generates_it_against_the_coverage_it_measured() -> None:
+    """Generating without coverage reports every declared capability as works.
+    That difference is the reason the table is worth having."""
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "--cov-report=json:coverage.json" in workflow
+    assert "--coverage coverage.json" in workflow
+
+
+def test_ci_publishes_the_result() -> None:
+    workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+    steps = workflow["jobs"]["test"]["steps"]
+    upload = [s for s in steps if "upload-artifact" in str(s.get("uses", ""))]
+
+    assert upload, "the ledger is generated but never published"
+    assert upload[0]["with"]["if-no-files-found"] == "error", (
+        "a missing ledger must fail the step, not pass silently")
+
+
+def test_the_upload_action_is_pinned_to_a_sha() -> None:
+    """Every other action in this workflow is SHA-pinned; a tag is mutable."""
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    import re as _re
+
+    for uses in _re.findall(r"uses:\s*(\S+)", workflow):
+        assert _re.search(r"@[0-9a-f]{40}$", uses), uses
