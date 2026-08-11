@@ -1,6 +1,3 @@
-# SweetClaude capability manifest
-# Central source for release-channel facts and safety gates that should be
-# shared by update, doctor, migrate, recover, status, and release tooling.
 schema_version: 1
 channels:
   stable:
@@ -9,8 +6,6 @@ channels:
     expected_marketplace: sweetclaude-stable
     prerelease_required: false
     prerelease_allowed: false
-    # ISSUE-241: control-lint moved here from the retired beta channel —
-    # stable is now the active development channel and keeps the gate.
     control_lint_required: true
   beta:
     branch: beta-4.x
@@ -19,9 +14,6 @@ channels:
     prerelease_required: true
     prerelease_allowed: true
     minimum_safe_version: 4.1.9-beta
-    # Decision log #35/#36 (ISSUE-241): the beta channel is retired. The
-    # entry stays so retired installs remain classifiable and route to the
-    # one-time switch instead of crashing on an unknown channel.
     retired: true
     retirement_target_channel: stable
     control_lint_required: true
@@ -43,7 +35,6 @@ release:
   - docs-capability
   - public-distribution
 capabilities:
-  # --- maintenance domain ---
   recover.stabilize_without_migration:
     title: Stabilize recoverable legacy layout without taxonomy migration
     delegate_skill: sweetclaude:recover
@@ -292,7 +283,6 @@ capabilities:
     mutates_project: false
     mutates_global_config: true
     requires_approval: true
-  # --- system domain (ISSUE-257) ---
   doctor.scan:
     title: Read-only diagnostic scan across all check categories
     delegate_skill: sweetclaude:doctor
@@ -315,7 +305,7 @@ capabilities:
       check: scan returns a findings payload without writing to the project
     rollback_support:
       supported: true
-      command: not applicable — scan writes nothing
+      command: "not applicable \u2014 scan writes nothing"
       limitations: []
     unsupported_states:
     - condition: not_configured
@@ -421,7 +411,7 @@ capabilities:
       check: no files or state written by init itself (ISSUE-249)
     rollback_support:
       supported: true
-      command: not applicable — init writes nothing
+      command: "not applicable \u2014 init writes nothing"
       limitations: []
     unsupported_states:
     - condition: damaged_state
@@ -435,7 +425,7 @@ capabilities:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_canonical_state_reads.py -q
   setup.onboard_project:
-    title: Onboard a project — detect shape, write sweetclaude.yaml, build v4 storage
+    title: "Onboard a project \u2014 detect shape, write sweetclaude.yaml, build v4 storage"
     delegate_skill: sweetclaude:setup
     command_entrypoint:
       slash_command: null
@@ -526,7 +516,7 @@ capabilities:
       check: a stable install is never offered a prerelease (ISSUE-248)
     rollback_support:
       supported: true
-      command: not applicable — check writes nothing to the project
+      command: "not applicable \u2014 check writes nothing to the project"
       limitations: []
     unsupported_states:
     - condition: network_unavailable
@@ -571,8 +561,6 @@ capabilities:
     verification_commands:
     - python3 scripts/backfill_work_item_artifacts.py --project-dir <project> --dry-run
     - python3 -m pytest tests/test_backfill_work_item_artifacts.py -q
-  # --- product / design / documents / testing / corpus domains
-  # (ISSUE-258, 259, 262, 263, 264) ---
   product.brief:
     title: Write a product brief
     delegate_skill: sweetclaude:product-brief
@@ -838,7 +826,7 @@ capabilities:
       check: no project files are modified
     rollback_support:
       supported: true
-      command: not applicable — writes nothing
+      command: "not applicable \u2014 writes nothing"
       limitations: []
     unsupported_states:
     - condition: artifact_privacy_manifest_missing
@@ -1426,7 +1414,7 @@ capabilities:
       check: no project files are modified
     rollback_support:
       supported: true
-      command: not applicable — writes nothing
+      command: "not applicable \u2014 writes nothing"
       limitations: []
     unsupported_states:
     - condition: artifact_privacy_manifest_missing
@@ -1456,7 +1444,7 @@ capabilities:
       check: no project files are modified
     rollback_support:
       supported: true
-      command: not applicable — writes nothing
+      command: "not applicable \u2014 writes nothing"
       limitations: []
     unsupported_states:
     - condition: artifact_privacy_manifest_missing
@@ -2106,7 +2094,7 @@ capabilities:
       check: no project files are modified
     rollback_support:
       supported: true
-      command: not applicable — writes nothing
+      command: "not applicable \u2014 writes nothing"
       limitations: []
     unsupported_states:
     - condition: artifact_privacy_manifest_missing
@@ -2231,7 +2219,7 @@ capabilities:
       check: every declared contract appears on the scorecard
     rollback_support:
       supported: true
-      command: not applicable — scoring writes no project files
+      command: "not applicable \u2014 scoring writes no project files"
       limitations: []
     unsupported_states:
     - condition: no_live_model
@@ -2260,7 +2248,7 @@ capabilities:
       check: each of the four modes is exercised
     rollback_support:
       supported: true
-      command: not applicable — validation writes no project files
+      command: "not applicable \u2014 validation writes no project files"
       limitations: []
     unsupported_states:
     - condition: mode_unset
@@ -2270,7 +2258,6 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_capability_manifest.py -q
-  # --- code / project domains (ISSUE-260, ISSUE-261) ---
   code.feature:
     title: Build a new feature end to end under TDD
     delegate_skill: sweetclaude:code-feature
@@ -2389,7 +2376,7 @@ capabilities:
       check: findings reported without modifying the tree
     rollback_support:
       supported: true
-      command: not applicable — writes no project files
+      command: "not applicable \u2014 writes no project files"
       limitations: []
     unsupported_states:
     - condition: not_configured
@@ -2450,7 +2437,7 @@ capabilities:
       check: results reported; no source modified
     rollback_support:
       supported: true
-      command: not applicable — writes no project files
+      command: "not applicable \u2014 writes no project files"
       limitations: []
     unsupported_states:
     - condition: not_configured
@@ -2853,7 +2840,7 @@ capabilities:
       check: listing does not modify item files
     rollback_support:
       supported: true
-      command: not applicable — writes no project files
+      command: "not applicable \u2014 writes no project files"
       limitations: []
     unsupported_states:
     - condition: not_configured
@@ -3273,7 +3260,7 @@ capabilities:
       check: judgment and blocked criteria are reported, not omitted
     rollback_support:
       supported: true
-      command: not applicable — reads only
+      command: "not applicable \u2014 reads only"
       limitations: []
     unsupported_states:
     - condition: unknown_artifact_type
@@ -3309,7 +3296,7 @@ capabilities:
       check: discriminate reports true for the configured backend
     rollback_support:
       supported: true
-      command: not applicable — reads only
+      command: "not applicable \u2014 reads only"
       limitations: []
     unsupported_states:
     - condition: backend_unavailable
@@ -3323,6 +3310,126 @@ capabilities:
     - python3 -m pytest tests/test_artifact_judge.py -q
     - python3 scripts/artifact_judge.py discriminate --backend stub
     verification_tier: tier-3-behavioral
+  config.audit_redirect:
+    title: 'Redirect: claude-config-audit sends the user to doctor'
+    delegate_skill: sweetclaude:claude-config-audit
+    command_entrypoint:
+      slash_command: /sweetclaude:claude-config-audit
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: target-resolves
+      check: sweetclaude:doctor exists as a skill
+    unsupported_states:
+    - condition: target_removed
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: 4.0.0
+    verification_commands:
+    - python3 scripts/checks/redirect_targets.py
+  fix.sweetclaude_redirect:
+    title: 'Redirect: fix-sweetclaude sends the user to doctor'
+    delegate_skill: sweetclaude:fix-sweetclaude
+    command_entrypoint:
+      slash_command: /sweetclaude:fix-sweetclaude
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: target-resolves
+      check: sweetclaude:doctor exists as a skill
+    unsupported_states:
+    - condition: target_removed
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: 4.0.0
+    verification_commands:
+    - python3 scripts/checks/redirect_targets.py
+  hooks.repair_redirect:
+    title: 'Redirect: hook-repair sends the user to doctor'
+    delegate_skill: sweetclaude:hook-repair
+    command_entrypoint:
+      slash_command: /sweetclaude:hook-repair
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: target-resolves
+      check: sweetclaude:doctor exists as a skill
+    unsupported_states:
+    - condition: target_removed
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: 4.0.0
+    verification_commands:
+    - python3 scripts/checks/redirect_targets.py
+  migrate.diagnose_redirect:
+    title: 'Redirect: migrate-diagnose sends the user to doctor'
+    delegate_skill: sweetclaude:migrate-diagnose
+    command_entrypoint:
+      slash_command: /sweetclaude:migrate-diagnose
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: target-resolves
+      check: sweetclaude:doctor exists as a skill
+    unsupported_states:
+    - condition: target_removed
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: 4.0.0
+    verification_commands:
+    - python3 scripts/checks/redirect_targets.py
+  project.epics_redirect:
+    title: 'Redirect: project-epics sends the user to epics'
+    delegate_skill: sweetclaude:project-epics
+    command_entrypoint:
+      slash_command: /sweetclaude:project-epics
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: target-resolves
+      check: sweetclaude:epics exists as a skill
+    unsupported_states:
+    - condition: target_removed
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: 4.0.0
+    verification_commands:
+    - python3 scripts/checks/redirect_targets.py
 project_shapes:
   recovery_required:
     guard_status: run-recover

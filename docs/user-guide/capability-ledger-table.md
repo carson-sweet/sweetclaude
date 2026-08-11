@@ -1,7 +1,7 @@
 # SweetClaude Capability Ledger
 
-**Declared capabilities:** 105
-**Works:** 82  ·  **Compromised:** 18  ·  **Broken:** 5  ·  **Not mechanically verifiable:** 0
+**Declared capabilities:** 110
+**Works:** 87  ·  **Compromised:** 18  ·  **Broken:** 5  ·  **Not mechanically verifiable:** 0
 
 A capability with no verification path is reported as broken, never
 omitted — an omitted capability is indistinguishable from a working one.
@@ -25,6 +25,7 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `code.testing` | tier-1-structural | **works** |  |
 | `code.ultraplan` | tier-1-structural | **works** |  |
 | `code.verify` | tier-2-executable | **works** |  |
+| `config.audit_redirect` | tier-1-structural | **works** |  |
 | `corpus.consolidate` | tier-1-structural | **works** |  |
 | `corpus.pipeline` | tier-1-structural | **works** |  |
 | `corpus.promote` | tier-1-structural | **works** |  |
@@ -59,7 +60,10 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `documents.report_failure` | tier-1-structural | **works** |  |
 | `documents.session_export` | tier-1-structural | **works** |  |
 | `documents.update_docs` | tier-1-structural | **works** |  |
+| `fix.sweetclaude_redirect` | tier-1-structural | **works** |  |
+| `hooks.repair_redirect` | tier-1-structural | **works** |  |
 | `init.dispatch` | tier-1-structural | **works** |  |
+| `migrate.diagnose_redirect` | tier-1-structural | **works** |  |
 | `migrate.flat_bl_to_issue` | tier-2-executable | **compromised** | entrypoint coverage 79% is below 80% |
 | `migrate.typed_legacy_backlog` | tier-2-executable | **works** |  |
 | `product.brief` | tier-1-structural | **works** |  |
@@ -87,6 +91,7 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `project.course_correction` | tier-2-executable | **compromised** | entrypoint coverage 72% is below 80% |
 | `project.epic_design` | tier-1-structural | **works** |  |
 | `project.epics` | tier-2-executable | **compromised** | rollback carries limitations: audit log retains the intermediate transition |
+| `project.epics_redirect` | tier-1-structural | **works** |  |
 | `project.gh_import` | tier-2-executable | **compromised** | entrypoint coverage 72% is below 80% |
 | `project.gh_sync` | tier-2-executable | **compromised** | rollback carries limitations: audit log retains the intermediate transition |
 | `project.goals` | tier-1-structural | **works** |  |

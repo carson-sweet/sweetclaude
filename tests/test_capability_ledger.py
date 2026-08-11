@@ -395,3 +395,89 @@ def test_a_non_works_row_always_says_why() -> None:
     for row in led.build_ledger(include_behavioral=False)["rows"]:
         if row["status"] != led.WORKS:
             assert row["reasons"], row["capability"]
+
+
+# --- redirect skills (ISSUE-261) -----------------------------------------
+
+def test_every_redirect_skill_is_classified() -> None:
+    """Five skills exist only to send the user somewhere else. They were absent
+    from the manifest, and an omitted capability is indistinguishable from a
+    working one — which is the whole basis of this ledger."""
+    import sys as _sys
+    _sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
+    from redirect_targets import redirect_targets
+
+    declared = {(v.get("delegate_skill") or "").replace("sweetclaude:", "")
+                for v in led._load_manifest(led.MANIFEST)["capabilities"].values()}
+
+    missing = [s for s in redirect_targets() if s not in declared]
+
+    assert not missing, f"redirect skills absent from the manifest: {missing}"
+
+
+def test_a_redirect_points_at_a_skill_that_exists() -> None:
+    """The defect this guards is ISSUE-252's: a redirect naming a target that
+    does not resolve. The sentence reads fine either way, so nothing surfaces
+    it."""
+    import subprocess as _sp
+
+    result = _sp.run([sys.executable,
+                      str(REPO_ROOT / "scripts" / "checks" / "redirect_targets.py")],
+                     capture_output=True, text=True, timeout=60)
+
+    assert result.returncode == 0, result.stdout
+
+
+def test_the_redirect_check_fails_on_a_broken_target(tmp_path) -> None:
+    """A check that cannot fail is not a check. This builds a redirect pointing
+    nowhere and asserts it is caught."""
+    import sys as _sys
+    _sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
+    import redirect_targets as rt
+
+    fake = tmp_path / "repo"
+    (fake / "skills" / "gone-nowhere").mkdir(parents=True)
+    (fake / "skills" / "gone-nowhere" / "SKILL.md").write_text(
+        '---\nname: gone-nowhere\ndescription: "Redirects to sweetclaude:does-not-exist."\n---\n',
+        encoding="utf-8")
+
+    original = rt.REPO
+    try:
+        rt.REPO = fake
+        assert rt.redirect_targets() == {"gone-nowhere": "does-not-exist"}
+        # the exit code is what a verification_command is judged on; asserting
+        # only that it returns 0 today leaves the failure path unexercised
+        assert rt.main() == 1
+    finally:
+        rt.REPO = original
+
+
+def test_the_redirect_check_passes_when_every_target_resolves(tmp_path) -> None:
+    import sys as _sys
+    _sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
+    import redirect_targets as rt
+
+    fake = tmp_path / "repo"
+    for name, desc in (("shim", '"Redirects to sweetclaude:real."'),
+                       ("real", '"Does the thing."')):
+        (fake / "skills" / name).mkdir(parents=True)
+        (fake / "skills" / name / "SKILL.md").write_text(
+            f'---\nname: {name}\ndescription: {desc}\n---\n', encoding="utf-8")
+
+    original = rt.REPO
+    try:
+        rt.REPO = fake
+        assert rt.main() == 0
+    finally:
+        rt.REPO = original
+
+
+def test_redirects_are_declared_read_only() -> None:
+    """A redirect that claims to mutate would demand rollback support it has no
+    use for, and would read as a risk it is not."""
+    caps = led._load_manifest(led.MANIFEST)["capabilities"]
+
+    for key, entry in caps.items():
+        if key.endswith("_redirect"):
+            assert entry["mutates_project"] is False, key
+            assert entry["mutation_class"] == "read_only", key
