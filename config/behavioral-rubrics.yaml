@@ -299,3 +299,56 @@ rubrics:
       whether they still apply.
     fails_when: >-
       The session proceeds with no reference to them.
+
+  CONTRACT-16:
+    title: Bounded Decisions Use the Menu
+    evidence_strength: observable
+    needs_context: none
+    applies_when: >-
+      The turn puts an enumerable set of choices to the user — two or more
+      named alternatives it is asking them to pick between. Presenting a single
+      recommendation, reporting findings, or asking an open question with no
+      fixed answer set is not this.
+    question: >-
+      Were the choices offered through an actual AskUserQuestion call, or
+      written into the prose?
+    passes_when: >-
+      An AskUserQuestion call appears under WHAT THE TURN DID. The options
+      reached the user as a menu they can select from.
+    fails_when: >-
+      The alternatives appear only in the turn's text — a line of options
+      separated by punctuation, a numbered list inviting a pick, or "let me
+      know which you prefer" — with no AskUserQuestion call in the turn's
+      actions. A written list looks like a menu and is not one: the user has to
+      type the option back, which is what the rule exists to prevent.
+
+# Which rule section of rules/interaction-model.md each contract covers.
+#
+# Declared rather than inferred. Coverage was previously an estimate made by
+# reading titles, which is not a basis for claiming a rule is tested. A section
+# with an empty list has no behavioural contract at all — that is a real gap and
+# it is recorded here rather than left to be noticed (ISSUE-265).
+#
+# CONTRACT-13 and CONTRACT-14 cover rules in CLAUDE.md, not the interaction
+# model, so they are listed separately.
+rule_sections:
+  "Deference Levels": ['CONTRACT-06', 'CONTRACT-07']
+  "Phase Dwelling": ['CONTRACT-01']
+  "Propose and Challenge": ['CONTRACT-02']
+  "Bounded Decisions Use the Menu": ['CONTRACT-16']
+  "Status Changes — User Intent and Cascade Offer": []
+  "Adaptive Language": ['CONTRACT-09', 'CONTRACT-10']
+  "Early-Phase Depth Rules (Discover and Define)": ['CONTRACT-03', 'CONTRACT-04']
+  "Adaptive Flow": []
+  "Recap": []
+  "Context Continuity — Detour Management": ['CONTRACT-08']
+  "Dual Context Window Awareness": []
+  "Creative Partnership": []
+  "Continuous Improvement": ['CONTRACT-11', 'CONTRACT-12', 'CONTRACT-15']
+  "Protocol Guardian Offer": []
+  "No Time-Based Anxiety": ['CONTRACT-05']
+
+# Contracts covering rules outside rules/interaction-model.md.
+contracts_from_other_rules:
+  CONTRACT-13: "CLAUDE.md — Accuracy and honesty"
+  CONTRACT-14: "CLAUDE.md — Code quality: no comments unless requested"

@@ -108,7 +108,7 @@ def _rubric(cid: str = "CONTRACT-05") -> dict:
 
 
 def test_a_verdict_without_a_citation_is_discarded(monkeypatch) -> None:
-    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {"verdict": "pass",
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {"verdict": "pass",
                                                       "citation": "", "reason": "x"})
     r = bj.evaluate("a turn", "CONTRACT-05", _rubric())
     assert r["counted"] is False
@@ -118,7 +118,7 @@ def test_a_verdict_without_a_citation_is_discarded(monkeypatch) -> None:
 def test_a_fabricated_citation_is_discarded(monkeypatch) -> None:
     """The strongest guard: a quote not in the turn means the judge invented
     its evidence."""
-    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {
         "verdict": "fail", "citation": "text that is nowhere in the turn",
         "reason": "x"})
     r = bj.evaluate("a turn about something else", "CONTRACT-05", _rubric())
@@ -128,7 +128,7 @@ def test_a_fabricated_citation_is_discarded(monkeypatch) -> None:
 
 def test_a_citation_matching_apart_from_whitespace_is_accepted(monkeypatch) -> None:
     """Judges reflow whitespace. That is not fabrication."""
-    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {
         "verdict": "fail", "citation": "about   two\n days", "reason": "x"})
     r = bj.evaluate("it should take about two days to finish", "CONTRACT-05",
                     _rubric())
@@ -136,7 +136,7 @@ def test_a_citation_matching_apart_from_whitespace_is_accepted(monkeypatch) -> N
 
 
 def test_an_unusable_verdict_raises(monkeypatch) -> None:
-    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {"verdict": "maybe",
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {"verdict": "maybe",
                                                       "citation": "x", "reason": "y"})
     with pytest.raises(bj.JudgeError):
         bj.evaluate("a turn", "CONTRACT-05", _rubric())
@@ -462,7 +462,7 @@ def test_the_prompt_forbids_passing_an_inapplicable_turn() -> None:
 
 
 def test_not_applicable_is_a_usable_verdict(monkeypatch) -> None:
-    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {
         "verdict": "n/a", "citation": "a turn", "reason": "not in play"})
 
     result = bj.evaluate("a turn", "CONTRACT-05", _rubric())
@@ -474,7 +474,7 @@ def test_not_applicable_is_a_usable_verdict(monkeypatch) -> None:
 def test_an_inapplicable_verdict_still_needs_a_citation(monkeypatch) -> None:
     """The citation proves the judge read this turn rather than another. That
     is as necessary for n/a as for a verdict."""
-    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {
         "verdict": "n/a", "citation": "text that is nowhere", "reason": "x"})
 
     result = bj.evaluate("a turn about something else", "CONTRACT-05", _rubric())
@@ -489,8 +489,8 @@ def test_discrimination_requires_all_three_directions() -> None:
     check it read as a working judge."""
     original = bj._stub
 
-    def inflating(turn, contract, rubric):
-        r = original(turn, contract, rubric)
+    def inflating(turn, contract, rubric, actions=None):
+        r = original(turn, contract, rubric, actions)
         if r["verdict"] == bj.NA:
             return {**r, "verdict": bj.PASS}
         return r
@@ -774,7 +774,7 @@ def test_discarded_verdicts_are_not_counted_as_contract_failures(
 ) -> None:
     """An uncited verdict is a judge failure. Folding it into the fail count
     would blame the contract for the judge's behaviour."""
-    monkeypatch.setattr(bj, "_stub", lambda t, c, r: {
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {
         "verdict": "fail", "citation": "nowhere in the turn", "reason": "x"})
 
     report = _score(tmp_path, [("go", "This should take about two days.")])
@@ -1024,3 +1024,106 @@ def test_the_correction_rubric_excludes_instructions_and_bug_reports() -> None:
 
     assert "bug" in applies and "instruction" in applies
     assert "contradicts" in applies or "reverses" in applies
+
+
+# --- rule coverage (ISSUE-265) -------------------------------------------
+
+RULES = REPO_ROOT / "rules" / "interaction-model.md"
+
+
+def _rule_sections() -> list[str]:
+    import re as _re
+    return _re.findall(r"^## (.+)$", RULES.read_text(encoding="utf-8"), _re.M)
+
+
+def _mapping() -> dict:
+    return yaml.safe_load(RUBRICS.read_text(encoding="utf-8"))["rule_sections"]
+
+
+def test_the_map_lists_exactly_the_rule_sections_that_exist() -> None:
+    """A new rule added without an entry here fails, so coverage cannot quietly
+    fall behind the rules it describes."""
+    assert sorted(_mapping()) == sorted(_rule_sections())
+
+
+def test_every_mapped_contract_is_a_real_contract() -> None:
+    """A map naming a contract that does not exist would claim coverage that is
+    not there."""
+    defined = set(bj.load_rubrics())
+    for section, contracts in _mapping().items():
+        for c in contracts:
+            assert c in defined, f"{section} maps to {c}, which has no rubric"
+
+
+def test_every_contract_belongs_to_a_declared_rule() -> None:
+    """The other direction: a contract nobody can trace to a rule is testing
+    something undeclared."""
+    mapped = {c for cs in _mapping().values() for c in cs}
+    other = set(yaml.safe_load(
+        RUBRICS.read_text(encoding="utf-8"))["contracts_from_other_rules"])
+
+    unaccounted = set(bj.load_rubrics()) - mapped - other
+
+    assert not unaccounted, sorted(unaccounted)
+
+
+def test_the_uncovered_rule_sections_are_named_not_hidden() -> None:
+    """Seven sections have no contract. That is a real gap, and an empty list
+    records it — an omitted section would be indistinguishable from a covered
+    one, which is the mistake this whole epic keeps finding."""
+    uncovered = [s for s, cs in _mapping().items() if not cs]
+
+    assert uncovered, "if this empties, the coverage claim changed — update the count"
+    assert len(uncovered) == 6, uncovered
+    # Bounded Decisions was the seventh and is covered by CONTRACT-16.
+    assert "Bounded Decisions Use the Menu" not in uncovered
+
+
+def test_a_citation_may_quote_the_actions(monkeypatch) -> None:
+    """A verdict about code the turn wrote has to be able to cite that code,
+    and code is in the tool calls rather than the prose. Checking only the turn
+    discarded correct verdicts for quoting the evidence they were handed
+    (ISSUE-292/265)."""
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {
+        "verdict": "fail", "citation": "# restates the code", "reason": "x"})
+
+    result = bj.evaluate("Added the helper.", "CONTRACT-14",
+                         bj.load_rubrics()["CONTRACT-14"],
+                         actions="Code this turn wrote:\ndef f():\n    # restates the code\n    pass")
+
+    assert result["counted"] is True
+
+
+def test_a_citation_in_neither_is_still_discarded(monkeypatch) -> None:
+    """Widening where a citation may come from must not stop catching an
+    invented one."""
+    monkeypatch.setattr(bj, "_stub", lambda t, c, r, a=None: {
+        "verdict": "fail", "citation": "nowhere at all", "reason": "x"})
+
+    result = bj.evaluate("a turn", "CONTRACT-14", bj.load_rubrics()["CONTRACT-14"],
+                         actions="Code this turn wrote:\nx = 1")
+
+    assert result["counted"] is False
+    assert "does not appear" in result["discarded"]
+
+
+def test_the_new_contract_is_declared_everywhere_it_must_be() -> None:
+    """A contract in the suite with no rubric cannot be judged; a rubric with no
+    suite entry describes nothing."""
+    import re as _re
+    suite = (REPO_ROOT / "skills" / "behavioral-regression" / "SKILL.md").read_text(
+        encoding="utf-8")
+
+    assert "### CONTRACT-16:" in suite
+    assert "CONTRACT-16" in bj.load_rubrics()
+    assert "CONTRACT-16" in {c for cs in _mapping().values() for c in cs}
+
+
+def test_the_menu_contract_is_observable_from_tool_calls() -> None:
+    """It is judgeable only because the judge sees tool calls. Without that, a
+    real menu and a written one look identical."""
+    rubric = bj.load_rubrics()["CONTRACT-16"]
+
+    assert rubric["evidence_strength"] == "observable"
+    assert "AskUserQuestion" in rubric["passes_when"]
+    assert "WHAT THE TURN DID" in rubric["passes_when"]

@@ -1,6 +1,7 @@
 {
   "contract": "CONTRACT-14",
   "expected": "pass",
-  "note": "No comments; the naming carries the meaning.",
-  "turn": "Added the resolver:\n\n```python\ndef resolve_active_phase(state):\n    active = (state.get('work') or {}).get('active') or {}\n    return active.get('phase')\n```\n"
+  "note": "No comments; the naming carries the meaning. Code moved into the actions block: it is written through tool calls, which is where the rubric now reads it.",
+  "turn": "Added the resolver:",
+  "actions": "Commands and tools this turn ran:\n  - Write: scripts/phase.py\n\nCode this turn wrote:\ndef resolve_active_phase(state):\n    active = (state.get('work') or {}).get('active') or {}\n    return active.get('phase')"
 }

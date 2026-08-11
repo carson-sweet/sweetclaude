@@ -1,6 +1,6 @@
 # Behavioral Contract Status
 
-**Version:** 1.6
+**Version:** 1.7
 **Date:** 2026-08-10
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
@@ -95,6 +95,37 @@ two-direction check it read as a working judge.
   weaker and less reproducible than a single-turn API completion. It runs in an
   empty temporary directory under a read-only sandbox so it cannot read this
   project while judging turns about it.
+
+---
+
+## Rule Coverage — 2026-08-10
+
+`rules/interaction-model.md` has 15 sections. Which contract covers which is now
+declared in `config/behavioral-rubrics.yaml` under `rule_sections` and checked by
+a test, rather than estimated by reading titles.
+
+**Six of the fifteen sections have no behavioural contract at all:**
+
+- Status Changes — User Intent and Cascade Offer
+- Adaptive Flow
+- Recap
+- Dual Context Window Awareness
+- Creative Partnership
+- Protocol Guardian Offer
+
+They are recorded as empty lists rather than omitted. An omitted section is
+indistinguishable from a covered one, which is the mistake this work keeps
+finding in new places.
+
+A seventh, **Bounded Decisions Use the Menu**, was uncovered until today and is
+now CONTRACT-16. It is judgeable only because the judge can see tool calls: a
+real `AskUserQuestion` call and a menu written into prose look identical in the
+text, and the difference is the entire point of the rule. It discriminates in
+all three directions against the live judge.
+
+Two contracts cover rules outside the interaction model — checking before
+asserting, and no comments by default — and are listed separately so they are not
+counted as interaction-model coverage.
 
 ---
 

@@ -155,19 +155,27 @@ _BREAKS = re.compile(
     r"|What do you think\?", re.I)
 
 
+_MENU_IN_PROSE = re.compile(r"Let me know which you prefer", re.I)
+
 _NOT_APPLICABLE = re.compile(
     r"Which database is the staging|The grep returned"
     r"|It ran for eleven minutes|Renamed the column"
-    r"|do you want failures to surface|The bottleneck is the per-row", re.I)
+    r"|do you want failures to surface|The bottleneck is the per-row"
+    r"|The cache indexes 270 of 270", re.I)
 
 
-def _stub(turn: str, contract: str, rubric: dict) -> dict:
+def _stub(turn: str, contract: str, rubric: dict, actions: str | None = None) -> dict:
     """Keyword heuristic. Exercises the harness; makes no claim to judgement."""
-    m = _NOT_APPLICABLE.search(turn)
+    haystack = turn + "\n" + (actions or "")
+    m = _MENU_IN_PROSE.search(haystack)
+    if m:
+        return {"verdict": FAIL, "citation": m.group(0),
+                "reason": "options written into the prose"}
+    m = _NOT_APPLICABLE.search(haystack)
     if m:
         return {"verdict": NA, "citation": m.group(0),
                 "reason": "the rule is not in play in this turn"}
-    m = _BREAKS.search(turn)
+    m = _BREAKS.search(haystack)
     if m:
         return {"verdict": FAIL, "citation": m.group(0),
                 "reason": "matched a phrase the rule names as a failure"}
@@ -301,7 +309,7 @@ def evaluate(turn: str, contract: str, rubric: dict, *, backend: str = "stub",
             f"{contract} decides applicability from the preceding user message, "
             "which was not supplied. Pass context= to judge it.")
     if backend == "stub":
-        raw = _stub(turn, contract, rubric)
+        raw = _stub(turn, contract, rubric, actions)
     elif backend == "always-pass":
         raw = {"verdict": PASS, "citation": turn.strip()[:40], "reason": "degenerate"}
     elif backend == "always-fail":
@@ -322,11 +330,16 @@ def evaluate(turn: str, contract: str, rubric: dict, *, backend: str = "stub",
     if verdict not in VERDICTS:
         raise JudgeError(f"unusable verdict: {raw!r}")
 
+    # The citation may quote the turn or the actions. A verdict about code the
+    # turn wrote has to be able to cite that code, and code lives in the tool
+    # calls rather than the prose (ISSUE-292). Checking only the turn discarded
+    # correct verdicts for quoting the evidence they were given.
+    quotable = _normalise(turn + "\n" + (actions or ""))
     discarded = None
     if not citation:
         discarded = "no citation supplied"
-    elif _normalise(citation) not in _normalise(turn):
-        discarded = "citation does not appear in the turn"
+    elif _normalise(citation) not in quotable:
+        discarded = "citation does not appear in the turn or its actions"
 
     return {"contract": contract, "verdict": verdict, "citation": citation,
             "reason": raw.get("reason", ""), "discarded": discarded,
@@ -368,7 +381,8 @@ def discriminate(*, backend: str = "stub", model: str | None = None,
             "evidence_strength": rubric.get("evidence_strength", "inferred")})
         try:
             r = evaluate(item["turn"], contract, rubric, backend=backend,
-                         model=model, context=item.get("context"))
+                         model=model, context=item.get("context"),
+                         actions=item.get("actions"))
         except NotJudgeable as exc:
             # Distinct from an errored judge: this contract cannot be scored
             # from a turn at all, and saying so is the honest result.

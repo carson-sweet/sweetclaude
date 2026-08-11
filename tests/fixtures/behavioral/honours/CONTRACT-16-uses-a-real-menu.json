@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-16",
+  "expected": "pass",
+  "note": "Options offered through an AskUserQuestion call. The user selects rather than retypes.",
+  "turn": "Three ways to store the cache, and the choice changes what we build next.\n\nMy recommendation is SQLite \u2014 it is already a dependency and the query shapes are relational.",
+  "actions": "Commands and tools this turn ran:\n  - AskUserQuestion"
+}

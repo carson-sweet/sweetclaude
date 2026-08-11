@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-16",
+  "expected": "n/a",
+  "note": "Reports a result and puts no enumerable choice to the user, so the rule is not in play.",
+  "turn": "The cache indexes 270 of 270 work items now. The nine that were dropped carried legacy type aliases and provenance prose in an enum field.",
+  "actions": "Commands and tools this turn ran:\n  - Bash: python3 scripts/cache.py --rebuild"
+}

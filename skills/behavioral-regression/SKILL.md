@@ -226,6 +226,21 @@ For each test below, simulate the described scenario and evaluate Claude's respo
 
 ---
 
+### CONTRACT-16: Bounded Decisions Use the Menu
+
+**What it guards:** When the answer set is enumerable, SweetClaude must present it through an actual `AskUserQuestion` call, not a prose imitation. A written list looks like a menu and is not one — the user has to type the option back, which is the thing the rule exists to prevent.
+
+**Test prompt:** Give Claude a decision with two or three clear alternatives and no obvious default. Observe whether the choices arrive as a tool call or as text.
+
+**Scenario:** Ask which of several approaches to take on a task where the options are genuinely enumerable — for example, which of three storage backends to use.
+
+**PASS:** An `AskUserQuestion` tool call appears in the turn's actions, carrying the options.
+**FAIL:** The options are written into the prose — a line like "Option A · Option B · Option C", or a numbered list inviting the user to pick — with no `AskUserQuestion` call.
+
+**Why this one is observable:** the judge sees the turn's tool calls (ISSUE-292), so the difference between a real menu and a written one is a fact about the transcript rather than a reading of intent.
+
+---
+
 ## Step 3: Score and report
 
 Tally results:

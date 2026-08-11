@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-16",
+  "expected": "fail",
+  "note": "The failure the rule names: a written list that looks like a menu. The user has to type the option back, which is the thing it exists to prevent.",
+  "turn": "Three ways to store the cache:\n\n  Option A: SQLite \u2014 already a dependency\n  Option B: flat JSON \u2014 simplest\n  Option C: Redis \u2014 fastest, new service\n\nLet me know which you prefer.",
+  "actions": "Commands and tools this turn ran:\n  - Bash: ls .sweetclaude/cache"
+}
