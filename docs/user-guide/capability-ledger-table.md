@@ -1,7 +1,7 @@
 # SweetClaude Capability Ledger
 
-**Declared capabilities:** 110
-**Works:** 87  ·  **Compromised:** 18  ·  **Broken:** 5  ·  **Not mechanically verifiable:** 0
+**Declared capabilities:** 132
+**Works:** 103  ·  **Compromised:** 27  ·  **Broken:** 2  ·  **Not mechanically verifiable:** 0
 
 A capability with no verification path is reported as broken, never
 omitted — an omitted capability is indistinguishable from a working one.
@@ -9,11 +9,13 @@ omitted — an omitted capability is indistinguishable from a working one.
 | Capability | Tier | Status | Notes |
 |---|---|---|---|
 | `code.debt` | tier-1-structural | **works** |  |
+| `code.deploy_ship` | tier-1-structural | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
 | `code.feature` | tier-1-structural | **works** |  |
 | `code.hotfix` | tier-1-structural | **works** |  |
 | `code.incident` | tier-1-structural | **works** |  |
 | `code.issue` | tier-1-structural | **works** |  |
 | `code.john_wick` | tier-1-structural | **compromised** | rollback carries limitations: an interrupted run resumes rather than unwinding |
+| `code.john_wick_checkin` | tier-1-structural | **works** |  |
 | `code.large_story` | tier-2-executable | **compromised** | rollback carries limitations: committed work on the story branch is discarded |
 | `code.orchestrator` | tier-2-executable | **compromised** | rollback carries limitations: side effects of completed steps are not undone |
 | `code.postmortem` | tier-1-structural | **works** |  |
@@ -49,9 +51,9 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `design.ux_review` | tier-1-structural | **works** |  |
 | `design.wireframes` | tier-1-structural | **works** |  |
 | `doctor.auto_fix` | tier-2-executable | **works** |  |
-| `doctor.compatibility_mode` | tier-1-structural | **broken** | no verification_commands declared |
+| `doctor.compatibility_mode` | tier-2-executable | **works** |  |
 | `doctor.fix_graduation_blockers` | tier-2-executable | **works** |  |
-| `doctor.manual_review` | tier-1-structural | **broken** | no verification_commands declared |
+| `doctor.manual_review` | tier-2-executable | **works** |  |
 | `doctor.restore` | tier-2-executable | **compromised** | rollback carries limitations: restores only files a doctor run itself changed |
 | `doctor.scan` | tier-2-executable | **works** |  |
 | `documents.academic` | tier-1-structural | **works** |  |
@@ -60,11 +62,18 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `documents.report_failure` | tier-1-structural | **works** |  |
 | `documents.session_export` | tier-1-structural | **works** |  |
 | `documents.update_docs` | tier-1-structural | **works** |  |
+| `features.configure` | tier-1-structural | **works** |  |
 | `fix.sweetclaude_redirect` | tier-1-structural | **works** |  |
+| `guardian.disable` | tier-2-executable | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
+| `guardian.enable` | tier-2-executable | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
+| `health.scan` | tier-2-executable | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
 | `hooks.repair_redirect` | tier-1-structural | **works** |  |
 | `init.dispatch` | tier-1-structural | **works** |  |
+| `install.feature_setup` | tier-1-structural | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
+| `metrics.usage` | tier-2-executable | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
 | `migrate.diagnose_redirect` | tier-1-structural | **works** |  |
 | `migrate.flat_bl_to_issue` | tier-2-executable | **compromised** | entrypoint coverage 79% is below 80% |
+| `migrate.orchestrate` | tier-2-executable | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
 | `migrate.typed_legacy_backlog` | tier-2-executable | **works** |  |
 | `product.brief` | tier-1-structural | **works** |  |
 | `product.competition` | tier-1-structural | **works** |  |
@@ -89,12 +98,14 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `project.backlog` | tier-2-executable | **compromised** | entrypoint coverage 72% is below 80% |
 | `project.backlog_triage` | tier-2-executable | **compromised** | rollback carries limitations: audit log retains the intermediate transition |
 | `project.course_correction` | tier-2-executable | **compromised** | entrypoint coverage 72% is below 80% |
+| `project.deactivate` | tier-1-structural | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
 | `project.epic_design` | tier-1-structural | **works** |  |
 | `project.epics` | tier-2-executable | **compromised** | rollback carries limitations: audit log retains the intermediate transition |
 | `project.epics_redirect` | tier-1-structural | **works** |  |
 | `project.gh_import` | tier-2-executable | **compromised** | entrypoint coverage 72% is below 80% |
 | `project.gh_sync` | tier-2-executable | **compromised** | rollback carries limitations: audit log retains the intermediate transition |
 | `project.goals` | tier-1-structural | **works** |  |
+| `project.hibernate` | tier-1-structural | **compromised** | rollback carries limitations: state written before the failure point is not unwound |
 | `project.issues` | tier-2-executable | **compromised** | rollback carries limitations: audit log retains the intermediate transition |
 | `project.mode` | tier-1-structural | **works** |  |
 | `project.retro` | tier-1-structural | **works** |  |
@@ -106,6 +117,17 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `quality.rubric_judge` | tier-3-behavioral | **broken** | entrypoint script scripts/artifact_judge.py not found |
 | `recover.graduate_from_compatibility` | tier-2-executable | **works** |  |
 | `recover.stabilize_without_migration` | tier-2-executable | **works** |  |
+| `report.big_picture` | tier-2-executable | **works** |  |
+| `report.dashboard` | tier-1-structural | **works** |  |
+| `report.next_steps` | tier-2-executable | **works** |  |
+| `report.recap` | tier-2-executable | **works** |  |
+| `report.status` | tier-2-executable | **works** |  |
+| `session.bootstrap` | tier-2-executable | **works** |  |
+| `session.find_skill` | tier-2-executable | **works** |  |
+| `session.go` | tier-2-executable | **works** |  |
+| `session.help` | tier-1-structural | **works** |  |
+| `session.master` | tier-1-structural | **works** |  |
+| `session.route` | tier-1-structural | **works** |  |
 | `setup.onboard_project` | tier-2-executable | **compromised** | rollback carries limitations: purge removes all SweetClaude artifacts, not just this run's |
 | `testing.accessibility` | tier-1-structural | **works** |  |
 | `testing.behavioral_regression` | tier-1-structural | **works** |  |
@@ -116,6 +138,6 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `testing.security` | tier-1-structural | **works** |  |
 | `testing.session` | tier-1-structural | **works** |  |
 | `update.check` | tier-2-executable | **compromised** | entrypoint coverage 79% is below 80% |
-| `update.framework_sync` | tier-1-structural | **broken** | no verification_commands declared |
+| `update.framework_sync` | tier-2-executable | **works** |  |
 | `work_item_artifacts.backfill` | tier-2-executable | **works** |  |
 

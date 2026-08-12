@@ -173,6 +173,9 @@ capabilities:
     - rollback
     verification_commands:
     - python3 scripts/migrate/migrate_taxonomy.py --dry-run --project-dir <project>
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
   recover.graduate_from_compatibility:
     title: Graduate from compatibility mode
     supported: true
@@ -226,6 +229,22 @@ capabilities:
     - accepted_legacy_taxonomy
     mutates_project: false
     requires_approval: false
+    delegate_skill: null
+    command_entrypoint:
+      slash_command: null
+      script: null
+      module: null
+    mutation_class: read_only
+    required_preconditions: []
+    postconditions:
+    - id: outcome-reported
+      check: continue in compatibility mode
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    verification_commands:
+    - python3 scripts/doctor.py scan --project-dir <project>
+    verification_tier: tier-2-executable
   doctor.fix_graduation_blockers:
     title: Fix graduation blockers
     supported: true
@@ -264,6 +283,9 @@ capabilities:
     - rollback
     verification_commands:
     - python3 scripts/recovery/recover_project.py graduation-check --project-dir <project>
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
   doctor.manual_review:
     title: Manual maintenance review
     supports_project_shapes:
@@ -271,6 +293,22 @@ capabilities:
     - missing_product_base
     mutates_project: false
     requires_approval: false
+    delegate_skill: null
+    command_entrypoint:
+      slash_command: null
+      script: null
+      module: null
+    mutation_class: read_only
+    required_preconditions: []
+    postconditions:
+    - id: outcome-reported
+      check: route a project the guard cannot classify to manual review
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    verification_commands:
+    - python3 scripts/doctor.py scan --project-dir <project>
+    verification_tier: tier-2-executable
   update.framework_sync:
     title: Framework/plugin update without project artifact migration
     supports_project_shapes:
@@ -283,6 +321,22 @@ capabilities:
     mutates_project: false
     mutates_global_config: true
     requires_approval: true
+    delegate_skill: null
+    command_entrypoint:
+      slash_command: null
+      script: null
+      module: null
+    mutation_class: read_only
+    required_preconditions: []
+    postconditions:
+    - id: outcome-reported
+      check: sync the installed framework to the plugin version
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    verification_commands:
+    - python3 -m pytest tests/test_update_orchestrator.py -q
+    verification_tier: tier-2-executable
   doctor.scan:
     title: Read-only diagnostic scan across all check categories
     delegate_skill: sweetclaude:doctor
@@ -2357,6 +2411,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   code.review:
     title: Code, security and compliance review
     delegate_skill: sweetclaude:code-review
@@ -2386,6 +2441,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   code.tdd:
     title: Run the TDD pipeline at the selected level
     delegate_skill: sweetclaude:code-tdd
@@ -2447,6 +2503,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   code.verify:
     title: Produce a completion evidence receipt before closing work
     delegate_skill: sweetclaude:code-verify
@@ -2669,6 +2726,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   code.incident:
     title: Reactive production incident triage
     delegate_skill: sweetclaude:something-broke
@@ -2698,6 +2756,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   code.postmortem:
     title: Author a post-mortem with timeline and action items
     delegate_skill: sweetclaude:postmortem
@@ -2760,6 +2819,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   code.ultraplan:
     title: Produce a design-phase architecture plan via ultraplan
     delegate_skill: sweetclaude:ultraplan
@@ -2789,6 +2849,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   project.issues:
     title: Create, view, update and close project issues
     delegate_skill: sweetclaude:project-issues
@@ -3001,6 +3062,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   project.scope:
     title: Define and maintain project scope
     delegate_skill: sweetclaude:project-scope
@@ -3030,6 +3092,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   project.themes:
     title: Manage domain-grouping labels on stories
     delegate_skill: sweetclaude:project-themes
@@ -3209,6 +3272,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    verification_tier: tier-1-structural
   project.course_correction:
     title: Document a pivot and triage in-flight work
     delegate_skill: sweetclaude:course-correction
@@ -3430,6 +3494,631 @@ capabilities:
       deprecated_in: 4.0.0
     verification_commands:
     - python3 scripts/checks/redirect_targets.py
+  session.bootstrap:
+    title: 'Session startup: pre-flight, drift and update offers, routing'
+    delegate_skill: sweetclaude:bootstrap
+    command_entrypoint:
+      slash_command: /sweetclaude:bootstrap
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_beta_channel_retirement.py -q
+  session.master:
+    title: Phase router and session entry point
+    delegate_skill: sweetclaude:master
+    command_entrypoint:
+      slash_command: /sweetclaude:master
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+  session.route:
+    title: Map natural-language input to the right internal skill
+    delegate_skill: sweetclaude:_route
+    command_entrypoint:
+      slash_command: /sweetclaude:_route
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+  session.help:
+    title: Help and skill discovery
+    delegate_skill: sweetclaude:help
+    command_entrypoint:
+      slash_command: /sweetclaude:help
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+  session.find_skill:
+    title: Find and start the right skill for a piece of work
+    delegate_skill: sweetclaude:find-skill
+    command_entrypoint:
+      slash_command: /sweetclaude:find-skill
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions: []
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_go_find_skill_routing.py -q
+  session.go:
+    title: Assess what to work on next and propose it
+    delegate_skill: sweetclaude:go
+    command_entrypoint:
+      slash_command: /sweetclaude:go
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_go_find_skill_routing.py -q
+  report.status:
+    title: Orient to the current project
+    delegate_skill: sweetclaude:status
+    command_entrypoint:
+      slash_command: /sweetclaude:status
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_reporting_skills_taxonomy.py -q
+  report.recap:
+    title: 'Where we are: phase, active item, recent commits, checkpoint'
+    delegate_skill: sweetclaude:recap
+    command_entrypoint:
+      slash_command: /sweetclaude:recap
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_reporting_skills_taxonomy.py -q
+  report.big_picture:
+    title: The full roadmap pipeline at a glance
+    delegate_skill: sweetclaude:big-picture
+    command_entrypoint:
+      slash_command: /sweetclaude:big-picture
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_reporting_skills_taxonomy.py -q
+  report.next_steps:
+    title: Walk the pipeline step by step
+    delegate_skill: sweetclaude:next-steps
+    command_entrypoint:
+      slash_command: /sweetclaude:next-steps
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_reporting_skills_taxonomy.py -q
+  features.configure:
+    title: Show and configure optional features
+    delegate_skill: sweetclaude:_features
+    command_entrypoint:
+      slash_command: /sweetclaude:_features
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+  health.scan:
+    title: Consistency scan and version check
+    delegate_skill: sweetclaude:_health
+    command_entrypoint:
+      slash_command: /sweetclaude:_health
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/state/sweetclaude.yaml
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_fresh_project_onboarding.py -q
+    rollback_support:
+      supported: true
+      command: remove or restore .sweetclaude/state/sweetclaude.yaml
+      limitations:
+      - state written before the failure point is not unwound
+  project.deactivate:
+    title: Deactivate SweetClaude for this project
+    delegate_skill: sweetclaude:off
+    command_entrypoint:
+      slash_command: /sweetclaude:off
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/disabled
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    rollback_support:
+      supported: true
+      command: remove or restore .sweetclaude/disabled
+      limitations:
+      - state written before the failure point is not unwound
+  project.hibernate:
+    title: Hibernate or wake a project
+    delegate_skill: sweetclaude:hibernate
+    command_entrypoint:
+      slash_command: /sweetclaude:hibernate
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/state/
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    rollback_support:
+      supported: true
+      command: remove or restore .sweetclaude/state/
+      limitations:
+      - state written before the failure point is not unwound
+  guardian.enable:
+    title: Enable the Protocol Guardian
+    delegate_skill: sweetclaude:guardian-on
+    command_entrypoint:
+      slash_command: /sweetclaude:guardian-on
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/state/guardian-enabled
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_hook_behavior.py -q
+    rollback_support:
+      supported: true
+      command: remove or restore .sweetclaude/state/guardian-enabled
+      limitations:
+      - state written before the failure point is not unwound
+  guardian.disable:
+    title: Disable the Protocol Guardian
+    delegate_skill: sweetclaude:guardian-off
+    command_entrypoint:
+      slash_command: /sweetclaude:guardian-off
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/state/guardian-enabled
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_hook_behavior.py -q
+    rollback_support:
+      supported: true
+      command: remove or restore .sweetclaude/state/guardian-enabled
+      limitations:
+      - state written before the failure point is not unwound
+  install.feature_setup:
+    title: Deploy the local repo to installed locations and rebuild the cache
+    delegate_skill: sweetclaude:feature-setup
+    command_entrypoint:
+      slash_command: /sweetclaude:feature-setup
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions: []
+    postconditions:
+    - id: reports-or-writes
+      check: writes ~/.claude and .sweetclaude/cache
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    rollback_support:
+      supported: true
+      command: remove or restore ~/.claude and .sweetclaude/cache
+      limitations:
+      - state written before the failure point is not unwound
+  migrate.orchestrate:
+    title: 'Migration orchestrator: snapshot, recovery menus, end-of-session decision'
+    delegate_skill: sweetclaude:_migrate
+    command_entrypoint:
+      slash_command: /sweetclaude:_migrate
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/state/
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_migration_helpers.py -q
+    rollback_support:
+      supported: true
+      command: remove or restore .sweetclaude/state/
+      limitations:
+      - state written before the failure point is not unwound
+  report.dashboard:
+    title: 'Local web dashboard: roadmap, releases, epics, backlog, dependencies'
+    delegate_skill: sweetclaude:dashboard
+    command_entrypoint:
+      slash_command: /sweetclaude:dashboard
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+  code.deploy_ship:
+    title: 'SHIP phase: deploy, smoke test, and close out the work item'
+    delegate_skill: sweetclaude:deploy-ship
+    command_entrypoint:
+      slash_command: /sweetclaude:deploy-ship
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/state/ and the work item file
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    rollback_support:
+      supported: true
+      command: restore .sweetclaude/state/ and the work item file
+      limitations:
+      - state written before the failure point is not unwound
+  code.john_wick_checkin:
+    title: Internal phase check-in subagent for the John Wick workflow
+    delegate_skill: sweetclaude:john-wick-checkin
+    command_entrypoint:
+      slash_command: /sweetclaude:john-wick-checkin
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: read_only
+    mutates_project: false
+    requires_approval: false
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: reports without mutating project state
+    unsupported_states:
+    - condition: not_configured
+      behavior: diagnose_only
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-1-structural
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+  metrics.usage:
+    title: Toggle and view local usage tracking
+    delegate_skill: sweetclaude:usage
+    command_entrypoint:
+      slash_command: /sweetclaude:usage
+      script: null
+      module: null
+    supports_project_shapes:
+    - current_layout
+    mutation_class: planned_write
+    mutates_project: true
+    requires_approval: true
+    required_preconditions:
+    - sweetclaude configured
+    postconditions:
+    - id: reports-or-writes
+      check: writes .sweetclaude/state/usage/
+    unsupported_states:
+    - condition: not_configured
+      behavior: block
+    version_metadata:
+      introduced_in: 4.0.0
+      deprecated_in: null
+    verification_tier: tier-2-executable
+    verification_commands:
+    - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_usage_outcomes.py -q
+    rollback_support:
+      supported: true
+      command: restore .sweetclaude/state/usage/
+      limitations:
+      - state written before the failure point is not unwound
 project_shapes:
   recovery_required:
     guard_status: run-recover

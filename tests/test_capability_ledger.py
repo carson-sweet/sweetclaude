@@ -533,3 +533,60 @@ def test_the_upload_action_is_pinned_to_a_sha() -> None:
 
     for uses in _re.findall(r"uses:\s*(\S+)", workflow):
         assert _re.search(r"@[0-9a-f]{40}$", uses), uses
+
+
+# --- complete classification (ISSUE-257) ---------------------------------
+
+def test_every_skill_is_classified() -> None:
+    """The durable form of the eight per-domain issues.
+
+    Domain-by-domain checks left strays belonging to no domain at all — five
+    redirects, then dashboard, deploy-ship, john-wick-checkin and usage. This
+    asserts the property those issues were each approximating: a skill absent
+    from the manifest is a capability the ledger cannot report on, and an
+    omitted capability is indistinguishable from a working one.
+    """
+    declared = {(v.get("delegate_skill") or "").replace("sweetclaude:", "")
+                for v in led._load_manifest(led.MANIFEST)["capabilities"].values()}
+    skills = {p.parent.name for p in (REPO_ROOT / "skills").glob("*/SKILL.md")}
+
+    unclassified = sorted(skills - declared)
+
+    assert not unclassified, f"skills with no manifest entry: {unclassified}"
+
+
+def test_every_entry_carries_the_fields_the_ledger_reads() -> None:
+    """An entry missing verification_commands reports broken; one missing
+    unsupported_states silently skips a check. Four entries were incomplete."""
+    required = ["title", "command_entrypoint", "mutation_class", "mutates_project",
+                "requires_approval", "required_preconditions", "postconditions",
+                "unsupported_states", "verification_commands"]
+
+    for key, entry in led._load_manifest(led.MANIFEST)["capabilities"].items():
+        missing = [f for f in required if f not in entry]
+        assert not missing, f"{key} is missing {missing}"
+
+
+def test_a_mutating_capability_declares_rollback() -> None:
+    for key, entry in led._load_manifest(led.MANIFEST)["capabilities"].items():
+        if entry.get("mutates_project"):
+            rollback = entry.get("rollback_support") or {}
+            assert rollback.get("supported"), f"{key} mutates and declares no rollback"
+
+
+def test_the_tier_is_declared_where_only_structure_is_verified() -> None:
+    """A slash-command entrypoint would otherwise infer tier-2-executable, which
+    claims the behaviour is exercised. Most of these skills have no test that
+    names them; saying so is the honest position."""
+    contracts = "python3 -m pytest tests/test_skill_contracts.py -q"
+    caps = led._load_manifest(led.MANIFEST)["capabilities"]
+
+    only_contracts = {k: v for k, v in caps.items()
+                      if v.get("verification_commands") == [contracts]}
+
+    assert only_contracts, "no capability admits to structural-only verification"
+    for key, entry in only_contracts.items():
+        assert entry.get("verification_tier") == "tier-1-structural", (
+            f"{key} is verified only by the shared contract suite but claims "
+            f"{entry.get('verification_tier')}; tier-2 says the behaviour is "
+            f"exercised, and nothing exercises it")
