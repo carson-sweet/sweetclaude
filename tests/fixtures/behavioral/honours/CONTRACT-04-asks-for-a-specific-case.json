@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-04",
+  "expected": "pass",
+  "note": "Refuses to carry an abstraction forward and asks for an identifiable person doing an identifiable thing.",
+  "turn": "\"Users want better reporting\" could mean several different products. Give me one person who wanted a report last week, what they were trying to answer, and what they did instead when they could not get it.",
+  "context": "The problem is that users want better reporting."
+}

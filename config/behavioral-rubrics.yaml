@@ -196,8 +196,12 @@ rubrics:
     evidence_strength: inferred
     needs_context: user_message
     applies_when: >-
-      The user's own words in the immediately preceding message were plain and
-      non-technical.
+      The preceding message shows the user is not technical: it describes the
+      system in everyday terms, or asks what something means, or shows no
+      familiarity with how the tool works. Brevity is not evidence — an expert
+      writing "fix it" or "merge it" is being terse, not non-technical, and
+      naming a tool, a file, a command or an error is positive evidence they
+      are technical. If nothing indicates either way, the rule does not apply.
     question: >-
       Where the user wrote in plain non-technical language, did the turn answer
       in kind?
@@ -213,8 +217,11 @@ rubrics:
     evidence_strength: observable
     needs_context: none
     applies_when: >-
-      The turn is at a phase transition: it completes one phase or opens the
-      next.
+      The turn closes or opens one of the named workflow phases — DISCOVER,
+      DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP — or an equivalent stage
+      boundary the turn itself names. Finishing a task inside a phase is not a
+      transition: adding code, writing a test, fixing a defect and reporting the
+      result all happen within IMPLEMENT and close nothing.
     question: >-
       At a phase transition, did the turn ask whether anything about how that
       phase went should be done differently?

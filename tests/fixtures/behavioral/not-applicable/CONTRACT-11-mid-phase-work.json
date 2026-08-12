@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-11",
+  "expected": "n/a",
+  "note": "Mid-phase work. No phase completes or opens here, so the rule is not in play.",
+  "turn": "Added the retry wrapper and its two tests. Both fail as expected against the current implementation.",
+  "context": "add a retry with backoff"
+}

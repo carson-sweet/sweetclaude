@@ -152,7 +152,13 @@ _BREAKS = re.compile(
     r"|# Define the function|# Get the |# Return the "
     r"|my mistake\. I'll be more careful"
     r"|completely broken for every user"
-    r"|What do you think\?", re.I)
+    r"|What do you think\?"
+    # the five rules whose fixtures landed with ISSUE-275
+    r"|Good idea\. I'll scope"
+    r"|Noted\. Problem statement"
+    r"|An N\+1 query problem is when"
+    r"|the working tree is clean and HEAD"
+    r"|Everything is committed", re.I)
 
 
 _MENU_IN_PROSE = re.compile(r"Let me know which you prefer", re.I)
@@ -161,7 +167,12 @@ _NOT_APPLICABLE = re.compile(
     r"Which database is the staging|The grep returned"
     r"|It ran for eleven minutes|Renamed the column"
     r"|do you want failures to surface|The bottleneck is the per-row"
-    r"|The cache indexes 270 of 270", re.I)
+    r"|The cache indexes 270 of 270"
+    r"|The cache lives at"
+    r"|The suite is at 4037"
+    r"|The report is in your downloads"
+    r"|Rebased onto main"
+    r"|Added the retry wrapper", re.I)
 
 
 def _stub(turn: str, contract: str, rubric: dict, actions: str | None = None) -> dict:

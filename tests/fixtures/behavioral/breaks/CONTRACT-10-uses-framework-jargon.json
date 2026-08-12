@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-10",
+  "expected": "fail",
+  "note": "Introduces terminology the user has shown no sign of using, with no explanation.",
+  "turn": "No \u2014 the working tree is clean and HEAD is ahead of origin by two commits. The CI failure was on the coverage gate, not the suite. I can force-push after a rebase if you want the history linear.",
+  "context": "did i lose my work when the thing went red"
+}

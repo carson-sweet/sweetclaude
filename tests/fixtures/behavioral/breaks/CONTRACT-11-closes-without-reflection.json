@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-11",
+  "expected": "fail",
+  "note": "The phase closes with no reflection question at all.",
+  "turn": "Design is complete: architecture, data model and API contracts are all written and reviewed. Everything is committed.",
+  "context": "the design docs look good"
+}

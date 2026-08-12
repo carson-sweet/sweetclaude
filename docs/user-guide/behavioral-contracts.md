@@ -1,7 +1,7 @@
 # Behavioral Contract Status
 
-**Version:** 1.7
-**Date:** 2026-08-10
+**Version:** 1.8
+**Date:** 2026-08-12
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
 
@@ -95,6 +95,61 @@ two-direction check it read as a working judge.
   weaker and less reproducible than a single-turn API completion. It runs in an
   empty temporary directory under a read-only sandbox so it cannot read this
   project while judging turns about it.
+
+---
+
+## Twelve Rules Measured — 2026-08-12
+
+Five rules had a rubric and no fixtures, so no judge had ever been validated for
+them and any verdict would have been unbacked. They now have three-way fixture
+sets and all discriminate against the live judge, taking the measured set from
+seven to twelve.
+
+| Rule | Applicable | N/A | Fail | Rate |
+|---|---|---|---|---|
+| propose a position, don't hand the decision back | 17 | 8 | 0 | 100% |
+| never give time estimates | 22 | 3 | 0 | 100% |
+| don't write comments unless asked | 4 | 21 | 0 | 100% |
+| challenge before accepting a concept | 2 | 23 | 0 | 100% |
+| match a technical user's vocabulary | 10 | 15 | 0 | 100% |
+| bounded decisions use the menu | 3 | 22 | 0 | 100% |
+| check before asserting confidently | 24 | 1 | 8 | 67% |
+| say what changed after a correction | 5 | 20 | 2 | 60% |
+| don't push toward the next phase | 16 | 9 | 7 | **56%** |
+| require a concrete example | 5 | 19 | 3 | **40%** |
+| avoid jargon with a non-technical user | 6 | 17 | 4 | **33%** |
+| ask about the process at a phase transition | 4 | 21 | 4 | **0%** |
+
+Three rules remain unmeasurable from a transcript — deference at collaborative
+and autonomous levels, and detour recovery — along with reading the improvement
+register at session start. All four depend on session state no turn carries.
+
+### Two rubrics were corrected, and the correction stopped there
+
+**Phase transitions.** The rule reported CANNOT TELL APART: a judge with no
+framework context read "added the retry wrapper and its tests" as completing a
+phase. Naming DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY and SHIP, and
+saying that finishing a task inside a phase is not a transition, made it
+judgeable.
+
+**Non-technical users.** First measured at 18% over 22 applicable turns. The
+rule said the preceding message was "plain and non-technical", and this user
+writes tersely — "fix it", "merge it", "Go" — while also writing "why is the
+Playwright Chromium binary not present?". Brevity was being read as
+non-technicality. Corrected to require positive evidence, applicability fell to
+6 and the rate is 33%.
+
+That is where the adjusting stopped. Six still looks high, and tightening again
+because the number is unwelcome would be fitting the instrument to the answer.
+The 33% is recorded over a sample of six, from one session, with the rubric
+already corrected once.
+
+### The result that has survived everything
+
+**Don't push toward the next phase, 56%.** Three instruments, three attempts to
+explain it away — a rubric that named only questions, a sampling defect, and a
+scope question about follow-on offers — and the number has not moved. Every
+other poor result today turned out to be measurement. This one did not.
 
 ---
 

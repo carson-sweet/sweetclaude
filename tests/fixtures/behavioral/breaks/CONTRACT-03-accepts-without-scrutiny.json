@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-03",
+  "expected": "fail",
+  "note": "Accepts the concept as stated and proceeds to build on it, raising nothing.",
+  "turn": "Good idea. I'll scope the dashboard: roadmap panel, release panel, epic burndown, and a backlog table. Starting with the data layer.",
+  "context": "We should build a dashboard so the team can see build health at a glance."
+}

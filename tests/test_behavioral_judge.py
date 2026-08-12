@@ -696,7 +696,8 @@ def test_only_contracts_with_a_three_way_fixture_set_are_scorable() -> None:
     validated = bj.contracts_with_a_validated_judge()
 
     assert "CONTRACT-05" in validated
-    assert "CONTRACT-04" not in validated, "CONTRACT-04 has no fixtures"
+    # a session-bound rule: unmeasurable from a turn, so deliberately unfixtured
+    assert "CONTRACT-06" not in validated, "CONTRACT-06 has no fixtures"
 
 
 def test_a_contract_missing_one_side_is_not_validated(monkeypatch) -> None:
@@ -1127,3 +1128,59 @@ def test_the_menu_contract_is_observable_from_tool_calls() -> None:
     assert rubric["evidence_strength"] == "observable"
     assert "AskUserQuestion" in rubric["passes_when"]
     assert "WHAT THE TURN DID" in rubric["passes_when"]
+
+
+# --- the corpus reaches every measurable rule (ISSUE-275) ----------------
+
+def test_every_rule_that_can_be_judged_has_a_fixture_set() -> None:
+    """A rubric with no fixtures has never had a judge validated for it, so any
+    verdict it produced would be unbacked. Five rules sat in that state."""
+    rubrics = bj.load_rubrics()
+    validated = bj.contracts_with_a_validated_judge()
+
+    measurable = {c for c, r in rubrics.items()
+                  if r.get("needs_context") != bj.NEEDS_SESSION}
+
+    assert measurable - validated == set(), sorted(measurable - validated)
+
+
+def test_the_session_bound_rules_are_the_only_ones_without_fixtures() -> None:
+    """Four rules depend on deference level, session position or the register —
+    none of which appear in a turn. They are unmeasurable by this harness, and
+    that is a stated position rather than an oversight."""
+    rubrics = bj.load_rubrics()
+    unvalidated = set(rubrics) - bj.contracts_with_a_validated_judge()
+
+    assert unvalidated == {"CONTRACT-06", "CONTRACT-07", "CONTRACT-08",
+                           "CONTRACT-15"}, sorted(unvalidated)
+    for contract in unvalidated:
+        assert rubrics[contract]["needs_context"] == bj.NEEDS_SESSION
+
+
+def test_the_phase_transition_rule_names_the_phases() -> None:
+    """It reported CANNOT TELL APART because a judge with no framework context
+    read "added the retry wrapper and its tests" as completing a phase. Naming
+    them is what made it judgeable."""
+    applies = bj.load_rubrics()["CONTRACT-11"]["applies_when"]
+
+    for phase in ("DISCOVER", "DEFINE", "DESIGN", "PLAN", "IMPLEMENT",
+                  "VERIFY", "SHIP"):
+        assert phase in applies
+    assert "not a transition" in applies
+
+
+@pytest.mark.parametrize("contract", ["CONTRACT-03", "CONTRACT-04", "CONTRACT-09",
+                                      "CONTRACT-10", "CONTRACT-11"])
+def test_each_new_fixture_set_has_all_three_sides(contract: str) -> None:
+    sides = {i["expected"] for i in bj.load_corpus() if i["contract"] == contract}
+
+    assert sides == {"pass", "fail", "n/a"}, sorted(sides)
+
+
+@pytest.mark.parametrize("contract", ["CONTRACT-03", "CONTRACT-09", "CONTRACT-10"])
+def test_context_dependent_fixtures_carry_their_context(contract: str) -> None:
+    """Without it the harness refuses to judge them, so the corpus would shrink
+    silently rather than fail."""
+    for item in bj.load_corpus():
+        if item["contract"] == contract:
+            assert item.get("context", "").strip(), item["file"]

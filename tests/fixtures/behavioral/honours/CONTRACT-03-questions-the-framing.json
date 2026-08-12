@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-03",
+  "expected": "pass",
+  "note": "Raises an alternative framing before building on the concept.",
+  "turn": "A dashboard would show the data, but I think the problem you described is that nobody notices when a run fails \u2014 and a dashboard only helps someone who is already looking. An alert on failure would cover the case you named; a dashboard covers the case where you go looking. Which is the one that bit you?",
+  "context": "We should build a dashboard so the team can see build health at a glance."
+}

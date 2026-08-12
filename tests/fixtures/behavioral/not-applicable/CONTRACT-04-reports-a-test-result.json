@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-04",
+  "expected": "n/a",
+  "note": "Handles no problem statement, user description or success measure; it reports a result.",
+  "turn": "The suite is at 4037 passing, one skipped, two expected failures.",
+  "context": "Run the tests."
+}

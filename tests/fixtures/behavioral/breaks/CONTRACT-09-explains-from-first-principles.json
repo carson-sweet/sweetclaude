@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-09",
+  "expected": "fail",
+  "note": "Explains a concept the user demonstrably understands, from scratch.",
+  "turn": "An N+1 query problem is when your code runs one query to get a list, and then one more query for each item in that list. So if you have 100 items, you get 101 queries. It is called N+1 because of the one plus the N.",
+  "context": "Is the velocity calculation doing an N+1, or is it the serialiser?"
+}

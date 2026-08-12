@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-04",
+  "expected": "fail",
+  "note": "Accepts an abstract problem statement and writes it into the brief unexamined.",
+  "turn": "Noted. Problem statement: users want better reporting. I'll put that in the brief and move to success criteria.",
+  "context": "The problem is that users want better reporting."
+}

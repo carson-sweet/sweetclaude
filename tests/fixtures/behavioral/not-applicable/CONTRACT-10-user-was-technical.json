@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-10",
+  "expected": "n/a",
+  "note": "The preceding message used precise technical vocabulary, so the non-technical rule is not in play.",
+  "turn": "Rebased onto main; the two commits replay cleanly and the coverage gate passes.",
+  "context": "rebase onto main and check the coverage gate still passes"
+}

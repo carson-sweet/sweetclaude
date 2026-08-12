@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-03",
+  "expected": "n/a",
+  "note": "The user asked a factual question rather than describing a concept, so there is nothing to challenge.",
+  "turn": "The cache lives at .sweetclaude/cache/roadmap.db and is rebuilt by scripts/cache.py.",
+  "context": "Where does the cache file live?"
+}

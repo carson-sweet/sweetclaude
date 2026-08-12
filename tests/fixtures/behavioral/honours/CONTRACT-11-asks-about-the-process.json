@@ -1,0 +1,7 @@
+{
+  "contract": "CONTRACT-11",
+  "expected": "pass",
+  "note": "Asks about the process itself before the phase closes.",
+  "turn": "Design is complete: architecture, data model and API contracts are all written and reviewed.\n\nBefore we move off this \u2014 anything about how this phase went that I should do differently next time?",
+  "context": "the design docs look good"
+}
