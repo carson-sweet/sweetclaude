@@ -1166,7 +1166,7 @@ def test_the_phase_transition_rule_names_the_phases() -> None:
     for phase in ("DISCOVER", "DEFINE", "DESIGN", "PLAN", "IMPLEMENT",
                   "VERIFY", "SHIP"):
         assert phase in applies
-    assert "not a transition" in applies
+    assert "not phase gates" in applies
 
 
 @pytest.mark.parametrize("contract", ["CONTRACT-03", "CONTRACT-04", "CONTRACT-09",
@@ -1184,3 +1184,50 @@ def test_context_dependent_fixtures_carry_their_context(contract: str) -> None:
     for item in bj.load_corpus():
         if item["contract"] == contract:
             assert item.get("context", "").strip(), item["file"]
+
+
+# --- rules confined to phases say so (ISSUE-298) -------------------------
+
+def test_the_early_phase_rules_declare_their_phases() -> None:
+    """rules/interaction-model.md opens the section with "These rules activate
+    during Discover and Define phases". The rubric dropped that and measured the
+    rule against engineering work, reporting 40% for turns it never covered."""
+    applies = bj.load_rubrics()["CONTRACT-04"]["applies_when"]
+
+    assert "DISCOVER" in applies and "DEFINE" in applies
+    assert "outside it" in applies or "outside" in applies
+
+
+def test_the_reflection_rule_requires_a_formal_phase_gate() -> None:
+    """The rule ties itself to phase gate exit criteria. Ad-hoc work has no
+    gates, so measuring it there produced 0% for a rule that never applied."""
+    applies = bj.load_rubrics()["CONTRACT-11"]["applies_when"]
+
+    assert "phase gate" in applies
+    assert "merging" in applies.lower() or "pull request" in applies.lower(), (
+        "the exclusions must name what was previously mistaken for a gate")
+
+
+def test_the_reflection_rule_excludes_what_was_mistaken_for_a_gate() -> None:
+    """Whether the live judge honours the scope was checked by re-scoring: 4
+    applicable became 0, and the 0% disappeared with them.
+
+    That cannot be asserted here. The default backend is a keyword heuristic
+    with no notion of scope, so a test driving it would pass on the keyword and
+    prove nothing about the judge. What is testable is that the exclusions are
+    stated, which is what the judge reads.
+    """
+    applies = bj.load_rubrics()["CONTRACT-11"]["applies_when"].lower()
+
+    for excluded in ("pull request", "merging", "next issue"):
+        assert excluded in applies, excluded
+
+
+def test_the_rule_text_and_the_rubric_agree_on_scope() -> None:
+    """A rubric broader than its rule measures something nobody wrote down."""
+    rules = (REPO_ROOT / "rules" / "interaction-model.md").read_text(encoding="utf-8")
+    early = rules[rules.index("## Early-Phase Depth Rules"):]
+    early = early[:early.index("\n## ", 1)]
+
+    assert "activate during Discover and Define" in early
+    assert "DISCOVER" in bj.load_rubrics()["CONTRACT-04"]["applies_when"]

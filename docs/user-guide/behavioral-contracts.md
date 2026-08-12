@@ -1,6 +1,6 @@
 # Behavioral Contract Status
 
-**Version:** 1.8
+**Version:** 1.9
 **Date:** 2026-08-12
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
@@ -116,13 +116,50 @@ seven to twelve.
 | check before asserting confidently | 24 | 1 | 8 | 67% |
 | say what changed after a correction | 5 | 20 | 2 | 60% |
 | don't push toward the next phase | 16 | 9 | 7 | **56%** |
-| require a concrete example | 5 | 19 | 3 | **40%** |
+| require a concrete example | 3 | 22 | 2 | **33%** — rescoped, see below |
 | avoid jargon with a non-technical user | 6 | 17 | 4 | **33%** |
-| ask about the process at a phase transition | 4 | 21 | 4 | **0%** |
+| ask about the process at a phase gate | 0 | 25 | 0 | unmeasured — rescoped, see below |
 
 Three rules remain unmeasurable from a transcript — deference at collaborative
 and autonomous levels, and detour recovery — along with reading the improvement
 register at session start. All four depend on session state no turn carries.
+
+### The two load-bearing failures were scope, not behaviour
+
+Both rules are confined to particular phases by the interaction model, and both
+rubrics had dropped that. They were measured against a session that entered
+neither phase.
+
+> Early-Phase Depth Rules: *"These rules activate during Discover and Define
+> phases."*
+>
+> Continuous Improvement: *"This is part of the phase gate exit criteria."*
+
+| Rule | Before | After | What changed |
+|---|---|---|---|
+| ask about the process at a phase gate | 0% of 4 | **unmeasured, 0 applicable** | the session never crossed a formal gate |
+| require a concrete example | 40% of 5 | **33% of 3** | two out-of-scope turns removed; two real failures remain |
+
+The 0% was measurement, not behaviour: opening a pull request, merging one, and
+moving to the next issue were being read as phase gates. They close nothing the
+pipeline recognises. With the scope stated, the rule reports unmeasured — which
+is the honest answer for a session that never ran the phase pipeline.
+
+Concrete examples survives at 33%, over three observations. Small, and real.
+
+**This is the third rubric this week that measured something wider than the rule
+it came from** — after one that read instructions as corrections and one that
+read terseness as non-technicality. The pattern is a rubric written from a
+rule's title rather than its text.
+
+### One trigger that fires constantly has no contract
+
+Continuous Improvement has five triggers: phase transition, after code review,
+friction, success, and session start. Only the first has a contract.
+
+The friction trigger — *"after user corrections, misalignment, or visible
+frustration"* — fired repeatedly in the session measured here and is not covered
+by anything. Carried on ISSUE-296.
 
 ### Two rubrics were corrected, and the correction stopped there
 

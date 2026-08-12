@@ -95,8 +95,11 @@ rubrics:
     evidence_strength: inferred
     needs_context: none
     applies_when: >-
-      The turn handles a problem statement, a description of users, or a
-      success measure. Implementation and reporting turns do not.
+      The turn is doing DISCOVER or DEFINE work — shaping a problem statement,
+      describing users, or setting a success measure for something not yet
+      built. The interaction model confines this rule to those two phases.
+      Engineering work, reporting, and assessing something already built are
+      outside it, even when they discuss quality or success in the abstract.
     question: >-
       Where the turn handled a problem statement, user description, or success
       measure, did it ground it in a specific situation or ask the user for
@@ -217,11 +220,12 @@ rubrics:
     evidence_strength: observable
     needs_context: none
     applies_when: >-
-      The turn closes or opens one of the named workflow phases — DISCOVER,
-      DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP — or an equivalent stage
-      boundary the turn itself names. Finishing a task inside a phase is not a
-      transition: adding code, writing a test, fixing a defect and reporting the
-      result all happen within IMPLEMENT and close nothing.
+      The turn crosses a formal phase gate of a work item running the phase
+      pipeline — DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP — which
+      the rule ties to phase gate exit criteria. Ad-hoc work that never enters
+      the pipeline has no phase gates to cross. Finishing a task, opening a pull
+      request, merging one, or moving to the next issue are not phase gates: they
+      close nothing the pipeline recognises.
     question: >-
       At a phase transition, did the turn ask whether anything about how that
       phase went should be done differently?
