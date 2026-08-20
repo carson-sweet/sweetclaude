@@ -542,6 +542,11 @@ capabilities:
     postconditions:
     - id: artifacts-removed
       check: no .sweetclaude/ directory remains
+      verify:
+        kind: path_absent
+        block: rm -rf .sweetclaude/
+        paths:
+        - .sweetclaude
     rollback_support:
       supported: true
       command: git checkout <backup-branch> -- .sweetclaude/
@@ -554,8 +559,10 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-2-executable
     verification_commands:
     - python3 scripts/doctor.py scan --project-dir <project>
+    - python3 -m pytest tests/test_capability_postconditions.py -q
   update.check:
     title: Channel-aware check for a newer framework version
     delegate_skill: sweetclaude:update
@@ -933,6 +940,10 @@ capabilities:
     postconditions:
     - id: product.user_stories-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -943,6 +954,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -1169,6 +1181,10 @@ capabilities:
     postconditions:
     - id: product.parking_lot-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1179,6 +1195,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -1231,6 +1248,10 @@ capabilities:
     postconditions:
     - id: product.personas-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1241,6 +1262,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -1640,6 +1662,10 @@ capabilities:
     postconditions:
     - id: design.mockup_extract-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1650,6 +1676,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -1671,6 +1698,10 @@ capabilities:
     postconditions:
     - id: design.mockup_graduate-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1681,6 +1712,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -2128,6 +2160,10 @@ capabilities:
     postconditions:
     - id: corpus.consolidate-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2138,6 +2174,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -2159,6 +2196,10 @@ capabilities:
     postconditions:
     - id: corpus.triage-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2169,6 +2210,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -2190,6 +2232,10 @@ capabilities:
     postconditions:
     - id: corpus.reconcile-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2200,6 +2246,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -2221,6 +2268,10 @@ capabilities:
     postconditions:
     - id: corpus.promote-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2231,6 +2282,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -2287,6 +2339,10 @@ capabilities:
     postconditions:
     - id: corpus.rag_setup-artifact-written
       check: the artifact exists at the configured base_path
+      not_executable:
+        reason: no code block in this skill writes the artifact; the model writes it
+          directly, so no fixture can make the block do it (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2297,6 +2353,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
@@ -2448,6 +2505,10 @@ capabilities:
     postconditions:
     - id: tests-green
       check: the suite passes and acceptance criteria are satisfied
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2458,6 +2519,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_small_story_gate.py -q
@@ -2486,6 +2548,10 @@ capabilities:
     postconditions:
     - id: issue-satisfied
       check: acceptance criteria met and tests green
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2496,6 +2562,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_small_story_gate.py -q
@@ -2578,6 +2645,10 @@ capabilities:
     postconditions:
     - id: red-then-green
       check: tests moved from RED to GREEN without test edits
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2588,6 +2659,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_small_story_gate.py -q
@@ -2768,6 +2840,10 @@ capabilities:
     postconditions:
     - id: postmortem-spawned
       check: a post-mortem work item is created
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2778,6 +2854,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_cache_taxonomy.py -q
@@ -2798,6 +2875,10 @@ capabilities:
     postconditions:
     - id: security-review
       check: independent security review completed before ship
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2808,6 +2889,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_cache_taxonomy.py -q
@@ -2829,8 +2911,16 @@ capabilities:
     postconditions:
     - id: production-healthy
       check: monitoring confirms recovery
+      not_executable:
+        reason: a production observation. No test in this repository can assert that
+          monitoring confirms recovery.
+        route: none
     - id: postmortem-spawned
       check: a post-mortem work item is created
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: re-deploy the reverted change
@@ -2844,7 +2934,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
-    verification_tier: tier-1-structural
+    verification_tier: tier-3-behavioral
   code.incident:
     title: Reactive production incident triage
     delegate_skill: sweetclaude:something-broke
@@ -2862,6 +2952,10 @@ capabilities:
     postconditions:
     - id: severity-classified
       check: severity classified before fix work begins
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2874,7 +2968,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
-    verification_tier: tier-1-structural
+    verification_tier: tier-3-behavioral
   code.postmortem:
     title: Author a post-mortem with timeline and action items
     delegate_skill: sweetclaude:postmortem
@@ -2892,6 +2986,10 @@ capabilities:
     postconditions:
     - id: action-items-filed
       check: action items land in the backlog with priority
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2902,6 +3000,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_cache_taxonomy.py -q
   code.john_wick:
@@ -2955,6 +3054,10 @@ capabilities:
     postconditions:
     - id: plan-ingested
       check: the plan lands as the DESIGN phase artifact
+      not_executable:
+        reason: describes model conduct rather than a file effect, so it is judged
+          from a transcript rather than executed (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2967,7 +3070,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
-    verification_tier: tier-1-structural
+    verification_tier: tier-3-behavioral
   project.issues:
     title: Create, view, update and close project issues
     delegate_skill: sweetclaude:project-issues
@@ -3108,6 +3211,10 @@ capabilities:
     postconditions:
     - id: stories-created
       check: stories are created and linked to the epic
+      not_executable:
+        reason: no code block in this skill produces this state; the model writes it
+          (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3118,6 +3225,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_cache_taxonomy.py -q
   project.sprints:
@@ -3168,6 +3276,11 @@ capabilities:
     postconditions:
     - id: goals-written
       check: goals persist to the project store
+      verify:
+        kind: artifact_written
+        block: sc_artifact_create milestone '{
+        category: product
+        artifact_glob: roadmap/milestones/MS-*.md
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3180,7 +3293,8 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
-    verification_tier: tier-1-structural
+    - python3 -m pytest tests/test_capability_postconditions.py -q
+    verification_tier: tier-2-executable
   project.scope:
     title: Define and maintain project scope
     delegate_skill: sweetclaude:project-scope
@@ -3198,6 +3312,10 @@ capabilities:
     postconditions:
     - id: scope-written
       check: scope changes persist and are logged
+      not_executable:
+        reason: no code block in this skill produces this state; the model writes it
+          (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3210,7 +3328,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
-    verification_tier: tier-1-structural
+    verification_tier: tier-3-behavioral
   project.themes:
     title: Manage domain-grouping labels on stories
     delegate_skill: sweetclaude:project-themes
@@ -3227,7 +3345,13 @@ capabilities:
     - issue store initialised
     postconditions:
     - id: themes-applied
-      check: theme labels persist on the referenced items
+      check: a theme record is created in the product store. Applying the label to the
+        referenced issues is model-driven and is not exercised by this check
+      verify:
+        kind: artifact_written
+        block: sc_artifact_create theme '{
+        category: product
+        artifact_glob: themes/TH-*.md
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3238,8 +3362,10 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-2-executable
     verification_commands:
     - python3 -m pytest tests/test_cache_taxonomy.py -q
+    - python3 -m pytest tests/test_capability_postconditions.py -q
   project.mode:
     title: Assess and shift the project mode
     delegate_skill: sweetclaude:project-mode
@@ -3257,6 +3383,11 @@ capabilities:
     postconditions:
     - id: gates-recompiled
       check: effective-gates.yaml is regenerated for the new mode
+      verify:
+        kind: path_written
+        block: bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-effective-gates.sh
+        paths:
+        - .sweetclaude/state/effective-gates.yaml
     rollback_support:
       supported: true
       command: restore state from the mode-shift snapshot directory
@@ -3267,8 +3398,10 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-2-executable
     verification_commands:
     - python3 -m pytest tests/test_canonical_state_reads.py -q
+    - python3 -m pytest tests/test_capability_postconditions.py -q
   project.assess_shape:
     title: Recommend and configure a project mode
     delegate_skill: sweetclaude:project-assess-shape
@@ -3285,7 +3418,14 @@ capabilities:
     - project is configured
     postconditions:
     - id: mode-written
-      check: project.mode is written to sweetclaude.yaml
+      check: effective-gates.yaml is regenerated for the assessed mode. The mode value
+        itself is written by the caller, not by this skill's code — its only
+        block is generate-effective-gates.sh
+      verify:
+        kind: path_written
+        block: bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-effective-gates.sh
+        paths:
+        - .sweetclaude/state/effective-gates.yaml
     rollback_support:
       supported: true
       command: /sweetclaude:project-mode shift <previous>
@@ -3296,8 +3436,10 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-2-executable
     verification_commands:
     - python3 -m pytest tests/test_canonical_state_reads.py -q
+    - python3 -m pytest tests/test_capability_postconditions.py -q
   project.gh_import:
     title: Import open GitHub issues into the local store
     delegate_skill: sweetclaude:project-gh-import-issues
@@ -3378,6 +3520,10 @@ capabilities:
     postconditions:
     - id: learnings-recorded
       check: entries persist to the improvement register
+      not_executable:
+        reason: no code block in this skill produces this state; the model writes it
+          (ISSUE-299)
+        route: tier-3-behavioral
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3390,7 +3536,7 @@ capabilities:
       deprecated_in: null
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
-    verification_tier: tier-1-structural
+    verification_tier: tier-3-behavioral
   project.course_correction:
     title: Document a pivot and triage in-flight work
     delegate_skill: sweetclaude:course-correction
@@ -3472,10 +3618,25 @@ capabilities:
     postconditions:
     - id: citation-required
       check: a verdict without a verbatim citation is discarded, not counted
+      not_executable:
+        reason: the entrypoint scripts/artifact_judge.py and its suite
+          tests/test_artifact_judge.py exist only on
+          park/EP-004-ledger-and-quality; nothing on main can run this
+        route: parked
     - id: one-criterion-at-a-time
       check: each verdict answers exactly one criterion
+      not_executable:
+        reason: the entrypoint scripts/artifact_judge.py and its suite
+          tests/test_artifact_judge.py exist only on
+          park/EP-004-ledger-and-quality; nothing on main can run this
+        route: parked
     - id: discrimination-proven
       check: discriminate reports true for the configured backend
+      not_executable:
+        reason: the entrypoint scripts/artifact_judge.py and its suite
+          tests/test_artifact_judge.py exist only on
+          park/EP-004-ledger-and-quality; nothing on main can run this
+        route: parked
     rollback_support:
       supported: true
       command: "not applicable \u2014 reads only"
@@ -4108,7 +4269,13 @@ capabilities:
     required_preconditions: []
     postconditions:
     - id: reports-or-writes
-      check: writes ~/.claude and .sweetclaude/cache
+      check: the project cache is created and rebuilt at .sweetclaude/cache. The ~/.claude
+        half runs sync-to-installed.sh and is deliberately not exercised here
+      verify:
+        kind: path_written
+        block: mkdir -p .sweetclaude/cache
+        paths:
+        - .sweetclaude/cache
     unsupported_states:
     - condition: not_configured
       behavior: block
@@ -4118,6 +4285,7 @@ capabilities:
     verification_tier: tier-1-structural
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_capability_postconditions.py -q
     rollback_support:
       supported: true
       command: remove or restore ~/.claude and .sweetclaude/cache
@@ -4198,13 +4366,17 @@ capabilities:
     postconditions:
     - id: reports-or-writes
       check: writes .sweetclaude/state/ and the work item file
+      not_executable:
+        reason: no code block in this skill produces this state; the model writes it
+          (ISSUE-299)
+        route: tier-3-behavioral
     unsupported_states:
     - condition: not_configured
       behavior: block
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
-    verification_tier: tier-1-structural
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     rollback_support:

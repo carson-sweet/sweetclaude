@@ -53,6 +53,16 @@ class PostconditionFailed(PostconditionError):
     """The block ran and the declared postcondition did not hold."""
 
 
+class UnsafeFixture(PostconditionError):
+    """The target project is not an isolated fixture.
+
+    purge's block is `rm -rf .sweetclaude/` and feature-setup's syncs into
+    ~/.claude. Running either against the working repository would destroy
+    real state, so the fixture path is checked before any block executes
+    rather than trusting every future spec author to pass a temp dir.
+    """
+
+
 class VerifySpecMissing(PostconditionError):
     """The capability declares a postcondition with no executable check."""
 
@@ -406,6 +416,14 @@ def verify_capability(
     Raises rather than returning a failed result: a check that can be ignored
     by not reading the return value is the same failure this closes.
     """
+    project = Path(project).resolve()
+    if project == REPO_ROOT or REPO_ROOT in project.parents:
+        raise UnsafeFixture(
+            f"refusing to run capability blocks against {project} — it is inside "
+            f"the working repository at {REPO_ROOT}. Pass an isolated temp "
+            f"directory: some blocks delete .sweetclaude/ outright."
+        )
+
     manifest = load_manifest(manifest_path)
     entry = manifest["capabilities"].get(capability_id)
     if entry is None:

@@ -337,3 +337,106 @@ def test_substituted_evidence_is_tracked_separately() -> None:
                     f"{cid} substitutes without declaring evidence: substituted")
                 subbed.append(cid)
     assert subbed, "expected at least one substituted spec"
+
+
+def test_path_absent_fails_when_the_removal_is_removed(
+    configured: Path, tmp_path: Path
+) -> None:
+    """purge's whole point is that .sweetclaude/ is gone afterwards."""
+    skills = _mutated_skill(
+        tmp_path, "purge",
+        "rm -rf .sweetclaude/",
+        "rm -rf .sweetclaude/nothing-here",
+    )
+    with pytest.raises(PostconditionFailed):
+        verify_capability("purge.remove_all", configured, skills_dir=skills)
+
+
+def test_artifact_written_fails_when_the_create_call_is_gutted(
+    configured: Path, tmp_path: Path
+) -> None:
+    skills = _mutated_skill(
+        tmp_path, "project-goals",
+        "sc_artifact_create milestone '{",
+        "true sc_artifact_create milestone '{",
+    )
+    with pytest.raises(PostconditionFailed):
+        verify_capability("project.goals", configured, skills_dir=skills)
+
+
+def test_the_fixture_guard_refuses_the_working_repository() -> None:
+    """purge's block is `rm -rf .sweetclaude/`. Nothing may point it here."""
+    from postcondition_verify import UnsafeFixture
+
+    with pytest.raises(UnsafeFixture):
+        verify_capability("purge.remove_all", REPO_ROOT)
+    with pytest.raises(UnsafeFixture):
+        verify_capability("purge.remove_all", REPO_ROOT / "tests")
+
+
+# --- tier-3: what cannot be executed must say so, and why ---------------
+
+def _manifest() -> dict:
+    import yaml
+
+    return yaml.safe_load(
+        (REPO_ROOT / "config" / "capability-manifest.yaml").read_text(encoding="utf-8"))
+
+
+def test_every_behavioral_capability_records_why_it_is_not_executable() -> None:
+    """ISSUE-299 requires what cannot be run to be listed with the reason
+    rather than quietly counted. A tier-3 capability with neither an
+    executable spec nor a recorded reason is exactly that quiet count."""
+    silent = []
+    for cid, entry in _manifest()["capabilities"].items():
+        if entry.get("verification_tier") != "tier-3-behavioral":
+            continue
+        for pc in entry.get("postconditions", []):
+            if not pc.get("verify") and not pc.get("not_executable"):
+                silent.append(f"{cid}.{pc['id']}")
+    assert not silent, (
+        "tier-3 postconditions with no recorded reason:\n  " + "\n  ".join(sorted(silent)))
+
+
+def test_no_postcondition_is_both_executable_and_not() -> None:
+    both = [
+        f"{cid}.{pc['id']}"
+        for cid, entry in _manifest()["capabilities"].items()
+        for pc in entry.get("postconditions", [])
+        if pc.get("verify") and pc.get("not_executable")
+    ]
+    assert not both, f"postconditions claiming both routes: {both}"
+
+
+def test_not_executable_reasons_are_substantive() -> None:
+    """A reason of 'n/a' would satisfy the letter of the rule and defeat it."""
+    thin = []
+    for cid, entry in _manifest()["capabilities"].items():
+        for pc in entry.get("postconditions", []):
+            ne = pc.get("not_executable")
+            if not ne:
+                continue
+            reason = (ne.get("reason") or "").strip()
+            if len(reason) < 40:
+                thin.append(f"{cid}.{pc['id']}: {reason!r}")
+            # tier-3-behavioral: judged from a transcript by the behavioural
+            # judge. none: not verifiable by anything here (a production
+            # observation). parked: the implementation is on another branch and
+            # becomes executable when it lands.
+            assert ne.get("route") in {"tier-3-behavioral", "none", "parked"}, (
+                f"{cid}.{pc['id']} declares an unknown route {ne.get('route')!r}")
+    assert not thin, "not_executable reasons too thin to be useful:\n  " + "\n  ".join(thin)
+
+
+def test_a_capability_with_no_executable_route_is_never_reported_working() -> None:
+    """The ledger must not certify a capability nothing executes. This is the
+    over-claim ISSUE-299 exists to remove: 21 of these read `works`."""
+    import capability_ledger as led
+
+    rows = {r["capability"]: r for r in led.build_ledger()["rows"]}
+    offenders = [
+        cid for cid, entry in _manifest()["capabilities"].items()
+        if entry.get("verification_tier") == "tier-3-behavioral"
+        and rows[cid]["status"] == "works"
+    ]
+    assert not offenders, f"tier-3 capabilities reported as working: {offenders}"

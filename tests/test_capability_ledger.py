@@ -585,8 +585,15 @@ def test_the_tier_is_declared_where_only_structure_is_verified() -> None:
                       if v.get("verification_commands") == [contracts]}
 
     assert only_contracts, "no capability admits to structural-only verification"
+    # tier-3-behavioral is also honest here, and stronger than tier-1: the
+    # ledger forces a tier-3 capability away from `works`, while tier-1 can
+    # still report it. ISSUE-299 moved code.rollback_revert there because its
+    # postconditions are a production observation and model conduct, neither
+    # of which any suite can assert. What must stay forbidden is tier-2, which
+    # claims the behaviour is exercised.
+    honest = {"tier-1-structural", "tier-3-behavioral"}
     for key, entry in only_contracts.items():
-        assert entry.get("verification_tier") == "tier-1-structural", (
+        assert entry.get("verification_tier") in honest, (
             f"{key} is verified only by the shared contract suite but claims "
             f"{entry.get('verification_tier')}; tier-2 says the behaviour is "
             f"exercised, and nothing exercises it")
