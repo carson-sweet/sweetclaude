@@ -2485,7 +2485,7 @@ capabilities:
       deprecated_in: null
     verification_tier: tier-3-behavioral
     verification_commands:
-    - python3 -m pytest tests/test_behavioral_contract_coverage.py -q
+    - python3 -m pytest tests/test_behavioral_judge.py -q
   testing.mode_regression:
     title: Validate mode enforcement across all four project modes
     delegate_skill: sweetclaude:sweetclaude-behavioral-regression

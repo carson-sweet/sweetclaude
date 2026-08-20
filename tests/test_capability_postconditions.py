@@ -266,11 +266,6 @@ KNOWN_MISSING_VERIFICATION = {
         "tests/test_artifact_judge.py exists only on "
         "park/EP-004-ledger-and-quality (5ac5ea4, ISSUE-273)."
     ),
-    "testing.behavioral_regression": (
-        "tests/test_behavioral_contract_coverage.py exists only on "
-        "park/EP-004-ledger-and-quality (7264075, ISSUE-265) even though "
-        "ISSUE-265 otherwise landed on main."
-    ),
     "update.framework_sync": (
         "tests/test_update_orchestrator.py has never existed on any branch "
         "(git log --all is empty for it). The correct pointer is "
