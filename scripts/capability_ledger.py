@@ -149,6 +149,30 @@ def _tier_for(entry: dict) -> str:
     return TIER_STRUCTURAL
 
 
+def _behavioral_reason(entry: dict) -> str:
+    """Say which tier-3 capabilities have an instrument and which do not.
+
+    "scored only against a live model" reads as a promise. For most tier-3
+    capabilities it is not one: the rubrics in config/behavioral-rubrics.yaml
+    judge interaction-model conduct, not whether a skill produced a work item,
+    so a capability routed `no-instrument` is not scored by anything today.
+    Reporting both cases identically would restate the over-claim this ledger
+    exists to remove, one level down (ISSUE-299).
+    """
+    routes = {
+        (pc.get("not_executable") or {}).get("route")
+        for pc in entry.get("postconditions", [])
+    }
+    if "no-instrument" in routes:
+        return (
+            "Tier 3 with no instrument: no rubric covers this postcondition, "
+            "so nothing scores it today"
+        )
+    if "parked" in routes:
+        return "Tier 3: the entrypoint and its suite live on another branch"
+    return "Tier 3: scored only against a live model"
+
+
 def _behavioral_rows() -> list[dict]:
     """Interaction-model rules are Tier 3 — enumerable, never a CI pass."""
     if not RULES.is_file() or not BEHAVIORAL.is_file():
@@ -193,7 +217,7 @@ def build_ledger(
             # it as working would be the exact over-claim this ledger exists to
             # prevent. A genuine defect (broken/compromised) still shows.
             status = UNVERIFIABLE
-            reasons = reasons + ["Tier 3: scored only against a live model"]
+            reasons = reasons + [_behavioral_reason(entry)]
         rows.append({
             "capability": name,
             "title": entry.get("title", ""),

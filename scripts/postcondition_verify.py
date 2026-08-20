@@ -301,7 +301,17 @@ def _check_state_key_written(spec: dict, project: Path, proc, result: VerifyResu
         raise PostconditionFailed(
             f"{result.capability}: {rel} does not exist after the block ran."
         )
-    node = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    text = f.read_text(encoding="utf-8")
+    # Work items are markdown with YAML frontmatter, not pure YAML. Loading the
+    # whole file would fail on the body and report a missing key for the wrong
+    # reason.
+    if text.startswith("---\n"):
+        end = text.find("\n---", 4)
+        if end == -1:
+            raise PostconditionFailed(
+                f"{result.capability}: {rel} opens a frontmatter block that never closes.")
+        text = text[4:end]
+    node = yaml.safe_load(text) or {}
     trail = []
     for key in spec["key_path"]:
         trail.append(str(key))
@@ -326,6 +336,69 @@ CHECKS = {
     "content_changed": _check_content_changed,
     "state_key_written": _check_state_key_written,
 }
+
+
+# An `ignore` entry may never cover a source-of-truth artifact. Without this,
+# the mechanism that excuses a derived cache becomes a blanket way to make any
+# no_mutation check pass, which is worse than not having the check.
+PROTECTED_PREFIXES = (
+    ".sweetclaude/state",
+    ".sweetclaude/product",
+    ".sweetclaude/strategy",
+    ".sweetclaude/technical",
+    ".sweetclaude/design",
+    ".sweetclaude/work",
+)
+
+
+def validate_ignore(ignore: list[str], capability_id: str) -> list[str]:
+    """Reject an ignore list that could hide a real mutation."""
+    cleaned = []
+    for raw in ignore:
+        entry = str(raw).strip()
+        if entry in ("", ".", "/", "./", "*", "**"):
+            raise PostconditionError(
+                f"{capability_id}: ignore entry {raw!r} would exclude the whole "
+                f"project, which defeats the check."
+            )
+        # lstrip("./") would strip the leading dot as a character, turning
+        # ".sweetclaude/cache" into "sweetclaude/cache" and defeating every
+        # comparison below. Remove a "./" prefix only.
+        norm = entry[2:] if entry.startswith("./") else entry
+        norm = norm.rstrip("/") + "/"
+        for protected in PROTECTED_PREFIXES:
+            if norm.startswith(protected.rstrip("/")):
+                raise PostconditionError(
+                    f"{capability_id}: ignore entry {raw!r} covers {protected}, a "
+                    f"source-of-truth path. Only derived artifacts may be ignored."
+                )
+        cleaned.append(norm)
+    return cleaned
+
+
+def apply_seed(seed: dict, project: Path) -> list[str]:
+    """Write the work-item files a check needs before the block runs.
+
+    A write-back check needs something to write back to. Declaring the seed in
+    the spec keeps it visible, and keeps it out of the shared fixture where it
+    would make other capabilities' checks pass for free — a seeded MS-001 in
+    the fixture would satisfy project.goals' artifact_written glob without its
+    block doing anything.
+
+    The spec gives frontmatter as a mapping rather than raw file text. An
+    embedded markdown block scalar has to be indented deeper than its key, and
+    getting that wrong makes the whole manifest unparseable — which is exactly
+    what it did on the first attempt.
+    """
+    written = []
+    for rel, fields in seed.items():
+        target = project / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        front = yaml.safe_dump(fields, default_flow_style=False, sort_keys=False)
+        target.write_text(f"---\n{front}---\n\nseeded by the postcondition harness\n",
+                          encoding="utf-8")
+        written.append(rel)
+    return written
 
 
 def _verify_no_mutation(
@@ -368,8 +441,16 @@ def _verify_no_mutation(
         postcondition_id=postcondition["id"],
         passed=False,
     )
+    if spec.get("seed_frontmatter"):
+        apply_seed(spec["seed_frontmatter"], project)
 
-    before = snapshot_tree(project)
+    ignore = validate_ignore(spec.get("ignore") or [], capability_id)
+
+    def _filtered(tree: dict[str, str]) -> dict[str, str]:
+        return {k: v for k, v in tree.items()
+                if not any(k.startswith(pref) for pref in ignore)}
+
+    before = _filtered(snapshot_tree(project))
     failed_to_run: list[str] = []
     for code in blocks:
         proc = run_block(code, project)
@@ -380,7 +461,7 @@ def _verify_no_mutation(
             )
         else:
             result.blocks_run += 1
-    after = snapshot_tree(project)
+    after = _filtered(snapshot_tree(project))
 
     delta = diff_trees(before, after)
     if any(delta.values()):
@@ -399,6 +480,64 @@ def _verify_no_mutation(
             + " | ".join(failed_to_run)
         )
 
+    result.passed = True
+    result.detail = f"{postcondition['id']}: {postcondition['check']}"
+    return result
+
+
+def _verify_set_complete(
+    capability_id: str,
+    postcondition: dict,
+    spec: dict,
+    skill_md: Path,
+    skill: str,
+) -> VerifyResult:
+    """A completeness claim: the block covers every item some config declares.
+
+    testing.mode_regression promises "each of the four modes is exercised" via
+    `for mode in flow kanban shape_up agile`. Executing that block is the wrong
+    instrument — it also runs three nested test suites and reads repo-relative
+    paths, so it cannot run against an isolated fixture at all. What the
+    postcondition actually claims is set equality between the modes the block
+    iterates and the modes the config declares, and that is checkable exactly.
+
+    This reads the block instead of running it, which is weaker than either
+    unaided or substituted evidence, so it reports `evidence: static`. It still
+    fails when either side changes: add a mode to the config, or drop one from
+    the loop.
+    """
+    code = select_block(extract_blocks(skill_md), spec["block"], skill=skill)
+    found = re.search(spec["block_pattern"], code)
+    if not found:
+        raise BlockNotFound(
+            f"{capability_id}: block_pattern {spec['block_pattern']!r} did not "
+            f"match the selected block — the loop changed shape."
+        )
+    in_block = set(found.group(1).split())
+
+    declared_file = REPO_ROOT / spec["declared_in"]
+    if not declared_file.is_file():
+        raise PostconditionFailed(
+            f"{capability_id}: {spec['declared_in']} does not exist.")
+    node = yaml.safe_load(declared_file.read_text(encoding="utf-8")) or {}
+    for key in spec.get("declared_path", []):
+        node = (node or {}).get(key) or {}
+    declared = set(node)
+
+    result = VerifyResult(
+        capability=capability_id,
+        postcondition_id=postcondition["id"],
+        passed=False,
+        evidence="static",
+    )
+    result.paths_checked.append(spec["declared_in"])
+    if in_block != declared:
+        raise PostconditionFailed(
+            f"{capability_id}: the block covers {sorted(in_block)} but "
+            f"{spec['declared_in']} declares {sorted(declared)}. "
+            f"missing from block: {sorted(declared - in_block)}; "
+            f"not declared: {sorted(in_block - declared)}"
+        )
     result.passed = True
     result.detail = f"{postcondition['id']}: {postcondition['check']}"
     return result
@@ -439,10 +578,11 @@ def verify_capability(
     spec = postcondition["verify"]
 
     kind = spec.get("kind")
-    if kind not in CHECKS and kind != "no_mutation":
+    NON_BLOCK_KINDS = {"no_mutation", "set_complete"}
+    if kind not in CHECKS and kind not in NON_BLOCK_KINDS:
         raise PostconditionError(
             f"{capability_id}: unknown verify kind {kind!r}. "
-            f"known kinds: {', '.join(sorted(set(CHECKS) | {'no_mutation'}))}"
+            f"known kinds: {', '.join(sorted(set(CHECKS) | NON_BLOCK_KINDS))}"
         )
 
     skill = _skill_dir_name(entry)
@@ -451,12 +591,19 @@ def verify_capability(
     if not skill_md.is_file():
         raise BlockNotFound(f"{skill_md} does not exist")
 
+    if kind == "set_complete":
+        return _verify_set_complete(
+            capability_id, postcondition, spec, skill_md, skill
+        )
+
     if kind == "no_mutation":
         return _verify_no_mutation(
             capability_id, entry, postcondition, spec, project, skill_md, skill
         )
 
     code = select_block(extract_blocks(skill_md), spec["block"], skill=skill)
+    if spec.get("seed_frontmatter"):
+        apply_seed(spec["seed_frontmatter"], project)
     subs = spec.get("substitutions") or {}
     if subs:
         if spec.get("evidence") != "substituted":

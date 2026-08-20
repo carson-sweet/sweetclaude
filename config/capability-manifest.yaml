@@ -901,12 +901,32 @@ capabilities:
       module: null
     supports_project_shapes:
     - current_layout
-    mutation_class: read_only
-    mutates_project: false
+    mutation_class: planned_write
+    mutates_project: true
     requires_approval: true
     postconditions:
     - id: product.roadmap_analysis-read-only
-      check: no project files are modified
+      check: a milestone's priority is written back to its own file. The skill
+        was declared read_only until ISSUE-299; sc_artifact_write rewrites the
+        milestone's frontmatter, which is the point of RICE scoring
+      verify:
+        kind: state_key_written
+        block: sc_artifact_write <MS-NNN>
+        substitutions:
+          <MS-NNN>: MS-001
+          <N>: '9'
+        evidence: substituted
+        seed_frontmatter:
+          .sweetclaude/product/roadmap/milestones/MS-001-seeded.md:
+            id: MS-001
+            type: milestone
+            title: Seeded milestone
+            status: planned
+            priority: 3
+        file: .sweetclaude/product/roadmap/milestones/MS-001-seeded.md
+        key_path:
+        - priority
+        value: 9
     rollback_support:
       supported: true
       command: "not applicable \u2014 writes nothing"
@@ -917,9 +937,11 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-2-executable
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
     - python3 -m pytest tests/test_preflight_guard_state_file.py -q
+    - python3 -m pytest tests/test_capability_postconditions.py -q
     required_preconditions:
     - project is configured
   product.user_stories:
@@ -943,7 +965,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1184,7 +1206,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1251,7 +1273,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1665,7 +1687,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -1701,7 +1723,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2163,7 +2185,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2199,7 +2221,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2235,7 +2257,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2271,7 +2293,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2342,7 +2364,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill writes the artifact; the model writes it
           directly, so no fixture can make the block do it (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git checkout -- <artifact-path>
@@ -2446,6 +2468,11 @@ capabilities:
     postconditions:
     - id: scorecard-complete
       check: every declared contract appears on the scorecard
+      not_executable:
+        reason: the scorecard is produced by scoring a live model, so no block can
+          write it. Block 0 stages a /tmp fixture and block 1 checks the CLI
+          version; neither produces a scorecard (ISSUE-299)
+        route: no-instrument
     rollback_support:
       supported: true
       command: "not applicable \u2014 scoring writes no project files"
@@ -2456,6 +2483,7 @@ capabilities:
     version_metadata:
       introduced_in: 4.0.0
       deprecated_in: null
+    verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_behavioral_contract_coverage.py -q
   testing.mode_regression:
@@ -2475,6 +2503,14 @@ capabilities:
     postconditions:
     - id: all-modes-checked
       check: each of the four modes is exercised
+      verify:
+        kind: set_complete
+        block: PROJECT_DIR="$tmpdir" bash scripts/generate-effective-gates.sh
+        block_pattern: 'for mode in ([a-z_ ]+); do'
+        declared_in: config/mode-gates.yaml
+        declared_path:
+        - mode_defaults
+        evidence: static
     rollback_support:
       supported: true
       command: "not applicable \u2014 validation writes no project files"
@@ -2485,8 +2521,10 @@ capabilities:
     version_metadata:
       introduced_in: 4.2.0
       deprecated_in: null
+    verification_tier: tier-2-executable
     verification_commands:
     - python3 -m pytest tests/test_capability_manifest.py -q
+    - python3 -m pytest tests/test_capability_postconditions.py -q
   code.feature:
     title: Build a new feature end to end under TDD
     delegate_skill: sweetclaude:code-feature
@@ -2508,7 +2546,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2551,7 +2589,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2648,7 +2686,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2843,7 +2881,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2878,7 +2916,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2920,7 +2958,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: re-deploy the reverted change
@@ -2955,7 +2993,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -2989,7 +3027,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3057,7 +3095,7 @@ capabilities:
       not_executable:
         reason: describes model conduct rather than a file effect, so it is judged
           from a transcript rather than executed (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3214,7 +3252,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill produces this state; the model writes it
           (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3315,7 +3353,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill produces this state; the model writes it
           (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -3523,7 +3561,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill produces this state; the model writes it
           (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     rollback_support:
       supported: true
       command: git revert <commit> or git checkout -- <path>
@@ -4339,7 +4377,16 @@ capabilities:
     - sweetclaude configured
     postconditions:
     - id: reports-or-writes
-      check: reports without mutating project state
+      check: no source artifact is modified. The derived cache at
+        .sweetclaude/cache/roadmap.db is rebuilt, because get_conn() creates it
+        on any read; it is gitignored and reconstructed from the work-item files.
+        The dashboard-launch and browser-open blocks are not exercised
+      verify:
+        kind: no_mutation
+        blocks:
+        - cache.py --project-dir . --rebuild
+        ignore:
+        - .sweetclaude/cache/
     unsupported_states:
     - condition: not_configured
       behavior: diagnose_only
@@ -4349,6 +4396,7 @@ capabilities:
     verification_tier: tier-1-structural
     verification_commands:
     - python3 -m pytest tests/test_skill_contracts.py -q
+    - python3 -m pytest tests/test_capability_postconditions.py -q
   code.deploy_ship:
     title: 'SHIP phase: deploy, smoke test, and close out the work item'
     delegate_skill: sweetclaude:deploy-ship
@@ -4369,7 +4417,7 @@ capabilities:
       not_executable:
         reason: no code block in this skill produces this state; the model writes it
           (ISSUE-299)
-        route: tier-3-behavioral
+        route: no-instrument
     unsupported_states:
     - condition: not_configured
       behavior: block

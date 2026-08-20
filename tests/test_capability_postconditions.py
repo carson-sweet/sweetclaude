@@ -419,11 +419,13 @@ def test_not_executable_reasons_are_substantive() -> None:
             reason = (ne.get("reason") or "").strip()
             if len(reason) < 40:
                 thin.append(f"{cid}.{pc['id']}: {reason!r}")
-            # tier-3-behavioral: judged from a transcript by the behavioural
-            # judge. none: not verifiable by anything here (a production
-            # observation). parked: the implementation is on another branch and
-            # becomes executable when it lands.
-            assert ne.get("route") in {"tier-3-behavioral", "none", "parked"}, (
+            # no-instrument: nothing scores this postcondition today. The
+            # behavioural rubrics judge interaction conduct, not whether a
+            # skill produced a work item, so naming a judge route here would
+            # promise an instrument that does not exist.
+            # none: not verifiable by anything (a production observation).
+            # parked: the implementation is on another branch.
+            assert ne.get("route") in {"no-instrument", "none", "parked"}, (
                 f"{cid}.{pc['id']} declares an unknown route {ne.get('route')!r}")
     assert not thin, "not_executable reasons too thin to be useful:\n  " + "\n  ".join(thin)
 
@@ -440,3 +442,161 @@ def test_a_capability_with_no_executable_route_is_never_reported_working() -> No
         and rows[cid]["status"] == "works"
     ]
     assert not offenders, f"tier-3 capabilities reported as working: {offenders}"
+
+
+def test_set_complete_fails_when_the_block_drops_a_member(
+    configured: Path, tmp_path: Path
+) -> None:
+    """The completeness claim must break when the loop stops covering a mode."""
+    skills = _mutated_skill(
+        tmp_path, "sweetclaude-behavioral-regression",
+        "for mode in flow kanban shape_up agile",
+        "for mode in flow kanban shape_up",
+    )
+    with pytest.raises(PostconditionFailed):
+        verify_capability("testing.mode_regression", configured, skills_dir=skills)
+
+
+def test_set_complete_fails_when_the_loop_shape_changes(
+    configured: Path, tmp_path: Path
+) -> None:
+    """Selecting by pattern means a rewritten loop is an error, not a pass."""
+    from postcondition_verify import BlockNotFound as _BNF
+
+    skills = _mutated_skill(
+        tmp_path, "sweetclaude-behavioral-regression",
+        "for mode in flow kanban shape_up agile; do",
+        "for mode in $ALL_MODES; do",
+    )
+    with pytest.raises((PostconditionFailed, _BNF)):
+        verify_capability("testing.mode_regression", configured, skills_dir=skills)
+
+
+def test_evidence_grades_are_from_a_known_set() -> None:
+    """Three grades, weakest last: a block that ran unaided, a block that ran
+    on harness-supplied values, and a block read rather than run. A new grade
+    must be added deliberately, not by typo."""
+    known = {"unaided", "substituted", "static"}
+    offenders = []
+    for cid, entry in _manifest()["capabilities"].items():
+        for pc in entry.get("postconditions", []):
+            v = pc.get("verify") or {}
+            if not v:
+                continue
+            grade = v.get("evidence", "unaided")
+            if grade not in known:
+                offenders.append(f"{cid}.{pc['id']}: {grade!r}")
+    assert not offenders, f"unknown evidence grades: {offenders}"
+
+
+def test_static_evidence_does_not_claim_a_block_ran(configured: Path) -> None:
+    """A static check reads the block. Reporting blocks_run would overstate it."""
+    result = verify_capability("testing.mode_regression", configured)
+    assert result.passed
+    assert result.evidence == "static"
+    assert result.blocks_run == 0
+
+
+def test_a_no_instrument_capability_does_not_claim_to_be_scored() -> None:
+    """The relabel has to reach the published table, or it is cosmetic.
+
+    Reporting "scored only against a live model" for a capability no rubric
+    covers restates the over-claim ISSUE-299 removes, one level down: the
+    status is honest while the note promises an instrument that does not
+    exist. The rows that DO have rubrics must keep saying so.
+    """
+    import capability_ledger as led
+
+    manifest = _manifest()["capabilities"]
+    rows = {r["capability"]: r for r in led.build_ledger()["rows"]}
+
+    no_instrument = {
+        cid for cid, entry in manifest.items()
+        if any((pc.get("not_executable") or {}).get("route") == "no-instrument"
+               for pc in entry.get("postconditions", []))
+    }
+    assert len(no_instrument) >= 20, f"expected the re-tiered set, got {len(no_instrument)}"
+
+    for cid in sorted(no_instrument):
+        notes = " ".join(rows[cid]["reasons"]).lower()
+        if rows[cid]["status"] != "not-mechanically-verifiable":
+            continue  # a real defect (broken/compromised) reports that instead
+        assert "no instrument" in notes, (
+            f"{cid} is routed no-instrument but its ledger note reads {notes!r}")
+        assert "scored only against a live model" not in notes, (
+            f"{cid} promises live-model scoring but no rubric covers it")
+
+    # the interaction-model rules genuinely are scored by the judge
+    judged = [r for k, r in rows.items() if k.startswith("interaction-model.")]
+    assert judged, "no interaction-model rows in the ledger"
+    for row in judged:
+        assert "behavioral-regression" in " ".join(row["reasons"]), (
+            "interaction-model rules must keep naming the instrument that scores them")
+
+
+# --- the derived-cache exclusion must not become an escape hatch ---------
+
+def test_ignore_cannot_cover_a_source_of_truth_path() -> None:
+    """`ignore` exists so a derived, gitignored cache does not fail a
+    read-only claim. If it could name .sweetclaude/state or a product base,
+    it would be a general way to make any no_mutation check pass, which is
+    worse than having no check."""
+    from postcondition_verify import PostconditionError, validate_ignore
+
+    for allowed in (".sweetclaude/cache", ".sweetclaude/cache/", "artifacts/build"):
+        assert validate_ignore([allowed], "t")
+
+    for refused in (".", "/", "*", "**", "./", ".sweetclaude/state",
+                    ".sweetclaude/product", ".sweetclaude/product/backlog",
+                    "./.sweetclaude/work", ".sweetclaude/design",
+                    ".sweetclaude/technical", ".sweetclaude/strategy"):
+        with pytest.raises(PostconditionError):
+            validate_ignore([refused], "t")
+
+
+def test_no_declared_ignore_list_hides_a_source_path() -> None:
+    """Every ignore list in the manifest, checked against the same guard."""
+    from postcondition_verify import validate_ignore
+
+    for cid, entry in _manifest()["capabilities"].items():
+        for pc in entry.get("postconditions", []):
+            ignore = (pc.get("verify") or {}).get("ignore")
+            if ignore:
+                validate_ignore(ignore, cid)  # raises if it covers a source path
+
+
+def test_the_cache_exclusion_still_catches_a_real_write(
+    configured: Path, tmp_path: Path
+) -> None:
+    """Ignoring roadmap.db must not ignore anything else."""
+    skills = _mutated_skill(
+        tmp_path, "dashboard",
+        "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cache.py --project-dir . --rebuild",
+        "mkdir -p .sweetclaude/state && touch .sweetclaude/state/leaked.yaml\n"
+        "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cache.py --project-dir . --rebuild",
+    )
+    with pytest.raises(PostconditionFailed):
+        verify_capability("report.dashboard", configured, skills_dir=skills)
+
+
+def test_roadmap_analysis_priority_write_back_fails_when_removed(
+    configured: Path, tmp_path: Path
+) -> None:
+    """The write is the point of RICE scoring; losing it must fail."""
+    skills = _mutated_skill(
+        tmp_path, "product-roadmap-analysis",
+        "sc_artifact_write <MS-NNN>",
+        "true sc_artifact_write <MS-NNN>",
+    )
+    with pytest.raises(PostconditionFailed):
+        verify_capability("product.roadmap_analysis", configured, skills_dir=skills)
+
+
+def test_the_seed_does_not_leak_into_other_capabilities(configured: Path) -> None:
+    """A seeded MS-001 in the shared fixture would satisfy project.goals'
+    artifact_written glob without its block doing anything, so the seed must
+    be written by the spec that needs it and nowhere else."""
+    milestones = configured / ".sweetclaude" / "product" / "roadmap" / "milestones"
+    assert not list(milestones.glob("MS-*.md")), (
+        "the fixture must not pre-seed a milestone; project.goals asserts one appears")
+    verify_capability("project.goals", configured)
