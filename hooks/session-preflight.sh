@@ -64,7 +64,9 @@ emit_block() {
 # ── Step 2: Project gate ──────────────────────────────────────────────────────
 
 if [ ! -d "$PROJECT_DIR/.sweetclaude" ]; then
-  emit_ctx "SweetClaude is not set up for this project. Run /sweetclaude:init to start a new or existing project, or just /sweetclaude:go and describe what you want to do." "SweetClaude is not configured for this project. To onboard it, run /sweetclaude:init (routes new vs. existing projects) or /sweetclaude:go with a plain-language request."
+  # This hook is plugin-native and therefore runs in every project where the
+  # plugin is installed. Do not inject SweetClaude instructions into a project
+  # that has not opted in.
   exit 0
 fi
 

@@ -100,7 +100,6 @@ class ProjectState:
     settings_local: dict | None
     claude_md_project: str | None
     claude_md_global: str | None
-    rules_files: dict[str, str]
     skills_yaml: dict | None
     installed_version: str | None
     migration_runner_path: Path | None
@@ -148,6 +147,7 @@ EXECUTOR_SUPPORTED_ACTIONS = frozenset({
     "file_move",
     "renumber_duplicate",
     "resolve_orphans",
+    "remove_global_rules",
 })
 
 # Manual guidance for known-unsupported actions, surfaced when an auto/prompted
@@ -644,21 +644,21 @@ def check_hook_health(state: ProjectState) -> list[Finding]:
                             "hook": name, "sources": ["backup", "repo"]},
             ))
 
-    rules_dir = Path.home() / ".claude" / "rules" / "sweetclaude"
-    expected_rules = ["interaction-model.md", "phase-gates.md", "tdd-levels.md"]
-    for rf in expected_rules:
-        if f"sweetclaude/{rf}" not in state.rules_files:
-            findings.append(Finding(
-                id=f"hook-health:missing-rule:{rf}",
-                category="hook_health",
-                severity="warning",
-                summary=f"SweetClaude rules file {rf} is missing",
-                detail=f"Expected at {rules_dir / rf}",
-                file_paths=[str(rules_dir / rf)],
-                fix_type="prompted",
-                fix_recipe={"action": "prompt", "type": "hook_restore",
-                            "hook": rf, "sources": ["backup", "repo"]},
-            ))
+    global_rules_dir = Path.home() / ".claude" / "rules" / "sweetclaude"
+    if global_rules_dir.is_dir():
+        findings.append(Finding(
+            id="hook-health:global-rules-loaded",
+            category="hook_health",
+            severity="warning",
+            summary="Global SweetClaude rules affect projects that opted out",
+            detail=(
+                f"{global_rules_dir} is loaded by Claude Code in every project. "
+                "Doctor will move it to the recoverable SweetClaude legacy backup."
+            ),
+            file_paths=[str(global_rules_dir)],
+            fix_type="auto",
+            fix_recipe={"action": "remove_global_rules", "file": str(global_rules_dir)},
+        ))
 
     return findings
 
@@ -1145,10 +1145,6 @@ def check_config_compat(state: ProjectState) -> list[Finding]:
     if state.claude_md_global:
         _text_sources.append(
             ("~/.claude/CLAUDE.md", state.claude_md_global, str(home_claude / "CLAUDE.md")))
-    for name, content in state.rules_files.items():
-        _text_sources.append(
-            (f"rules/{name}", content, str(home_claude / "rules" / name)))
-
     _settings_sources: list[tuple[str, dict, str]] = []
     if state.settings_global:
         _settings_sources.append(
@@ -2299,15 +2295,6 @@ def build_project_state(project_dir: Path) -> ProjectState:
 
     home_claude = Path.home() / ".claude"
 
-    rules_dir = home_claude / "rules" / "sweetclaude"
-    rules_files = {}
-    if rules_dir.is_dir():
-        for f in rules_dir.iterdir():
-            if f.suffix == ".md":
-                content = _read_text(f)
-                if content is not None:
-                    rules_files[f"sweetclaude/{f.name}"] = content
-
     backlog_dir = product_base / "backlog"
     roadmap_dir = product_base / "roadmap"
 
@@ -2332,7 +2319,6 @@ def build_project_state(project_dir: Path) -> ProjectState:
         settings_local=_read_json(project_dir / ".claude" / "settings.local.json"),
         claude_md_project=_read_text(project_dir / "CLAUDE.md"),
         claude_md_global=_read_text(home_claude / "CLAUDE.md"),
-        rules_files=rules_files,
         skills_yaml=_read_yaml(state_dir / "skills.yaml"),
         installed_version=_resolve_installed_version(),
         migration_runner_path=_find_migration_runner(project_dir),
@@ -3606,11 +3592,12 @@ def _resolve_hook_restore_paths(recipe: dict) -> tuple[Path, Path]:
     home_claude = Path.home() / ".claude"
 
     if name.endswith(".md"):
-        source = plugin_dir / "rules" / name
-        dest = home_claude / "rules" / "sweetclaude" / name
-    else:
-        source = plugin_dir / "hooks" / name
-        dest = home_claude / "hooks" / "sweetclaude" / name
+        raise ValueError(
+            "SweetClaude rules must remain inside the plugin bundle; restoring "
+            "them to ~/.claude/rules would load them for every project."
+        )
+    source = plugin_dir / "hooks" / name
+    dest = home_claude / "hooks" / "sweetclaude" / name
     return source, dest
 
 
@@ -3745,9 +3732,10 @@ def execute_recipe(
         return RecipeResult("", "", None, None, False, f"unknown yaml_repair choice: {choice!r}")
 
     if action == "hook_restore":
-        # Restore a SweetClaude hook script, hooks config, or rules file from
-        # the plugin source to its ~/.claude destination. Resolves the correct
-        # per-kind source/dest (the old skill-side cp used the wrong path), and
+        # Restore a SweetClaude hook script or hook config from the plugin
+        # source to its ~/.claude destination. Rules deliberately stay in the
+        # plugin bundle so Claude Code cannot load them in opted-out projects.
+        # Resolves the correct source/dest, and
         # routes any overwrite through _record_mutation so a clobbered dest is
         # backed up, diffed, and reversible via `restore` — important because
         # these ~/.claude files live outside the project git safety branch.
@@ -3963,6 +3951,27 @@ def execute_recipe(
         recipe["moved_to"] = str(dest)
         return RecipeResult("", recorded.before_hash, recorded.after_hash,
                             recorded.backup_path, True)
+
+    if action == "remove_global_rules":
+        target = Path(recipe.get("file", Path.home() / ".claude" / "rules" / "sweetclaude"))
+        expected = Path.home() / ".claude" / "rules" / "sweetclaude"
+        if target != expected:
+            return RecipeResult("", "", None, None, False,
+                                f"refusing to remove unexpected global rules path: {target}")
+        if not target.is_dir():
+            h = _hash_bytes(b"")
+            return RecipeResult("", h, h, None, True, "already absent")
+        try:
+            backup_dir = (Path.home() / ".claude" / ".sweetclaude-legacy-backup" /
+                          datetime.datetime.now().strftime("%Y%m%d-%H%M%S") /
+                          "legacy" / "rules")
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            backup_path = backup_dir / "sweetclaude"
+            shutil.move(str(target), str(backup_path))
+            return RecipeResult("", _hash_bytes(b"global-rules"), _hash_bytes(b""),
+                                backup_path, True)
+        except OSError as e:
+            return RecipeResult("", "", None, None, False, str(e))
 
     if action == "run_script":
         cmd = recipe.get("cmd", [])

@@ -528,6 +528,16 @@ def cmd_sync(args: argparse.Namespace) -> int:
                 except (ValueError, IndexError):
                     hook_cleaned += 1
 
+    # Rules in ~/.claude/rules are global Claude Code instructions. Remove the
+    # historical SweetClaude copy so projects that are disabled or never
+    # adopted cannot receive SweetClaude's phase/TDD/interaction rules.
+    legacy_cleanup = Path(source) / "scripts" / "maintenance" / "cleanup-legacy-paths.py"
+    if legacy_cleanup.exists():
+        cleanup = _run([sys.executable, str(legacy_cleanup), "clean", "--only",
+                        "rules/sweetclaude"])
+        if cleanup.returncode != 0:
+            errors.append(f"remove global SweetClaude rules: {cleanup.stderr.strip()}")
+
     # Verify sync
     verify_errors = []
     sync_target = version_dir or install_path

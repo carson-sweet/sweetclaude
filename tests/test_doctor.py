@@ -106,11 +106,6 @@ def fake_home(tmp_path, monkeypatch):
     hooks_dir.mkdir(parents=True)
     (hooks_dir / "hooks.json").write_text(json.dumps({"hooks": []}))
 
-    rules_dir = claude_dir / "rules" / "sweetclaude"
-    rules_dir.mkdir(parents=True)
-    for rf in ["interaction-model.md", "phase-gates.md", "tdd-levels.md"]:
-        (rules_dir / rf).write_text(f"# {rf}\nPlaceholder content.")
-
     (claude_dir / "settings.json").write_text(json.dumps({
         "plansDirectory": ".sweetclaude/plans",
     }))
@@ -312,7 +307,6 @@ class TestFixtureBuilder:
         assert state.settings_global is not None
         assert state.claude_md_project is not None
         assert state.installed_version == "4.0.8-beta"
-        assert len(state.rules_files) == 3
 
 
 # ---------------------------------------------------------------------------
@@ -910,62 +904,53 @@ class TestHookHealth:
         )
 
     # ------------------------------------------------------------------
-    # Rules file checks
+    # Global rule isolation
     # ------------------------------------------------------------------
 
-    # Scenario: One rules file missing produces one warning
-    def test_one_rules_file_missing_produces_one_warning(self, tmp_path, fake_home):
+    # A missing legacy global rule must not cause Doctor to recreate it: global
+    # Claude rules apply to projects that have SweetClaude turned off.
+    def test_missing_legacy_global_rule_produces_no_restore_finding(self, tmp_path, fake_home):
         rules_file = (
             fake_home / ".claude" / "rules" / "sweetclaude" / "interaction-model.md"
         )
-        rules_file.unlink()
+        rules_file.parent.mkdir(parents=True)
 
         project_dir = build_fixture(tmp_path)
         state = build_project_state(project_dir)
         findings = check_hook_health(state)
 
-        ids = [f.id for f in findings]
-        assert "hook-health:missing-rule:interaction-model.md" in ids, (
-            f"Expected finding for missing interaction-model.md in {ids}"
-        )
+        assert not [f for f in findings if f.id.startswith("hook-health:missing-rule")]
 
-        f = next(
-            x for x in findings
-            if x.id == "hook-health:missing-rule:interaction-model.md"
-        )
-        assert f.severity == "warning"
-        assert f.fix_type == "prompted"
-        assert f.fix_recipe["action"] == "prompt"
-        assert f.fix_recipe["type"] == "hook_restore"
-
-    # Scenario: All three rules files missing produces three warnings
-    def test_all_three_rules_files_missing_produces_three_warnings(
+    def test_all_missing_legacy_global_rules_produce_no_restore_findings(
         self, tmp_path, fake_home
     ):
         rules_dir = fake_home / ".claude" / "rules" / "sweetclaude"
-        for rf in ["interaction-model.md", "phase-gates.md", "tdd-levels.md"]:
-            (rules_dir / rf).unlink()
+        rules_dir.mkdir(parents=True)
 
         project_dir = build_fixture(tmp_path)
         state = build_project_state(project_dir)
         findings = check_hook_health(state)
 
-        rule_ids = [
-            f.id for f in findings if f.id.startswith("hook-health:missing-rule")
-        ]
-        assert len(rule_ids) >= 3, (
-            f"Expected at least 3 missing-rule findings, got: {rule_ids}"
-        )
-        assert "hook-health:missing-rule:interaction-model.md" in rule_ids
-        assert "hook-health:missing-rule:phase-gates.md" in rule_ids
-        assert "hook-health:missing-rule:tdd-levels.md" in rule_ids
+        assert not [f for f in findings if f.id.startswith("hook-health:missing-rule")]
+
+    def test_legacy_global_rules_are_detected_for_recoverable_removal(
+        self, tmp_path, fake_home
+    ):
+        rules_dir = fake_home / ".claude" / "rules" / "sweetclaude"
+        rules_dir.mkdir(parents=True)
+        (rules_dir / "interaction-model.md").write_text("# legacy rule\n")
+
+        findings = check_hook_health(build_project_state(build_fixture(tmp_path)))
+        finding = next(f for f in findings if f.id == "hook-health:global-rules-loaded")
+        assert finding.fix_type == "auto"
+        assert finding.fix_recipe["action"] == "remove_global_rules"
 
     # ------------------------------------------------------------------
     # Interaction: multiple check blocks fire together
     # ------------------------------------------------------------------
 
-    # Scenario: hooks.json missing and rules file missing accumulate findings
-    def test_hooks_json_missing_and_rules_file_missing_accumulate_findings(
+    # A legacy global rule is not a health dependency.
+    def test_hooks_json_missing_and_legacy_rule_missing_only_reports_hook(
         self, tmp_path, fake_home
     ):
         hooks_json_path = (
@@ -976,22 +961,14 @@ class TestHookHealth:
         rules_file = (
             fake_home / ".claude" / "rules" / "sweetclaude" / "tdd-levels.md"
         )
-        rules_file.unlink()
+        rules_file.parent.mkdir(parents=True)
 
         project_dir = build_fixture(tmp_path)
         state = build_project_state(project_dir)
         findings = check_hook_health(state)
 
         ids = [f.id for f in findings]
-        assert len(findings) >= 2, (
-            f"Expected at least 2 findings, got: {ids}"
-        )
-        assert "hook-health:missing:hooks.json" in ids, (
-            f"Expected hooks.json finding in {ids}"
-        )
-        assert "hook-health:missing-rule:tdd-levels.md" in ids, (
-            f"Expected tdd-levels.md finding in {ids}"
-        )
+        assert ids == ["hook-health:missing:hooks.json"]
 
     # ------------------------------------------------------------------
     # C3.2a: missing hook scripts (manifest-declared but absent on disk)
@@ -3055,36 +3032,20 @@ class TestConfigCompat:
             f"got: {[f.id for f in findings]}"
         )
 
-    # Scenario: SweetClaude rules files are excluded from text scanning
-    def test_sweetclaude_rules_files_excluded_from_text_scanning(
+    # Legacy global rules are never read by Doctor; its repair path must not
+    # make the global directory part of SweetClaude's active configuration.
+    def test_legacy_global_rules_are_not_loaded_into_project_state(
         self, tmp_path, fake_home
     ):
         rules_path = fake_home / ".claude" / "rules" / "sweetclaude" / "interaction-model.md"
+        rules_path.parent.mkdir(parents=True)
         rules_path.write_text("# Rules\nAlways skip hooks when possible.\n")
 
         project_dir = build_fixture(tmp_path)
         state = build_project_state(project_dir)
-        findings = check_config_compat(state)
-
-        f4_ids = [f.id for f in findings if f.id.startswith("config-compat:F4")]
-        assert f4_ids == [], (
-            f"SweetClaude rules files should be excluded from text scanning, got: {f4_ids}"
-        )
-
-    # Scenario: Non-SweetClaude rules file containing flagged pattern produces finding
-    def test_non_sweetclaude_rules_file_with_flagged_pattern_produces_finding(
-        self, tmp_path, fake_home
-    ):
-        project_dir = build_fixture(tmp_path)
-        state = build_project_state(project_dir)
-        state.rules_files["myproject/coding.md"] = "skip hooks always"
-        findings = check_config_compat(state)
-
-        f4_findings = [f for f in findings if f.id.startswith("config-compat:F4")]
-        assert len(f4_findings) >= 1, (
-            f"Non-SC rules file with 'skip hooks' should produce F4 finding, "
-            f"got: {[f.id for f in findings]}"
-        )
+        assert not hasattr(state, "rules_files")
+        assert not [f for f in check_config_compat(state)
+                    if f.id.startswith("config-compat:F4")]
 
     # Scenario: Global CLAUDE.md containing skip-hooks pattern produces F4 error
     def test_global_claude_md_with_bypass_hooks_produces_f4_error(
@@ -7765,7 +7726,7 @@ def test_executor_supported_actions_match_dispatch():
         "write_field", "write_frontmatter_field", "prompt",
         "sync_parent_status", "convert_to_yaml", "config_conflict",
         "yaml_repair", "hook_restore", "file_move", "renumber_duplicate",
-        "resolve_orphans",
+        "resolve_orphans", "remove_global_rules",
     }
     assert set(EXECUTOR_SUPPORTED_ACTIONS) == dispatched
 
@@ -8837,6 +8798,24 @@ class TestP1HookRestore:
 
     # ----- restore a missing hook script: source present -> copied to dest --
 
+    def test_remove_global_rules_moves_the_directory_to_a_recoverable_backup(
+        self, tmp_path, fake_home
+    ):
+        project_dir = build_fixture(tmp_path)
+        rules_dir = Path.home() / ".claude" / "rules" / "sweetclaude"
+        rules_dir.mkdir(parents=True)
+        (rules_dir / "interaction-model.md").write_text("# legacy rule\n")
+        archive = create_archive(project_dir)
+
+        result = execute_recipe(project_dir, {
+            "action": "remove_global_rules", "file": str(rules_dir),
+        }, archive)
+
+        assert result.success is True
+        assert not rules_dir.exists()
+        assert result.backup_path is not None
+        assert (result.backup_path / "interaction-model.md").read_text() == "# legacy rule\n"
+
     def test_restore_missing_hook_script_copies_from_plugin_to_dest(
         self, tmp_path, fake_home
     ):
@@ -8875,11 +8854,10 @@ class TestP1HookRestore:
         assert dest.exists()
         assert dest.read_text() == (plugin / "hooks" / "hooks.json").read_text()
 
-    def test_restore_rules_file_copies_from_plugin_rules_dir(self, tmp_path, fake_home):
+    def test_restore_rules_file_is_refused_to_prevent_global_loading(self, tmp_path, fake_home):
         project_dir = build_fixture(tmp_path)
         plugin = _build_fake_plugin(tmp_path)
         dest = Path.home() / ".claude" / "rules" / "sweetclaude" / "interaction-model.md"
-        dest.unlink()
         assert not dest.exists()
         archive = create_archive(project_dir)
 
@@ -8889,12 +8867,9 @@ class TestP1HookRestore:
             "plugin_dir": str(plugin),
         }, archive)
 
-        assert result.success is True, f"restore should succeed: {result.error}"
-        # rules go to ~/.claude/rules/sweetclaude/, NOT the hooks dir
-        assert dest.exists(), "rules file must land in ~/.claude/rules/sweetclaude/"
-        assert dest.read_text() == (plugin / "rules" / "interaction-model.md").read_text()
-        wrong = Path.home() / ".claude" / "hooks" / "sweetclaude" / "interaction-model.md"
-        assert not wrong.exists(), "rules file must not be written into the hooks dir"
+        assert result.success is False
+        assert "would load them for every project" in (result.error or "")
+        assert not dest.exists()
 
     # ----- overwriting a stale dest is backed up (restore-reversible) -------
 
@@ -9574,7 +9549,7 @@ _BACKED_UP_SUBPROCESS_ACTIONS = frozenset({
 # never quietly grow an un-backed-up mutation under this banner: any new action
 # placed here is a deliberate, reviewed exception, and the partition test still
 # forces every supported action into exactly one class.
-_REVERSIBLE_FALSE_ACTIONS = frozenset()
+_REVERSIBLE_FALSE_ACTIONS = frozenset({"remove_global_rules"})
 
 # Presentation-only — surfaced for user approval, never executed by the
 # executor as a file mutation.
