@@ -79,6 +79,33 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Test 2b: session-preflight.sh is silent for a non-SweetClaude project
+# ---------------------------------------------------------------------------
+echo "[2b] session-preflight.sh: silent for non-SweetClaude project"
+
+OUTPUT2B=$(cd "$FX2_PROJ" && HOME="$FX2_HOME" bash "$REPO_ROOT/hooks/session-preflight.sh" 2>/dev/null) || true
+if [ -z "$OUTPUT2B" ]; then
+  pass "silent for non-SweetClaude project"
+else
+  fail "unexpected output for non-SC project: $(printf '%s' "$OUTPUT2B" | head -c 100)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 2c: session-preflight.sh is silent for a disabled SweetClaude project
+# ---------------------------------------------------------------------------
+echo "[2c] session-preflight.sh: silent for disabled SweetClaude project"
+
+mkdir -p "$FX2_PROJ/.sweetclaude"
+touch "$FX2_PROJ/.sweetclaude/disabled"
+OUTPUT2C=$(cd "$FX2_PROJ" && HOME="$FX2_HOME" bash "$REPO_ROOT/hooks/session-preflight.sh" 2>/dev/null) || true
+if [ -z "$OUTPUT2C" ]; then
+  pass "silent for disabled SweetClaude project"
+else
+  fail "unexpected output for disabled project: $(printf '%s' "$OUTPUT2C" | head -c 100)"
+fi
+rm -rf "$FX2_PROJ/.sweetclaude"
+
+# ---------------------------------------------------------------------------
 # Test 3: drift-gate.sh re-surfaces pre-existing marker without running runner
 # ---------------------------------------------------------------------------
 echo "[3] drift-gate.sh: re-surfaces pre-existing marker without runner"

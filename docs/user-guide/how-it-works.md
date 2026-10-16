@@ -208,12 +208,16 @@ Doctor and recovery write their own run artifacts under `.sweetclaude/state/doct
 ## What Lives Where
 
 ```
-~/.claude/                          ← Global SweetClaude install
-├── skills/sweetclaude/             ← all skills
-├── agents/sweetclaude/             ← 8 isolated subagents
-├── hooks/sweetclaude/              ← TDD enforcement hooks
-├── rules/sweetclaude/              ← Phase gates, TDD levels, interaction model
-└── config/sweetclaude/             ← Phase-skill mapping, workflow templates
+SweetClaude plugin bundle/           ← Plugin implementation
+├── skills/                          ← all skills
+├── agents/                          ← isolated subagents
+├── hooks/                           ← project-gated enforcement hooks
+├── rules/                           ← loaded only by an active SweetClaude workflow
+└── config/                          ← Phase-skill mapping, workflow templates
+
+`~/.claude/rules/sweetclaude/` is intentionally not used: files in that
+directory are global Claude Code rules and would affect projects that have not
+opted into SweetClaude or have turned it off.
 
 your-project/.sweetclaude/          ← Per-project state
 ├── state/

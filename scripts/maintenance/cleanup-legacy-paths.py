@@ -14,7 +14,8 @@ the currently installed version.
 
 Usage:
   python3 cleanup-legacy-paths.py detect              # list what would be cleaned
-  python3 cleanup-legacy-paths.py clean [--no-backup]  # back up and remove
+  python3 cleanup-legacy-paths.py clean [--no-backup] [--only PATH]
+                                                     # back up and remove
 """
 import argparse
 import json
@@ -53,10 +54,12 @@ def get_installed_version() -> tuple[str, str]:
     return "", ""
 
 
-def find_legacy_dirs() -> list[Path]:
+def find_legacy_dirs(only: str | None = None) -> list[Path]:
+    if only is not None and only not in LEGACY_DIRS:
+        raise ValueError(f"unsupported legacy path: {only}")
     home_claude = Path.home() / ".claude"
     found = []
-    for rel in LEGACY_DIRS:
+    for rel in ([only] if only else LEGACY_DIRS):
         d = home_claude / rel
         if d.is_dir():
             found.append(d)
@@ -78,9 +81,9 @@ def find_stale_cache_dirs(current_version: str, current_install_path: str) -> li
 
 
 def detect(args: argparse.Namespace) -> int:
-    legacy = find_legacy_dirs()
+    legacy = find_legacy_dirs(getattr(args, "only", None))
     version, install_path = get_installed_version()
-    stale = find_stale_cache_dirs(version, install_path)
+    stale = [] if getattr(args, "only", None) else find_stale_cache_dirs(version, install_path)
 
     output = {"legacy_dirs": [], "stale_cache_dirs": [], "installed_version": version}
 
@@ -98,9 +101,9 @@ def detect(args: argparse.Namespace) -> int:
 
 
 def clean(args: argparse.Namespace) -> int:
-    legacy = find_legacy_dirs()
+    legacy = find_legacy_dirs(args.only)
     version, install_path = get_installed_version()
-    stale = find_stale_cache_dirs(version, install_path)
+    stale = [] if args.only else find_stale_cache_dirs(version, install_path)
 
     if not legacy and not stale:
         print(json.dumps({"status": "clean", "removed": []}))
@@ -149,6 +152,8 @@ def main() -> int:
 
     clean_p = sub.add_parser("clean", help="Back up and remove legacy dirs")
     clean_p.add_argument("--no-backup", action="store_true", help="Skip backup")
+    clean_p.add_argument("--only", choices=LEGACY_DIRS,
+                        help="Clean exactly one legacy directory")
 
     args = parser.parse_args()
     if args.command == "detect":
