@@ -44,12 +44,8 @@ The oracle reads tool calls only. Nothing the model says in prose counts as evid
 
 Before any paid run, the driver runs `hooks/session-preflight.sh` against the fixture and refuses to start if it is rejected. That rejection is the failure that invalidated every case on 2026-10-19 (see `FAILURE-REGISTER.md`, BEH-001).
 
-## Baseline: 2026-10-20, Sonnet
+## Baselines (Sonnet)
 
-The full tier passed 30 of 33 cases and cost $4.43. All three failures were in Tier 1's category choice; each case passed when run through its category command.
+**2026-10-20, first run:** 30 of 33 passed, $4.43. All three failures were Tier 1 category choices: `build-issue-tracker` went to configure, `test-performance` went to maintain, and `utils-big-picture` went to `sweetclaude:status`. Each passed through its category command, and find-skill boundary rules fixed them.
 
-| Case | Routed to | Expected |
-|---|---|---|
-| `build-issue-tracker` | configure | build `project-issues` |
-| `test-performance` | maintain | build `testing-performance` |
-| `utils-big-picture` | `sweetclaude:status` | utils `big-picture` |
+**2026-10-20, 5.0.0 release candidate:** 32 of 33 passed, $4.20. The one miss, `plan-milestone`, was a fixture artifact: the weekly doctor checkup prompt fired in the fresh project. The fixture now records a recent doctor run, and the case passed on rerun. Every run's catalog listed exactly the nine Tier 1 commands.

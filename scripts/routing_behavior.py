@@ -170,6 +170,9 @@ def classify(case: dict[str, Any], trace: Trace, repo: str | None = None) -> tup
     missing = PUBLIC - set(trace.public_skills)
     if missing:
         return "harness-error", f"Tier 1 commands missing from the catalog: {sorted(missing)}"
+    exposed = set(trace.public_skills) - PUBLIC
+    if exposed:
+        return "harness-error", f"commands beyond Tier 1 are exposed in the catalog: {sorted(exposed)}"
     expected = case["category"]
     if trace.workflow:
         category, workflow = trace.workflow
@@ -205,6 +208,7 @@ def make_project(root: Path) -> Path:
     state.mkdir(parents=True)
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     (state / "sweetclaude.yaml").write_text(FIXTURE_STATE.format(now=now), encoding="utf-8")
+    (state / "last-doctor-run.json").write_text(json.dumps({"timestamp": now}), encoding="utf-8")
     (project / "README.md").write_text("# ShiftBoard\n\nStaff shift scheduling for small veterinary clinics.\n", encoding="utf-8")
     git = ["git", "-c", "user.email=routing-fixture@example.invalid", "-c", "user.name=Routing Fixture"]
     subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)

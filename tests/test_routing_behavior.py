@@ -102,6 +102,12 @@ def test_missing_tier_one_command_is_a_harness_error():
     assert grade_events(events, "maintain-live-defect") == "harness-error"
 
 
+def test_library_workflow_exposed_as_a_command_is_a_harness_error():
+    events = transcript("go-maintain-hotfix")
+    events[0] = {**events[0], "skills": [*events[0]["skills"], "sweetclaude:hotfix"]}
+    assert grade_events(events, "maintain-live-defect") == "harness-error"
+
+
 def test_unfinished_run_without_a_workflow_is_a_harness_error():
     events = [event for event in transcript("go-no-route") if event["type"] != "result"]
     assert grade_events(events, "maintain-live-defect") == "harness-error"
@@ -177,6 +183,15 @@ def test_fixture_project_is_a_committed_git_repository(tmp_path):
 @needs_jq
 def test_session_preflight_accepts_the_fixture(tmp_path):
     assert rb.preflight(rb.make_project(tmp_path)) is None
+
+
+@needs_jq
+def test_session_preflight_leaves_no_pending_prompts(tmp_path):
+    project = rb.make_project(tmp_path)
+    assert rb.preflight(project) is None
+    state = project / ".sweetclaude" / "state"
+    assert not (state / "doctor-prompt-pending.json").exists()
+    assert not (state / "pending-drift-decision.yaml").exists()
 
 
 @needs_jq
