@@ -1038,7 +1038,7 @@ def _build_body(body: str, fm: dict) -> str:
 def _check_already_migrated(project_dir: pathlib.Path) -> dict | None:
     """Idempotency guard: refuse to overwrite a populated v4 state.
 
-    If installed_version is already 4.x AND ISSUE-*.md files exist in
+    If installed_version is already 4.x or later AND ISSUE-*.md files exist in
     .sweetclaude/product/backlog/, re-running execute would create
     duplicates. Refuse and direct the user to cleanup-v3-files.
     """
@@ -1050,7 +1050,8 @@ def _check_already_migrated(project_dir: pathlib.Path) -> dict | None:
     except yaml.YAMLError:
         return None
     installed = str((sc.get("framework") or {}).get("installed_version", ""))
-    if not installed.startswith("4."):
+    installed_major = re.match(r"^(\d+)\.", installed)
+    if not installed_major or int(installed_major.group(1)) < 4:
         return None
     backlog_dir = project_dir / ".sweetclaude" / "product" / "backlog"
     issue_files = list(backlog_dir.glob("ISSUE-*.md")) if backlog_dir.exists() else []
@@ -1658,7 +1659,7 @@ def finalize(project_dir: pathlib.Path) -> dict:
     If a crash interrupts between the two writes, the half-state is:
       - installed_version: 4.0.0 (project is "v4")
       - product_base:      still old (pre-migration)
-    Bootstrap then sees PLUGIN_IS_V4 && !PROJECT_NOT_V4 — no hard-stop fires.
+    Bootstrap then sees PLUGIN_IS_V4_PLUS && !PROJECT_BELOW_V4 — no hard-stop fires.
     The user can re-run cleanup-v3-files to finish. This is strictly safer
     than the previous order, where a crash between writes produced
     privacy=new + installed_version=old → bootstrap hard-stop loop that

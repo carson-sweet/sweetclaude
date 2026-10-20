@@ -841,7 +841,8 @@ def check_storage_lint(state: ProjectState) -> list[Finding]:
                 .get("installed_version", "")
             )
         v3_files = list(backlog_dir.glob("BL-*.md"))
-        if v3_files and sc_version.startswith("4."):
+        sc_major = re.match(r"^(\d+)\.", str(sc_version))
+        if v3_files and sc_major and int(sc_major.group(1)) >= 4:
             findings.append(Finding(
                 id="storage-lint:v3-files-present:backlog",
                 category="storage_lint",

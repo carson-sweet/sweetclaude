@@ -410,6 +410,41 @@ run_bug_005_idempotency() {
     rm -rf "$tmp"
 }
 
+run_bug_005_idempotency_v5() {
+    echo ""
+    echo "=== Scenario: BUG-005 idempotency — execute refuses re-run on a 5.x-stamped migrated project ==="
+    local tmp
+    tmp=$(prep_fixture "$REPO_ROOT/tests/fixtures/migrate-smoke" "bug-005-idem-v5")
+    local approval_receipt
+    approval_receipt=$(approval_receipt_for "$tmp" --include-done)
+    python3 "$SCRIPT" execute --project-dir "$tmp" --include-done --approval-receipt "$approval_receipt" > /dev/null
+    python3 "$SCRIPT" finalize --project-dir "$tmp" > /dev/null
+    python3 -c "
+import yaml
+p = '$tmp/.sweetclaude/state/sweetclaude.yaml'
+sc = yaml.safe_load(open(p)) or {}
+sc.setdefault('framework', {})['installed_version'] = '5.0.0'
+open(p, 'w').write(yaml.safe_dump(sc, default_flow_style=False, sort_keys=False))
+"
+
+    local second_run_out second_run_exit
+    second_run_exit=0
+    second_run_out=$(python3 "$SCRIPT" execute --project-dir "$tmp" --include-done 2>&1) || second_run_exit=$?
+
+    if echo "$second_run_out" | grep -q '"error": "already-migrated"'; then
+        pass "idempotency v5: second execute returns 'already-migrated' error"
+    else
+        fail "idempotency v5: second execute did not return already-migrated error (output: $second_run_out)"
+    fi
+    if [ "$second_run_exit" = "1" ]; then
+        pass "idempotency v5: second execute exit code 1"
+    else
+        fail "idempotency v5: second execute exit code $second_run_exit (expected 1)"
+    fi
+
+    rm -rf "$tmp"
+}
+
 # ── frontmatter-not-a-dict regression (BUG-007) ────────────────────────────
 
 run_frontmatter_not_dict_scenario() {
@@ -809,6 +844,7 @@ run_scenario "$REPO_ROOT/tests/fixtures/migrate-smoke-docs" "docs/product varian
 run_skip_done_scenario
 run_bug_005_reorder
 run_bug_005_idempotency
+run_bug_005_idempotency_v5
 run_frontmatter_not_dict_scenario
 run_legacy_markdown_scenario
 run_milestone_reference_rewrite_scenario

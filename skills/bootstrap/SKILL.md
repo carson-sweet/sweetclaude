@@ -162,15 +162,8 @@ If `false`:
 After confirming setup is complete, decide whether the recovery guard needs to
 run, in one of two modes:
 
-- **hard-stop** — a v4 plugin is running against a project that hasn't migrated
-  yet (project `installed_version` below 4.x, or v3 `BL-*.md` files present).
-  Unsafe to continue; the session stops after routing.
-- **advisory** — the project is v4 but sits in a compatibility/recovery state
-  (`recovery.taxonomy.status: stabilized-without-migration`), or its product
-  tree still holds old-taxonomy files (`STORY-`/`BUG-`/`DEBT-`/`CHORE-`)
-  despite the state claiming migration is complete. Graduation opportunities,
-  blockers, and recoverable states are only visible through the guard, so it
-  runs at session start, routes to an action, and the session continues.
+- **hard-stop** — a v4-or-later plugin is running against a project that hasn't migrated yet (project `installed_version` major below 4, missing, or unparseable, or v3 `BL-*.md` files present). Unsafe to continue; the session stops after routing.
+- **advisory** — the project is v4 or later but sits in a compatibility/recovery state (`recovery.taxonomy.status: stabilized-without-migration`), or its product tree still holds old-taxonomy files (`STORY-`/`BUG-`/`DEBT-`/`CHORE-`) despite the state claiming migration is complete, or v3 `BL-*.md` files are present but the plugin version could not be read. Graduation opportunities, blockers, and recoverable states are only visible through the guard, so it runs at session start, routes to an action, and the session continues.
 
 Every status the guard can emit has a route below. There are no unrouted
 statuses: bootstrap either offers the resolving action or explains honestly
@@ -190,7 +183,7 @@ if p.exists():
 print('.sweetclaude/product')
 " 2>/dev/null || echo '.sweetclaude/product')
 
-# Detect v4 plugin: plugin version ≥ 4.x, project installed_version < 4.x
+# Detect v4+ plugin: plugin major >= 4, project installed_version major < 4
 PLUGIN_V=$(python3 -c "
 import json, os, re
 try:
@@ -199,7 +192,8 @@ try:
                for e in versions if e.get('scope') == 'user']
     for e in sorted(entries, key=lambda x: x.get('lastUpdated',''), reverse=True):
         v = e.get('version','')
-        if re.match(r'^4\.', v) and 'sweetclaude' in str(e.get('installPath','')).lower():
+        m = re.match(r'^(\d+)\.', v)
+        if m and int(m.group(1)) >= 4 and 'sweetclaude' in str(e.get('installPath','')).lower():
             print(v)
             break
 except Exception:
@@ -214,11 +208,15 @@ print(d.get('framework', {}).get('installed_version', ''))
 
 V3_FILES=$(find "${PRODUCT_BASE}/backlog" -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
 
-PLUGIN_IS_V4=false
-case "$PLUGIN_V" in 4.*) PLUGIN_IS_V4=true ;; esac
+PLUGIN_IS_V4_PLUS=false
+case "$PLUGIN_V" in
+  [0-9]*.*) [ "${PLUGIN_V%%.*}" -ge 4 ] 2>/dev/null && PLUGIN_IS_V4_PLUS=true ;;
+esac
 
-PROJECT_NOT_V4=false
-case "$PROJECT_V" in 4.*) ;; *) PROJECT_NOT_V4=true ;; esac
+PROJECT_BELOW_V4=true
+case "$PROJECT_V" in
+  [0-9]*.*) [ "${PROJECT_V%%.*}" -ge 4 ] 2>/dev/null && PROJECT_BELOW_V4=false ;;
+esac
 
 COMPAT_STATE=$(python3 -c "
 import yaml
@@ -230,9 +228,9 @@ print('yes' if taxonomy.get('status') == 'stabilized-without-migration' else 'no
 LEGACY_FILES=$(find "${PRODUCT_BASE}" \( -name 'STORY-*.md' -o -name 'BUG-*.md' -o -name 'DEBT-*.md' -o -name 'CHORE-*.md' \) 2>/dev/null | wc -l | tr -d ' ')
 
 GUARD_MODE=none
-if $PLUGIN_IS_V4 && ( $PROJECT_NOT_V4 || [ "$V3_FILES" -gt 0 ] ); then
+if $PLUGIN_IS_V4_PLUS && ( $PROJECT_BELOW_V4 || [ "$V3_FILES" -gt 0 ] ); then
   GUARD_MODE=hard-stop
-elif [ "$COMPAT_STATE" = "yes" ] || [ "$LEGACY_FILES" -gt 0 ]; then
+elif [ "$COMPAT_STATE" = "yes" ] || [ "$LEGACY_FILES" -gt 0 ] || [ "$V3_FILES" -gt 0 ]; then
   GUARD_MODE=advisory
 fi
 
@@ -435,13 +433,10 @@ Read `framework.update.available`, `framework.update.declined`, and `framework.i
 
 - `available` is null → no offer.
 - `available` is a prerelease (`-beta`/`-rc`/`-alpha`) while the installed version is not → no offer, ever (ISSUE-248: stable installs are never prompted with prerelease versions, regardless of what an older hook wrote to state).
-- `available` is non-null:
-  - Compute `is_major_bump = major(available) > major(installed_version)`.
-  - If `is_major_bump` is true → **always prompt**, regardless of `declined`.
-  - Else (minor/patch within installed major):
-    - `declined` is null/missing/false → prompt.
-    - `declined` is the boolean `true` (legacy) → treat as if user declined the installed major (silence until next major).
-    - `declined` is a version string → prompt only if `major(available) > major(declined)`. Otherwise silent.
+- `available` is non-null (minor, patch, or major bump):
+  - `declined` is null/missing/false → prompt.
+  - `declined` is the boolean `true` (legacy) → treat as if user declined the installed major (silence until next major).
+  - `declined` is a version string → prompt only if `major(available) > major(declined)`. Otherwise silent. A decline silences every later release in its own major: installed 4.5.3 with `declined: 5.0.0` stays silent for 5.0.0 and 5.1.0, and prompts again for 6.0.0. An undeclined major bump always prompts.
 
 ```bash
 python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
@@ -471,23 +466,21 @@ if is_prerelease(available) and not is_prerelease(installed):
 inst_maj, avail_maj = major(installed), major(available)
 if inst_maj is None or avail_maj is None:
     print("DECISION=prompt"); sys.exit()
-if avail_maj > inst_maj:
-    print("DECISION=prompt"); sys.exit()
 if declined in (None, False):
     print("DECISION=prompt"); sys.exit()
 declined_maj = inst_maj if declined is True else major(str(declined))
 if declined_maj is None or avail_maj > declined_maj:
     print("DECISION=prompt"); sys.exit()
-# Silenced by decline. Emit the installed major so the caller can compose
+# Silenced by decline. Emit the silenced major so the caller can compose
 # the user-facing message ("all 3.x.x updates will be skipped").
-print(f"DECISION=silent_declined|{inst_maj}")
+print(f"DECISION=silent_declined|{max(inst_maj, avail_maj)}")
 PY
 ```
 
 - **DECISION=silent** → no update available; continue silently past this section.
-- **DECISION=silent_declined|<major>** → user previously declined a minor in this major. Surface a brief informational message so the user is not silently kept in the dark, then continue past this section. The message MUST use the major from the decision output (parameterized — it is not always `3`):
+- **DECISION=silent_declined|<major>** → user previously declined an update in this major. Surface a brief informational message so the user is not silently kept in the dark, then continue past this section. The message MUST use the major from the decision output (parameterized — it is not always `3`):
 
-  > "Minor updates were previously declined by the user, so all <major>.x.x updates will be skipped. Run `/sweetclaude:configure update` to manually update at any time."
+  > "Updates were previously declined by the user, so all <major>.x.x updates will be skipped. Run `/sweetclaude:configure update` to manually update at any time."
 
   Show this message ONCE per session, then continue to Step 7. Do not pause for input — the user is being informed, not prompted.
 
