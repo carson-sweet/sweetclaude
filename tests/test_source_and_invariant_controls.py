@@ -116,7 +116,7 @@ def _write_release_project(project_dir: Path, version: str = "3.9.0") -> None:
         "artifact\n",
         encoding="utf-8",
     )
-    (project_dir / "dist" / "sweetclaude-4.99.0.tgz").write_text(
+    (project_dir / "dist" / "sweetclaude-5.99.0.tgz").write_text(
         "stable artifact\n",
         encoding="utf-8",
     )
@@ -261,7 +261,7 @@ def _write_release_identity_receipt(
         tag=tag,
     )
     channel_defaults = {
-        "stable": ("v4.99.0", project_dir / "dist" / "sweetclaude-4.99.0.tgz"),
+        "stable": ("v5.99.0", project_dir / "dist" / "sweetclaude-5.99.0.tgz"),
         "beta": ("v4.1.99-beta", project_dir / "dist" / "sweetclaude-4.1.99-beta.tgz"),
         "legacy": ("v3.99.0", project_dir / "dist" / "sweetclaude-3.99.0.tgz"),
     }

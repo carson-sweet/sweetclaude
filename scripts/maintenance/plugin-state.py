@@ -112,7 +112,7 @@ def _marketplace(plugin_key: str) -> str:
 def _channel(plugin_key: str, entry: dict[str, Any]) -> str:
     """Post-promotion model (decision log #35, ISSUE-241): marketplace name
     is authoritative; for the bare legacy marketplace, a prerelease version
-    means beta, 4.x means stable, and 3.x means legacy."""
+    means beta, 4.x and later mean stable, and 3.x means legacy."""
     market = _marketplace(plugin_key).lower()
     version = str(entry.get("version") or "")
     major = _major(version)
@@ -124,7 +124,7 @@ def _channel(plugin_key: str, entry: dict[str, Any]) -> str:
         return "stable"
     if PRERELEASE_RE.search(version):
         return "beta"
-    if major == 4:
+    if major is not None and major >= 4:
         return "stable"
     if major == 3:
         return "legacy"

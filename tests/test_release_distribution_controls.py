@@ -117,7 +117,7 @@ def _write_release_project(project_dir: Path, version: str = "3.9.0") -> None:
         "artifact\n",
         encoding="utf-8",
     )
-    (project_dir / "dist" / "sweetclaude-4.99.0.tgz").write_text(
+    (project_dir / "dist" / "sweetclaude-5.99.0.tgz").write_text(
         "stable artifact\n",
         encoding="utf-8",
     )
@@ -252,7 +252,7 @@ def _release_identity_receipt(
     channel = str(overrides.get("channel", "legacy"))
     tag = str(overrides.get("tag", f"v{version}"))
     channel_defaults = {
-        "stable": ("v4.99.0", project_dir / "dist" / "sweetclaude-4.99.0.tgz"),
+        "stable": ("v5.99.0", project_dir / "dist" / "sweetclaude-5.99.0.tgz"),
         "beta": ("v4.1.99-beta", project_dir / "dist" / "sweetclaude-4.1.99-beta.tgz"),
         "legacy": ("v3.99.0", project_dir / "dist" / "sweetclaude-3.99.0.tgz"),
     }
@@ -800,12 +800,12 @@ def test_release_readiness_rejects_missing_docs_capability(tmp_path):
 
 
 def test_release_readiness_rejects_wrong_discovery_tag_for_release_channel(tmp_path):
-    _write_release_project(tmp_path, version="4.6.0")
+    _write_release_project(tmp_path, version="5.0.0")
     (tmp_path / "dist" / "sweetclaude-3.99.0.tgz").write_text(
         "legacy artifact\n",
         encoding="utf-8",
     )
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     commit = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
     smoke_output = tmp_path / ".sweetclaude" / "state" / "evidence" / "stable-docs-smoke.txt"
     smoke_output.parent.mkdir(parents=True, exist_ok=True)
@@ -815,19 +815,19 @@ def test_release_readiness_rejects_wrong_discovery_tag_for_release_channel(tmp_p
     # match the release tag — the gate must reject the mismatch.
     stale_identity = _release_identity_receipt(
         tmp_path,
-        "4.6.0",
+        "5.0.0",
         commit=commit,
         branch="main",
         channel="stable",
-        tag="v4.6.0",
+        tag="v5.0.0",
         update_discovery={
             "stable": _discovery_entry(
                 tmp_path,
-                tmp_path / "dist" / "sweetclaude-4.99.0.tgz",
+                tmp_path / "dist" / "sweetclaude-5.99.0.tgz",
                 branch="main",
                 commit=commit,
                 channel="stable",
-                tag="v4.99.0",
+                tag="v5.99.0",
             ),
             "legacy": _discovery_entry(
                 tmp_path,
@@ -850,12 +850,12 @@ def test_release_readiness_rejects_wrong_discovery_tag_for_release_channel(tmp_p
         _release_check("docs-capability", evidence_path=str(docs_receipt)),
         _release_check("public-distribution", evidence_path=str(_public_distribution_receipt(tmp_path))),
     ]
-    receipt = _release_receipt(tmp_path, checks=checks, tag="v4.6.0")
+    receipt = _release_receipt(tmp_path, checks=checks, tag="v5.0.0")
 
     with pytest.raises(ValueError, match="update discovery|Update discovery execution"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,

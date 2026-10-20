@@ -2,7 +2,7 @@ schema_version: 1
 channels:
   stable:
     branch: main
-    major_version: 4
+    major_version: 5
     expected_marketplace: sweetclaude-stable
     prerelease_required: false
     prerelease_allowed: false

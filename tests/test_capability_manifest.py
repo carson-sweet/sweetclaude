@@ -27,13 +27,13 @@ ROOT = Path(__file__).parents[1]
 
 def test_capability_manifest_loads_channel_facts():
     # ISSUE-239 (decision log #34, #36): promotion-time three-channel model.
-    # stable -> main/major 4; beta unchanged (retired later in ISSUE-241);
+    # stable -> main/major 5 (major 4 until the 5.0.0 release); beta unchanged (retired later in ISSUE-241);
     # legacy -> stable-3.x/major 3.
     manifest = load_manifest(ROOT / "config" / "capability-manifest.yaml")
 
     assert expected_ref("stable", manifest) == "main"
     assert expected_marketplace("stable", manifest) == "sweetclaude-stable"
-    assert manifest["channels"]["stable"]["major_version"] == 4
+    assert manifest["channels"]["stable"]["major_version"] == 5
     assert manifest["channels"]["stable"]["prerelease_allowed"] is False
 
     # beta channel is untouched by this story
