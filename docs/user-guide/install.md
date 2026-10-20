@@ -17,7 +17,7 @@ Restart Claude Code after install. Then run:
 /sweetclaude:help
 ```
 
-**Upgrading from 4.x:** Run `/sweetclaude:configure update`. See [Upgrading to 5.0](upgrading-to-5.md) for the new command names.
+**Upgrading from 4.x:** Run `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. After the restart, run `/sweetclaude:configure update` in each project. See [Upgrading to 5.0](upgrading-to-5.md) for the new command names.
 
 **Upgrading from 3.x:** The stable channel moved from `stable-3.x` to `main`. To switch a 3.x install, re-add the stable marketplace and
 reinstall as above, then run `/sweetclaude:configure update` inside each project to
