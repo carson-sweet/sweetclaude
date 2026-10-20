@@ -199,3 +199,35 @@ class TestAC3BetaRescueUsesTheRetiredBetaSwitch:
         early = [m.group(0) for m in SC_COMMAND.finditer(text[: restart.start()])
                  if m.group(0).startswith("/sweetclaude:configure")]
         assert early == [], f"{self.REL}: /sweetclaude:configure given before the post-switch restart: {early}"
+
+
+PAIRING_FILES = [
+    "docs/user-guide/beta-rescue.md",
+    "README.md",
+    "docs/README.md",
+    "docs/user-guide/install.md",
+]
+EXPECTED_PLUGIN_FOR_REF = {
+    "main": "sweetclaude@sweetclaude-stable",
+    "stable-3.x": "sweetclaude@sweetclaude-legacy",
+}
+ADD_REF = re.compile(r"/plugin marketplace add carson-sweet/sweetclaude@(\S+)")
+INSTALL_PLUGIN = re.compile(r"/plugin install (\S+)")
+
+
+class TestAC5MarketplaceRefAndPluginPairing:
+    @pytest.mark.parametrize("rel", PAIRING_FILES)
+    def test_every_add_and_install_pair_uses_the_matching_marketplace(self, rel):
+        text = _read(rel)
+        adds = list(ADD_REF.finditer(text))
+        offenders = []
+        for n, add in enumerate(adds):
+            limit = adds[n + 1].start() if n + 1 < len(adds) else len(text)
+            install = INSTALL_PLUGIN.search(text, add.end(), limit)
+            if not install:
+                continue
+            ref = add.group(1)
+            expected = EXPECTED_PLUGIN_FOR_REF.get(ref)
+            if install.group(1) != expected:
+                offenders.append(f"@{ref} paired with {install.group(1)} (expected {expected})")
+        assert offenders == [], f"{rel}: marketplace ref and plugin key mismatched: {offenders}"
