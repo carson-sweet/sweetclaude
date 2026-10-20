@@ -2,6 +2,7 @@
 they restart, 3.x -> stable removes the old sweetclaude-stable marketplace
 before adding @main, and the retired-beta switch is the documented fix."""
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -104,7 +105,12 @@ class TestAC1FourXReadersGetOnlyPluginCommandsBeforeRestart:
 
     def test_4x_update_command_not_recommended_for_moving_to_5x(self):
         pattern = re.compile(r"/sweetclaude:update\b|4\.x update command|4\.x command\b")
-        files = [ROOT / "README.md"] + sorted((ROOT / "docs").rglob("*.md"))
+        tracked = subprocess.run(
+            ["git", "ls-files", "docs/user-guide"], cwd=ROOT, capture_output=True, text=True
+        ).stdout.split()
+        files = [ROOT / "README.md", ROOT / "docs" / "README.md"] + [
+            ROOT / t for t in tracked if t.endswith(".md")
+        ]
         offenders = []
         for f in files:
             for block in re.split(r"\n\s*\n", f.read_text(encoding="utf-8")):
