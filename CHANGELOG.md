@@ -4,6 +4,22 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [5.0.2] — 2026-10-20
+
+### Fixed — updates install the complete workflow library
+
+Updating SweetClaude now installs and refreshes every workflow behind the nine commands.
+
+### Changed — clearer upgrade paths from 4.x, 3.x and beta
+
+Each upgrade path now uses the exact plugin commands for your current version, in the right order. See [Upgrading to 5.0](https://github.com/carson-sweet/sweetclaude/blob/main/docs/user-guide/upgrading-to-5.md).
+
+### Changed — policy documentation states how each rule is applied
+
+The guides now distinguish policies Claude applies as instructions from policies enforced by hooks. Hook-based enforcement for TDD, WIP limits, sprint and phase gates arrives in 5.1.
+
+---
+
 ## [5.0.1] — 2026-10-20
 
 ### Changed — README quick start suggests an overview prompt
