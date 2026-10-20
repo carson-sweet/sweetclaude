@@ -424,3 +424,27 @@ def test_migrate_finalize_rejects_forged_execution_manifest_without_integrity(tm
         "missing-migration-map-integrity",
     }.issubset(_blocking_codes(payload["preflight"]))
     assert _file_snapshot(project) == before
+
+
+def test_migrate_execute_refuses_rerun_on_5x_migrated_project(tmp_path):
+    project = _copy_flat_bl_fixture(tmp_path)
+    sc_path = project / ".sweetclaude" / "state" / "sweetclaude.yaml"
+    sc_path.write_text(
+        "framework:\n"
+        "  installed_version: 5.0.0\n",
+        encoding="utf-8",
+    )
+    backlog = project / ".sweetclaude" / "product" / "backlog"
+    (backlog / "ISSUE-001-migrated.md").write_text(
+        "---\nid: ISSUE-001\ntitle: Migrated\nstatus: new\ntype: story\n---\n\nMigrated.\n",
+        encoding="utf-8",
+    )
+    before = _file_snapshot(project)
+
+    result = _run_migrator(project, "execute", "--include-done")
+
+    assert result.returncode != 0
+    payload = json.loads(result.stdout)
+    assert payload["error"] == "already-migrated"
+    assert payload["installed_version"] == "5.0.0"
+    assert _file_snapshot(project) == before

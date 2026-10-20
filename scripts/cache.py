@@ -653,7 +653,7 @@ def main():
                 name = os.path.basename(entry.get("path", "?"))
                 reasons = "; ".join(entry.get("reasons", []))
                 print(f"  {name}: {reasons}", file=sys.stderr)
-            print("Run /sweetclaude:doctor for the same finding with a fix.",
+            print("Run /sweetclaude:configure doctor for the same finding with a fix.",
                   file=sys.stderr)
         return
 

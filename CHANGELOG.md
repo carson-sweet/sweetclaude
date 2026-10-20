@@ -1,6 +1,32 @@
 # Changelog
 
-All notable changes to SweetClaude are documented here. SweetClaude ships on the stable channel (4.x, tracked on `main`) with a legacy 3.x maintenance channel; this changelog calls out channel-specific changes explicitly.
+All notable changes to SweetClaude are documented here. SweetClaude ships on the stable channel (5.x, tracked on `main`) with a legacy 3.x maintenance channel; this changelog calls out channel-specific changes explicitly.
+
+---
+
+## [5.0.0] — 2026-10-20
+
+### Changed — nine commands replace the full skill menu (breaking)
+
+SweetClaude now shows nine commands instead of one per workflow: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status` and `/sweetclaude:help`. Specialized workflows live in a library behind these commands. Name the workflow after its category, for example `/sweetclaude:configure doctor`, or describe what you need and SweetClaude picks the workflow. Old commands such as `/sweetclaude:doctor` no longer exist, and Claude Code reports them as unknown; run `/sweetclaude:help` to see the new ones. Project data does not change. See [Upgrading to 5.0](https://github.com/carson-sweet/sweetclaude/blob/main/docs/user-guide/upgrading-to-5.md) for the full mapping.
+
+4.x receives no further releases. Stable installs move to 5.0 when you run `/sweetclaude:configure update`.
+
+### Changed — update prompts respect a declined major version
+
+Declining the 5.0 update stops the prompt for 5.x releases. You are asked again when a later major version ships, and `/sweetclaude:configure update` still updates at any time. When you update from 4.x, the update prompt explains the new commands before you confirm.
+
+### Changed — manual behavioral test workflows removed
+
+The two manual behavioral test workflows (`behavioral-regression` and `sweetclaude-behavioral-regression`) are removed. Contributors now check behavior with an automated routing suite and a transcript judge; see `CONTRIBUTING.md`.
+
+### Fixed — library workflows receive session state
+
+Workflows loaded from the library now receive the project's session state, as they did when each workflow was its own command.
+
+### Fixed — doctor can roll back removal of legacy global rules
+
+When doctor removes the legacy `~/.claude/rules/sweetclaude/` directory, each rule file is now backed up through doctor's normal pipeline, so doctor rollback restores it. An empty legacy rules directory is no longer reported.
 
 ---
 

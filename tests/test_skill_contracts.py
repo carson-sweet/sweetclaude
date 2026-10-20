@@ -26,12 +26,15 @@ import pytest
 
 REPO_ROOT = Path(__file__).parents[1]
 SKILLS_DIR = REPO_ROOT / "skills"
+LIBRARY_DIR = REPO_ROOT / "skill-library"
 AGENTS_DIR = REPO_ROOT / "agents"
 
-SKILL_NAMES = sorted(d.name for d in SKILLS_DIR.iterdir() if d.is_dir())
+CORE_SKILL_NAMES = {d.name for d in SKILLS_DIR.iterdir() if d.is_dir()}
+LIBRARY_SKILL_NAMES = {p.parent.name for p in LIBRARY_DIR.glob("*/*/SKILL.md")}
+SKILL_NAMES = sorted(CORE_SKILL_NAMES | LIBRARY_SKILL_NAMES)
 AGENT_NAMES = sorted(p.stem for p in AGENTS_DIR.glob("*.md"))
 
-SKILL_MDS = sorted(SKILLS_DIR.glob("*/SKILL.md"))
+SKILL_MDS = sorted([*SKILLS_DIR.glob("*/SKILL.md"), *LIBRARY_DIR.glob("*/*/SKILL.md")])
 
 REF = re.compile(r"(?<![/\w])sweetclaude:([a-z0-9_/-]+)")
 
@@ -41,7 +44,6 @@ REF = re.compile(r"(?<![/\w])sweetclaude:([a-z0-9_/-]+)")
 #   placeholders for skills that were designed but never built. The annotation
 #   is what makes them honest; the test requires it.
 #   doctor.py states outright that sweetclaude:adopt does not exist.
-#   benchmark.sh embeds grep alternations, not references.
 INTENTIONAL_MISSING = {
     ("skills/find-skill/routing-tables.md", "concept-framing"),
     ("skills/find-skill/routing-tables.md", "security-planning"),
@@ -50,8 +52,6 @@ INTENTIONAL_MISSING = {
     ("skills/find-skill/routing-tables.md", "external-integration"),
     ("skills/find-skill/routing-tables.md", "break-glass-notes"),
     ("scripts/doctor.py", "adopt"),
-    ("scripts/benchmark.sh", "something"),
-    ("scripts/benchmark.sh", "testing"),
 }
 
 

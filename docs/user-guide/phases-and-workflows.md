@@ -181,7 +181,7 @@ For high-risk work (infrastructure changes, technology migrations, data migratio
 2. At least one alternative was considered and explicitly rejected with rationale.
 3. A rollback plan is documented in detail. Step-by-step. Not "revert the commit."
 
-You can run the gate explicitly with `/sweetclaude:design-solutioning-gate`, or it triggers automatically when a hard-gate work type reaches DESIGN.
+You can run the gate explicitly with `/sweetclaude:design` and ask to validate the solution, or it triggers automatically when a hard-gate work type reaches DESIGN.
 
 ---
 

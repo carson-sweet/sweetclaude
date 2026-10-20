@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Judge behavioural contracts using an independent model (ISSUE-275).
 
-The contracts in skills/behavioral-regression/SKILL.md have never been scored.
+The contracts in config/behavioral-contracts.md have never been scored.
 The obstacle was never writing the rubric — it was that the obvious assessor is
 the model being assessed, and self-assessment on "did I push the user to move
 on" is worth nothing.

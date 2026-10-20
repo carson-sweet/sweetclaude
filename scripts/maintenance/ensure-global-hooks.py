@@ -11,7 +11,7 @@
 # It also registers any future scope=global hooks if any are declared (currently
 # none — see hooks-manifest.json).
 #
-# Called by sweetclaude:update Step 4b and sweetclaude:fix-sweetclaude Step 7a.
+# Called by sweetclaude:library-load update Step 4b and sweetclaude:library-load fix-sweetclaude Step 7a.
 import json
 import os
 import sys

@@ -6,7 +6,7 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 def build_template(name, project_type, version_stage, installed_version='unknown',
-                   migrated_from=None):
+                   migrated_from=None, issue_tracker='local'):
     feat = lambda: {'status': 'not_offered', 'offered_at': None,
                     'decided_at': None, 'defer_until': None}
     return {
@@ -19,6 +19,9 @@ def build_template(name, project_type, version_stage, installed_version='unknown
             'type': project_type,
             'version_stage': version_stage,
             'mode': None,
+            # The issue system of record for this project. Local remains the
+            # compatible default; github makes project-issues use GitHub Issues.
+            'issue_tracker': issue_tracker,
             'safety_snapshot': '',
         },
         'framework': {
@@ -86,6 +89,7 @@ def main():
     p.add_argument('--version-stage', default='IDEA')
     p.add_argument('--installed-version', default='unknown')
     p.add_argument('--migrated-from', default=None)
+    p.add_argument('--issue-tracker', choices=('local', 'github'), default='local')
     p.add_argument('--output', default='-')
     args = p.parse_args()
 
@@ -95,6 +99,7 @@ def main():
         version_stage=args.version_stage,
         installed_version=args.installed_version,
         migrated_from=args.migrated_from,
+        issue_tracker=args.issue_tracker,
     )
 
     content = yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False)

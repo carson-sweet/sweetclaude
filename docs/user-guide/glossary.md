@@ -78,11 +78,11 @@ Where SweetClaude keeps all its own artifacts — state, product docs, design do
 
 ## Doctor
 
-The SweetClaude diagnostic and maintenance front door. `/sweetclaude:doctor` scans state, hooks, storage, migration, config, files, onboarding, and environment, then routes repair, recovery, or supported migration through safety checks.
+The SweetClaude diagnostic and maintenance front door. `/sweetclaude:configure doctor` scans state, hooks, storage, migration, config, files, onboarding, and environment, then routes repair, recovery, or supported migration through safety checks.
 
 ## Recover
 
-The safety flow for projects left in bad update, doctor, repair, or unsafe migration states. `/sweetclaude:recover` diagnoses first, plans, snapshots before mutation, asks before execution, verifies, and reports rollback instructions.
+The safety flow for projects left in bad update, doctor, repair, or unsafe migration states. `/sweetclaude:configure recover` diagnoses first, plans, snapshots before mutation, asks before execution, verifies, and reports rollback instructions.
 
 ## Compatibility Mode
 

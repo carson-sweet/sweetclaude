@@ -1,9 +1,9 @@
-# SweetClaude 4.x User Guide
+# SweetClaude User Guide
 
 **Version:** 1.4
 **Date:** 2026-08-11
 
-SweetClaude 4.x is the stable channel, tracked on `main`. Plugin update,
+SweetClaude 5.x is the stable channel, tracked on `main`. Plugin update,
 framework sync, project recovery, and taxonomy migration are separate
 safety-gated flows.
 
@@ -23,7 +23,7 @@ commands. To update:
 
 ```text
 /plugin update sweetclaude@sweetclaude-stable
-/sweetclaude:update
+/sweetclaude:configure update
 ```
 
 If `/plugin list` shows the legacy key `sweetclaude@sweetclaude`, update
@@ -34,7 +34,7 @@ that exact key first.
 For project problems after update, start with:
 
 ```text
-/sweetclaude:doctor
+/sweetclaude:configure doctor
 ```
 
 Doctor scans read-only, then routes to one of these outcomes (see
@@ -42,12 +42,12 @@ Doctor scans read-only, then routes to one of these outcomes (see
 
 | Route status | Next step |
 |---|---|
-| `recovery-available` | `/sweetclaude:recover` |
-| `supported-migration-available` | `/sweetclaude:migrate` |
+| `recovery-available` | `/sweetclaude:configure recover` |
+| `supported-migration-available` | `/sweetclaude:configure migrate` |
 | `compatibility-mode` | Continue without migration prompt. |
 | `no-migration-recommended` | Continue normal work. |
 
-Do not start by running `/sweetclaude:migrate` on an unknown old project layout.
+Do not start by running `/sweetclaude:configure migrate` on an unknown old project layout.
 
 ## Where To Begin
 
@@ -80,9 +80,10 @@ If you have it installed and want to understand the design decisions, read
 | [Phases and Workflows](phases-and-workflows.md) | Reference for phases, work types, gates, and workflow shapes. |
 | [Large-Story and Small-Story Workflows](large-story-workflow.md) | Controller-gated, evidence-based workflows for large and bounded work items. |
 | [Planning Concepts](planning-concepts.md) | Backlogs, stories/issues, milestones, epics, sprints, and priorities. |
-| [Skills Reference](skills-reference.md) | 4.x skill surface, including doctor, recover, migrate, and hook repair. |
+| [Upgrading to 5.0](upgrading-to-5.md) | Old commands and their 5.0 replacements. |
+| [Skills Reference](skills-reference.md) | Tier 1 commands and library workflows, including doctor, recover, migrate, and hook repair. |
 | [TDD Levels](tdd.md) | The four enforcement levels and hook-based discipline. |
-| [State and Memory](state-and-memory.md) | 4.x state layout, product artifacts, doctor runs, and recovery runs. |
+| [State and Memory](state-and-memory.md) | State layout, product artifacts, doctor runs, and recovery runs. |
 | [Work-Item Artifacts](work-item-artifacts.md) | Opt-in per-work-item artifact directories, and how to enable and backfill them. |
 | [Hook Development](hook-development.md) | Hook repair and emergency recovery. |
 | [Corpus and RAG](corpus-system.md) | Document pipeline and local semantic search. |
@@ -100,7 +101,7 @@ If you have it installed and want to understand the design decisions, read
 /sweetclaude:go       Pick up where you left off
 /sweetclaude:status   Project status
 /sweetclaude:help     Conversational help
-/sweetclaude:doctor   Maintenance front door
-/sweetclaude:recover  Recovery for stuck project states
-/sweetclaude:migrate  Supported taxonomy migration only after preflight
+/sweetclaude:configure doctor   Maintenance front door
+/sweetclaude:configure recover  Recovery for stuck project states
+/sweetclaude:configure migrate  Supported taxonomy migration only after preflight
 ```

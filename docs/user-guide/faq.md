@@ -83,15 +83,15 @@ If you ask anyway, SweetClaude says:
 
 This is a deliberate position, not a bug. Time estimates in AI-assisted development reinforce a paradigm that is broken. Phase gates measure progress in artifacts produced and quality criteria met. That is what matters.
 
-If you have an external deadline, set a milestone (`/sweetclaude:product-milestones add`). Milestones have target dates without forcing the framework to pretend it knows how long things take.
+If you have an external deadline, set a milestone (`/sweetclaude:plan product-milestones add`). Milestones have target dates without forcing the framework to pretend it knows how long things take.
 
 ---
 
-## What is the difference between stable 4.x and legacy 3.x?
+## What is the difference between stable 5.x and legacy 3.x?
 
-Stable 4.x (on `main`) is the recommended channel for normal active project work: update syncs framework files, doctor is the maintenance front door, recovery handles unsafe legacy layouts, and migration runs only after preflight says it is supported. Legacy 3.x receives maintenance only. The 4.x beta channel is retired — see [Installing SweetClaude](install.md) for the one-time switch.
+Stable 5.x (on `main`) is the recommended channel for normal active project work: update syncs framework files, doctor is the maintenance front door, recovery handles unsafe legacy layouts, and migration runs only after preflight says it is supported. Legacy 3.x receives maintenance only. The 4.x beta channel is retired — see [Installing SweetClaude](install.md) for the one-time switch.
 
-Choose the channel through Claude Code plugin marketplace commands. Do not use `/sweetclaude:update` to move a legacy 3.x install onto 4.x.
+Choose the channel through Claude Code plugin marketplace commands. Do not use `/sweetclaude:configure update` to move a legacy 3.x install onto the stable line.
 
 ## Can I disable parts I don't want?
 
@@ -101,9 +101,9 @@ Yes. The lever depends on what you want to disable.
 |---|---|
 | All of SweetClaude for one project | `touch .sweetclaude/disabled` |
 | TDD hooks globally | Edit `~/.claude/settings.json`, remove the hook entries (the installer wires them in; you can wire them out) |
-| Auto status at session start | Touch `.sweetclaude/disabled` then run `/sweetclaude` only when you want it |
+| Auto status at session start | Touch `.sweetclaude/disabled` then run `/sweetclaude:go` only when you want it |
 | Specific skills | Skills are individual `.md` files in `~/.claude/skills/sweetclaude/`. Delete the directory of any skill you do not want. The framework continues working. |
-| Protocol Guardian (when enabled) | `/sweetclaude:guardian-off` |
+| Protocol Guardian (when enabled) | `/sweetclaude:configure guardian-off` |
 
 The framework is composed, not monolithic. You can dismantle it piece by piece without breaking what is left.
 
@@ -131,7 +131,7 @@ If you find yourself overriding the same gate repeatedly, that is a signal worth
 
 ## What should I run when update, migrate, or repair gets stuck?
 
-Run `/sweetclaude:doctor` first. Doctor scans the project and routes maintenance safely. If doctor reports recovery is available, run `/sweetclaude:recover`. Do not run `/sweetclaude:migrate` as the first response to an unknown project layout.
+Run `/sweetclaude:configure doctor` first. Doctor scans the project and routes maintenance safely. If doctor reports recovery is available, run `/sweetclaude:configure recover`. Do not run `/sweetclaude:configure migrate` as the first response to an unknown project layout.
 
 ## What survives a session crash?
 
@@ -147,7 +147,7 @@ Everything in `.sweetclaude/`. Specifically:
 
 Plus whatever skills wrote during the session — discovery output, persona files, briefs, PRDs, architecture docs, code commits.
 
-What does not survive: in-flight conversation context. If you were in the middle of a discovery interview when the session died, you will need to resume it. SweetClaude does not silently lose work, but it cannot read your mind about what was about to be said. Run `/sweetclaude` to re-orient.
+What does not survive: in-flight conversation context. If you were in the middle of a discovery interview when the session died, you will need to resume it. SweetClaude does not silently lose work, but it cannot read your mind about what was about to be said. Run `/sweetclaude:go` to re-orient.
 
 ---
 

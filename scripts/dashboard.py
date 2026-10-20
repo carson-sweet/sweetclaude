@@ -394,7 +394,7 @@ def handle_update(project_dir, payload):
                     return {
                         "error": (
                             "Cannot mark done without evidence_receipt. "
-                            "Run /sweetclaude:code-verify first, then retry with the receipt path."
+                            "Run /sweetclaude:build code-verify first, then retry with the receipt path."
                         )
                     }
                 set_terminal(

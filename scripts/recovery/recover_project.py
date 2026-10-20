@@ -890,14 +890,14 @@ def _migrate_orphan_scan_check(project: Path) -> dict[str, Any]:
 
 def _update_skill_contract_check(root: Path | None = None) -> dict[str, Any]:
     base = root or Path(__file__).resolve().parents[2]
-    skill = base / "skills" / "update" / "SKILL.md"
+    skill = base / "skill-library" / "configure" / "update" / "SKILL.md"
     text = skill.read_text(encoding="utf-8")
-    # These anchors must match the Contract section of skills/update/SKILL.md
+    # These anchors must match the Contract section of skill-library/configure/update/SKILL.md
     # and the assertions in tests/test_recovery_skill.py — the three files
     # move together.
     required = [
         "Update never mutates project work-item state.",
-        "Update does not run project-state migrations inline; route project repair to `/sweetclaude:doctor`.",
+        "Update does not run project-state migrations inline; route project repair to `/sweetclaude:configure doctor`.",
         "Do not present a migration prompt from update.",
         "Do not write `doctor-prompt-pending.json` from update.",
     ]
@@ -946,11 +946,17 @@ def _update_script_contract_check(root: Path | None = None) -> dict[str, Any]:
 
 
 def _fix_skill_contract_check() -> dict[str, Any]:
-    skill = Path(__file__).resolve().parents[2] / "skills" / "fix-sweetclaude" / "SKILL.md"
+    skill = (
+        Path(__file__).resolve().parents[2]
+        / "skill-library"
+        / "configure"
+        / "fix-sweetclaude"
+        / "SKILL.md"
+    )
     text = skill.read_text(encoding="utf-8")
     required = [
-        "replaced by `/sweetclaude:doctor`",
-        "Invoke `sweetclaude:doctor` now.",
+        "replaced by `/sweetclaude:configure doctor`",
+        "Invoke `sweetclaude:library-load doctor` now.",
     ]
     missing = [phrase for phrase in required if phrase not in text]
     return {
@@ -1562,13 +1568,13 @@ def diagnose_project(project_dir: Path | str) -> dict[str, Any]:
                 f"No recovery action is needed, but state schema drift was "
                 f"detected ({drifted}). The migration runner resolves it — "
                 "bootstrap offers this at session start, or run "
-                "/sweetclaude:doctor to auto-fix."
+                "/sweetclaude:configure doctor to auto-fix."
             )
         else:
             next_step = "No recovery action is currently indicated by read-only diagnosis."
     elif has_recoverable_state and has_typed_backlog_failure and migration_status != "incomplete":
         recovery_route = "typed-legacy-migrate"
-        next_step = "Run /sweetclaude:migrate to migrate the typed legacy backlog to unified ISSUE-NNN taxonomy."
+        next_step = "Run /sweetclaude:configure migrate to migrate the typed legacy backlog to unified ISSUE-NNN taxonomy."
     elif has_recoverable_state:
         recovery_route = "stabilize-without-migration"
         next_step = "Run recovery plan generation after creating a project snapshot."
@@ -1770,7 +1776,7 @@ def _with_blocker_resolution(blocker: dict[str, Any]) -> dict[str, Any]:
     code = str(blocker.get("code", ""))
     resolution: dict[str, Any] = {
         "capability_id": _BLOCKER_RESOLUTION_CAPABILITY,
-        "delegate_skill": "sweetclaude:doctor",
+        "delegate_skill": "sweetclaude:library-load doctor",
     }
     if code in _RESOLVABLE_BLOCKER_CODES:
         script = Path(__file__).resolve()
@@ -1863,7 +1869,7 @@ def resolve_graduation_blocker(
             "code": code,
             "detail": (
                 f"No deterministic resolution for blocker '{code}'. "
-                "Run /sweetclaude:doctor for the prompted-fix flow."
+                "Run /sweetclaude:configure doctor for the prompted-fix flow."
             ),
         }
 
@@ -2055,7 +2061,7 @@ def guard_project(project_dir: Path | str) -> dict[str, Any]:
                 "duplicate_ids": sorted(duplicate_ids),
                 "resolution": {
                     "capability_id": "doctor.fix_graduation_blockers",
-                    "delegate_skill": "sweetclaude:doctor",
+                    "delegate_skill": "sweetclaude:library-load doctor",
                 },
             }]
     elif route == "stabilize-without-migration":
@@ -2089,7 +2095,7 @@ def guard_project(project_dir: Path | str) -> dict[str, Any]:
                 "duplicate_ids": sorted(duplicate_ids),
                 "resolution": {
                     "capability_id": "doctor.fix_graduation_blockers",
-                    "delegate_skill": "sweetclaude:doctor",
+                    "delegate_skill": "sweetclaude:library-load doctor",
                 },
             }]
     elif old_prefix_count and flat_bl_count and not has_typed_backlog_dirs:

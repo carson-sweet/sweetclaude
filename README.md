@@ -2,7 +2,7 @@
 
 # SweetClaude
 
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-4.5.3-blue)](https://github.com/carson-sweet/sweetclaude/releases/tag/v4.5.3) [![Behavioral Contracts](https://img.shields.io/badge/behavioral_contracts-15%2F15_passing-brightgreen)](docs/user-guide/behavioral-contracts.md)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-5.0.0-blue)](https://github.com/carson-sweet/sweetclaude/releases/tag/v5.0.0)
 
 ## TL;DR
 
@@ -32,7 +32,7 @@ Install SweetClaude (below) then run `/sweetclaude:help` to get a guided walk-th
 There's a massive number of Claude Code plugins out there. To help you decide if SweetClaude might be one that's helpful, here are the top principles used when designing SweetClaude:
 
 * **Successful projects take more than code.** If you're here you probably already know this, but really thinking through what you're building, for who, why, and how they'll use it results in a good product that delivers value to users. Unfortunately, that part is a lot less fun than vibe-coding — it's real work. SweetClaude is primarily about taking care of that work — and a bunch of other lessfun work — in a structured, reliable way.
-* **Hide the complexity**. SweetClaude has over 100 skills built natively on Claude Code's Skills framework and Anthropic's multi-agent architecture. These skills compose into dynamic, situation-driven workflows across four operating modes. *Few people want to learn all that.*  To hide the complexity, SweetClaude uses a conversational interface with just a few commands as entry points, and an orchestrator skill does the rest (you can also manually invoke most skills if you want).
+* **Hide the complexity**. SweetClaude has over 100 skills built natively on Claude Code's Skills framework and Anthropic's multi-agent architecture. These skills compose into dynamic, situation-driven workflows across four operating modes. *Few people want to learn all that.*  To hide the complexity, SweetClaude uses a conversational interface with just a few commands as entry points, and an orchestrator skill does the rest (you can also name a specific workflow after its category, such as `/sweetclaude:configure doctor`).
 * **Adapt to user preferences as they evolve.** AI assisted vibe-coding is fantastic for rapid experimentation and iteration to see if an idea is viable. An assistant framework should be able to capture things passively without killing the vibe and then be able to use what it captured to dial up the structure and discipline as needed, based on what it learned in the vibe phase. The framework adjusts to the user's preferences — not the other way around — and is designed to dial up or dial back the level of structure mid-project as needed.
 
 
@@ -52,7 +52,7 @@ Start Claude Code in your project folder as you normally would, then inside Clau
 
 Inside Claude Code, the primary command is `/sweetclaude:go` which keeps things simple. Use natural language after the command to drive things. The  `/sweetclaude:go`  command acts as a primary interface (sometimes the only command needed) to SweetClaude's work state, skills, and workflow orchestration, so you don't have to know every skill command — which would be madness.
 
-Use `/sweetclaude:go` followed by what you want to do, in plain English — "show me milestones and sprints", "let's see the backlog", I want to start building X", "what should I work on next".  Or use `/sweetclaude:go` with no arguments to just pick up where you left off. SweetClaude will ask questions if needed and the orchestrator detects your project state, routes to the right skill, and collaborates with you — it handles the red tape, you do the creating.
+Use `/sweetclaude:go` followed by what you want to do, in plain English — "show me milestones and sprints", "let's see the backlog", I want to start building X", "what should I work on next". Or use `/sweetclaude:go` with no arguments to just pick up where you left off. SweetClaude will ask questions if needed and route work into its workflow library — it handles the red tape, you do the creating.
 
 You can use SweetClaude to start a new effort from scratch, or have it adopt an existing project. Just point to any documents you might have — backlog, roadmaps, design, etc. — it will assess and migrate what you have and then help you fill in the gaps.
 
@@ -60,7 +60,7 @@ A few other key commands to know about are:
 
 * `/sweetclaude:help` — the guided tour. Walks you through what SweetClaude is, how it works, and whether it's right for your project before touching a single file.
 * `/sweetclaude:status` — project dashboard. Active work item, phase, roadmap, backlog, recent commits at a glance.
-* `/sweetclaude:doctor` — if SweetClaude is behaving unexpectedly, run this. It scans state, hooks, storage, migration, config, files, onboarding, and environment, then routes repair, recovery, or migration safely.
+* `/sweetclaude:configure` — configure SweetClaude or diagnose an unexpected installation, hook, state, migration, or onboarding problem.
 
 
 We've tried to design SweetClaude to be intuitive, but additional documentation is available if needed or desired:
@@ -93,9 +93,9 @@ SweetClaude has four operating modes that support everything from vibe-coding ho
 * **Kanban** — continuous delivery with one hard rule: no more than three things in progress at once. No sprints, no planning ceremonies, no velocity calculations. Work flows from backlog to done at whatever pace makes sense. SweetClaude enforces the WIP limit and surfaces blocked items before they quietly pile up. Best for: maintenance work, steady feature delivery, and solo developers who want lightweight structure without sprint overhead.
 * **Shape Up** — six-week cycles where appetite is fixed and scope is variable. Work starts with a pitch: what problem are we solving, what's the rough shape of the solution, and what won't we build? A betting table decides what gets the next cycle. No backlog grooming, no story points, no carry-over. If it doesn't ship in the cycle, it goes back to the pile. Best for: product-focused work where you want strong scope discipline and a natural forcing function against gold-plating.
 * **Agile** — sprint-based delivery with a full planning, execution, and retrospective cycle. Each sprint anchors to a milestone and has an explicit active/closed state — SweetClaude won't let you implement work that isn't in the active sprint. Velocity is tracked on close and feeds into future planning. Best for: projects with defined delivery commitments, multiple contributors, or any situation where stakeholders expect predictable, time-boxed output.
-* **John Wick mode** — an experiment at the intersection of vibe-coding and disciplined product development. John Wick mode goes fully autonomous after a short project discovery cycle. Intensely disciplined — TDD Level 3, subagent isolation, QA caucus, hard gates at key decisions. Not for everyday use — but no other mode comes close for maximum automation. Fast, independent, admittedly dangerous - but disciplined. No loose ends. `/sweetclaude:john-wick`
+* **John Wick mode** — an experiment at the intersection of vibe-coding and disciplined product development. John Wick mode goes fully autonomous after a short project discovery cycle. Intensely disciplined — TDD Level 3, subagent isolation, QA caucus, hard gates at key decisions. Not for everyday use — but no other mode comes close for maximum automation. Fast, independent, admittedly dangerous - but disciplined. No loose ends. Ask `/sweetclaude:build` to start it.
 
-Switch modes at any time with `/sweetclaude:project-mode`. SweetClaude snapshots your current state before any transition. It's also best to take a Git snapshot for belt-and-suspenders safety - SweetClaude can do that for you too, as well as roll things back if needed. Just tell SweetClaude what you need to do.
+Switch modes at any time through `/sweetclaude:configure`. SweetClaude snapshots your current state before any transition. It's also best to take a Git snapshot for belt-and-suspenders safety - SweetClaude can do that for you too, as well as roll things back if needed. Just tell SweetClaude what you need to do.
 
 
 
@@ -108,13 +108,13 @@ Switch modes at any time with `/sweetclaude:project-mode`. SweetClaude snapshots
 - **Mockup pipeline** — Design UI components in an isolated Vite + React sandbox before touching production code. Graduate approved mockups with acceptance criteria extracted automatically.
 - **Local semantic search over your design documents** — LanceDB-powered RAG, fully offline, no API keys, no external services. Index your architecture docs, data model, and product decisions so both you and SweetClaude can ask questions and get canonical answers instantly. Setup takes one command.
 - **Corpus management** — Four-step pipeline (consolidate → triage → reconcile → promote) for messy document collections. Pairs with local RAG for full document lifecycle management.
-- **Behavioral contracts** — 15 behavioral properties tested against each Claude model version. Hook-enforced properties are deterministic; instruction-guided properties are validated by a regression suite.
+- **Behavioral contracts** — 16 behavioral properties scored against each Claude model version. Hook-enforced properties are deterministic; instruction-guided properties are scored by a transcript judge, and a routing suite checks that requests reach the right workflow.
 
 
 
 ## How It Works
 
-SweetClaude is implemented as a Claude Code plugin. After install, all skills are available as slash commands in every session. Load for a single session with `--plugin-dir` without a global install.
+SweetClaude is implemented as a Claude Code plugin. After install, nine public commands are available in every session: `go`, `plan`, `design`, `build`, `maintain`, `configure`, `utils`, `status`, and `help`. Each workflow command loads only the relevant part of the Tier 2 library; individual library workflows are intentionally not slash-addressable. Load for a single session with `--plugin-dir` without a global install.
 
 TDD hooks physically block test file modification during implementation and run tests automatically after every source edit. At higher TDD levels, test writer and implementer are separate AI agents — the implementer never sees the spec, only failing tests.
 
@@ -124,7 +124,7 @@ TDD hooks physically block test file modification during implementation and run 
 
 ## Common Commands
 
-You can invoke skills directly if you know what you want. These are the most common. You can also refer to the [complete skills reference](docs/user-guide/index.md).
+These nine commands are the whole command surface. Add a workflow name or a plain-English request after any of them. You can also refer to the [complete skills reference](docs/user-guide/index.md).
 
 ### Primary
 | Command | What it does |
@@ -133,26 +133,17 @@ You can invoke skills directly if you know what you want. These are the most com
 | `/sweetclaude:status` | Project status dashboard — active work item, phase, roadmap, backlog. |
 | `/sweetclaude:help` | Conversational help — describe what you want to do, browse features, or ask questions |
 
-### Maintenance & Troubleshooting
+### Workflow entry points
 | Command | What it does |
 |---|---|
-| `/sweetclaude:off` | Suspend SweetClaude — preserves all artifacts, reactivate with `/sweetclaude:go` |
-| `/sweetclaude:purge` | Delete all SweetClaude artifacts — recommends a backup branch, shows all files, requires "I understand". **Taking a branch snapshot before is highly recommended.** |
-| `/sweetclaude:update` | Sync SweetClaude framework files inside the installed channel |
-| `/sweetclaude:doctor` | Diagnostic scan and maintenance front door |
-| `/sweetclaude:recover` | Recover stuck update, doctor, repair, or unsafe migration states |
-| `/sweetclaude:hook-repair` | Restore broken installed hooks from backup. Uses Bash only — works when Write/Edit are blocked. See [hook-development.md](docs/user-guide/hook-development.md) for manual and emergency procedures. |
+| `/sweetclaude:plan` | Product strategy, research, scope, roadmaps, and planning. |
+| `/sweetclaude:design` | Product, UX, and technical design. |
+| `/sweetclaude:build` | Delivery, testing, deployment, and project work. |
+| `/sweetclaude:maintain` | Defects, debt, security patches, recovery, and postmortems. |
+| `/sweetclaude:configure` | Setup, settings, lifecycle administration, migration, and diagnostics. |
+| `/sweetclaude:utils` | Cross-workflow utilities such as corpus work, dashboards, recap, and exports. |
 
-### Advanced
-| Command | What it does |
-|---|---|
-| `/sweetclaude:behavioral-regression` | Run the 15-contract behavioral test suite — validates that the current model version honors SweetClaude's behavioral contracts. Run after any Claude model upgrade. **15/15 passing on claude-sonnet-4-6 (2026-05-01).** [Contract status by model version →](docs/user-guide/behavioral-contracts.md) · [Full contract list →](skills/behavioral-regression/SKILL.md) |
-| `/sweetclaude:guardian-on` | Enable Protocol Guardian — enforces skill invocations and protocol steps for the session |
-| `/sweetclaude:guardian-off` | Disable Protocol Guardian |
-| `/sweetclaude:session-export` | Export a Claude.ai session as a structured document |
-| `/sweetclaude:usage` | View, enable, or disable local usage tracking |
-
-Individual workflow skills (product, design, code, testing, corpus) are accessible directly if you know what you want, but `/sweetclaude:go` routes to all of them automatically.
+`/sweetclaude:go` can route to every workflow automatically. The library workflows that do the focused work remain internal, which keeps the slash-command surface small and coherent.
 
 → [All skills by category](docs/user-guide/index.md)
 
@@ -178,7 +169,9 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 
 ## Migrating from Older Channels
 
-**From the 4.x beta channel:** The beta channel is being retired. Switch in this order so you are never double-installed (both channels' skills and hooks would load at once):
+**From 4.x:** Run `/sweetclaude:configure update`. Your project data does not change. SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands; for example `/sweetclaude:doctor` is now `/sweetclaude:configure doctor`. Claude Code reports old commands as unknown; `/sweetclaude:help` lists the new ones. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping. 4.x receives no further releases.
+
+**From the 4.x beta channel:** The beta channel is retired. Switch in this order so you are never double-installed (both channels' skills and hooks would load at once):
 
 ```
 /plugin marketplace add carson-sweet/sweetclaude@main
@@ -186,17 +179,17 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 /plugin marketplace remove sweetclaude-beta
 ```
 
-Removing the beta marketplace uninstalls its plugin, so add and install stable first. Then run `/sweetclaude:update` on the stable channel.
+Removing the beta marketplace uninstalls its plugin, so add and install stable first. Then run `/sweetclaude:configure update` on the stable channel.
 
 Beta releases before `v4.1.9-beta` had known update/recovery risks. See [4.x Beta Rescue](docs/user-guide/beta-rescue.md) if an existing beta install reports `4.1.8-beta` or older.
 
-**From 3.x:** The 3.x channel has been renamed to `sweetclaude-legacy`. To move a 3.x install onto 4.x:
+**From 3.x:** The 3.x channel has been renamed to `sweetclaude-legacy`. To move a 3.x install onto the stable line:
 
 ```
 /plugin marketplace add carson-sweet/sweetclaude@main
 /plugin install sweetclaude@sweetclaude-stable
 /plugin marketplace remove sweetclaude-stable
-/sweetclaude:update
+/sweetclaude:configure update
 ```
 
 To stay on 3.x, re-add the renamed legacy marketplace (a one-time step — the marketplace name changed):

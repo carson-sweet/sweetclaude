@@ -39,5 +39,5 @@ if [ -f "$LEGACY_REPO/state/sweetclaude.yaml" ] || [ -f "$LEGACY_REPO/state/phas
 fi
 
 # Flag exists, project still not configured — BLOCK
-echo '{"ok": false, "reason": "BLOCKED: SweetClaude is not configured for this project. Run /sweetclaude:init to set up, or create .sweetclaude-skip to opt out."}'
+echo '{"ok": false, "reason": "BLOCKED: SweetClaude is not configured for this project. Run /sweetclaude:configure init to set up, or create .sweetclaude-skip to opt out."}'
 exit 0

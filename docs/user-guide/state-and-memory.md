@@ -120,7 +120,7 @@ framework:
 | `framework.consistency` | Last drift-check result. Updated by the health hook. |
 | `framework.update` | Whether a newer version is available. Updated by the health hook. |
 
-**Migration from older state:** If your project has old SweetClaude state files, run `/sweetclaude:doctor` or `/sweetclaude:go` and follow the routed maintenance flow. In 4.x, `/sweetclaude:update` reports drift but does not run project-state or taxonomy migrations inline.
+**Migration from older state:** If your project has old SweetClaude state files, run `/sweetclaude:configure doctor` or `/sweetclaude:go` and follow the routed maintenance flow. In 4.x, `/sweetclaude:configure update` reports drift but does not run project-state or taxonomy migrations inline.
 
 ---
 
@@ -152,7 +152,7 @@ If a field is unknown, set it to `none`. Skills check before invoking commands.
 
 ## decision-log.md
 
-Every significant architecture, design, or product decision recorded here. Written by `/sweetclaude:design-manage-decisions` but any skill can write to it. Query it with: "Why did we choose X?"
+Every significant architecture, design, or product decision recorded here. Written by `/sweetclaude:design design-manage-decisions` but any skill can write to it. Query it with: "Why did we choose X?"
 
 Format per entry:
 
@@ -282,7 +282,7 @@ To disable for a project without uninstalling:
 touch .sweetclaude/disabled
 ```
 
-Running `/sweetclaude` removes the file and reactivates. The session-start health check fires automatically only when `disabled` does not exist.
+Running `/sweetclaude:go` removes the file and reactivates. The session-start health check fires automatically only when `disabled` does not exist.
 
 To uninstall globally:
 
@@ -309,7 +309,7 @@ What does not survive:
 - Drafts that were in progress but not committed
 - Anything you typed but did not act on
 
-If a session dies mid-discovery interview, you do not lose the answers you already gave (those are in state files). You lose the next question. Run `/sweetclaude` and it re-orients from state and resumes from the next step.
+If a session dies mid-discovery interview, you do not lose the answers you already gave (those are in state files). You lose the next question. Run `/sweetclaude:go` and it re-orients from state and resumes from the next step.
 
 ---
 

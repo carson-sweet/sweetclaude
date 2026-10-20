@@ -28,107 +28,108 @@ Eight buckets. Each row maps a work type to the skill that handles it, plus the 
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Concept articulation / framing | DISCOVER, DEFINE, SHIP | `sweetclaude:product-discovery` *(fallback — `sweetclaude:concept-framing` planned, see ISSUE-008)* |
-| Pain analysis | DISCOVER, DEFINE, SHIP | `sweetclaude:product-discovery` |
-| Customer profiling | DISCOVER, DEFINE, SHIP | `sweetclaude:user-personas` |
-| Synthetic panel research / concept testing | DISCOVER, DEFINE | `sweetclaude:product-user-focus-group` *(requires validated personas — gate enforced)* |
-| Competitive landscape | DISCOVER, DEFINE, SHIP | `sweetclaude:product-competition` |
-| Research / deep research | DISCOVER, DEFINE, SHIP | `sweetclaude:documents-academic-research` |
-| Meeting preparation | DEFINE | `sweetclaude:misc-meeting-prep` |
-| Market messaging | DEFINE | `sweetclaude:product-market-messaging` |
+| Concept articulation / framing | DISCOVER, DEFINE, SHIP | `sweetclaude:library-load product-discovery` *(fallback — `sweetclaude:concept-framing` planned, see ISSUE-008)* |
+| Pain analysis | DISCOVER, DEFINE, SHIP | `sweetclaude:library-load product-discovery` |
+| Customer profiling | DISCOVER, DEFINE, SHIP | `sweetclaude:library-load user-personas` |
+| Synthetic panel research / concept testing | DISCOVER, DEFINE | `sweetclaude:library-load product-user-focus-group` *(requires validated personas — gate enforced)* |
+| Competitive landscape | DISCOVER, DEFINE, SHIP | `sweetclaude:library-load product-competition` |
+| Research / deep research | DISCOVER, DEFINE, SHIP | `sweetclaude:library-load documents-academic-research` |
+| Meeting preparation | DEFINE | `sweetclaude:library-load misc-meeting-prep` |
+| Market messaging | DEFINE | `sweetclaude:library-load product-market-messaging` |
 | Security planning | DISCOVER, DEFINE, SHIP | `sweetclaude:security-planning` *(Plan 3)* |
-| Course correction | DISCOVER, DEFINE, TRIAGE, SHIP | `sweetclaude:course-correction` |
+| Course correction | DISCOVER, DEFINE, TRIAGE, SHIP | `sweetclaude:library-load course-correction` |
 
 ## product/ — what to build and why
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Net-new feature | DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:product-discovery` |
-| Large story / high-rigor story | DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP/closeout; controller-enforced phase gates, hook-verified enforcement | `sweetclaude:large-story` |
-| Small story / bounded story | DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP/closeout; controller-enforced phase gates, hook-verified enforcement | `sweetclaude:small-story` |
-| Enhancement / iteration | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:product-prd` |
-| Product brief | DEFINE | `sweetclaude:product-brief` |
-| Requirements / PRD | DEFINE | `sweetclaude:product-prd` |
-| User stories | PLAN | `sweetclaude:product-user-stories` |
-| Test specs from stories | PLAN | `sweetclaude:product-user-tdd-tests` |
-| Scope change | any | `sweetclaude:product-manage-scope` |
-| Parking lot / deferred ideas | any | `sweetclaude:product-parking-lot` |
-| Sprint / release planning | DEFINE, PLAN, SHIP | `sweetclaude:product-sprint-plan` |
-| Market / technical research | DISCOVER | `sweetclaude:product-research` |
+| Net-new feature | DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load product-discovery` |
+| Large story / high-rigor story | DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP/closeout; controller-enforced phase gates, hook-verified enforcement | `sweetclaude:library-load large-story` |
+| Small story / bounded story | DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP/closeout; controller-enforced phase gates, hook-verified enforcement | `sweetclaude:library-load small-story` |
+| Enhancement / iteration | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load product-prd` |
+| Product brief | DEFINE | `sweetclaude:library-load product-brief` |
+| Requirements / PRD | DEFINE | `sweetclaude:library-load product-prd` |
+| User stories | PLAN | `sweetclaude:library-load product-user-stories` |
+| Test specs from stories | PLAN | `sweetclaude:library-load product-user-tdd-tests` |
+| Scope change | any | `sweetclaude:library-load product-manage-scope` |
+| Parking lot / deferred ideas | any | `sweetclaude:library-load product-parking-lot` |
+| Sprint / release planning | DEFINE, PLAN, SHIP | `sweetclaude:library-load product-sprint-plan` |
+| Market / technical research | DISCOVER | `sweetclaude:library-load product-research` |
 | Release planning | DEFINE, PLAN, SHIP | `sweetclaude:release-planning` *(Plan 3)* |
 
 ## design/ — how it's structured
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| System architecture | DESIGN | `sweetclaude:design-architecture` |
-| Technical specification | DESIGN | `sweetclaude:design-tech-spec` |
-| UX/UI design | DESIGN | `sweetclaude:design-ux` |
-| Solution validation | DESIGN | `sweetclaude:design-solutioning-gate` |
-| Impact analysis | any | `sweetclaude:design-change-impact-analysis` |
-| Doc updates | VERIFY | `sweetclaude:documents-update-docs` |
-| Data model / schema | DESIGN | `sweetclaude:design-data-model` |
-| API design | DESIGN | `sweetclaude:design-api-design` |
-| Record a decision | any | `sweetclaude:design-manage-decisions` |
+| System architecture | DESIGN | `sweetclaude:library-load design-architecture` |
+| Technical specification | DESIGN | `sweetclaude:library-load design-tech-spec` |
+| UX/UI design | DESIGN | `sweetclaude:library-load design-ux` |
+| Solution validation | DESIGN | `sweetclaude:library-load design-solutioning-gate` |
+| Impact analysis | any | `sweetclaude:library-load design-change-impact-analysis` |
+| Doc updates | VERIFY | `sweetclaude:library-load documents-update-docs` |
+| Data model / schema | DESIGN | `sweetclaude:library-load design-data-model` |
+| API design | DESIGN | `sweetclaude:library-load design-api-design` |
+| Record a decision | any | `sweetclaude:library-load design-manage-decisions` |
 | Onboarding flow design | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:onboarding-flow-design` *(Plan 3)* |
 
 ## code/ — writing and verifying code
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Net-new feature (implement) | IMPLEMENT | `sweetclaude:code-feature` |
-| Bug fix | DIAGNOSE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-issue` |
-| Enhancement | IMPLEMENT | `sweetclaude:code-issue` |
-| Tech debt / refactor | DEFINE, SCOPE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
-| Hotfix | DIAGNOSE, IMPLEMENT, SHIP, POST-MORTEM | `sweetclaude:hotfix` |
-| Security patch | DIAGNOSE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:security-patch` |
-| Performance optimization | DIAGNOSE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-issue` |
+| Net-new feature (implement) | IMPLEMENT | `sweetclaude:library-load code-feature` |
+| Bug fix | DIAGNOSE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load code-issue` |
+| Enhancement | IMPLEMENT | `sweetclaude:library-load code-issue` |
+| Tech debt / refactor | DEFINE, SCOPE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load code-debt` |
+| Hotfix | DIAGNOSE, IMPLEMENT, SHIP, POST-MORTEM | `sweetclaude:library-load hotfix` |
+| Security patch | DIAGNOSE, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load security-patch` |
+| Performance optimization | DIAGNOSE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load code-issue` |
 | External integration | DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:external-integration` *(Plan 3)* |
-| Technology migration | ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, CUTOVER, CLEANUP | `sweetclaude:code-debt` |
-| Data migration | ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
-| API deprecation | ASSESS, DEFINE, IMPLEMENT, VERIFY, SHIP, CLEANUP | `sweetclaude:code-feature` |
-| Dependency upgrade | ASSESS, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
-| Infrastructure change | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-debt` |
-| Rollback / revert | DIAGNOSE, SHIP | `sweetclaude:rollback-revert` |
-| Code review | VERIFY | `sweetclaude:code-review` |
-| Compliance requirement | ASSESS, DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:code-feature` |
+| Technology migration | ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, CUTOVER, CLEANUP | `sweetclaude:library-load code-debt` |
+| Data migration | ASSESS, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load code-debt` |
+| API deprecation | ASSESS, DEFINE, IMPLEMENT, VERIFY, SHIP, CLEANUP | `sweetclaude:library-load code-feature` |
+| Dependency upgrade | ASSESS, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load code-debt` |
+| Infrastructure change | DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load code-debt` |
+| Rollback / revert | DIAGNOSE, SHIP | `sweetclaude:library-load rollback-revert` |
+| Code review | VERIFY | `sweetclaude:library-load code-review` |
+| Compliance requirement | ASSESS, DEFINE, DESIGN, IMPLEMENT, VERIFY, SHIP | `sweetclaude:library-load code-feature` |
 
 ## project/ — managing the work
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Issue / bug tracking | any | `sweetclaude:project-issues` |
-| Import GitHub Issues into local store | any | `sweetclaude:project-gh-import-issues` |
-| Sync issue status with GitHub | any | `sweetclaude:project-gh-sync-issues` |
-| Epic management | any | `sweetclaude:project-epics` |
-| Sprint planning and execution | PLAN, IMPLEMENT | `sweetclaude:project-sprints` |
-| Backlog view and promotion | any | `sweetclaude:project-backlog` |
-| Backlog grooming / triage | any | `sweetclaude:project-backlog-triage` |
-| Roadmap management | any | `sweetclaude:product-roadmap` |
-| Roadmap prioritization / RICE analysis | any | `sweetclaude:product-roadmap-analysis` |
-| Scope definition and updates | DEFINE, any | `sweetclaude:project-scope` |
-| Goal tracking | any | `sweetclaude:project-goals` |
-| Project mode (flow/kanban/agile) | any | `sweetclaude:project-mode` |
+| Issue / bug tracking | any | `sweetclaude:library-load project-issues` |
+| Use GitHub instead of local project issues | any | `sweetclaude:build tracker github` |
+| Import GitHub Issues into local store | any | `sweetclaude:library-load project-gh-import-issues` |
+| Sync issue status with GitHub | any | `sweetclaude:library-load project-gh-sync-issues` |
+| Epic management | any | `sweetclaude:library-load project-epics` |
+| Sprint planning and execution | PLAN, IMPLEMENT | `sweetclaude:library-load project-sprints` |
+| Backlog view and promotion | any | `sweetclaude:library-load project-backlog` |
+| Backlog grooming / triage | any | `sweetclaude:library-load project-backlog-triage` |
+| Roadmap management | any | `sweetclaude:library-load product-roadmap` |
+| Roadmap prioritization / RICE analysis | any | `sweetclaude:library-load product-roadmap-analysis` |
+| Scope definition and updates | DEFINE, any | `sweetclaude:library-load project-scope` |
+| Goal tracking | any | `sweetclaude:library-load project-goals` |
+| Project mode (flow/kanban/agile) | any | `sweetclaude:library-load project-mode` |
 
 ## testing/ — validating the work
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Test plan / test strategy | PLAN, VERIFY | `sweetclaude:testing-plan` |
-| Security review / threat model | VERIFY, any | `sweetclaude:testing-security` |
-| Compliance control testing | any | `sweetclaude:testing-compliance` |
-| Manual QA session | VERIFY | `sweetclaude:testing-session` |
-| Performance / load testing | VERIFY, any | `sweetclaude:testing-performance` |
-| Accessibility audit | VERIFY, any | `sweetclaude:testing-accessibility` |
+| Test plan / test strategy | PLAN, VERIFY | `sweetclaude:library-load testing-plan` |
+| Security review / threat model | VERIFY, any | `sweetclaude:library-load testing-security` |
+| Compliance control testing | any | `sweetclaude:library-load testing-compliance` |
+| Manual QA session | VERIFY | `sweetclaude:library-load testing-session` |
+| Performance / load testing | VERIFY, any | `sweetclaude:library-load testing-performance` |
+| Accessibility audit | VERIFY, any | `sweetclaude:library-load testing-accessibility` |
 
 ## operations/ — keeping it running
 
 | Work Type | Template Phases | Skill to invoke |
 |---|---|---|
-| Something broke | DIAGNOSE, SHIP, POST-MORTEM | `sweetclaude:something-broke` |
-| Postmortem | POST-MORTEM | `sweetclaude:postmortem` |
+| Something broke | DIAGNOSE, SHIP, POST-MORTEM | `sweetclaude:library-load something-broke` |
+| Postmortem | POST-MORTEM | `sweetclaude:library-load postmortem` |
 | Break-glass notes | DEFINE, SHIP | `sweetclaude:break-glass-notes` *(Plan 3)* |
-| Onboarding playbook | DEFINE, IMPLEMENT, SHIP | `sweetclaude:code-feature` |
+| Onboarding playbook | DEFINE, IMPLEMENT, SHIP | `sweetclaude:library-load code-feature` |
 
 ## system/ — managing the framework
 
@@ -136,27 +137,26 @@ Always visible regardless of `version_stage`. No phases — these are point-in-t
 
 | Work Type | Skill to invoke |
 |---|---|
-| Set up SweetClaude on a new or existing project | `sweetclaude:setup` |
-| Onboard a project, unsure which entry point applies | `sweetclaude:init` |
-| Deactivate SweetClaude for a project | `sweetclaude:off` |
-| Update SweetClaude to the latest version | `sweetclaude:update` |
-| Audit or repair SweetClaude configuration | `sweetclaude:fix-sweetclaude` |
-| Delete all SweetClaude artifacts | `sweetclaude:purge` |
-| Validate framework behavioral contracts | `sweetclaude:behavioral-regression` |
-| Enable protocol enforcement for the session | `sweetclaude:guardian-on` |
-| Disable protocol enforcement | `sweetclaude:guardian-off` |
-| Toggle or view usage tracking | `sweetclaude:usage` |
+| Set up SweetClaude on a new or existing project | `sweetclaude:library-load setup` |
+| Onboard a project, unsure which entry point applies | `sweetclaude:library-load init` |
+| Deactivate SweetClaude for a project | `sweetclaude:library-load off` |
+| Update SweetClaude to the latest version | `sweetclaude:library-load update` |
+| Audit or repair SweetClaude configuration | `sweetclaude:library-load fix-sweetclaude` |
+| Delete all SweetClaude artifacts | `sweetclaude:library-load purge` |
+| Enable protocol enforcement for the session | `sweetclaude:library-load guardian-on` |
+| Disable protocol enforcement | `sweetclaude:library-load guardian-off` |
+| Toggle or view usage tracking | `sweetclaude:library-load usage` |
 | Get help with SweetClaude | `sweetclaude:help` |
 
 ## Plan 3 fallbacks
 
 | Bucket | Plan 3 fallback |
 |---|---|
-| strategy/ | `sweetclaude:product-discovery` |
-| product/ | `sweetclaude:product-sprint-plan` |
-| design/ | `sweetclaude:design-ux` |
-| code/ — hotfix, security-patch | `sweetclaude:code-issue` |
-| code/ — external-integration | `sweetclaude:code-feature` |
-| project/ | `sweetclaude:project-issues` |
-| testing/ | `sweetclaude:testing-session` |
-| operations/ | `sweetclaude:code-issue` |
+| strategy/ | `sweetclaude:library-load product-discovery` |
+| product/ | `sweetclaude:library-load product-sprint-plan` |
+| design/ | `sweetclaude:library-load design-ux` |
+| code/ — hotfix, security-patch | `sweetclaude:library-load code-issue` |
+| code/ — external-integration | `sweetclaude:library-load code-feature` |
+| project/ | `sweetclaude:library-load project-issues` |
+| testing/ | `sweetclaude:library-load testing-session` |
+| operations/ | `sweetclaude:library-load code-issue` |

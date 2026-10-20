@@ -1,7 +1,7 @@
 """Preflight guards must key on the v4 state file (ISSUE-250).
 
 v4 moved configuration detection to .sweetclaude/state/sweetclaude.yaml.
-Nothing in the onboarding path (skills/setup, skills/_features) creates
+Nothing in the onboarding path (skill-library/configure/setup, skill-library/configure/_features) creates
 phase.yaml — small_story_controller writes it lazily on the first story
 workflow. A guard that gates solely on phase.yaml therefore refuses to run
 on a correctly configured, freshly onboarded project.
@@ -16,6 +16,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).parents[1]
 SKILLS_DIR = REPO_ROOT / "skills"
+SKILL_LIBRARY_DIR = REPO_ROOT / "skill-library"
 PREFLIGHT_HOOK = REPO_ROOT / "hooks" / "preflight-guard.sh"
 
 GUARD_BLOCK = re.compile(r"<preflight-guard>(.*?)</preflight-guard>", re.DOTALL)
@@ -23,7 +24,7 @@ GUARD_BLOCK = re.compile(r"<preflight-guard>(.*?)</preflight-guard>", re.DOTALL)
 
 def _guarded_skills() -> list[tuple[str, str]]:
     found = []
-    for skill_md in sorted(SKILLS_DIR.glob("*/SKILL.md")):
+    for skill_md in sorted([*SKILLS_DIR.glob("*/SKILL.md"), *SKILL_LIBRARY_DIR.glob("*/*/SKILL.md")]):
         match = GUARD_BLOCK.search(skill_md.read_text(encoding="utf-8"))
         if match:
             found.append((skill_md.relative_to(REPO_ROOT).as_posix(), match.group(1)))
@@ -50,7 +51,7 @@ def test_guard_accepts_v4_state_file(rel_path: str, guard: str) -> None:
 def test_guard_never_routes_to_non_invocable_setup(rel_path: str, guard: str) -> None:
     assert "/sweetclaude:setup" not in guard, (
         f"{rel_path} preflight guard tells the user to run /sweetclaude:setup, "
-        "but skills/setup/SKILL.md is user-invocable: false. Route to "
+        "but skill-library/configure/setup/SKILL.md is user-invocable: false. Route to "
         "/sweetclaude:init instead."
     )
 

@@ -120,6 +120,15 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/migration-decision-reminder.sh"
     },
     {
+      "file": "legacy-command-redirect.sh",
+      "event": "UserPromptSubmit",
+      "matcher": null,
+      "required": true,
+      "scope": "plugin-native",
+      "purpose": "Tells the user the 5.0 replacement for a removed /sweetclaude:<workflow> command and hands the request to its category. Silent for Tier 1 commands and ordinary prompts.",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/legacy-command-redirect.sh"
+    },
+    {
       "file": "git-checkpoint.sh",
       "event": null,
       "matcher": null,

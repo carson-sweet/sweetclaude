@@ -384,7 +384,7 @@ def _check_completion_criteria(fm: dict, filepath: str) -> None:
 def _validate_completion_receipt(receipt_path: str | None, subject_id: str) -> None:
     if not receipt_path:
         raise ValueError(
-            "Cannot mark done without evidence. Run sweetclaude:code-verify "
+            "Cannot mark done without evidence. Run sweetclaude:library-load code-verify "
             "or provide --evidence-receipt PATH."
         )
     try:

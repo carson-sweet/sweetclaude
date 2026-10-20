@@ -109,6 +109,9 @@ class TestChannelClassification:
         # Post-promotion: a non-prerelease 4.x install defaults to stable.
         assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "4.5.1"}) == "stable"
 
+    def test_bare_marketplace_5x_release_is_stable(self):
+        assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "5.0.0"}) == "stable"
+
     def test_bare_marketplace_3x_is_legacy(self):
         assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "3.68.6"}) == "legacy"
 
@@ -177,7 +180,11 @@ class TestReleaseGateRefusesRetiredChannel:
             release_gate._validate_channel("4.6.0-beta", "beta", "beta-4.x")
 
     def test_stable_release_still_allowed(self):
-        release_gate._validate_channel("4.6.0", "stable", "main")
+        release_gate._validate_channel("5.0.0", "stable", "main")
+
+    def test_stable_release_rejects_previous_major(self):
+        with pytest.raises(ValueError, match="stable releases must be 5.x"):
+            release_gate._validate_channel("4.6.0", "stable", "main")
 
 
 class TestCiRetargeted:
@@ -199,7 +206,7 @@ class TestCiRetargeted:
 
 class TestFrontDoorStops:
     """The retired-channel stop is grep-anchored in the front-door skills,
-    like the recovery contract in skills/update/SKILL.md."""
+    like the recovery contract in skill-library/configure/update/SKILL.md."""
 
     # bootstrap and doctor consume preflight.sh shell vars; update consumes
     # update.py preflight JSON fields.
@@ -212,7 +219,9 @@ class TestFrontDoorStops:
         ],
     )
     def test_skill_carries_retired_channel_stop(self, skill, anchor):
-        text = (REPO_ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8")
+        category = {"bootstrap": None, "doctor": "configure", "update": "configure"}[skill]
+        root = REPO_ROOT / "skills" if category is None else REPO_ROOT / "skill-library" / category
+        text = (root / skill / "SKILL.md").read_text(encoding="utf-8")
         assert anchor in text, f"{skill} missing retired-channel stop"
         assert "SweetClaude channel retired." in text, f"{skill} missing retired stop heading"
         for command in SWITCH_COMMANDS:

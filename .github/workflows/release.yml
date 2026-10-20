@@ -32,7 +32,7 @@ jobs:
           # Derive channel + channel-branch from the tag. Two live channels
           # (decision log #35, ISSUE-241 — the beta channel is retired and
           # prerelease tags are refused):
-          #   non-prerelease 4.x  -> stable / main
+          #   non-prerelease 5.x  -> stable / main
           #   non-prerelease 3.x  -> legacy / stable-3.x
           major="${TAG#v}"; major="${major%%.*}"
           case "$TAG" in

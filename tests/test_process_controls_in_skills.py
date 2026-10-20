@@ -28,7 +28,7 @@ def test_shared_process_controls_contract_exists():
 
 
 def test_code_tdd_and_feature_require_process_control_ledger():
-    for path in ("skills/code-tdd/SKILL.md", "skills/code-feature/SKILL.md", "skills/code-issue/SKILL.md"):
+    for path in ("skill-library/build/code-tdd/SKILL.md", "skill-library/build/code-feature/SKILL.md", "skill-library/build/code-issue/SKILL.md"):
         text = _read(path)
         assert "skills/process-controls.md" in text
         assert ".sweetclaude/state/process-control-ledger.yaml" in text
@@ -37,13 +37,13 @@ def test_code_tdd_and_feature_require_process_control_ledger():
 
 def test_john_wick_autonomous_caucus_steps_require_process_controls():
     for path in (
-        "skills/john-wick/SKILL.md",
-        "skills/john-wick/phase-1-define.md",
-        "skills/john-wick/phase-2-plan.md",
-        "skills/john-wick/phase-3-design.md",
-        "skills/john-wick/phase-4-implement-prep.md",
-        "skills/john-wick/phase-5-implement.md",
-        "skills/john-wick/phase-6-verify.md",
+        "skill-library/build/john-wick/SKILL.md",
+        "skill-library/build/john-wick/phase-1-define.md",
+        "skill-library/build/john-wick/phase-2-plan.md",
+        "skill-library/build/john-wick/phase-3-design.md",
+        "skill-library/build/john-wick/phase-4-implement-prep.md",
+        "skill-library/build/john-wick/phase-5-implement.md",
+        "skill-library/build/john-wick/phase-6-verify.md",
     ):
         text = _read(path)
         assert "process-controls.md" in text
@@ -51,7 +51,7 @@ def test_john_wick_autonomous_caucus_steps_require_process_controls():
 
 
 def test_john_wick_state_schema_contains_process_control_state():
-    text = _read("skills/john-wick/state-schema.md")
+    text = _read("skill-library/build/john-wick/state-schema.md")
 
     for phrase in (
         "process_control:",
@@ -92,13 +92,13 @@ def test_shared_process_controls_define_success_criteria_contract():
 def test_large_story_4x_canonical_entrypoint_is_large_story_skill():
     process_controls = _read("skills/process-controls.md")
     go = _read("skills/go/SKILL.md")
-    large_story = _read("skills/large-story/SKILL.md")
-    john_wick = _read("skills/john-wick/SKILL.md")
+    large_story = _read("skill-library/build/large-story/SKILL.md")
+    john_wick = _read("skill-library/build/john-wick/SKILL.md")
     skills_reference = _read("docs/user-guide/skills-reference.md")
     find_skill_routes = _read("skills/find-skill/routing-tables.md")
 
     assert "Users start complete large/high-rigor story workflows through `/sweetclaude:go`" in process_controls
-    assert "internal `sweetclaude:large-story` workflow" in process_controls
+    assert "internal `sweetclaude:library-load large-story` workflow" in process_controls
     assert "Invoke `sweetclaude:find-skill` with the user's request as context" in go
     assert "scripts/large_story_controller.py route --route-surface /sweetclaude:go" in go
     assert "user-invocable: false" in large_story
@@ -113,7 +113,7 @@ def test_large_story_4x_canonical_entrypoint_is_large_story_skill():
     for forbidden in ("john-wick", "John Wick", "sweetclaude:john-wick"):
         assert forbidden not in large_story
 
-    for path in ("skills/code-tdd/SKILL.md", "skills/code-feature/SKILL.md", "skills/code-issue/SKILL.md"):
+    for path in ("skill-library/build/code-tdd/SKILL.md", "skill-library/build/code-feature/SKILL.md", "skill-library/build/code-issue/SKILL.md"):
         text = _read(path).lower()
         assert "canonical 4.x entrypoint" not in text
         assert "end-to-end large-story entrypoint" not in text
@@ -124,7 +124,7 @@ def test_large_story_4x_canonical_entrypoint_is_large_story_skill():
 
 def test_large_story_entrypoint_requires_contract_before_downstream_work():
     process_controls = _normalized("skills/process-controls.md")
-    large_story = _normalized("skills/large-story/SKILL.md")
+    large_story = _normalized("skill-library/build/large-story/SKILL.md")
 
     for phrase in (
         "During Define, create and freeze `success_criteria_contract`",
@@ -147,7 +147,7 @@ def test_large_story_entrypoint_requires_contract_before_downstream_work():
 
 
 def test_large_story_state_schema_contains_contract_surface():
-    text = _read("skills/large-story/state-schema.md")
+    text = _read("skill-library/build/large-story/state-schema.md")
 
     for phrase in (
         "requires_success_criteria_contract: true",
@@ -162,7 +162,7 @@ def test_large_story_state_schema_contains_contract_surface():
 
 
 def test_entry_skills_require_success_criteria_contract_for_large_work():
-    for path in ("skills/code-tdd/SKILL.md", "skills/code-feature/SKILL.md", "skills/code-issue/SKILL.md"):
+    for path in ("skill-library/build/code-tdd/SKILL.md", "skill-library/build/code-feature/SKILL.md", "skill-library/build/code-issue/SKILL.md"):
         text = _read(path)
         normalized = _normalized(path)
         assert "success_criteria_contract" in text
@@ -175,22 +175,22 @@ def test_entry_skills_require_success_criteria_contract_for_large_work():
 
 def test_john_wick_phases_preserve_success_criteria_contract():
     for path in (
-        "skills/john-wick/SKILL.md",
-        "skills/john-wick/phase-1-define.md",
-        "skills/john-wick/phase-2-plan.md",
-        "skills/john-wick/phase-3-design.md",
-        "skills/john-wick/phase-4-implement-prep.md",
-        "skills/john-wick/phase-5-implement.md",
-        "skills/john-wick/phase-6-verify.md",
+        "skill-library/build/john-wick/SKILL.md",
+        "skill-library/build/john-wick/phase-1-define.md",
+        "skill-library/build/john-wick/phase-2-plan.md",
+        "skill-library/build/john-wick/phase-3-design.md",
+        "skill-library/build/john-wick/phase-4-implement-prep.md",
+        "skill-library/build/john-wick/phase-5-implement.md",
+        "skill-library/build/john-wick/phase-6-verify.md",
     ):
         text = _read(path)
         assert "success_criteria_contract_hash" in text
         assert "criterion_ids" in text
 
     for path in (
-        "skills/john-wick/SKILL.md",
-        "skills/john-wick/phase-5-implement.md",
-        "skills/john-wick/phase-6-verify.md",
+        "skill-library/build/john-wick/SKILL.md",
+        "skill-library/build/john-wick/phase-5-implement.md",
+        "skill-library/build/john-wick/phase-6-verify.md",
     ):
         text = _read(path)
         assert "success-criteria-ledger.json" in text
@@ -198,7 +198,7 @@ def test_john_wick_phases_preserve_success_criteria_contract():
 
 
 def test_john_wick_state_schema_contains_success_criteria_state():
-    text = _read("skills/john-wick/state-schema.md")
+    text = _read("skill-library/build/john-wick/state-schema.md")
 
     for phrase in (
         "success_criteria_contract:",

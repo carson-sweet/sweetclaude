@@ -110,5 +110,5 @@ if git -C "$PROJECT_DIR" status --short 2>/dev/null | \
 fi
 
 # No test evidence found — block
-echo '{"ok": false, "reason": "No test files written yet. Write failing tests before source code (TDD). Run /sweetclaude:guardian-off if you need to bypass this check."}'
+echo '{"ok": false, "reason": "No test files written yet. Write failing tests before source code (TDD). Run /sweetclaude:configure guardian-off if you need to bypass this check."}'
 exit 0

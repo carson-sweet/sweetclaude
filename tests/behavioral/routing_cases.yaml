@@ -1,0 +1,240 @@
+schema_version: 1
+version: 1.0.0
+date: 2026-10-20
+source: docs/testing/behavioral-e2e/new-saas-lifecycle.feature
+product_context: ShiftBoard, a new multi-tenant SaaS that schedules staff shifts for small veterinary clinics
+
+cases:
+  - id: plan-customer-problem
+    story: "Plan — capture a customer problem"
+    prompt: "Clinic managers spend every Sunday night rebuilding next week's staff schedule in a spreadsheet and still end up short-staffed. I want to plan a SaaS around that."
+    category: plan
+    workflows: [product-discovery]
+    clarify_ok: false
+
+  - id: plan-compare-alternatives
+    story: "Plan — compare alternatives"
+    prompt: "Before we commit, I want to know what scheduling tools clinics already use and how we would compare against them."
+    category: plan
+    workflows: [product-competition, product-research]
+    clarify_ok: false
+
+  - id: plan-product-brief
+    story: "Plan — create a product brief"
+    prompt: "The problem framing is approved. Write up a product brief for ShiftBoard."
+    category: plan
+    workflows: [product-brief]
+    clarify_ok: false
+
+  - id: plan-milestone
+    story: "Plan — plan a milestone"
+    prompt: "We agreed the first outcome is clinics publishing a week's schedule in under ten minutes. Plan the milestone that gets us there."
+    category: plan
+    workflows: [product-milestone-planning, product-milestones]
+    clarify_ok: false
+
+  - id: design-architecture
+    story: "Design — choose service architecture"
+    prompt: "The ShiftBoard problem is approved. Lay out the system architecture: services, boundaries, and how data flows between them."
+    category: design
+    workflows: [design-architecture]
+    clarify_ok: false
+
+  - id: design-tenant-data-model
+    story: "Design — model tenant data"
+    prompt: "ShiftBoard serves many clinics. Design the data model for clinics, staff, shifts, and availability so tenants stay separated."
+    category: design
+    workflows: [design-data-model]
+    clarify_ok: false
+
+  - id: design-api
+    story: "Design — design an API"
+    prompt: "The mobile app needs to read and claim open shifts. Design the endpoints, request and response shapes, and error responses."
+    category: design
+    workflows: [design-api-design]
+    clarify_ok: false
+
+  - id: design-onboarding-flow
+    story: "Design — design onboarding"
+    prompt: "A new clinic has to get from sign-up to its first published schedule. Map out the onboarding screens and steps."
+    category: design
+    workflows: [design-user-flows, design-ux]
+    clarify_ok: false
+
+  - id: build-tenant-safe-feature
+    story: "Build — implement a tenant-safe feature"
+    prompt: "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+    category: build
+    workflows: [code-feature, small-story, large-story]
+    clarify_ok: false
+
+  - id: build-repair-defect
+    story: "Build — repair a discovered defect"
+    prompt: "While building shift swaps I found that swapping across midnight drops the second day. It reproduces every time in the unit tests. Fix it."
+    category: build
+    workflows: [code-feature, code-issue, small-story, large-story]
+    clarify_ok: true
+    notes: "Pre-release defect found during build. Expected to expose the find-skill vs go disagreement on bug-fix routing."
+
+  - id: build-review-change
+    story: "Build — review a proposed change"
+    prompt: "There's a change set on this branch for the availability calendar. Review it before I merge."
+    category: build
+    workflows: [code-review]
+    clarify_ok: false
+
+  - id: build-issue-tracker
+    story: supplemental
+    prompt: "Use GitHub for this project's issues from now on."
+    category: build
+    workflows: [project-issues]
+    clarify_ok: false
+    notes: "Regression case for the 2026-10-19 direct gh issue create failure."
+
+  - id: test-accessibility
+    story: "Test — test accessibility"
+    prompt: "The schedule editor UI is built. Check it for accessibility problems."
+    category: build
+    workflows: [testing-accessibility]
+    clarify_ok: false
+
+  - id: test-performance
+    story: "Test — test performance thresholds"
+    prompt: "Schedule generation has to finish in under two seconds for a 40-person clinic. Set up load scenarios and check whether we meet that."
+    category: build
+    workflows: [testing-performance]
+    clarify_ok: false
+
+  - id: test-security
+    story: "Test — test security risks"
+    prompt: "Shift data includes staff phone numbers and home addresses. Do security testing on the staff profile feature."
+    category: build
+    workflows: [testing-security, code-review]
+    clarify_ok: false
+
+  - id: deploy-prepare-release
+    story: "Deploy — prepare a release"
+    prompt: "Verification passed for the shift-swap release. Prepare it for deployment."
+    category: build
+    workflows: [deploy-ship]
+    clarify_ok: false
+
+  - id: deploy-smoke-check
+    story: "Deploy — perform a smoke check"
+    prompt: "The release just went out to production. Verify it's actually working."
+    category: build
+    workflows: [code-verify, deploy-ship]
+    clarify_ok: false
+
+  - id: deploy-roll-back
+    story: "Deploy — roll back a failed release"
+    prompt: "The new release is throwing errors for every clinic and I've approved a rollback. Roll it back."
+    category: maintain
+    workflows: [rollback-revert]
+    clarify_ok: false
+
+  - id: document-update-affected
+    story: "Document — update affected documentation"
+    prompt: "We changed shift swaps so managers must approve them. Update whatever documentation that change affects."
+    category: utils
+    workflows: [documents-update-docs]
+    clarify_ok: false
+
+  - id: document-api-docs
+    story: "Document — write API documentation"
+    prompt: "The shifts API contract is final. Write the API documentation for it."
+    category: utils
+    workflows: [documents-update-docs]
+    clarify_ok: true
+    notes: "No library workflow owns writing new docs. Expected to expose a routing gap; review the first result before trusting this expectation."
+
+  - id: maintain-triage-incident
+    story: "Maintain — triage a production incident"
+    prompt: "Clinics are reporting that published schedules show up blank this morning. Help."
+    category: maintain
+    workflows: [something-broke]
+    clarify_ok: false
+
+  - id: maintain-security-patch
+    story: "Maintain — patch a security vulnerability"
+    prompt: "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+    category: maintain
+    workflows: [security-patch]
+    clarify_ok: false
+
+  - id: maintain-live-defect
+    story: "Maintain — fix a live defect"
+    prompt: "In production, overtime totals double-count shifts that span midnight. It reproduces reliably. Fix it."
+    category: maintain
+    workflows: [hotfix]
+    clarify_ok: false
+
+  - id: maintain-postmortem
+    story: "Maintain — perform a postmortem"
+    prompt: "The blank-schedule incident is resolved. Write the postmortem."
+    category: maintain
+    workflows: [postmortem]
+    clarify_ok: false
+
+  - id: maintain-tech-debt
+    story: "Maintain — manage technical debt"
+    prompt: "The scheduling module has three copies of the same date-range logic and it slows every change. Clean that up."
+    category: maintain
+    workflows: [code-debt]
+    clarify_ok: false
+
+  - id: configure-health-check
+    story: supplemental
+    prompt: "Check whether SweetClaude itself is set up correctly in this project and fix anything broken."
+    category: configure
+    workflows: [doctor]
+    clarify_ok: false
+
+  - id: configure-update
+    story: supplemental
+    prompt: "Update SweetClaude to the latest version."
+    category: configure
+    workflows: [update]
+    clarify_ok: false
+
+  - id: configure-mode
+    story: supplemental
+    prompt: "Switch this project to Kanban mode."
+    category: configure
+    workflows: [project-mode]
+    clarify_ok: false
+
+  - id: configure-off
+    story: supplemental
+    prompt: "Turn SweetClaude off for this project."
+    category: configure
+    workflows: ["off"]
+    clarify_ok: false
+
+  - id: utils-meeting-prep
+    story: supplemental
+    prompt: "I'm meeting a clinic owner tomorrow to pitch ShiftBoard. Help me prepare."
+    category: utils
+    workflows: [misc-meeting-prep]
+    clarify_ok: false
+
+  - id: utils-dashboard
+    story: supplemental
+    prompt: "Open the local dashboard for this project."
+    category: utils
+    workflows: [dashboard]
+    clarify_ok: false
+
+  - id: utils-big-picture
+    story: supplemental
+    prompt: "Show me the whole project at a glance: milestones, epics, and issues."
+    category: utils
+    workflows: [big-picture]
+    clarify_ok: false
+
+  - id: utils-session-export
+    story: supplemental
+    prompt: "Export this session as a portable package."
+    category: utils
+    workflows: [session-export]
+    clarify_ok: false

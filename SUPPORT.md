@@ -10,7 +10,7 @@ Use [GitHub Discussions](https://github.com/carson-sweet/sweetclaude/discussions
 
 ## Model compatibility
 
-If behavior changed after a Claude model upgrade, run `/sweetclaude:behavioral-regression` to identify which contracts failed. Include the output in your issue report. This is the fastest path to a fix.
+If behavior changed after a Claude model upgrade, score a session transcript with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN` to identify which contracts failed. Include the output in your issue report. This is the fastest path to a fix.
 
 ## Contributing
 

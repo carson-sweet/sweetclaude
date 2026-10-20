@@ -133,7 +133,7 @@ def test_large_init_no_story_returns_resumable_creation_signal(tmp_path):
 
 def test_story_skills_document_route_and_resume(tmp_path):
     root = Path(__file__).resolve().parents[1]
-    for rel in ("skills/small-story/SKILL.md", "skills/large-story/SKILL.md"):
+    for rel in ("skill-library/build/small-story/SKILL.md", "skill-library/build/large-story/SKILL.md"):
         text = (root / rel).read_text(encoding="utf-8")
         assert "needs_story_creation" in text, (
             f"{rel} must handle the resumable no-story signal"

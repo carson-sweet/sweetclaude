@@ -18,6 +18,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).parents[1]
 SKILLS_DIR = REPO_ROOT / "skills"
+LIBRARY_DIR = REPO_ROOT / "skill-library"
 TEMPLATE = REPO_ROOT / "scripts" / "sweetclaude-yaml-template.py"
 
 # behavioral-regression builds a phase.yaml fixture under /tmp on purpose.
@@ -29,7 +30,12 @@ UNGUARDED_OPEN = re.compile(
 
 
 def _skill_docs() -> list[Path]:
-    return sorted(p for p in SKILLS_DIR.glob("*/*.md") if p.name != "README.md")
+    return sorted(
+        [
+            *(p for p in SKILLS_DIR.glob("*/*.md") if p.name != "README.md"),
+            *(p for p in LIBRARY_DIR.glob("*/*/*.md") if p.name != "README.md"),
+        ]
+    )
 
 
 def _relevant_docs() -> list[tuple[str, str]]:
@@ -81,3 +87,26 @@ def test_template_project_block_shape() -> None:
     ).stdout
     data = yaml.safe_load(out)
     assert "mode" in data["project"], "project.mode missing from generated state"
+
+
+def test_template_defines_issue_tracker_with_a_local_default() -> None:
+    """Issue management needs a per-project system-of-record choice."""
+    import subprocess
+    import sys
+
+    def render(*args: str) -> dict:
+        return yaml.safe_load(subprocess.run(
+            [sys.executable, str(TEMPLATE), "--name", "t", *args, "--output", "-"],
+            capture_output=True, text=True, timeout=30, check=True,
+        ).stdout)
+
+    assert render()["project"]["issue_tracker"] == "local"
+    assert render("--issue-tracker", "github")["project"]["issue_tracker"] == "github"
+
+
+def test_project_issues_recognizes_natural_language_tracker_changes() -> None:
+    """The option must be usable without knowing the tracker subcommand."""
+    skill = (LIBRARY_DIR / "build" / "project-issues" / "SKILL.md").read_text(encoding="utf-8")
+    assert "use GitHub for this project's issues" in skill
+    assert "stop using local issue tracking" in skill
+    assert "do not import, export, or delete issues as a side effect" in skill

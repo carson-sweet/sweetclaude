@@ -114,7 +114,7 @@ def validate_receipt(
         raise ValueError(
             "Evidence receipt was not verified: its command was recorded but "
             "never executed. Re-run with `evidence.py write --run`, or via "
-            "sweetclaude:code-verify, so the result is observed rather than "
+            "sweetclaude:library-load code-verify, so the result is observed rather than "
             "asserted."
         )
 

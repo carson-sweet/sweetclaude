@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Step 7c helper for skills/update/SKILL.md — configure .sweetclaude/plans
+Step 7c helper for skill-library/configure/update/SKILL.md — configure .sweetclaude/plans
 as the project's plansDirectory in both Claude Code settings files.
 
 Replaces an inline `if [ -d ".sweetclaude" ]; then python3 - << 'PY' ... PY fi`

@@ -1,6 +1,6 @@
 """Output-contract coverage for the three _migrate helpers (ISSUE-253).
 
-skills/_migrate/SKILL.md shells out to these at lines 45, 54, and 145 and
+skill-library/configure/_migrate/SKILL.md shells out to these at lines 45, 54, and 145 and
 parses one line of stdout. The contract is the prefix before the pipe. If a
 helper crashes or changes its prefix, the skill misreads the result and can
 proceed as though a snapshot exists when it does not.

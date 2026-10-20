@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Step 2 helper for skills/_migrate/SKILL.md.
+Step 2 helper for skill-library/configure/_migrate/SKILL.md.
 
 Runs the migration and prints the results as JSON.
 

@@ -29,7 +29,7 @@ This is transparency, not alarm. These are known and accepted tradeoffs — but 
 
 **License:** MIT
 
-**What fails if it goes unmaintained:** The corpus pipeline's promote step stops auto-indexing. The `/sweetclaude:document-corpus rag` mode fails. Everything else in SweetClaude is unaffected — corpus management through the promote step still works, just without the RAG index.
+**What fails if it goes unmaintained:** The corpus pipeline's promote step stops auto-indexing. The `/sweetclaude:utils document-corpus rag` mode fails. Everything else in SweetClaude is unaffected — corpus management through the promote step still works, just without the RAG index.
 
 **Contingency plan:** RAG is explicitly optional. If mcp-local-rag becomes unavailable, the behavior reverts to manual semantic search. The canonical documents (produced by the corpus pipeline) still exist and are still organized — they just aren't automatically indexed.
 

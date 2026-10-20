@@ -1680,11 +1680,11 @@ class TestManifestAndDoctorContracts:
 SKILLS_THAT_HANDLE_GUARD_STATUS = [
     REPO_ROOT / "skills" / "status" / "SKILL.md",
     REPO_ROOT / "skills" / "go" / "SKILL.md",
-    REPO_ROOT / "skills" / "project-backlog" / "SKILL.md",
-    REPO_ROOT / "skills" / "project-issues" / "SKILL.md",
-    REPO_ROOT / "skills" / "project-backlog-triage" / "SKILL.md",
-    REPO_ROOT / "skills" / "project-gh-sync-issues" / "SKILL.md",
-    REPO_ROOT / "skills" / "project-gh-import-issues" / "SKILL.md",
+    REPO_ROOT / "skill-library" / "build" / "project-backlog" / "SKILL.md",
+    REPO_ROOT / "skill-library" / "build" / "project-issues" / "SKILL.md",
+    REPO_ROOT / "skill-library" / "build" / "project-backlog-triage" / "SKILL.md",
+    REPO_ROOT / "skill-library" / "build" / "project-gh-sync-issues" / "SKILL.md",
+    REPO_ROOT / "skill-library" / "build" / "project-gh-import-issues" / "SKILL.md",
 ]
 
 
@@ -1716,14 +1716,14 @@ class TestBootstrapSkillHandlerContracts:
 
     def test_bootstrap_skill_offers_sweetclaude_migrate_for_supported_migration(self):
         """
-        bootstrap/SKILL.md must offer /sweetclaude:migrate as the action for the
+        bootstrap/SKILL.md must offer /sweetclaude:configure as the action for the
         'supported-migration-available' branch.
 
         This is distinct from the 'compatibility-mode' branch which explicitly
         says NO action (migration stays blocked). The new branch must
-        tell the user to run /sweetclaude:migrate.
+        tell the user to use /sweetclaude:configure.
 
-        RED reason: bootstrap currently says "Never recommend /sweetclaude:migrate
+        RED reason: bootstrap currently says "Never recommend the migration route
         for any status except migration-may-be-needed." That rule must be updated
         to also allow it for 'supported-migration-available'.
         """
@@ -1733,23 +1733,22 @@ class TestBootstrapSkillHandlerContracts:
         assert "supported-migration-available" in skill_text, (
             "bootstrap/SKILL.md must contain 'supported-migration-available' first"
         )
-        assert "/sweetclaude:migrate" in skill_text, (
-            "bootstrap/SKILL.md must mention /sweetclaude:migrate somewhere in "
-            "the skill text — it is the command for the migration path."
+        assert "/sweetclaude:configure" in skill_text, (
+            "bootstrap/SKILL.md must mention /sweetclaude:configure somewhere in "
+            "the skill text — it is the public entry point for the migration path."
         )
-        # The 'never recommend /sweetclaude:migrate for any status except
-        # migration-may-be-needed' restriction must be relaxed or updated to
+        # The former leaf-command-only restriction must be relaxed or updated to
         # include supported-migration-available.
         # Check: the skill does not say the old restriction still applies to
         # ALL other statuses (i.e., supported-migration-available must be
         # explicitly excepted or the restriction must be updated).
-        # We check indirectly: the status string must appear BEFORE the migrate
-        # recommendation or in a section that allows migrate.
+        # We check indirectly: the status string and public configuration entry
+        # point must both be present in the router.
         status_pos = skill_text.find("supported-migration-available")
-        migrate_pos = skill_text.find("/sweetclaude:migrate")
-        assert status_pos != -1 and migrate_pos != -1, (
+        configure_pos = skill_text.find("/sweetclaude:configure")
+        assert status_pos != -1 and configure_pos != -1, (
             "bootstrap/SKILL.md must contain both 'supported-migration-available' "
-            "and '/sweetclaude:migrate'."
+            "and '/sweetclaude:configure'."
         )
 
 

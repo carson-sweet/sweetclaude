@@ -33,10 +33,10 @@ The ledger must record:
 
 Users start complete large/high-rigor story workflows through `/sweetclaude:go`
 using natural language. `/sweetclaude:go` routes matching requests to the
-internal `sweetclaude:large-story` workflow.
+internal `sweetclaude:library-load large-story` workflow.
 
-Other skills such as `/sweetclaude:code-feature`, `/sweetclaude:code-issue`,
-and `/sweetclaude:code-tdd` may perform bounded implementation work inside a
+Other skills such as `/sweetclaude:build code-feature`, `/sweetclaude:build code-issue`,
+and `/sweetclaude:build code-tdd` may perform bounded implementation work inside a
 large-story workflow, but they are not the canonical end-to-end large-story
 entrypoint. They must inherit the frozen success criteria contract from the
 calling workflow or stop before implementation begins.

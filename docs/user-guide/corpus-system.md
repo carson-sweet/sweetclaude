@@ -12,7 +12,7 @@ The corpus system manages the lifecycle of project documents — from messy scat
 Run from any SweetClaude-configured project:
 
 ```
-/sweetclaude:document-corpus
+/sweetclaude:utils document-corpus
 ```
 
 A menu appears showing all available modes and the current pipeline status next to each. Pick one or more.

@@ -14,7 +14,7 @@ SweetClaude doesn't lock you into a single methodology. Think of it as a dial, n
 
 Most solo developers start in Flow Mode and dial up as the project matures. You can change mode at any time — even mid-project.
 
-There's also **John Wick mode** — an experimental, fully autonomous SDLC pipeline that runs discovery through PR with minimal human intervention. It uses TDD Level 3, subagent isolation, QA caucus review, and a full phase sequence. Not for everyday use — but powerful for teams that want maximum automation and discipline. Invoke with `/sweetclaude:john-wick`.
+There's also **John Wick mode** — an experimental, fully autonomous SDLC pipeline that runs discovery through PR with minimal human intervention. It uses TDD Level 3, subagent isolation, QA caucus review, and a full phase sequence. Not for everyday use — but powerful for teams that want maximum automation and discipline. Invoke with `/sweetclaude:build john-wick`.
 
 ## Option 2b — What actually changes at each level
 

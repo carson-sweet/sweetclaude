@@ -4,7 +4,7 @@
 SweetClaude doctor — diagnostic scan and repair engine.
 
 Deterministic engine with no user interaction. The skill layer
-(skills/doctor/SKILL.md) owns all UX: report rendering, menus,
+(skill-library/configure/doctor/SKILL.md) owns all UX: report rendering, menus,
 prompted fixes, safety branch offers. This script owns: scan,
 auto-fix, archive, persist, suppression, dry-run simulation.
 
@@ -326,7 +326,7 @@ def _build_terminal_fallback(
                 "no_data_loss": True,
                 "snapshot_first": True,
                 # V8 / plan §8.4: re_adopt.py archives .sweetclaude/ then hands
-                # to sweetclaude:init as the re-onboard entry point. There is NO
+                # to sweetclaude:library-load init as the re-onboard entry point. There is NO
                 # sweetclaude:adopt skill.
                 "capability": "init",
                 "executable": "scripts/recovery/re_adopt.py",
@@ -645,7 +645,7 @@ def check_hook_health(state: ProjectState) -> list[Finding]:
             ))
 
     global_rules_dir = Path.home() / ".claude" / "rules" / "sweetclaude"
-    if global_rules_dir.is_dir():
+    if global_rules_dir.is_dir() and any(p.is_file() for p in global_rules_dir.rglob("*")):
         findings.append(Finding(
             id="hook-health:global-rules-loaded",
             category="hook_health",
@@ -841,7 +841,8 @@ def check_storage_lint(state: ProjectState) -> list[Finding]:
                 .get("installed_version", "")
             )
         v3_files = list(backlog_dir.glob("BL-*.md"))
-        if v3_files and sc_version.startswith("4."):
+        sc_major = re.match(r"^(\d+)\.", str(sc_version))
+        if v3_files and sc_major and int(sc_major.group(1)) >= 4:
             findings.append(Finding(
                 id="storage-lint:v3-files-present:backlog",
                 category="storage_lint",
@@ -1992,8 +1993,8 @@ def check_version_currency(state: ProjectState) -> list[Finding]:
             f"version-currency: installed={installed}, available={available}. "
             "Doctor's checks and recovery improve between releases, so some "
             "findings here may already be resolved in the newer version. "
-            "Guidance: update first — run /sweetclaude:update (beta: update the "
-            "plugin package and restart, then /sweetclaude:update) — then re-run "
+            "Guidance: update first — run /sweetclaude:configure update (beta: update the "
+            "plugin package and restart, then /sweetclaude:configure update) — then re-run "
             "doctor before acting on other findings."
         ),
         file_paths=[],
@@ -2017,7 +2018,7 @@ def check_work_item_artifacts(state: ProjectState) -> list[Finding]:
             category="work_item_artifacts",
             severity="warning",
             summary="Work-item artifacts feature is active but .sweetclaude/work/ does not exist",
-            detail="The feature is enabled but no work directory has been created. Run /sweetclaude:work-item-artifacts to set it up.",
+            detail="The feature is enabled but no work directory has been created. Run /sweetclaude:configure work-item-artifacts to set it up.",
             file_paths=[],
             fix_type="report-only",
             fix_recipe={},
@@ -2757,7 +2758,7 @@ def build_maintenance_route(state: ProjectState) -> dict:
             "status": "supported-migration-available",
             "message": (
                 "Doctor found a typed legacy backlog layout. "
-                "Run /sweetclaude:migrate to migrate to the unified ISSUE-NNN taxonomy."
+                "Run /sweetclaude:configure migrate to migrate to the unified ISSUE-NNN taxonomy."
             ),
             "primary_action": _capability_action(
                 capability_id,
@@ -2975,7 +2976,7 @@ def _apply_manifest_migration_policy(
             visible.append(finding)
             continue
         # T3b (plan §8.2, LOCKED): taxonomy migration now has a runnable CLI and
-        # routes through sweetclaude:migrate, which owns its own preflight/safety
+        # routes through sweetclaude:library-load migrate, which owns its own preflight/safety
         # flow — the same delegation contract as the v3-to-v4 path. So it is no
         # longer manifest-blocked; let the runnable prompted finding through.
         if recipe.get("script") == "migrate_taxonomy.py" and taxonomy_runnable:
@@ -3962,14 +3963,24 @@ def execute_recipe(
             h = _hash_bytes(b"")
             return RecipeResult("", h, h, None, True, "already absent")
         try:
+            rule_files = sorted(p for p in target.rglob("*") if p.is_file())
+            inventory = b""
+            for rule_file in rule_files:
+                content = rule_file.read_bytes()
+                _record_mutation(archive_path, rule_file, content, b"")
+                inventory += str(rule_file).encode() + b"\0" + content
+            if rule_files:
+                recipe["file"] = str(rule_files[0])
+                if len(rule_files) > 1:
+                    recipe["extra_files"] = [str(p) for p in rule_files[1:]]
             backup_dir = (Path.home() / ".claude" / ".sweetclaude-legacy-backup" /
                           datetime.datetime.now().strftime("%Y%m%d-%H%M%S") /
                           "legacy" / "rules")
             backup_dir.mkdir(parents=True, exist_ok=True)
             backup_path = backup_dir / "sweetclaude"
             shutil.move(str(target), str(backup_path))
-            return RecipeResult("", _hash_bytes(b"global-rules"), _hash_bytes(b""),
-                                backup_path, True)
+            return RecipeResult("", _hash_bytes(b"global-rules\0" + inventory),
+                                _hash_bytes(b""), backup_path, True)
         except OSError as e:
             return RecipeResult("", "", None, None, False, str(e))
 

@@ -19,7 +19,7 @@ Multi-view project orientation. One command, dynamic views. No background agents
 ## Step 1: Schema check
 
 Use `phase_schema_version` from pre-loaded session state:
-- If absent or `1`: warn — "Your config is on schema v1. Run `/sweetclaude:update` to upgrade." Stop.
+- If absent or `1`: warn — "Your config is on schema v1. Run `/sweetclaude:configure update` to upgrade." Stop.
 - If `2`: proceed.
 
 ## Step 2: Recovery/migration guard
@@ -32,30 +32,30 @@ fi
 if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
   python3 "$SCRIPT" guard --project-dir . --pretty
 else
-  echo '{"status":"guard-unavailable","message":"Recovery guard unavailable. Run /sweetclaude:update before migration."}'
+  echo '{"status":"guard-unavailable","message":"Recovery guard unavailable. Run /sweetclaude:configure update before migration."}'
 fi
 ```
 
 Parse the JSON output.
 
 - If `status` is `run-recover`: output the guard `message`, then output
-  `Run /sweetclaude:recover to create a snapshot-backed recovery plan. Do not run /sweetclaude:migrate yet.` Stop.
+  `Run /sweetclaude:configure recover to create a snapshot-backed recovery plan. Do not run /sweetclaude:configure migrate yet.` Stop.
 - If `status` is `manual-review`: output the guard `message`, summarize
   `blocking_factor_codes`, and stop. Do not recommend migration.
 - If `status` is `supported-migration-available`: output
-  `This project has a typed legacy backlog layout that can be migrated. Run /sweetclaude:migrate to convert to the unified ISSUE-NNN taxonomy.`
+  `This project has a typed legacy backlog layout that can be migrated. Run /sweetclaude:configure migrate to convert to the unified ISSUE-NNN taxonomy.`
   Stop.
 - If `status` is `compatibility-mode`: output
-  `This project is in compatibility mode. Run /sweetclaude:migrate to convert to v4 layout, or /sweetclaude:recover to check graduation eligibility.`
+  `This project is in compatibility mode. Run /sweetclaude:configure migrate to convert to v4 layout, or /sweetclaude:configure recover to check graduation eligibility.`
   Stop.
 - If `status` is `missing-product-base` or `guard-unavailable`: output the
   guard `message` and stop. Do not recommend migration.
 - If `standard_product_dir_exists` is false and `product_base` is not
   `.sweetclaude/product`: output
-  `This project's product layout is at a non-standard path. Run /sweetclaude:migrate to convert to v4 layout, or /sweetclaude:recover to check graduation eligibility.`
+  `This project's product layout is at a non-standard path. Run /sweetclaude:configure migrate to convert to v4 layout, or /sweetclaude:configure recover to check graduation eligibility.`
   Stop.
 - If `status` is `migration-may-be-needed`: output
-  `Old-format work items were found. This appears to be a simple migration candidate, but review /sweetclaude:migrate before executing it; for any duplicate IDs, typed backlog folders, pending doctor prompt, or stale migration state, run /sweetclaude:recover instead.`
+  `Old-format work items were found. This appears to be a simple migration candidate, but review /sweetclaude:configure migrate before executing it; for any duplicate IDs, typed backlog folders, pending doctor prompt, or stale migration state, run /sweetclaude:configure recover instead.`
   Stop.
 - If `status` is `ok`: proceed.
 
@@ -286,7 +286,7 @@ all_issue_files = (glob.glob('.sweetclaude/product/roadmap/issues/**/*.md', recu
 disk_max = max((int(m.group(1)) for f in all_issue_files
                 for m in [re.search(r'ISSUE-(\d+)', os.path.basename(f))] if m), default=0)
 if disk_max > cache_max:
-    warnings.append(f'counter-drift: disk max ISSUE-{disk_max:03d}, cache max ISSUE-{cache_max:03d} — run /sweetclaude:doctor')
+    warnings.append(f'counter-drift: disk max ISSUE-{disk_max:03d}, cache max ISSUE-{cache_max:03d} — run /sweetclaude:configure doctor')
 
 # cross-location-dup
 backlog_ids = {m.group(1) for f in (glob.glob('.sweetclaude/product/backlog/*.md') +
@@ -350,7 +350,7 @@ Unlinked: {unlinked.open} items not assigned to an epic
 
 If rebuild from Step 4a/5 had `skipped` count > 0:
 ```
-{scanned} scanned, {ingested} indexed, {skipped} skipped — run /sweetclaude:doctor for details
+{scanned} scanned, {ingested} indexed, {skipped} skipped — run /sweetclaude:configure doctor for details
 ```
 
 ---

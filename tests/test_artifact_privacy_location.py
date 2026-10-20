@@ -29,7 +29,7 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).parents[1]
-SETUP_SKILL = REPO_ROOT / "skills" / "setup" / "SKILL.md"
+SETUP_SKILL = REPO_ROOT / "skill-library" / "configure" / "setup" / "SKILL.md"
 DOCTOR = REPO_ROOT / "scripts" / "doctor.py"
 SESSION_STATE = REPO_ROOT / "hooks" / "generate-session-state.sh"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))

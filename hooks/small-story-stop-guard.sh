@@ -82,7 +82,7 @@ try:
         f"Workflow checkpoint — {workflow_id} is paused in {phase}. Progress is saved. "
         "To resume: keep working on this story. "
         "To pause: stop again to confirm (guard stays silent until story progresses). "
-        "To save for later: /sweetclaude:hibernate. "
+        "To save for later: /sweetclaude:configure hibernate. "
         "Relay this to the user as a checkpoint, not an error. Do not paste raw JSON "
         "or claim the story is done."
     )

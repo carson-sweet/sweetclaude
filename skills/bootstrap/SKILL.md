@@ -61,7 +61,7 @@ hooks load at once):
 /plugin marketplace remove sweetclaude-beta
 
 (Removing the retired marketplace uninstalls its plugin, so add and install
-the new channel first.) Then restart Claude Code and run /sweetclaude:update;
+the new channel first.) Then restart Claude Code and run /sweetclaude:configure update;
 your project data migrates normally. No project files were changed.
 ```
 
@@ -83,14 +83,14 @@ Run this Claude Code command:
 {SC_PLUGIN_UPDATE_COMMAND}
 
 Then restart Claude Code and run:
-/sweetclaude:update
+/sweetclaude:configure update
 
 Stopping here because this installed beta is old enough to have unsafe
 update/recovery behavior. No project files were changed.
 ```
 
-Do not invoke `/sweetclaude:update`, `/sweetclaude:doctor`,
-`/sweetclaude:recover`, `/sweetclaude:migrate`, `_migrate`, setup, purge, or
+Do not invoke `/sweetclaude:configure update`, `/sweetclaude:configure doctor`,
+`/sweetclaude:configure recover`, `/sweetclaude:configure migrate`, `_migrate`, setup, purge, or
 any project-mutating skill from this stale-beta stop path.
 
 ---
@@ -103,18 +103,18 @@ If the pre-loaded content is `SC_YAML_NOT_FOUND`:
 ls .sweetclaude/state/phase.yaml .sweetclaude/state/skills.yaml 2>/dev/null | wc -l
 ```
 
-- Count > 0 → invoke `sweetclaude:_migrate` then stop (migration tells user to re-run)
-- Count = 0 → invoke `sweetclaude:setup` then stop
+- Count > 0 → invoke `sweetclaude:library-load _migrate` then stop (migration tells user to re-run)
+- Count = 0 → invoke `sweetclaude:library-load setup` then stop
 
 If the pre-loaded content exists but fails YAML parsing (malformed — check by attempting to interpret it as a YAML structure):
 > "Something in my config got scrambled. Let me fix it."
-Invoke `sweetclaude:fix-sweetclaude`. Stop.
+Invoke `sweetclaude:library-load fix-sweetclaude`. Stop.
 
 ## Step 2: Schema version check
 
 Read `schema_version` from pre-loaded state.
 If `schema_version` is not in `{1, 2}`:
-- Invoke `sweetclaude:_migrate --schema-upgrade`
+- Invoke `sweetclaude:library-load _migrate --schema-upgrade`
 - Stop (migration tells user to re-run)
 
 If `schema_version` is `1`, the registry-driven runner will pick up the v1→v2 migration during the Step 5c drift scan. Bootstrap continues — it does not need to short-circuit here.
@@ -122,14 +122,14 @@ If `schema_version` is `1`, the registry-driven runner will pick up the v1→v2 
 ## Step 3: Check migration status
 
 Read `framework.migration_status`.
-- `in_progress` or `failed` → invoke `sweetclaude:_migrate` (retry). Stop.
+- `in_progress` or `failed` → invoke `sweetclaude:library-load _migrate` (retry). Stop.
 - `complete` or `null` → continue.
 
 ## Step 4: Stale hook check
 
 Read `framework.hook_last_ran`.
 If null or more than 2 hours ago:
-- Invoke `sweetclaude:_health` to run checks inline
+- Invoke `sweetclaude:library-load _health` to run checks inline
 - Re-read updated values from file before continuing
 
 To check if stale:
@@ -155,22 +155,15 @@ except:
 
 Read `framework.setup_complete`.
 If `false`:
-- Invoke `sweetclaude:setup`. Stop.
+- Invoke `sweetclaude:library-load setup`. Stop.
 
 ## Step 5b: Maintenance guard — v3 artifacts and compatibility states
 
 After confirming setup is complete, decide whether the recovery guard needs to
 run, in one of two modes:
 
-- **hard-stop** — a v4 plugin is running against a project that hasn't migrated
-  yet (project `installed_version` below 4.x, or v3 `BL-*.md` files present).
-  Unsafe to continue; the session stops after routing.
-- **advisory** — the project is v4 but sits in a compatibility/recovery state
-  (`recovery.taxonomy.status: stabilized-without-migration`), or its product
-  tree still holds old-taxonomy files (`STORY-`/`BUG-`/`DEBT-`/`CHORE-`)
-  despite the state claiming migration is complete. Graduation opportunities,
-  blockers, and recoverable states are only visible through the guard, so it
-  runs at session start, routes to an action, and the session continues.
+- **hard-stop** — a v4-or-later plugin is running against a project that hasn't migrated yet (project `installed_version` major below 4, missing, or unparseable, or v3 `BL-*.md` files present). Unsafe to continue; the session stops after routing.
+- **advisory** — the project is v4 or later but sits in a compatibility/recovery state (`recovery.taxonomy.status: stabilized-without-migration`), or its product tree still holds old-taxonomy files (`STORY-`/`BUG-`/`DEBT-`/`CHORE-`) despite the state claiming migration is complete, or v3 `BL-*.md` files are present but the plugin version could not be read. Graduation opportunities, blockers, and recoverable states are only visible through the guard, so it runs at session start, routes to an action, and the session continues.
 
 Every status the guard can emit has a route below. There are no unrouted
 statuses: bootstrap either offers the resolving action or explains honestly
@@ -190,7 +183,7 @@ if p.exists():
 print('.sweetclaude/product')
 " 2>/dev/null || echo '.sweetclaude/product')
 
-# Detect v4 plugin: plugin version ≥ 4.x, project installed_version < 4.x
+# Detect v4+ plugin: plugin major >= 4, project installed_version major < 4
 PLUGIN_V=$(python3 -c "
 import json, os, re
 try:
@@ -199,7 +192,8 @@ try:
                for e in versions if e.get('scope') == 'user']
     for e in sorted(entries, key=lambda x: x.get('lastUpdated',''), reverse=True):
         v = e.get('version','')
-        if re.match(r'^4\.', v) and 'sweetclaude' in str(e.get('installPath','')).lower():
+        m = re.match(r'^(\d+)\.', v)
+        if m and int(m.group(1)) >= 4 and 'sweetclaude' in str(e.get('installPath','')).lower():
             print(v)
             break
 except Exception:
@@ -214,11 +208,15 @@ print(d.get('framework', {}).get('installed_version', ''))
 
 V3_FILES=$(find "${PRODUCT_BASE}/backlog" -maxdepth 1 -name 'BL-*.md' 2>/dev/null | wc -l | tr -d ' ')
 
-PLUGIN_IS_V4=false
-case "$PLUGIN_V" in 4.*) PLUGIN_IS_V4=true ;; esac
+PLUGIN_IS_V4_PLUS=false
+case "$PLUGIN_V" in
+  [0-9]*.*) [ "${PLUGIN_V%%.*}" -ge 4 ] 2>/dev/null && PLUGIN_IS_V4_PLUS=true ;;
+esac
 
-PROJECT_NOT_V4=false
-case "$PROJECT_V" in 4.*) ;; *) PROJECT_NOT_V4=true ;; esac
+PROJECT_BELOW_V4=true
+case "$PROJECT_V" in
+  [0-9]*.*) [ "${PROJECT_V%%.*}" -ge 4 ] 2>/dev/null && PROJECT_BELOW_V4=false ;;
+esac
 
 COMPAT_STATE=$(python3 -c "
 import yaml
@@ -230,9 +228,9 @@ print('yes' if taxonomy.get('status') == 'stabilized-without-migration' else 'no
 LEGACY_FILES=$(find "${PRODUCT_BASE}" \( -name 'STORY-*.md' -o -name 'BUG-*.md' -o -name 'DEBT-*.md' -o -name 'CHORE-*.md' \) 2>/dev/null | wc -l | tr -d ' ')
 
 GUARD_MODE=none
-if $PLUGIN_IS_V4 && ( $PROJECT_NOT_V4 || [ "$V3_FILES" -gt 0 ] ); then
+if $PLUGIN_IS_V4_PLUS && ( $PROJECT_BELOW_V4 || [ "$V3_FILES" -gt 0 ] ); then
   GUARD_MODE=hard-stop
-elif [ "$COMPAT_STATE" = "yes" ] || [ "$LEGACY_FILES" -gt 0 ]; then
+elif [ "$COMPAT_STATE" = "yes" ] || [ "$LEGACY_FILES" -gt 0 ] || [ "$V3_FILES" -gt 0 ]; then
   GUARD_MODE=advisory
 fi
 
@@ -273,7 +271,7 @@ write away from leaving compatibility mode. Present via **AskUserQuestion**:
 > Graduation is a state-only write — no work-item files change.
 
 Options:
-- **Graduate now (Recommended)** — invoke `sweetclaude:doctor`; its
+- **Graduate now (Recommended)** — invoke `sweetclaude:library-load doctor`; its
   maintenance route runs graduation-check and graduates with archive and
   rollback support.
 - **Not now** — continue in compatibility mode.
@@ -288,50 +286,50 @@ project and graduation. List each entry from the guard's
 > reversible.
 
 Options:
-- **Fix blockers and graduate (Recommended)** — invoke `sweetclaude:doctor`;
+- **Fix blockers and graduate (Recommended)** — invoke `sweetclaude:library-load doctor`;
   its `graduation-blocked` route resolves each blocker, re-checks, and
   graduates.
 - **Not now** — continue in compatibility mode.
 
 **`run-recover`** — a recoverable maintenance state. Present via
 **AskUserQuestion**: **Run recovery now (Recommended)** (invoke
-`sweetclaude:recover`) or **Not now**. In hard-stop mode, stop after the
+`sweetclaude:library-load recover`) or **Not now**. In hard-stop mode, stop after the
 choice resolves; do not run normal skills until recovery completes.
 
 **`migration-may-be-needed`** — flat v3 `BL-*.md` items with no recovery
 state. Tell the user: "Old-format work items were found. Run
-`/sweetclaude:migrate` to review the migration — it runs its own preflight
+`/sweetclaude:configure migrate` to review the migration — it runs its own preflight
 and safety steps." Stop (hard-stop mode only fires here).
 
 **`supported-migration-available`** — a typed legacy backlog layout that can
 now be migrated. Tell the user: "This project has a typed legacy backlog
-layout. Run `/sweetclaude:migrate` to migrate to the unified ISSUE-NNN
+layout. Run `/sweetclaude:configure migrate` to migrate to the unified ISSUE-NNN
 taxonomy — it handles typed backlog folders (stories/, bugs/, debt/, chores/)
 and creates a rollback snapshot before writing anything." Stop in hard-stop
 mode; in advisory mode offer migration or continue.
 
 **`compatibility-mode`** — legacy taxonomy layout that can be migrated.
 Print one line: "This project is in compatibility mode. Run
-`/sweetclaude:migrate` to convert to v4 layout, or `/sweetclaude:recover`
+`/sweetclaude:configure migrate` to convert to v4 layout, or `/sweetclaude:configure recover`
 to check graduation eligibility." In advisory mode continue the session.
 
 **`manual-review`** — the guard cannot classify the project safely. Print the
-guard `message`, then: "Run `/sweetclaude:doctor` for a full diagnostic scan —
+guard `message`, then: "Run `/sweetclaude:configure doctor` for a full diagnostic scan —
 it can characterize states the guard cannot." Stop in hard-stop mode.
 
 **`missing-product-base`** — `artifact-privacy.yaml` points at a product
 directory that does not exist. Print the configured path from the guard
 payload and: "Fix the `base_path` in `.sweetclaude/artifact-privacy.yaml` or
-restore the directory, then restart. `/sweetclaude:doctor` can diagnose
+restore the directory, then restart. `/sweetclaude:configure doctor` can diagnose
 this." Stop in hard-stop mode.
 
 **`guard-unavailable`** — the guard script is missing from the install. Print:
 "Recovery guard unavailable — the install is incomplete. Run
-`/sweetclaude:update` to repair it, then restart." Stop in hard-stop mode.
+`/sweetclaude:configure update` to repair it, then restart." Stop in hard-stop mode.
 
 **`ok`** — nothing to do; continue to Step 5c.
 
-Recommend `/sweetclaude:migrate` for statuses `migration-may-be-needed`,
+Recommend `/sweetclaude:configure migrate` for statuses `migration-may-be-needed`,
 `supported-migration-available`, and `compatibility-mode`.
 
 ## Step 5c: Artifact-format drift check (hard demand)
@@ -378,16 +376,16 @@ If `DRIFT_COUNT > 0`: the binary prompt depends on `CASE`.
 > "{DRIFT_COUNT} SweetClaude state file(s) in this project need migration before SweetClaude can continue. Would you like to do this now?"
 >
 > Options:
-> - **Migrate now** — invoke `sweetclaude:_migrate` to bring artifacts up to current.
-> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
+> - **Migrate now** — invoke `sweetclaude:library-load _migrate` to bring artifacts up to current.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:library-load purge`.
 
 **Case B (CASE=B — at least one chain broken, out of 3-major support window):** present via **AskUserQuestion** (single-select):
 
 > "This project's SweetClaude state files are too old for automatic migration (out of framework support window). How would you like to proceed?"
 >
 > Options:
-> - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:init` against a fresh state. Your old files stay as reference; init does not auto-import them.
-> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:purge`.
+> - **Re-onboard from scratch** — archive existing SweetClaude content and run `/sweetclaude:configure init` against a fresh state. Your old files stay as reference; init does not auto-import them.
+> - **Remove SweetClaude from this project (re-onboarding required to reactivate)** — invoke `sweetclaude:library-load purge`.
 
 ### Re-onboarding flow (Case B → Re-onboard from scratch)
 
@@ -405,7 +403,7 @@ echo "Archived existing SweetClaude content to $LEGACY/ — init will use it as 
 and reports `legacy_path`; the archive helper then relocates the artifact bases
 (e.g. `docs/product`) under that same path.
 
-Then invoke `sweetclaude:init`. Init runs against the now-empty project and
+Then invoke `sweetclaude:library-load init`. Init runs against the now-empty project and
 re-onboards the existing source. The legacy tree at
 `.sweetclaude.legacy/<timestamp>/` is visible to the user during onboarding so
 they can manually port content as needed; init does not auto-import it.
@@ -428,20 +426,17 @@ print(', '.join(drift) if drift else 'configuration drift detected')
 "
 ```
 > "I found some drift: [drift list]. Fix it now? (Yes / No)"
-- Yes → invoke `sweetclaude:fix-sweetclaude`. Stop.
+- Yes → invoke `sweetclaude:library-load fix-sweetclaude`. Stop.
 - No → continue.
 
 Read `framework.update.available`, `framework.update.declined`, and `framework.installed_version` from pre-loaded state. Apply the version-aware decline rule (Gap #1 #8, locked in `scratch/v3-upgrade-assessment-2026-05-11/DECISIONS.md`):
 
 - `available` is null → no offer.
 - `available` is a prerelease (`-beta`/`-rc`/`-alpha`) while the installed version is not → no offer, ever (ISSUE-248: stable installs are never prompted with prerelease versions, regardless of what an older hook wrote to state).
-- `available` is non-null:
-  - Compute `is_major_bump = major(available) > major(installed_version)`.
-  - If `is_major_bump` is true → **always prompt**, regardless of `declined`.
-  - Else (minor/patch within installed major):
-    - `declined` is null/missing/false → prompt.
-    - `declined` is the boolean `true` (legacy) → treat as if user declined the installed major (silence until next major).
-    - `declined` is a version string → prompt only if `major(available) > major(declined)`. Otherwise silent.
+- `available` is non-null (minor, patch, or major bump):
+  - `declined` is null/missing/false → prompt.
+  - `declined` is the boolean `true` (legacy) → treat as if user declined the installed major (silence until next major).
+  - `declined` is a version string → prompt only if `major(available) > major(declined)`. Otherwise silent. A decline silences every later release in its own major: installed 4.5.3 with `declined: 5.0.0` stays silent for 5.0.0 and 5.1.0, and prompts again for 6.0.0. An undeclined major bump always prompts.
 
 ```bash
 python3 - .sweetclaude/state/sweetclaude.yaml << 'PY'
@@ -471,29 +466,27 @@ if is_prerelease(available) and not is_prerelease(installed):
 inst_maj, avail_maj = major(installed), major(available)
 if inst_maj is None or avail_maj is None:
     print("DECISION=prompt"); sys.exit()
-if avail_maj > inst_maj:
-    print("DECISION=prompt"); sys.exit()
 if declined in (None, False):
     print("DECISION=prompt"); sys.exit()
 declined_maj = inst_maj if declined is True else major(str(declined))
 if declined_maj is None or avail_maj > declined_maj:
     print("DECISION=prompt"); sys.exit()
-# Silenced by decline. Emit the installed major so the caller can compose
+# Silenced by decline. Emit the silenced major so the caller can compose
 # the user-facing message ("all 3.x.x updates will be skipped").
-print(f"DECISION=silent_declined|{inst_maj}")
+print(f"DECISION=silent_declined|{max(inst_maj, avail_maj)}")
 PY
 ```
 
 - **DECISION=silent** → no update available; continue silently past this section.
-- **DECISION=silent_declined|<major>** → user previously declined a minor in this major. Surface a brief informational message so the user is not silently kept in the dark, then continue past this section. The message MUST use the major from the decision output (parameterized — it is not always `3`):
+- **DECISION=silent_declined|<major>** → user previously declined an update in this major. Surface a brief informational message so the user is not silently kept in the dark, then continue past this section. The message MUST use the major from the decision output (parameterized — it is not always `3`):
 
-  > "Minor updates were previously declined by the user, so all <major>.x.x updates will be skipped. Run `/sweetclaude:update` to manually update at any time."
+  > "Updates were previously declined by the user, so all <major>.x.x updates will be skipped. Run `/sweetclaude:configure update` to manually update at any time."
 
   Show this message ONCE per session, then continue to Step 7. Do not pause for input — the user is being informed, not prompted.
 
 - **DECISION=prompt** → present:
   > "SweetClaude [available] is out. Update now? (Yes / Not now)"
-  - Yes → invoke `sweetclaude:update`. Stop.
+  - Yes → invoke `sweetclaude:library-load update`. Stop.
   - Not now → write `declined: <available>` (the specific version declined), continue:
 
 ```bash
@@ -526,7 +519,7 @@ If the marker exists, present a prompt based on the trigger type via AskUserQues
 - **Unknown/other** (`TRIGGER=unknown` or any other value): "Want to run a quick checkup?"
 
 Options:
-- **Yes** — invoke `sweetclaude:doctor`, then remove the marker file
+- **Yes** — invoke `sweetclaude:library-load doctor`, then remove the marker file
 - **Not now** — remove the marker file (session-scoped suppression; the health-check hook rewrites it next session if the condition still holds)
 
 Remove the marker regardless of choice:

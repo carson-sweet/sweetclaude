@@ -5,7 +5,7 @@
 ## Recovery
 
 **Symptom:** Claude Code returns `{"ok": false}` on Write or Edit operations.
-Run `/sweetclaude:hook-repair` to diagnose and restore.
+Run `/sweetclaude:configure hook-repair` to diagnose and restore.
 
 When an installed hook has a syntax error or logic bug, Write and Edit
 operations are blocked — the broken hook returns `{"ok": false}` for
@@ -25,7 +25,7 @@ scenario all three are either inactive or transparent.
 
 If the hook-repair skill is available:
 
-    /sweetclaude:hook-repair
+    /sweetclaude:configure hook-repair
 
 The skill diagnoses broken hooks, offers to restore from `hooks.bak/`,
 and verifies the restoration.
@@ -122,5 +122,5 @@ letting the workflow run unprotected.
 ## What to Read Next
 
 - [How It Works](how-it-works.md) — hook architecture and the Write|Edit matcher
-- [Skills Reference](skills-reference.md) — full list of available skills including `/sweetclaude:hook-repair`
+- [Skills Reference](skills-reference.md) — full list of available skills including `/sweetclaude:configure hook-repair`
 - [TDD](tdd.md) — the testing discipline that keeps hooks correct before they are synced

@@ -37,7 +37,7 @@ EFFORT_ROOT = Path(".sweetclaude") / "efforts" / "ms-007-failure-mode-controls"
 
 def _write_release_project(project_dir: Path, version: str) -> None:
     (project_dir / ".claude-plugin").mkdir(parents=True, exist_ok=True)
-    (project_dir / "skills" / "recover").mkdir(parents=True, exist_ok=True)
+    (project_dir / "skill-library" / "configure" / "recover").mkdir(parents=True, exist_ok=True)
     (project_dir / "config").mkdir(parents=True, exist_ok=True)
     (project_dir / "hooks").mkdir(parents=True, exist_ok=True)
     (project_dir / "dist").mkdir(parents=True, exist_ok=True)
@@ -49,8 +49,8 @@ def _write_release_project(project_dir: Path, version: str) -> None:
         json.dumps({"name": "sweetclaude", "version": version}, indent=2) + "\n",
         encoding="utf-8",
     )
-    (project_dir / "skills" / "recover" / "SKILL.md").write_text(
-        "Invoke /sweetclaude:recover for recovery.\n",
+    (project_dir / "skill-library" / "configure" / "recover" / "SKILL.md").write_text(
+        "Invoke /sweetclaude:configure recover for recovery.\n",
         encoding="utf-8",
     )
     (project_dir / "config" / "capability-manifest.yaml").write_text(
@@ -73,7 +73,7 @@ def _write_release_project(project_dir: Path, version: str) -> None:
         "artifact\n",
         encoding="utf-8",
     )
-    (project_dir / "dist" / "sweetclaude-4.99.0.tgz").write_text(
+    (project_dir / "dist" / "sweetclaude-5.99.0.tgz").write_text(
         "stable artifact\n",
         encoding="utf-8",
     )
@@ -251,7 +251,7 @@ def _write_release_identity_receipt(
         tag=tag,
     )
     channel_defaults = {
-        "stable": ("v4.99.0", project_dir / "dist" / "sweetclaude-4.99.0.tgz"),
+        "stable": ("v5.99.0", project_dir / "dist" / "sweetclaude-5.99.0.tgz"),
         "legacy": ("v3.99.0", project_dir / "dist" / "sweetclaude-3.99.0.tgz"),
     }
     update_discovery: dict[str, dict] = {}
@@ -327,7 +327,7 @@ def _write_public_distribution_receipt(project_dir: Path) -> Path:
         installed_user_file_access=[".sweetclaude/", ".claude/"],
         network_access=["git remote tag/update discovery"],
         hooks=["hooks/session-preflight.sh"],
-        project_mutation_commands=["/sweetclaude:migrate", "/sweetclaude:recover"],
+        project_mutation_commands=["/sweetclaude:configure migrate", "/sweetclaude:configure recover"],
         provider_bound_data=["Claude Code prompt and local project context"],
         auth_assumptions=["Claude Code local user approval gates mutating commands"],
         secrets_handling="does not require or persist provider secrets",
@@ -354,10 +354,10 @@ def _write_public_distribution_inventory_receipt(
         manifest_capabilities=["slash-commands", "hooks"],
         installed_plugin_files=[
             ".claude-plugin/plugin.json",
-            "skills/recover/SKILL.md",
+            "skill-library/configure/recover/SKILL.md",
         ],
         hook_files=["hooks/session-preflight.sh"],
-        mutation_commands=["/sweetclaude:migrate", "/sweetclaude:recover"],
+        mutation_commands=["/sweetclaude:configure migrate", "/sweetclaude:configure recover"],
         network_commands=["git ls-remote --tags origin"],
         generated_from=["config/capability-manifest.yaml", ".claude-plugin/plugin.json"],
         capability_manifest_path="config/capability-manifest.yaml",
@@ -371,8 +371,8 @@ def _write_public_distribution_inventory_receipt(
                 "sha256": hash_file(project_dir / ".claude-plugin" / "plugin.json"),
             },
             {
-                "path": "skills/recover/SKILL.md",
-                "sha256": hash_file(project_dir / "skills" / "recover" / "SKILL.md"),
+                "path": "skill-library/configure/recover/SKILL.md",
+                "sha256": hash_file(project_dir / "skill-library" / "configure" / "recover" / "SKILL.md"),
             },
             {
                 "path": "hooks/session-preflight.sh",
@@ -396,23 +396,23 @@ def _write_docs_capability_receipt(project_dir: Path, *, branch: str, commit: st
         repo_root=str(project_dir),
         branch=branch,
         commit=commit,
-        installed_entrypoint="/sweetclaude:recover",
+        installed_entrypoint="/sweetclaude:configure recover",
         installed_path=str(project_dir),
         plugin_identity="sweetclaude",
         installed_manifest_path=str(project_dir / ".claude-plugin" / "plugin.json"),
         installed_manifest_sha256=hash_file(project_dir / ".claude-plugin" / "plugin.json"),
-        command="claude /sweetclaude:recover --help",
+        command="claude /sweetclaude:configure recover --help",
         run_at="2026-05-26T12:00:00Z",
         exit_code=0,
         stdout_path=str(smoke_output),
         stdout_sha256=hash_file(smoke_output),
         stderr_path=str(stderr),
         stderr_sha256=hash_file(stderr),
-        entrypoint_lookup_result="/sweetclaude:recover found in installed plugin",
+        entrypoint_lookup_result="/sweetclaude:configure recover found in installed plugin",
         entrypoint_source_paths=[
             {
-                "path": str(project_dir / "skills" / "recover" / "SKILL.md"),
-                "sha256": hash_file(project_dir / "skills" / "recover" / "SKILL.md"),
+                "path": str(project_dir / "skill-library" / "configure" / "recover" / "SKILL.md"),
+                "sha256": hash_file(project_dir / "skill-library" / "configure" / "recover" / "SKILL.md"),
             }
         ],
         release_artifact_path=str(artifact),
@@ -426,12 +426,12 @@ def _write_docs_capability_receipt(project_dir: Path, *, branch: str, commit: st
         commit=commit,
         claims=[
             {
-                "claim": "/sweetclaude:recover repairs project state",
+                "claim": "/sweetclaude:configure repairs project state",
                 "status": "proven",
-                "installed_entrypoint": "/sweetclaude:recover",
+                "installed_entrypoint": "/sweetclaude:configure recover",
                 "installed_path": str(project_dir),
                 "plugin_identity": "sweetclaude",
-                "smoke_command": "claude /sweetclaude:recover --help",
+                "smoke_command": "claude /sweetclaude:configure recover --help",
                 "run_at": "2026-05-26T12:00:00Z",
                 "last_run_result": "pass",
                 "exit_code": 0,
@@ -545,15 +545,15 @@ def _init_release_git_state(
 
 
 def test_stable_release_readiness_accepts_valid_receipt_and_metadata(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
-    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
 
     result = check_release_readiness(
         tmp_path,
-        tag="v4.6.0",
+        tag="v5.0.0",
         channel="stable",
         branch="main",
         receipt_path=receipt,
@@ -561,26 +561,26 @@ def test_stable_release_readiness_accepts_valid_receipt_and_metadata(tmp_path):
     )
 
     assert result["ok"] is True
-    assert result["version"] == "4.6.0"
+    assert result["version"] == "5.0.0"
     assert result["git"]["checked"] is True
     assert result["checks"] == sorted(REQUIRED_CHECKS)
 
 
 def test_release_readiness_accepts_matching_git_branch_upstream_and_tag(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     commit = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(
         tmp_path,
-        "v4.6.0",
+        "v5.0.0",
         commit=commit,
     )
 
     result = check_release_readiness(
         tmp_path,
-        tag="v4.6.0",
+        tag="v5.0.0",
         channel="stable",
         branch="main",
         receipt_path=receipt,
@@ -591,26 +591,26 @@ def test_release_readiness_accepts_matching_git_branch_upstream_and_tag(tmp_path
     assert result["git"]["checked"] is True
     assert result["git"]["branch"] == "main"
     assert result["git"]["upstream"] == "origin/main"
-    assert "v4.6.0" in result["git"]["head_tags"]
+    assert "v5.0.0" in result["git"]["head_tags"]
 
 
 @pytest.mark.parametrize("actual_branch", ["beta-4.x", "evidence-gates-beta"])
 def test_release_readiness_rejects_wrong_actual_git_branch(tmp_path, actual_branch):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch=actual_branch, tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch=actual_branch, tag="v5.0.0")
     commit = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(
         tmp_path,
-        "v4.6.0",
+        "v5.0.0",
         commit=commit,
     )
 
     with pytest.raises(ValueError, match="branch mismatch"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -619,26 +619,26 @@ def test_release_readiness_rejects_wrong_actual_git_branch(tmp_path, actual_bran
 
 
 def test_release_readiness_rejects_wrong_git_upstream(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
     _init_release_git_state(
         tmp_path,
         branch="main",
-        tag="v4.6.0",
+        tag="v5.0.0",
         upstream="origin/evidence-gates-beta",
     )
     commit = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(
         tmp_path,
-        "v4.6.0",
+        "v5.0.0",
         commit=commit,
     )
 
     with pytest.raises(ValueError, match="upstream mismatch"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -647,21 +647,21 @@ def test_release_readiness_rejects_wrong_git_upstream(tmp_path):
 
 
 def test_release_readiness_rejects_missing_head_tag(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
     _init_release_git_state(tmp_path, branch="main")
     commit = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(
         tmp_path,
-        "v4.6.0",
+        "v5.0.0",
         commit=commit,
     )
 
     with pytest.raises(ValueError, match="must point at HEAD"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -698,17 +698,17 @@ def test_retired_beta_channel_refuses_release(tmp_path):
 
 
 def test_release_readiness_rejects_metadata_drift(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     (tmp_path / ".claude-plugin" / "plugin.json").write_text(
         json.dumps({"name": "sweetclaude", "version": "4.5.9"}) + "\n",
         encoding="utf-8",
     )
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
 
     with pytest.raises(ValueError, match="plugin.json version mismatch"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -716,20 +716,20 @@ def test_release_readiness_rejects_metadata_drift(tmp_path):
 
 
 def test_release_readiness_rejects_missing_required_receipt_checks(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     receipt = _write_release_receipt(
         tmp_path,
-        "v4.6.0",
+        "v5.0.0",
         checks=["tests", "channel-isolation"],
     )
-    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v4.6.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
 
     with pytest.raises(ValueError, match="missing required checks"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -738,38 +738,38 @@ def test_release_readiness_rejects_missing_required_receipt_checks(tmp_path):
 
 
 def test_release_readiness_rejects_undefined_control_in_active_artifacts(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path, implementation_text="Controls: CTL-999\n")
 
     with pytest.raises(ValueError, match="undefined control.*CTL-999"):
         _write_control_lint_receipt(
             tmp_path,
-            "v4.6.0",
+            "v5.0.0",
         )
 
 
 def test_release_readiness_rejects_control_range_in_active_artifacts(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     bad_range = "T-001 " + "thr" + "ough T-002"
     _write_ms007_control_artifacts(tmp_path, implementation_text=f"Fixtures: {bad_range}\n")
 
     with pytest.raises(ValueError, match="numeric range"):
         _write_control_lint_receipt(
             tmp_path,
-            "v4.6.0",
+            "v5.0.0",
         )
 
 
 def test_stable_release_readiness_fails_closed_without_control_lint_receipt(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
 
     with pytest.raises(ValueError, match="control-lint receipt is required"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -777,20 +777,20 @@ def test_stable_release_readiness_fails_closed_without_control_lint_receipt(tmp_
 
 
 def test_release_readiness_rejects_stale_control_lint_receipt_commit(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(
         tmp_path,
-        "v4.6.0",
+        "v5.0.0",
         commit="old",
     )
 
     with pytest.raises(ValueError, match="commit mismatch"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -800,11 +800,11 @@ def test_release_readiness_rejects_stale_control_lint_receipt_commit(tmp_path):
 
 
 def test_release_readiness_rejects_dirty_control_lint_artifact(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
-    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
     (
         tmp_path
         / EFFORT_ROOT
@@ -815,7 +815,7 @@ def test_release_readiness_rejects_dirty_control_lint_artifact(tmp_path):
     with pytest.raises(ValueError, match="tracked modifications"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -824,11 +824,11 @@ def test_release_readiness_rejects_dirty_control_lint_artifact(tmp_path):
 
 
 def test_release_readiness_rejects_untracked_package_input(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
-    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
     (tmp_path / "scripts").mkdir(exist_ok=True)
     (tmp_path / "scripts" / "untracked-release-input.sh").write_text(
         "#!/bin/sh\nexit 0\n",
@@ -838,7 +838,7 @@ def test_release_readiness_rejects_untracked_package_input(tmp_path):
     with pytest.raises(ValueError, match="untracked package inputs"):
         check_release_readiness(
             tmp_path,
-            tag="v4.6.0",
+            tag="v5.0.0",
             channel="stable",
             branch="main",
             receipt_path=receipt,
@@ -847,15 +847,15 @@ def test_release_readiness_rejects_untracked_package_input(tmp_path):
 
 
 def test_release_readiness_accepts_valid_control_lint_receipt(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
-    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
 
     result = check_release_readiness(
         tmp_path,
-        tag="v4.6.0",
+        tag="v5.0.0",
         channel="stable",
         branch="main",
         receipt_path=receipt,
@@ -867,11 +867,11 @@ def test_release_readiness_accepts_valid_control_lint_receipt(tmp_path):
 
 
 def test_release_gate_cli_returns_json_success(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
-    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
 
     completed = subprocess.run(
         [
@@ -881,7 +881,7 @@ def test_release_gate_cli_returns_json_success(tmp_path):
             "--project-dir",
             str(tmp_path),
             "--tag",
-            "v4.6.0",
+            "v5.0.0",
             "--channel",
             "stable",
             "--branch",
@@ -901,14 +901,14 @@ def test_release_gate_cli_returns_json_success(tmp_path):
 
 
 def test_release_gate_cli_validates_actual_git_branch(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
-    _init_release_git_state(tmp_path, branch="evidence-gates-beta", tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch="evidence-gates-beta", tag="v5.0.0")
     commit = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
-    receipt = _write_release_receipt(tmp_path, "v4.6.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(
         tmp_path,
-        "v4.6.0",
+        "v5.0.0",
         commit=commit,
     )
 
@@ -920,7 +920,7 @@ def test_release_gate_cli_validates_actual_git_branch(tmp_path):
             "--project-dir",
             str(tmp_path),
             "--tag",
-            "v4.6.0",
+            "v5.0.0",
             "--channel",
             "stable",
             "--branch",
@@ -942,8 +942,8 @@ def test_release_gate_cli_validates_actual_git_branch(tmp_path):
 
 
 def test_release_gate_cli_fails_closed_without_receipt(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
 
     completed = subprocess.run(
         [
@@ -953,7 +953,7 @@ def test_release_gate_cli_fails_closed_without_receipt(tmp_path):
             "--project-dir",
             str(tmp_path),
             "--tag",
-            "v4.6.0",
+            "v5.0.0",
             "--channel",
             "stable",
             "--branch",
@@ -973,14 +973,14 @@ def test_release_gate_cli_fails_closed_without_receipt(tmp_path):
 
 
 def test_release_gate_generate_evidence_cli_writes_usable_stable_packet(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
     (tmp_path / "config" / "capability-manifest.yaml").write_text(
         (ROOT / "config" / "capability-manifest.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
-    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
 
     completed = subprocess.run(
         [
@@ -990,7 +990,7 @@ def test_release_gate_generate_evidence_cli_writes_usable_stable_packet(tmp_path
             "--project-dir",
             str(tmp_path),
             "--tag",
-            "v4.6.0",
+            "v5.0.0",
             "--channel",
             "stable",
             "--branch",
@@ -1016,7 +1016,7 @@ def test_release_gate_generate_evidence_cli_writes_usable_stable_packet(tmp_path
 
     result = check_release_readiness(
         tmp_path,
-        tag="v4.6.0",
+        tag="v5.0.0",
         channel="stable",
         branch="main",
         receipt_path=release_receipt,
@@ -1027,7 +1027,7 @@ def test_release_gate_generate_evidence_cli_writes_usable_stable_packet(tmp_path
 
 
 def test_release_gate_generate_evidence_derives_distribution_inventory_from_disk(tmp_path):
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
     (tmp_path / "config" / "capability-manifest.yaml").write_text(
         (ROOT / "config" / "capability-manifest.yaml").read_text(encoding="utf-8"),
@@ -1035,7 +1035,7 @@ def test_release_gate_generate_evidence_derives_distribution_inventory_from_disk
     )
     extra_hook = tmp_path / "hooks" / "extra-release-hook.sh"
     extra_hook.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
 
     completed = subprocess.run(
         [
@@ -1045,7 +1045,7 @@ def test_release_gate_generate_evidence_derives_distribution_inventory_from_disk
             "--project-dir",
             str(tmp_path),
             "--tag",
-            "v4.6.0",
+            "v5.0.0",
             "--channel",
             "stable",
             "--branch",
@@ -1067,7 +1067,7 @@ def test_release_gate_generate_evidence_derives_distribution_inventory_from_disk
     }
 
     assert ".claude-plugin/plugin.json" in inventory["installed_plugin_files"]
-    assert "skills/recover/SKILL.md" in inventory["installed_plugin_files"]
+    assert "skill-library/configure/recover/SKILL.md" in inventory["installed_plugin_files"]
     assert "hooks/session-preflight.sh" in inventory["hook_files"]
     assert "hooks/extra-release-hook.sh" in inventory["hook_files"]
     assert input_hashes["hooks/extra-release-hook.sh"] == hash_file(extra_hook)
@@ -1077,14 +1077,14 @@ def test_generate_evidence_resolves_recover_skill_at_canonical_root_layout(tmp_p
     """Regression (ISSUE-203): the gate only ever modeled the fabricated
     .claude-plugin/skills/ layout. In the canonical layout skills live at root
     skills/, and generate-evidence (default installed-path) must still resolve
-    the /sweetclaude:recover entrypoint and inventory the skill from root."""
-    _write_release_project(tmp_path, "4.6.0")
+    the /sweetclaude:configure entrypoint and inventory the skill from root."""
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
     (tmp_path / "config" / "capability-manifest.yaml").write_text(
         (ROOT / "config" / "capability-manifest.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
 
     completed = subprocess.run(
         [
@@ -1094,7 +1094,7 @@ def test_generate_evidence_resolves_recover_skill_at_canonical_root_layout(tmp_p
             "--project-dir",
             str(tmp_path),
             "--tag",
-            "v4.6.0",
+            "v5.0.0",
             "--channel",
             "stable",
             "--branch",
@@ -1112,21 +1112,21 @@ def test_generate_evidence_resolves_recover_skill_at_canonical_root_layout(tmp_p
     public_receipt = Path(generated["public_distribution_receipt"])
     inventory_path = Path(json.loads(public_receipt.read_text(encoding="utf-8"))["inventory_receipt_path"])
     inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
-    assert "skills/recover/SKILL.md" in inventory["installed_plugin_files"]
-    assert ".claude-plugin/skills/recover/SKILL.md" not in inventory["installed_plugin_files"]
+    assert "skill-library/configure/recover/SKILL.md" in inventory["installed_plugin_files"]
+    assert ".claude-plugin/skill-library/configure/recover/SKILL.md" not in inventory["installed_plugin_files"]
 
 
 def test_generate_evidence_emits_control_lint_receipt_for_stable(tmp_path):
     """ISSUE-203: beta `check` requires a control-lint receipt, and nothing
     generated it. generate-evidence must now emit it (from config/controls-map.md)
     so `check` passes for beta WITHOUT an explicitly supplied receipt."""
-    _write_release_project(tmp_path, "4.6.0")
+    _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
     (tmp_path / "config" / "capability-manifest.yaml").write_text(
         (ROOT / "config" / "capability-manifest.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
-    _init_release_git_state(tmp_path, branch="main", tag="v4.6.0")
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
 
     completed = subprocess.run(
         [
@@ -1136,7 +1136,7 @@ def test_generate_evidence_emits_control_lint_receipt_for_stable(tmp_path):
             "--project-dir",
             str(tmp_path),
             "--tag",
-            "v4.6.0",
+            "v5.0.0",
             "--channel",
             "stable",
             "--branch",
@@ -1152,7 +1152,7 @@ def test_generate_evidence_emits_control_lint_receipt_for_stable(tmp_path):
     # No explicit control-lint receipt: must use the one generate-evidence emitted.
     result = check_release_readiness(
         tmp_path,
-        tag="v4.6.0",
+        tag="v5.0.0",
         channel="stable",
         branch="main",
         receipt_path=release_receipt,
@@ -1177,12 +1177,12 @@ def test_distribution_roots_cover_every_present_load_dir_in_real_repo():
 
 
 def test_recover_entrypoint_is_findable_in_real_repo_distribution_surface():
-    """Re-rot guard (ISSUE-203): the /sweetclaude:recover entrypoint the gate
+    """Re-rot guard (ISSUE-203): the /sweetclaude:configure entrypoint the gate
     proves must actually be discoverable under the gate's distribution roots in
     the real repo — not just in a fixture."""
     from control_receipts import PLUGIN_DISTRIBUTION_ROOTS
 
-    entrypoint = "/sweetclaude:recover"
+    entrypoint = "/sweetclaude:configure recover"
     found = False
     for root_name in PLUGIN_DISTRIBUTION_ROOTS:
         root = ROOT / root_name
@@ -1403,23 +1403,23 @@ def test_validate_issue_closeout_error_lists_all_unclosed(tmp_path):
 
 
 def test_release_readiness_fails_on_unclosed_issues(tmp_path):
-    _write_release_project(tmp_path, "4.2.1")
+    _write_release_project(tmp_path, "5.2.1")
     _write_ms007_control_artifacts(tmp_path)
     _init_release_git_state(tmp_path, branch="main")
-    _git(tmp_path, "tag", "v4.2.0")
+    _git(tmp_path, "tag", "v5.2.0")
     _write_backlog_issue(tmp_path, "ISSUE-100", status="new")
     (tmp_path / "fix.txt").write_text("fix\n", encoding="utf-8")
     _git(tmp_path, "add", ".")
     _git(tmp_path, "commit", "-m", "fix: thing (ISSUE-100)")
-    _git(tmp_path, "tag", "v4.2.1")
+    _git(tmp_path, "tag", "v5.2.1")
     _git(tmp_path, "update-ref", "refs/remotes/origin/main", "HEAD")
-    receipt = _write_release_receipt(tmp_path, "v4.2.1")
-    control_lint = _write_control_lint_receipt(tmp_path, "v4.2.1")
+    receipt = _write_release_receipt(tmp_path, "v5.2.1")
+    control_lint = _write_control_lint_receipt(tmp_path, "v5.2.1")
 
     with pytest.raises(ValueError, match="ISSUE-100"):
         check_release_readiness(
             tmp_path,
-            tag="v4.2.1",
+            tag="v5.2.1",
             channel="stable",
             branch="main",
             receipt_path=receipt,

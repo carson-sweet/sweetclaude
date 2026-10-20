@@ -11,7 +11,7 @@ Subcommands:
     preflight       Resolve plugin install state and clear decline if needed
     check           Clone latest from GitHub and compare to installed version
     safety-check    Identify removed skills with live project artifacts
-    major-gate      Detect v3 → v4 major version boundary
+    major-gate      Detect v3 → v4 and v4 → v5 major version boundaries
     sync            Copy source to all installed locations
     metadata        Update installed_plugins.json and project version
     project-check   Scan project for drift, orphans, legacy taxonomy
@@ -112,7 +112,7 @@ def beta_stable_migration_notice(*, channel, installed_version, stable_tags):
         "  /plugin install sweetclaude@sweetclaude-stable\n"
         "  /plugin marketplace remove sweetclaude-beta\n\n"
         "(Removing the beta marketplace uninstalls its plugin, so add and "
-        "install stable first.) Then run /sweetclaude:update on the stable "
+        "install stable first.) Then run /sweetclaude:configure update on the stable "
         "channel; your project data migrates normally."
     )
 
@@ -414,12 +414,19 @@ def cmd_safety_check(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 def cmd_major_gate(args: argparse.Namespace) -> int:
-    """Detect whether a v3 → v4 major version boundary applies."""
+    """Detect whether the v3 → v4 or v4 → v5 major version boundary applies."""
     current = _major_version(args.installed_version)
     incoming = _major_version(args.incoming_version)
+    if current == 3 and incoming >= 4:
+        gate = "v3-to-v4"
+    elif current == 4 and incoming >= 5:
+        gate = "v4-to-v5"
+    else:
+        gate = None
     _json_out({
         "ok": True,
-        "gate_applies": current == 3 and incoming >= 4,
+        "gate_applies": gate is not None,
+        "gate": gate,
         "current_major": current,
         "incoming_major": incoming,
     })

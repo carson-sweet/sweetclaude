@@ -52,7 +52,7 @@ def plan_re_adopt(project_dir: str | Path) -> dict[str, Any]:
         "no_data_loss": True,
         "reversible": True,
         "next_step": (
-            "After archiving, re-onboard: run /sweetclaude:init (or /sweetclaude:go "
+            "After archiving, re-onboard: run /sweetclaude:configure init (or /sweetclaude:go "
             "and describe the project) to adopt the existing project. The archived "
             "state remains at the legacy path for manual reference/port."
         ),
@@ -79,7 +79,7 @@ def execute_re_adopt(project_dir: str | Path) -> dict[str, Any]:
         "archived": str(dest),
         "reversible": True,
         "next_step": (
-            "Re-onboard with /sweetclaude:init (or /sweetclaude:go). Existing "
+            "Re-onboard with /sweetclaude:configure init (or /sweetclaude:go). Existing "
             "source and relocated artifacts are untouched. Archived state is at "
             f"{legacy_root}."
         ),
@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
     callers can detect it."""
     parser = argparse.ArgumentParser(
         description="Re-adopt: archive .sweetclaude/ aside (reversible) and "
-        "re-onboard via sweetclaude:init.")
+        "re-onboard via sweetclaude:library-load init.")
     subparsers = parser.add_subparsers(dest="command")
 
     plan_parser = subparsers.add_parser(

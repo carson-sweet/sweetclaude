@@ -1,6 +1,6 @@
 # Installing SweetClaude
 
-SweetClaude 4.x is the stable channel, tracked on `main`.
+SweetClaude 5.x is the stable channel, tracked on `main`.
 
 ## Marketplace Install
 
@@ -17,9 +17,10 @@ Restart Claude Code after install. Then run:
 /sweetclaude:help
 ```
 
-**Upgrading from 3.x:** The stable channel moved from `stable-3.x` to the 4.x
-line on `main`. To switch a 3.x install, re-add the stable marketplace and
-reinstall as above, then run `/sweetclaude:update` inside each project to
+**Upgrading from 4.x:** Run `/sweetclaude:configure update`. See [Upgrading to 5.0](upgrading-to-5.md) for the new command names.
+
+**Upgrading from 3.x:** The stable channel moved from `stable-3.x` to `main`. To switch a 3.x install, re-add the stable marketplace and
+reinstall as above, then run `/sweetclaude:configure update` inside each project to
 migrate your data.
 
 **The beta channel is retired.** It no longer receives updates and cannot be
@@ -33,7 +34,7 @@ double-installed:
 /plugin marketplace remove sweetclaude-beta
 ```
 
-Then restart Claude Code and run `/sweetclaude:update`; your project data
+Then restart Claude Code and run `/sweetclaude:configure update`; your project data
 migrates normally. If a former beta project is stuck from a prior update,
 doctor, migrate, or repair flow, follow
 [SweetClaude 4.x Beta Rescue](beta-rescue.md).
@@ -57,15 +58,15 @@ Restart Claude Code after plugin update. Then run this inside each SweetClaude
 project:
 
 ```text
-/sweetclaude:update
+/sweetclaude:configure update
 ```
 
-`/sweetclaude:update` syncs framework files and reports project drift. It does
+`/sweetclaude:configure update` syncs framework files and reports project drift. It does
 not run project-state migrations or taxonomy migrations inline. For project
 repair or migration prompts, run:
 
 ```text
-/sweetclaude:doctor
+/sweetclaude:configure doctor
 ```
 
 ## Optional Integrations
@@ -116,7 +117,7 @@ Add it to Claude Code's MCP settings:
 
 Restart Claude Code. Without RAG installed, the corpus pipeline still works
 through Promote; you can add semantic search later and run
-`/sweetclaude:document-corpus reindex`.
+`/sweetclaude:utils document-corpus reindex`.
 
 ## Uninstalling Or Suspending
 

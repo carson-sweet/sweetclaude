@@ -22,7 +22,7 @@ Before doing ANY work, verify SweetClaude is correctly set up. Run this check th
 If `.sweetclaude/disabled` exists:
 > "SweetClaude is not active for this project. Would you like to activate it?"
 
-If the user says yes, invoke `sweetclaude:setup`. Otherwise stop — do not proceed with any SweetClaude skill or pipeline work.
+If the user says yes, invoke `sweetclaude:library-load setup`. Otherwise stop — do not proceed with any SweetClaude skill or pipeline work.
 
 **Step 1: Check global installation.**
 - `${CLAUDE_PLUGIN_ROOT}/config/phase-skills.yaml` exists
@@ -159,7 +159,7 @@ Follow `${CLAUDE_PLUGIN_ROOT}/rules/interaction-model.md` at all times:
 - Context continuity — track detours, re-orient proactively
 - Dual context windows — manage yours AND the human's
 - Creative partnership — think with, not just for
-- Protocol guardian — if protocol violations are detected or user expresses frustration with skipped steps, offer `/sweetclaude:guardian-on` (see interaction-model.md for full trigger rules)
+- Protocol guardian — if protocol violations are detected or user expresses frustration with skipped steps, offer `/sweetclaude:configure guardian-on` (see interaction-model.md for full trigger rules)
 
 ## Skill Surfacing
 
@@ -171,7 +171,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/config/phase-skills.yaml` to determine which skills 
 - **`code:`** — TDD, implementation, code review
 - **`project:`** — issues, epics, sprints, backlog, roadmap, scope, milestones, mode
 - **`testing:`** — test plans, security reviews, compliance, manual QA sessions, performance, accessibility
-- **`system:`** — on, off, init, adopt, update, fix-sweetclaude, purge, behavioral-regression, guardian, usage, help
+- **`system:`** — on, off, init, adopt, update, fix-sweetclaude, purge, guardian, usage, help
 - **`deploy:`** — shipping (deferred)
 - **`operations:`** — operations skills (something-broke, postmortem, break-glass-notes, sla-error-budget-review, monitoring-alerting, onboarding-playbook)
 
@@ -181,13 +181,13 @@ When the user asks to do something, the `find-skill` skill classifies it into th
 
 When delegating to early-phase skills, set depth expectations:
 
-**For `sweetclaude:product-discovery`:** Invoke for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal discovery directly.
+**For `sweetclaude:library-load product-discovery`:** Invoke for net-new products and apps. The skill runs a structured 3-stage workflow (persona discovery → feature brainstorming → competitive analysis) with user control at every gate. Do not substitute freeform brainstorming for this structured workflow when building a product. For CLIs/libraries, the skill scales down automatically. For utilities/scripts, skip it — handle minimal discovery directly.
 
-**For `sweetclaude:product-brief`:** Present the outline first and get adjustment before writing. Ask about audience and NDA material. Sections scale to available input. Always end with "Additional Development" noting what wasn't covered. Follow the document production system (front matter, versioned naming, paragraph numbering in drafts).
+**For `sweetclaude:library-load product-brief`:** Present the outline first and get adjustment before writing. Ask about audience and NDA material. Sections scale to available input. Always end with "Additional Development" noting what wasn't covered. Follow the document production system (front matter, versioned naming, paragraph numbering in drafts).
 
-**For `sweetclaude:product-research`:** Explain what the skill does and ask if the user wants it before running. Suggest depth based on project type. Document in the effort log if skipped. Output includes an initial competitive seed list that feeds `product-competition`.
+**For `sweetclaude:library-load product-research`:** Explain what the skill does and ask if the user wants it before running. Suggest depth based on project type. Document in the effort log if skipped. Output includes an initial competitive seed list that feeds `product-competition`.
 
-**For `sweetclaude:product-discovery`:** Use depth levels — L1 for intent and boundaries, L2 for problem and success definition, L3 for full pain thesis. Challenge the framing at L2+. Never re-ask what was established at a prior level.
+**For `sweetclaude:library-load product-discovery`:** Use depth levels — L1 for intent and boundaries, L2 for problem and success definition, L3 for full pain thesis. Challenge the framing at L2+. Never re-ask what was established at a prior level.
 
 ## State Directory
 
@@ -214,4 +214,4 @@ SweetClaude internal state always lives in `.sweetclaude/`. Planning artifact pa
                           (e.g. docs/, strategy/, docs/design/ — or user-specified paths)
 ```
 
-All planning skills read `.sweetclaude/artifact-privacy.yaml` before writing any file. If the manifest does not exist, skills stop and direct the user to run `/sweetclaude:doctor`.
+All planning skills read `.sweetclaude/artifact-privacy.yaml` before writing any file. If the manifest does not exist, skills stop and direct the user to run `/sweetclaude:configure doctor`.

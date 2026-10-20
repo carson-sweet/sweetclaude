@@ -23,7 +23,7 @@ import yaml
 
 # Ensure the scripts/ directory is importable so `recovery.characterize_project`
 # resolves both as a package import (under tests, via conftest) and when this
-# file is executed directly as a CLI (how sweetclaude:migrate invokes it).
+# file is executed directly as a CLI (how sweetclaude:library-load migrate invokes it).
 _SCRIPTS_DIR = str(Path(__file__).resolve().parents[1])
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
@@ -2945,7 +2945,7 @@ def run_migration(
     }
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint for sweetclaude:migrate."""
+    """CLI entrypoint for sweetclaude:library-load migrate."""
     parser = argparse.ArgumentParser(
         description="Migrate legacy multi-prefix artifacts to unified ISSUE-NNN taxonomy.")
     parser.add_argument("--project-dir", default=".", help="Project directory")

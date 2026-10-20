@@ -10,7 +10,7 @@ that hand-wrote it to check the hooks' logic.
 So `rules/tdd-levels.md` — "test files are immutable during implementation" —
 described something that had never once happened.
 
-This script is the writer. `skills/code-tdd/SKILL.md` calls it at the points
+This script is the writer. `skill-library/build/code-tdd/SKILL.md` calls it at the points
 its own process already names: after RED is verified and the tests are
 committed, test files are frozen; when the cycle returns to writing tests,
 they are not.

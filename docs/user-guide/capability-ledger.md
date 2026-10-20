@@ -39,7 +39,7 @@ resolvable `delegate_skill`, no entrypoint. The Notes column says which.
 | `works` | Declared, verified, nothing outstanding. |
 | `compromised` | Verified, but a documented limitation applies — unsupported states, rollback limitations, or entrypoint coverage below the bar. |
 | `broken` | A verification fails, or the capability has no verification path at all. |
-| `not-mechanically-verifiable` | Tier 3. Scored only by running `/sweetclaude:behavioral-regression` against a live model. |
+| `not-mechanically-verifiable` | Tier 3. Scored only by `scripts/behavioral_judge.py` against a live model. |
 
 ---
 

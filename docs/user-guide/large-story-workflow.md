@@ -14,8 +14,8 @@ controller has recorded evidence against the criteria that were locked in up fro
 
 ## You Don't Invoke These Directly
 
-Both workflows are internal. You do not call `/sweetclaude:large-story` or
-`/sweetclaude:small-story` yourself. You start work the normal way — describe what
+Both workflows are internal. You do not call `/sweetclaude:build large-story` or
+`/sweetclaude:build small-story` yourself. You start work the normal way — describe what
 you want in natural language to `/sweetclaude:go`. SweetClaude classifies the
 request and, when the work warrants it, routes into one of these workflows.
 
@@ -136,8 +136,8 @@ downstream artifacts to its hash, record evidence, and fail closed at VERIFY. Th
 difference is what kind of work each is meant for:
 
 - **Large story** is for a work item that is too large or high-risk for a single
-  bounded `/sweetclaude:code-feature`, `/sweetclaude:code-issue`, or
-  `/sweetclaude:code-tdd` pass. This is the high-rigor path. SweetClaude's process
+  bounded `/sweetclaude:build code-feature`, `/sweetclaude:build code-issue`, or
+  `/sweetclaude:build code-tdd` pass. This is the high-rigor path. SweetClaude's process
   controls anchor the frozen, hash-bound success-criteria contract requirement to
   large/high-rigor work specifically — large-story is where that contract discipline
   is mandatory before any downstream planning, design, implementation, review, or

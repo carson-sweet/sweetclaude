@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Step 1 helper for skills/_migrate/SKILL.md.
+Step 1 helper for skill-library/configure/_migrate/SKILL.md.
 
 Creates a pre-migration safety snapshot (tarball + git tag). Idempotent:
 if a prior snapshot is recorded in .sweetclaude/state/pending-migration-snapshot.json

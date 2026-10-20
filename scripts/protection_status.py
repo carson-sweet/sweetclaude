@@ -98,7 +98,7 @@ def check_protections(project_dir: Path) -> list[dict]:
     elif not (sc or mirror):
         add("phase-dwelling guard", INACTIVE,
             "Protocol Guardian is on but no project state is readable",
-            "run /sweetclaude:doctor")
+            "run /sweetclaude:configure doctor")
     else:
         add("phase-dwelling guard", ACTIVE, "advancement-pushing language is blocked")
 
@@ -111,7 +111,7 @@ def check_protections(project_dir: Path) -> list[dict]:
         add("artifact placement", INACTIVE,
             "no artifact privacy manifest, so skills cannot resolve where "
             "product artifacts belong",
-            "run /sweetclaude:doctor to repair the artifact privacy configuration")
+            "run /sweetclaude:configure doctor to repair the artifact privacy configuration")
     else:
         add("artifact placement", ACTIVE, "artifact paths resolve from the manifest")
 

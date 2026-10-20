@@ -17,7 +17,7 @@ import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-PURGE_SKILL = REPO / "skills" / "purge" / "SKILL.md"
+PURGE_SKILL = REPO / "skill-library" / "configure" / "purge" / "SKILL.md"
 
 
 # ---------------------------------------------------------------------------

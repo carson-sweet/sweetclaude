@@ -52,7 +52,7 @@ _make_302_fixture() {
   mkdir -p "$fake_repo/tests"
   mkdir -p "$fake_repo/hooks"
   mkdir -p "$fake_repo/skills"
-  mkdir -p "$fake_repo/skills/recover"
+  mkdir -p "$fake_repo/skill-library/configure/recover"
   mkdir -p "$fake_repo/scripts/recovery"
   mkdir -p "$fake_repo/config"
 
@@ -63,7 +63,7 @@ _make_302_fixture() {
   chmod +x "$fake_repo/hooks/stub-hook.sh"
 
   printf 'recovery-script-marker\n' > "$fake_repo/scripts/recovery/recover_project.py"
-  printf 'recovery-skill-marker\n' > "$fake_repo/skills/recover/SKILL.md"
+  printf 'recovery-skill-marker\n' > "$fake_repo/skill-library/configure/recover/SKILL.md"
   printf '{"name":"sweetclaude","version":"0.0.0-test"}\n' > "$fake_repo/package.json"
 
   if [ "$tests_exit_code" -eq 0 ]; then
@@ -1168,7 +1168,7 @@ else
   fail "recovery script missing from versioned install directory"
 fi
 
-if [ -f "$FX35_INSTALL/skills/recover/SKILL.md" ]; then
+if [ -f "$FX35_INSTALL/skill-library/configure/recover/SKILL.md" ]; then
   pass "recover skill is present under installed plugin skills/"
 else
   fail "recover skill missing from installed plugin skills/"

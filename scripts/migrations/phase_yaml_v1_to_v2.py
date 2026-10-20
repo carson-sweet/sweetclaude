@@ -2,7 +2,7 @@
 """
 phase.yaml v1 → v2 migration handler.
 
-Source rules: skills/update/project-migration.md Step 8e (the inline migration
+Source rules: skill-library/configure/update/project-migration.md Step 8e (the inline migration
 that this handler replaces).
 
 v1 fields → v2 destinations:
