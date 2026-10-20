@@ -18,7 +18,7 @@ The README's TL;DR now ends with `/sweetclaude:go give me an overview of what yo
 
 SweetClaude now shows nine commands instead of one per workflow: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status` and `/sweetclaude:help`. Specialized workflows live in a library behind these commands. Name the workflow after its category, for example `/sweetclaude:configure doctor`, or describe what you need and SweetClaude picks the workflow. Old commands such as `/sweetclaude:doctor` no longer exist, and Claude Code reports them as unknown; run `/sweetclaude:help` to see the new ones. Project data does not change. See [Upgrading to 5.0](https://github.com/carson-sweet/sweetclaude/blob/main/docs/user-guide/upgrading-to-5.md) for the full mapping.
 
-4.x receives no further releases. To upgrade from 4.x, run `/sweetclaude:update` (the 4.x command), or `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. After the restart, run `/sweetclaude:configure update` in each project.
+4.x receives no further releases. To upgrade from 4.x, run `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. After the restart, run `/sweetclaude:configure update` in each project.
 
 ### Changed — update prompts respect a declined major version
 

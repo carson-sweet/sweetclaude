@@ -8,7 +8,7 @@ SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands. Y
 
 ## Upgrading from 4.x
 
-The 5.0 commands do not exist until 5.0 is installed, so `/sweetclaude:configure` is unknown on 4.x. Run `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. You can also use the 4.x update command, which is `update` after the `/sweetclaude:` prefix. After the restart, run `/sweetclaude:configure update` in each project.
+The 5.0 commands do not exist until 5.0 is installed, so `/sweetclaude:configure` is unknown on 4.x. Run `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. Do not use the 4.x update command for this upgrade: it does not install the 5.0 workflow library. After the restart, run `/sweetclaude:configure update` in each project.
 
 ## The nine commands
 

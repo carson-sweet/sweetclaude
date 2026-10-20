@@ -171,7 +171,7 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 
 ## Migrating from Older Channels
 
-**From 4.x:** Run `/sweetclaude:update` (the 4.x command), or `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. After the restart, run `/sweetclaude:configure update` in each project. Your project data does not change. SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands; for example `/sweetclaude:doctor` is now `/sweetclaude:configure doctor`. Claude Code reports old commands as unknown; `/sweetclaude:help` lists the new ones. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping. 4.x receives no further releases.
+**From 4.x:** Run `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. After the restart, run `/sweetclaude:configure update` in each project. Your project data does not change. SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands; for example `/sweetclaude:doctor` is now `/sweetclaude:configure doctor`. Claude Code reports old commands as unknown; `/sweetclaude:help` lists the new ones. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping. 4.x receives no further releases.
 
 **From the 4.x beta channel:** The beta channel is retired. Switch in this order so you are never double-installed (both channels' skills and hooks would load at once):
 
