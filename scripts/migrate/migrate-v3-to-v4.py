@@ -1659,7 +1659,7 @@ def finalize(project_dir: pathlib.Path) -> dict:
     If a crash interrupts between the two writes, the half-state is:
       - installed_version: 4.0.0 (project is "v4")
       - product_base:      still old (pre-migration)
-    Bootstrap then sees PLUGIN_IS_V4 && !PROJECT_NOT_V4 — no hard-stop fires.
+    Bootstrap then sees PLUGIN_IS_V4_PLUS && !PROJECT_BELOW_V4 — no hard-stop fires.
     The user can re-run cleanup-v3-files to finish. This is strictly safer
     than the previous order, where a crash between writes produced
     privacy=new + installed_version=old → bootstrap hard-stop loop that
