@@ -32,7 +32,7 @@ Install SweetClaude (below) then run `/sweetclaude:help` to get a guided walk-th
 There's a massive number of Claude Code plugins out there. To help you decide if SweetClaude might be one that's helpful, here are the top principles used when designing SweetClaude:
 
 * **Successful projects take more than code.** If you're here you probably already know this, but really thinking through what you're building, for who, why, and how they'll use it results in a good product that delivers value to users. Unfortunately, that part is a lot less fun than vibe-coding — it's real work. SweetClaude is primarily about taking care of that work — and a bunch of other lessfun work — in a structured, reliable way.
-* **Hide the complexity**. SweetClaude has over 100 skills built natively on Claude Code's Skills framework and Anthropic's multi-agent architecture. These skills compose into dynamic, situation-driven workflows across four operating modes. *Few people want to learn all that.*  To hide the complexity, SweetClaude uses a conversational interface with just a few commands as entry points, and an orchestrator skill does the rest (you can also manually invoke most skills if you want).
+* **Hide the complexity**. SweetClaude has over 100 skills built natively on Claude Code's Skills framework and Anthropic's multi-agent architecture. These skills compose into dynamic, situation-driven workflows across four operating modes. *Few people want to learn all that.*  To hide the complexity, SweetClaude uses a conversational interface with just a few commands as entry points, and an orchestrator skill does the rest (you can also name a specific workflow after its category, such as `/sweetclaude:configure doctor`).
 * **Adapt to user preferences as they evolve.** AI assisted vibe-coding is fantastic for rapid experimentation and iteration to see if an idea is viable. An assistant framework should be able to capture things passively without killing the vibe and then be able to use what it captured to dial up the structure and discipline as needed, based on what it learned in the vibe phase. The framework adjusts to the user's preferences — not the other way around — and is designed to dial up or dial back the level of structure mid-project as needed.
 
 
@@ -108,7 +108,7 @@ Switch modes at any time through `/sweetclaude:configure`. SweetClaude snapshots
 - **Mockup pipeline** — Design UI components in an isolated Vite + React sandbox before touching production code. Graduate approved mockups with acceptance criteria extracted automatically.
 - **Local semantic search over your design documents** — LanceDB-powered RAG, fully offline, no API keys, no external services. Index your architecture docs, data model, and product decisions so both you and SweetClaude can ask questions and get canonical answers instantly. Setup takes one command.
 - **Corpus management** — Four-step pipeline (consolidate → triage → reconcile → promote) for messy document collections. Pairs with local RAG for full document lifecycle management.
-- **Behavioral contracts** — 15 behavioral properties tested against each Claude model version. Hook-enforced properties are deterministic; instruction-guided properties are validated by a regression suite.
+- **Behavioral contracts** — 16 behavioral properties scored against each Claude model version. Hook-enforced properties are deterministic; instruction-guided properties are scored by a transcript judge, and a routing suite checks that requests reach the right workflow.
 
 
 
@@ -124,7 +124,7 @@ TDD hooks physically block test file modification during implementation and run 
 
 ## Common Commands
 
-You can invoke skills directly if you know what you want. These are the most common. You can also refer to the [complete skills reference](docs/user-guide/index.md).
+These nine commands are the whole command surface. Add a workflow name or a plain-English request after any of them. You can also refer to the [complete skills reference](docs/user-guide/index.md).
 
 ### Primary
 | Command | What it does |
@@ -169,9 +169,9 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 
 ## Migrating from Older Channels
 
-**From 4.x:** Run `/sweetclaude:configure update`. Your project data does not change. SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands; for example `/sweetclaude:doctor` is now `/sweetclaude:configure doctor`. Typing an old command tells you its new form. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping.
+**From 4.x:** Run `/sweetclaude:configure update`. Your project data does not change. SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands; for example `/sweetclaude:doctor` is now `/sweetclaude:configure doctor`. Typing an old command tells you its new form. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping. 4.x receives no further releases.
 
-**From the 4.x beta channel:** The beta channel is being retired. Switch in this order so you are never double-installed (both channels' skills and hooks would load at once):
+**From the 4.x beta channel:** The beta channel is retired. Switch in this order so you are never double-installed (both channels' skills and hooks would load at once):
 
 ```
 /plugin marketplace add carson-sweet/sweetclaude@main

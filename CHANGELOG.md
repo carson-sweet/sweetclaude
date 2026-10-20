@@ -8,15 +8,17 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ### Changed — nine commands replace the full skill menu (breaking)
 
-SweetClaude now shows nine commands instead of one per workflow: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status` and `/sweetclaude:help`. Specialized workflows live in a library behind these commands. Name the workflow after its category, for example `/sweetclaude:configure doctor`, or describe what you need and SweetClaude picks the workflow. Typing a removed command such as `/sweetclaude:doctor` tells you its new form and runs it. Project data does not change. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping.
+SweetClaude now shows nine commands instead of one per workflow: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status` and `/sweetclaude:help`. Specialized workflows live in a library behind these commands. Name the workflow after its category, for example `/sweetclaude:configure doctor`, or describe what you need and SweetClaude picks the workflow. Typing a removed command such as `/sweetclaude:doctor` tells you its new form and runs it. Project data does not change. See [Upgrading to 5.0](https://github.com/carson-sweet/sweetclaude/blob/main/docs/user-guide/upgrading-to-5.md) for the full mapping.
+
+4.x receives no further releases. Stable installs move to 5.0 when you run `/sweetclaude:configure update`.
 
 ### Changed — update prompts respect a declined major version
 
-Declining the 5.0 update stops the prompt for 5.x releases. You are asked again when a later major version ships, and `/sweetclaude:configure update` still updates at any time. Upgrading from 4.x shows a one-time notice explaining the new commands.
+Declining the 5.0 update stops the prompt for 5.x releases. You are asked again when a later major version ships, and `/sweetclaude:configure update` still updates at any time. When you update from 4.x, the update prompt explains the new commands before you confirm.
 
-### Changed — behavioral-regression workflows retired
+### Changed — manual behavioral test workflows removed
 
-The manual `behavioral-regression` and `sweetclaude-behavioral-regression` workflows are retired. The interaction-model contracts now live in `config/behavioral-contracts.md` and are scored with `scripts/behavioral_judge.py`. A cost-capped routing suite checks that requests reach the right category and workflow.
+The two manual behavioral test workflows (`behavioral-regression` and `sweetclaude-behavioral-regression`) are removed. Contributors now check behavior with an automated routing suite and a transcript judge; see `CONTRIBUTING.md`.
 
 ### Fixed — library workflows receive session state
 

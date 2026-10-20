@@ -115,15 +115,24 @@ does both. Re-run it after changing the pinned `playwright` version in
 
 ---
 
-## Running the Behavioral Regression Tests
+## Running the Behavioral Tests
 
-After any significant skill edit, run the behavioral regression tests to check that the change doesn't break existing contracts:
+If you change a router, a category command, or a library `INDEX.md`, run the routing suite. It sends real requests through `/sweetclaude:go` and checks which workflow each one reaches:
+
+```
+python3 scripts/routing_behavior.py --tier smoke   # 6 cases, about $0.90
+python3 scripts/routing_behavior.py --tier full    # 33 cases, about $4.50
+```
+
+See `docs/testing/behavioral-e2e/README.md` for how cases are graded.
+
+If you touched a skill with behavioral contracts, score a session transcript against the contract it affects:
 
 ```
 python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN
 ```
 
-This runs 15 tests against the current model version. If your change causes a FAIL on a contract that was previously PASS, investigate before submitting.
+The contracts are listed in `config/behavioral-contracts.md`. If your change causes a FAIL on a contract that was previously PASS, investigate before submitting.
 
 ---
 
