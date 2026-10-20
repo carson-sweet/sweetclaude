@@ -20,7 +20,7 @@ SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands. Y
 | `/sweetclaude:status` | Current project, active work and blockers. |
 | `/sweetclaude:help` | The command list and examples. |
 
-You can name a workflow after its category, for example `/sweetclaude:configure doctor`, or describe the task and let the category choose. If you type a removed command, SweetClaude tells you its new form and runs it.
+You can name a workflow after its category, for example `/sweetclaude:configure doctor`, or describe the task and let the category choose. In an interactive session, Claude Code reports a removed command as unknown; use the table below or `/sweetclaude:help`. In non-interactive sessions (`claude -p` and the SDK), SweetClaude names the new form and runs it.
 
 ## Old commands and their replacements
 
