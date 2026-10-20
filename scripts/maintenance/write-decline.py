@@ -3,10 +3,10 @@
 """
 Step 6 helper for skills/bootstrap/SKILL.md.
 
-When the user declines a minor/patch update ("Not now"), write
+When the user declines an update ("Not now"), write
 `framework.update.declined = <available-version>` to sweetclaude.yaml so
-the version-aware decline rule silences the offer for the rest of this
-installed major.
+the version-aware decline rule silences the offer for the rest of the
+declined version's major.
 
 Usage:
     python3 write-decline.py <project-dir>

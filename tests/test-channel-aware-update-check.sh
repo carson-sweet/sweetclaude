@@ -239,6 +239,79 @@ YAML
 fi
 
 # ---------------------------------------------------------------------------
+# Test 7: bootstrap Step 6 decision block — a decline silences its own major
+# ---------------------------------------------------------------------------
+
+echo "[7] bootstrap Step 6 -> declined version silences prompts for its major"
+
+if [ -z "$DECISION_BLOCK" ]; then
+  fail "could not extract Step 6 decision block from skills/bootstrap/SKILL.md"
+else
+  step6_decide_declined() {
+    local installed="$1" available="$2" declined="$3"
+    local yml="$WORK/step6-declined.yaml"
+    cat > "$yml" << YAML
+schema_version: 2
+framework:
+  installed_version: $installed
+  update:
+    available: $available
+    declined: $declined
+YAML
+    python3 -c "$DECISION_BLOCK" "$yml"
+  }
+
+  D=$(step6_decide_declined "4.5.3" "5.0.0" "5.0.0")
+  if [ "$D" = "DECISION=silent_declined|5" ]; then
+    pass "installed 4.5.3 + available 5.0.0 + declined 5.0.0 -> silent_declined|5"
+  else
+    fail "declined major bump -> $D (want DECISION=silent_declined|5)"
+  fi
+
+  D=$(step6_decide_declined "4.5.3" "5.1.0" "5.0.0")
+  if [ "$D" = "DECISION=silent_declined|5" ]; then
+    pass "installed 4.5.3 + available 5.1.0 + declined 5.0.0 -> silent_declined|5"
+  else
+    fail "later minor in declined major -> $D (want DECISION=silent_declined|5)"
+  fi
+
+  D=$(step6_decide_declined "4.5.3" "6.0.0" "5.0.0")
+  if [ "$D" = "DECISION=prompt" ]; then
+    pass "installed 4.5.3 + available 6.0.0 + declined 5.0.0 -> prompt"
+  else
+    fail "next major after declined major -> $D (want DECISION=prompt)"
+  fi
+
+  D=$(step6_decide_declined "4.5.3" "5.0.0" "null")
+  if [ "$D" = "DECISION=prompt" ]; then
+    pass "installed 4.5.3 + available 5.0.0 + no decline -> prompt"
+  else
+    fail "undeclined major bump -> $D (want DECISION=prompt)"
+  fi
+
+  D=$(step6_decide_declined "4.0.0" "5.0.0" "4.0.0")
+  if [ "$D" = "DECISION=prompt" ]; then
+    pass "installed 4.0.0 + available 5.0.0 + declined 4.0.0 -> prompt"
+  else
+    fail "decline of an older major -> $D (want DECISION=prompt)"
+  fi
+
+  D=$(step6_decide_declined "4.5.3" "5.0.0" "true")
+  if [ "$D" = "DECISION=prompt" ]; then
+    pass "installed 4.5.3 + available 5.0.0 + legacy declined true -> prompt"
+  else
+    fail "legacy boolean decline on major bump -> $D (want DECISION=prompt)"
+  fi
+
+  D=$(step6_decide_declined "4.5.3" "5.0.0-beta" "5.0.0-beta")
+  if [ "$D" = "DECISION=silent" ]; then
+    pass "stable 4.5.3 + available 5.0.0-beta -> silent (prerelease rule)"
+  else
+    fail "prerelease offer on stable install -> $D (want DECISION=silent)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 
 echo ""
 if [ "$FAILED" -gt 0 ]; then

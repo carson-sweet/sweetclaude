@@ -18,7 +18,7 @@ pass() { echo "  PASS: $1"; }
 
 echo "[1] version-aware decline decision"
 
-python3 - << 'PY' && pass "decision table covers all 10 cases including silent_declined" || fail "decision table"
+python3 - << 'PY' && pass "decision table covers all 13 cases including silent_declined" || fail "decision table"
 import re, sys
 
 def major(v):
@@ -32,14 +32,12 @@ def decide(installed, available, declined):
     inst_maj, avail_maj = major(installed), major(available)
     if inst_maj is None or avail_maj is None:
         return "prompt"
-    if avail_maj > inst_maj:
-        return "prompt"
     if declined in (None, False):
         return "prompt"
     declined_maj = inst_maj if declined is True else major(str(declined))
     if declined_maj is None or avail_maj > declined_maj:
         return "prompt"
-    return f"silent_declined|{inst_maj}"
+    return f"silent_declined|{max(inst_maj, avail_maj)}"
 
 cases = [
     ("3.65.0", None,     None,    "silent"),
@@ -52,6 +50,9 @@ cases = [
     ("3.65.0", "4.0.0",  "3.66.0","prompt"),
     ("4.0.0",  "4.5.0",  "4.0.0", "silent_declined|4"),
     ("4.0.0",  "5.0.0",  "4.0.0", "prompt"),
+    ("4.5.3",  "5.0.0",  "5.0.0", "silent_declined|5"),
+    ("4.5.3",  "5.1.0",  "5.0.0", "silent_declined|5"),
+    ("4.5.3",  "6.0.0",  "5.0.0", "prompt"),
 ]
 failed = 0
 for inst, avail, dec, exp in cases:
