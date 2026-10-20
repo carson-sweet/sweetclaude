@@ -92,10 +92,10 @@ Once SweetClaude is installed, here are some things to try. You'll quickly get o
 SweetClaude has four operating modes that support everything from vibe-coding hobby projects through enterprise-class B2B product development. It also has one experimental mode that isn't recommended for anything that matters (maybe initial prototyping). Those modes are:
 
 * **Flow** — the default mode, usually the right mode to start any new project. Can be the right mode for quick experiments or non-critical projects. No phases, no gates, no ceremony. SweetClaude observes quietly, builds what you ask, and collects thin artifacts in the background — personas, decisions, scope notes — without interrupting your momentum. If you decide to dial up the structure, everything it captured is already there. Best for: early-stage exploration, side projects, and any time you need to move fast and figure out what you're building.
-* **Kanban** — continuous delivery with one hard rule: no more than three things in progress at once. No sprints, no planning ceremonies, no velocity calculations. Work flows from backlog to done at whatever pace makes sense. SweetClaude enforces the WIP limit and surfaces blocked items before they quietly pile up. Best for: maintenance work, steady feature delivery, and solo developers who want lightweight structure without sprint overhead.
-* **Shape Up** — six-week cycles where appetite is fixed and scope is variable. Work starts with a pitch: what problem are we solving, what's the rough shape of the solution, and what won't we build? A betting table decides what gets the next cycle. No backlog grooming, no story points, no carry-over. If it doesn't ship in the cycle, it goes back to the pile. Best for: product-focused work where you want strong scope discipline and a natural forcing function against gold-plating.
-* **Agile** — sprint-based delivery with a full planning, execution, and retrospective cycle. Each sprint anchors to a milestone and has an explicit active/closed state — SweetClaude won't let you implement work that isn't in the active sprint. Velocity is tracked on close and feeds into future planning. Best for: projects with defined delivery commitments, multiple contributors, or any situation where stakeholders expect predictable, time-boxed output.
-* **John Wick mode** — an experiment at the intersection of vibe-coding and disciplined product development. John Wick mode goes fully autonomous after a short project discovery cycle. Intensely disciplined — TDD Level 3, subagent isolation, QA caucus, hard gates at key decisions. Not for everyday use — but no other mode comes close for maximum automation. Fast, independent, admittedly dangerous - but disciplined. No loose ends. Ask `/sweetclaude:build` to start it.
+* **Kanban** — continuous delivery with one hard rule: no more than three things in progress at once. No sprints, no planning ceremonies, no velocity calculations. Work flows from backlog to done at whatever pace makes sense. SweetClaude enforces the WIP limit and surfaces blocked items before they quietly pile up. Best for: maintenance work, steady feature delivery, and solo developers who want lightweight structure without sprint overhead. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+* **Shape Up** — six-week cycles where appetite is fixed and scope is variable. Work starts with a pitch: what problem are we solving, what's the rough shape of the solution, and what won't we build? A betting table decides what gets the next cycle. No backlog grooming, no story points, no carry-over. If it doesn't ship in the cycle, it goes back to the pile. Best for: product-focused work where you want strong scope discipline and a natural forcing function against gold-plating. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+* **Agile** — sprint-based delivery with a full planning, execution, and retrospective cycle. Each sprint anchors to a milestone and has an explicit active/closed state — SweetClaude won't let you implement work that isn't in the active sprint. Velocity is tracked on close and feeds into future planning. Best for: projects with defined delivery commitments, multiple contributors, or any situation where stakeholders expect predictable, time-boxed output. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+* **John Wick mode** — an experiment at the intersection of vibe-coding and disciplined product development. John Wick mode goes fully autonomous after a short project discovery cycle. Intensely disciplined — TDD Level 3, subagent isolation, QA caucus, hard gates at key decisions. Not for everyday use — but no other mode comes close for maximum automation. Fast, independent, admittedly dangerous - but disciplined. No loose ends. Ask `/sweetclaude:build` to start it. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 Switch modes at any time through `/sweetclaude:configure`. SweetClaude snapshots your current state before any transition. It's also best to take a Git snapshot for belt-and-suspenders safety - SweetClaude can do that for you too, as well as roll things back if needed. Just tell SweetClaude what you need to do.
 
@@ -105,7 +105,7 @@ Switch modes at any time through `/sweetclaude:configure`. SweetClaude snapshots
 
 - **Discovery-first pipeline** — Compliance requirements (GDPR, HIPAA, PCI DSS) flow from user and data discovery into architecture and code review automatically — not a checkbox at the end.
 - **Compliance-ready from day one** — SOC 2, GDPR, HIPAA, and PCI DSS requirements surface automatically during discovery, not as an afterthought. For regulated industries, SweetClaude produces the artifacts your auditor needs: decision logs, gate records, and traceability maps.
-- **Enforced TDD at four levels** — At the highest level, test writer and implementer are separate AI agents. Test files are physically blocked from modification during implementation by hooks. Tests run after every source edit.
+- **Enforced TDD at four levels** — At the highest level, test writer and implementer are separate AI agents. Test files are physically blocked from modification during implementation by hooks. Tests run after every source edit. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 - **Persistent phase state** — `.sweetclaude/` tracks phase, decisions, and scope changes in git. Return after weeks and `/sweetclaude:go` re-orients without re-explaining.
 - **Mockup pipeline** — Design UI components in an isolated Vite + React sandbox before touching production code. Graduate approved mockups with acceptance criteria extracted automatically.
 - **Local semantic search over your design documents** — LanceDB-powered RAG, fully offline, no API keys, no external services. Index your architecture docs, data model, and product decisions so both you and SweetClaude can ask questions and get canonical answers instantly. Setup takes one command.
@@ -118,7 +118,7 @@ Switch modes at any time through `/sweetclaude:configure`. SweetClaude snapshots
 
 SweetClaude is implemented as a Claude Code plugin. After install, nine public commands are available in every session: `go`, `plan`, `design`, `build`, `maintain`, `configure`, `utils`, `status`, and `help`. Each workflow command loads only the relevant part of the Tier 2 library; individual library workflows are intentionally not slash-addressable. Load for a single session with `--plugin-dir` without a global install.
 
-TDD hooks physically block test file modification during implementation and run tests automatically after every source edit. At higher TDD levels, test writer and implementer are separate AI agents — the implementer never sees the spec, only failing tests.
+TDD hooks physically block test file modification during implementation and run tests automatically after every source edit. At higher TDD levels, test writer and implementer are separate AI agents — the implementer never sees the spec, only failing tests. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 → [Full architecture and design decisions](docs/user-guide/index.md)
 
@@ -188,11 +188,12 @@ Beta releases before `v4.1.9-beta` had known update/recovery risks. See [4.x Bet
 **From 3.x:** The 3.x channel has been renamed to `sweetclaude-legacy`. To move a 3.x install onto the stable line:
 
 ```
+/plugin marketplace remove sweetclaude-stable
 /plugin marketplace add carson-sweet/sweetclaude@main
 /plugin install sweetclaude@sweetclaude-stable
-/plugin marketplace remove sweetclaude-stable
-/sweetclaude:configure update
 ```
+
+Old 3.x installs registered their marketplace as `sweetclaude-stable`, so remove it first. Then restart Claude Code and run `/sweetclaude:configure doctor` in each project; doctor routes legacy project state to recovery or migration, and update does not migrate project data.
 
 To stay on 3.x, re-add the renamed legacy marketplace (a one-time step — the marketplace name changed):
 

@@ -53,11 +53,11 @@ The two-dimension model matters because it lets the framework do **progressive d
 
 The 7-phase pipeline (DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP) looks like the standard SDLC, but it is not used the standard way.
 
-In a typical SDLC, phases are time-boxed: "we are in design this sprint." In SweetClaude, phases are **quality gates**. A phase is done when its exit criteria are met. Not when the calendar says so. Not when you feel like it.
+In a typical SDLC, phases are time-boxed: "we are in design this sprint." In SweetClaude, phases are **quality gates**. A phase is done when its exit criteria are met. Not when the calendar says so. Not when you feel like it. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 This is why SweetClaude refuses to give time estimates. The right question is not "how long will design take?" — it is "have we covered the architecture, the data model, the API contracts, and recorded the key decisions?" When the answer is yes, design is done.
 
-There are two kinds of gates. **Soft gates** are advisory — you can override with "I've addressed this informally — proceed." **Hard gates** (⚠️) cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans, technology migration cutover decisions. Hard gate overrides require explicit risk acceptance, logged to the decision log.
+There are two kinds of gates. **Soft gates** are advisory — you can override with "I've addressed this informally — proceed." **Hard gates** (⚠️) cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans, technology migration cutover decisions. Hard gate overrides require explicit risk acceptance, logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 The list of soft and hard gates is in [`phases-and-workflows.md`](phases-and-workflows.md).
 
@@ -137,9 +137,9 @@ SweetClaude has four project modes that calibrate structure and enforcement to w
 | Mode | What it signals | TDD level | Key enforcement |
 |---|---|---|---|
 | **Flow Mode** | Solo exploration, early stage, no ceremony needed | Level 1 | No gates, all skills available. Quietly accumulates thin artifacts in the background. |
-| **Kanban** | Continuous delivery, work organized as a flowing board | Level 1 | WIP limit (default 3 in-progress issues, hard block), sprint-planning skills blocked |
-| **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | Sprint and backlog-triage skills blocked, betting table approval required before implementation, ship/no-ship gate at cycle end |
-| **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship |
+| **Kanban** | Continuous delivery, work organized as a flowing board | Level 1 | WIP limit (default 3 in-progress issues, hard block), sprint-planning skills blocked (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | Sprint and backlog-triage skills blocked, betting table approval required before implementation, ship/no-ship gate at cycle end (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 
 There is also **John Wick mode** — an experimental, fully autonomous SDLC pipeline from discovery through PR (TDD Level 3, subagent isolation, QA caucus). Invoked via `/sweetclaude:build john-wick`, not through the mode selector.
 
@@ -147,7 +147,7 @@ Modes are not permanent. `/sweetclaude:configure project-mode` re-assesses or ac
 
 Within the execution layer, the work hierarchy is **Milestone → Sprint → Story** — three levels, that is all. Epics and themes are classification attributes on stories (a `epic_id` and `theme_id` field), not nodes that stories flow through. A sprint in Agile mode anchors to a milestone via `milestone_id`; stories are pulled into it regardless of which epic or theme they belong to. This is the Linear model, not the Jira model — epics are goal lenses and progress metrics, not delivery containers.
 
-Enforcement happens at three layers: (1) `effective-gates.yaml`, compiled at mode selection time into `.sweetclaude/state/`, contains the full rule set for the active mode; (2) `wip-limit.sh`, a PreToolUse hook, blocks tool calls in Kanban mode when the WIP limit is reached; (3) MODE_CHECK blocks inside individual skills reject invocations that are disallowed by the active mode.
+Enforcement happens at three layers: (1) `effective-gates.yaml`, compiled at mode selection time into `.sweetclaude/state/`, contains the full rule set for the active mode; (2) `wip-limit.sh`, a PreToolUse hook, blocks tool calls in Kanban mode when the WIP limit is reached; (3) MODE_CHECK blocks inside individual skills reject invocations that are disallowed by the active mode. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 Mode selection happens at project init via the `project-assess-shape` five-question interview, and on demand via `/sweetclaude:configure project-mode`.
 
@@ -159,8 +159,8 @@ Most TDD documentation is advisory: "write the test first." SweetClaude does not
 
 SweetClaude substantially raises the cost of this at higher levels:
 
-- **Test-guardian hook** (PreToolUse) blocks edits to test files during the IMPLEMENT phase. Not "warns" — blocks.
-- **Auto-test-runner hook** (PostToolUse) runs tests automatically after every source edit. Not "reminds" — runs.
+- **Test-guardian hook** (PreToolUse) blocks edits to test files during the IMPLEMENT phase. Not "warns" — blocks. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+- **Auto-test-runner hook** (PostToolUse) runs tests automatically after every source edit. Not "reminds" — runs. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 - **Subagent isolation** at TDD Level 2-3 means the test writer and implementer are different agents in different contexts. The implementer never sees the spec or the test writer's reasoning. Only the tests.
 
 This sounds extreme until you watch what happens without it: a test passes, you ship, and three weeks later production breaks because the test was passing for the wrong reason. The hooks remove that failure mode.
@@ -185,7 +185,7 @@ Three levels: collaborative, guided, autonomous.
 
 The honest framing: **deference levels are about how much you trust the framework today**, not about how complex the work is. Your first session should be collaborative because you are still building a model of what SweetClaude does. Your tenth feature in the same project might be autonomous because you have seen the rhythm and you are tired of confirming sub-steps.
 
-Autonomous does not mean unsupervised. The framework still pauses at phase gates. It still respects hard gates. It still saves state. It just stops asking "okay to proceed?" between every micro-step.
+Autonomous does not mean unsupervised. The framework still pauses at phase gates. It still respects hard gates. It still saves state. It just stops asking "okay to proceed?" between every micro-step. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 The level is changeable mid-session by saying "switch to guided" or "go autonomous." SweetClaude immediately respects the change and updates `sweetclaude.yaml`.
 
@@ -252,7 +252,7 @@ This is the part most documentation skips. SweetClaude has explicit non-goals:
 
 **It will not push you forward.** Phase advancement is the user's call. Always.
 
-**It will not modify tests during implementation.** Hooks block this physically.
+**It will not modify tests during implementation.** Hooks block this physically. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 **It will not silently skip steps in the corpus pipeline.** The state machine refuses out-of-order operations and explains why if you try.
 
@@ -270,17 +270,17 @@ This distinction matters because deterministic properties are version-stable (a 
 
 | Property | Mechanism | What it guarantees |
 |---|---|---|
-| Test files cannot be edited during IMPLEMENT | `test-guardian.sh` (PreToolUse) | Edits to test directories are blocked at the tool call level; the user can override via tool approval |
-| Tests run after every source edit | `auto-test-runner.sh` (PostToolUse) | Test suite runs automatically after source edits; the user can override via tool approval |
-| WIP limit enforced in Kanban mode | `wip-limit.sh` (PreToolUse) | Blocks tool calls that would create new in-progress work when the WIP limit is reached |
+| Test files cannot be edited during IMPLEMENT | `test-guardian.sh` (PreToolUse) | Edits to test directories are blocked at the tool call level; the user can override via tool approval (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
+| Tests run after every source edit | `auto-test-runner.sh` (PostToolUse) | Test suite runs automatically after source edits; the user can override via tool approval (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| WIP limit enforced in Kanban mode | `wip-limit.sh` (PreToolUse) | Blocks tool calls that would create new in-progress work when the WIP limit is reached (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 | TDD Level 2-3 context isolation | Subagent architecture | Implementer agent never receives the spec or test writer's reasoning |
-| Phase advancement phrases removed from responses | `phase-dwelling-guard.sh` (Stop hook) | When Protocol Guardian is active, responses containing "ready to move on?" are blocked before reaching the user |
+| Phase advancement phrases removed from responses | `phase-dwelling-guard.sh` (Stop hook) | When Protocol Guardian is active, responses containing "ready to move on?" are blocked before reaching the user (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
 
 **Instruction-guided (probabilistic):**
 
 | Property | Mechanism | What it means |
 |---|---|---|
-| Phase dwelling — never asks "ready to move on?" | `interaction-model.md` rule | Claude is directed to dwell; Protocol Guardian enforces it when active |
+| Phase dwelling — never asks "ready to move on?" | `interaction-model.md` rule | Claude is directed to dwell; Protocol Guardian enforces it when active (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
 | Deference level respect | `interaction-model.md` rule | Claude adjusts how frequently it stops based on the configured level |
 | Improvement register capture triggers | `interaction-model.md` rule | Claude is directed to capture feedback at defined trigger points |
 | Propose-not-ask interaction mode | `interaction-model.md` rule | Claude defaults to making proposals with reasoning rather than asking open-ended questions |

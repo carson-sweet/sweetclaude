@@ -17,7 +17,7 @@ How much SweetClaude stops and waits for your approval. Three levels: *Collabora
 SweetClaude's commitment to not pushing you forward. It never asks "ready to move on?" or "shall we proceed?" — you decide when a phase is done. Iteration is the work; advancement happens when you say so.
 
 **Phase gate**
-A quality checkpoint between phases. SweetClaude will not advance to the next phase until the exit criteria for the current one are met. *Soft gates* can be bypassed with "I've addressed this informally — proceed." *Hard gates* (marked ⚠️) require explicit risk acceptance logged to the decision log.
+A quality checkpoint between phases. SweetClaude will not advance to the next phase until the exit criteria for the current one are met. *Soft gates* can be bypassed with "I've addressed this informally — proceed." *Hard gates* (marked ⚠️) require explicit risk acceptance logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Subagent**
 A separate Claude instance spawned for a specific task — test writing, implementation, code review, QA, security review. Subagents have isolated context windows: the implementer never sees the spec, only the failing tests. This prevents rationalization across contexts.
@@ -26,22 +26,22 @@ A separate Claude instance spawned for a specific task — test writing, impleme
 The design principle that test writers and implementers must never share context. Prevents the implementer from knowing what the tests are supposed to prove, which would allow it to write code that passes tests without satisfying the underlying intent. Applies at TDD Levels 2 and 3; Level 1 uses a single context.
 
 **TDD Level**
-The degree of test-driven development enforcement. Four levels: *Level 0* (hotfix — regression test written in same session), *Level 1* (light — test-first, single context), *Level 2* (standard — subagent separation, test-guardian hook active), *Level 3* (full — Gherkin specs, QA caucus, maximum isolation). See [TDD Levels](tdd.md) for full details.
+The degree of test-driven development enforcement. Four levels: *Level 0* (hotfix — regression test written in same session), *Level 1* (light — test-first, single context), *Level 2* (standard — subagent separation, test-guardian hook active), *Level 3* (full — Gherkin specs, QA caucus, maximum isolation). See [TDD Levels](tdd.md) for full details. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 **Test-guardian hook**
-A Claude Code hook that physically blocks edits to test files during the IMPLEMENT phase. Prevents the implementer from modifying tests to make them pass. Active at TDD Levels 1–3.
+A Claude Code hook that physically blocks edits to test files during the IMPLEMENT phase. Prevents the implementer from modifying tests to make them pass. Active at TDD Levels 1–3. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 **Auto-test-runner hook**
-A Claude Code hook that runs the test suite automatically after every source file edit during IMPLEMENT. Gives instant feedback on whether the change moved the tests from RED to GREEN.
+A Claude Code hook that runs the test suite automatically after every source file edit during IMPLEMENT. Gives instant feedback on whether the change moved the tests from RED to GREEN. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Version stage**
 Where the project is in its lifecycle. The stages that control which work types and phase gates are visible are PROTOTYPE → ALPHA → BETA → GA → SCALED → MAINTAINED (the six stages the rest of this guide enumerates). Brand-new projects may carry an earlier informal label — IDEA or PRE-ALPHA — before reaching PROTOTYPE. A PROTOTYPE-stage project doesn't see compliance work types; a GA project gets them surfaced automatically.
 
 **Betting table**
-A Shape Up concept (does not exist in Kanban or Agile modes). A decision artifact produced during the DEFINE phase that records: the core outcome if this ships, the rabbit holes (likely scope explosions), and what is explicitly out of scope. Implementation is hard-blocked until the betting table is approved.
+A Shape Up concept (does not exist in Kanban or Agile modes). A decision artifact produced during the DEFINE phase that records: the core outcome if this ships, the rabbit holes (likely scope explosions), and what is explicitly out of scope. Implementation is hard-blocked until the betting table is approved. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Agile mode**
-SweetClaude's most structured mode. Uses the full hierarchy: milestones, epics, sprints, and stories. Epics are first-class. Implementation is hard-blocked without an active sprint. Best for teams with stakeholder delivery commitments. See [Planning Concepts](planning-concepts.md).
+SweetClaude's most structured mode. Uses the full hierarchy: milestones, epics, sprints, and stories. Epics are first-class. Implementation is hard-blocked without an active sprint. Best for teams with stakeholder delivery commitments. See [Planning Concepts](planning-concepts.md). (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Backlog**
 A flat, priority-ranked list of stories that have not yet been scheduled for work. The default landing zone for all new ideas. The backlog is a completely separate structure from the roadmap — backlog stories have no epic and no milestone assignment. When a story moves from the backlog to the roadmap, it is physically moved and its ID does not change. See [Planning Concepts](planning-concepts.md).
@@ -59,13 +59,13 @@ A named strategic outcome — a meaningful product state the project is driving 
 SweetClaude's lightest mode. No phase gates, no required artifacts. Backlog and milestones are optional. TDD Level 1. SweetClaude observes quietly and builds what you ask. Best for exploration, prototypes, and personal projects. See [Planning Concepts](planning-concepts.md).
 
 **Kanban mode**
-A continuous-flow mode with a hard WIP limit of 3 in-progress stories. No sprints. Backlog is used but epics are not surfaced. Best for solo developers or small teams who deliver continuously without sprint ceremonies. See [Planning Concepts](planning-concepts.md).
+A continuous-flow mode with a hard WIP limit of 3 in-progress stories. No sprints. Backlog is used but epics are not surfaced. Best for solo developers or small teams who deliver continuously without sprint ceremonies. See [Planning Concepts](planning-concepts.md). (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Roadmap-driven development**
 A development approach where stories are organized into milestones and epics, with optional sprint planning for time-boxed execution. Used by product teams delivering software commercially. See [Planning Concepts](planning-concepts.md).
 
 **Shape Up mode**
-A mode based on the Basecamp methodology. Work enters through shaped pitches, not a backlog. A betting table approves pitches before implementation begins (hard gate). 6-week cycles; fixed appetite, variable scope. No milestones, epics, or sprints. See [Planning Concepts](planning-concepts.md).
+A mode based on the Basecamp methodology. Work enters through shaped pitches, not a backlog. A betting table approves pitches before implementation begins (hard gate). 6-week cycles; fixed appetite, variable scope. No milestones, epics, or sprints. See [Planning Concepts](planning-concepts.md). (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Sprint**
 A fixed-length time container for work (Agile). Groups stories by when they will be worked, not by what they are about. Optional in SweetClaude — solo developers often skip sprints and work directly from epics. See [Planning Concepts](planning-concepts.md).

@@ -19,9 +19,15 @@ Restart Claude Code after install. Then run:
 
 **Upgrading from 4.x:** Run `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. After the restart, run `/sweetclaude:configure update` in each project. See [Upgrading to 5.0](upgrading-to-5.md) for the new command names.
 
-**Upgrading from 3.x:** The stable channel moved from `stable-3.x` to `main`. To switch a 3.x install, re-add the stable marketplace and
-reinstall as above, then run `/sweetclaude:configure update` inside each project to
-migrate your data.
+**Upgrading from 3.x:** The stable channel moved from `stable-3.x` to `main`. Old 3.x installs registered their marketplace as `sweetclaude-stable`, so remove it first, then add `main` and install:
+
+```text
+/plugin marketplace remove sweetclaude-stable
+/plugin marketplace add carson-sweet/sweetclaude@main
+/plugin install sweetclaude@sweetclaude-stable
+```
+
+Restart Claude Code, then run `/sweetclaude:configure doctor` inside each project. Doctor routes legacy project state to recovery or migration; update does not migrate project data. To stay on 3.x, add `carson-sweet/sweetclaude@stable-3.x` and install `sweetclaude@sweetclaude-legacy`.
 
 **The beta channel is retired.** It no longer receives updates and cannot be
 installed. If `/plugin list` shows `sweetclaude@sweetclaude-beta`, make the
