@@ -213,7 +213,9 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/update.py" major-gate \
   --incoming-version "{new_version}"
 ```
 
-If `gate_applies` is true, present via AskUserQuestion:
+If `gate_applies` is true, branch on `gate`.
+
+If `gate` is `v3-to-v4`, present via AskUserQuestion:
 
 > **SweetClaude v4 is available — this is a major release.**
 >
@@ -225,6 +227,19 @@ If `gate_applies` is true, present via AskUserQuestion:
 - **Not now**
 
 On "Not now": write `framework.update.declined: true` to `.sweetclaude/state/sweetclaude.yaml` (if it exists). Run cleanup. Stop.
+
+If `gate` is `v4-to-v5`, present via AskUserQuestion:
+
+> **SweetClaude 5.0 is available — this is a major release.**
+>
+> SweetClaude 5.0 replaces the full slash-command menu with nine commands: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status`, and `/sweetclaude:help`. Older commands move under them; for example, `/sweetclaude:doctor` becomes `/sweetclaude:configure doctor`.
+>
+> Your project data does not change.
+
+- **Yes, update**
+- **Not now**
+
+On "Not now": write `framework.update.declined: "{new_version}"` (the specific version declined) to `.sweetclaude/state/sweetclaude.yaml` (if it exists), so bootstrap stays silent for that major. Run cleanup. Stop.
 
 If gate does not apply: continue.
 

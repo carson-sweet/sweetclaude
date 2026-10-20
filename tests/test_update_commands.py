@@ -133,13 +133,50 @@ def test_major_gate_does_not_fire_on_a_downgrade() -> None:
     assert out["gate_applies"] is False
 
 
-def test_major_gate_does_not_fire_within_v4() -> None:
+def test_major_gate_fires_its_own_notice_on_the_v4_to_v5_boundary() -> None:
     out = _capture(mod.cmd_major_gate,
                    argparse.Namespace(installed_version="4.0.0",
                                       incoming_version="5.0.0"))
-    assert out["gate_applies"] is False, (
-        "the gate is scoped to 3 -> 4; a future 4 -> 5 needs its own decision"
-    )
+    assert out["gate_applies"] is True
+    assert out["gate"] == "v4-to-v5"
+    assert out["current_major"] == 4
+    assert out["incoming_major"] == 5
+
+
+def test_major_gate_names_the_v3_to_v4_gate() -> None:
+    out = _capture(mod.cmd_major_gate,
+                   argparse.Namespace(installed_version="3.18.2",
+                                      incoming_version="4.0.0"))
+    assert out["gate"] == "v3-to-v4"
+
+
+def test_major_gate_keeps_the_v3_gate_for_a_v3_to_v5_jump() -> None:
+    out = _capture(mod.cmd_major_gate,
+                   argparse.Namespace(installed_version="3.18.2",
+                                      incoming_version="5.0.0"))
+    assert out["gate_applies"] is True
+    assert out["gate"] == "v3-to-v4"
+
+
+def test_major_gate_has_no_gate_within_v5() -> None:
+    out = _capture(mod.cmd_major_gate,
+                   argparse.Namespace(installed_version="5.0.0",
+                                      incoming_version="5.1.0"))
+    assert out["gate_applies"] is False
+    assert out["gate"] is None
+
+
+def test_update_skill_presents_a_distinct_v5_notice() -> None:
+    skill = (REPO_ROOT / "skill-library" / "configure" / "update" / "SKILL.md").read_text(encoding="utf-8")
+    step = skill.split("## Step 2c: Major version gate", 1)[1].split("\n## Step 3", 1)[0]
+    assert "`v3-to-v4`" in step
+    assert "`v4-to-v5`" in step
+    assert "SweetClaude 5.0" in step
+    for command in ("go", "plan", "design", "build", "maintain",
+                    "configure", "utils", "status", "help"):
+        assert f"/sweetclaude:{command}`" in step
+    assert "`/sweetclaude:configure doctor`" in step
+    assert "project data does not change" in step
 
 
 def test_major_gate_tolerates_unparseable_versions() -> None:
