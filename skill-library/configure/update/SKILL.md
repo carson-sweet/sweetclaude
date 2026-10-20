@@ -232,7 +232,7 @@ If `gate` is `v4-to-v5`, present via AskUserQuestion:
 
 > **SweetClaude 5.0 is available — this is a major release.**
 >
-> SweetClaude 5.0 replaces the full slash-command menu with nine commands: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status`, and `/sweetclaude:help`. Older commands move under them; for example, `/sweetclaude:doctor` becomes `/sweetclaude:configure doctor`.
+> SweetClaude 5.0 replaces the full slash-command menu with nine commands: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status`, and `/sweetclaude:help`. Older commands move under them; for example, the doctor command is now `/sweetclaude:configure doctor`.
 >
 > Your project data does not change.
 
