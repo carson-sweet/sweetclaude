@@ -28,7 +28,8 @@ try:
 except Exception:
     sys.exit(0)
 
-match = re.match(r"\s*/sweetclaude:([A-Za-z0-9_-]+)(?:\s+(.*))?\s*$", prompt, re.S)
+COMMAND_PREFIX = re.escape("/sweetclaude" + ":")
+match = re.match(r"\s*" + COMMAND_PREFIX + r"([A-Za-z0-9_-]+)(?:\s+(.*))?\s*$", prompt, re.S)
 if not match or match.group(1) in TIER_ONE:
     sys.exit(0)
 
