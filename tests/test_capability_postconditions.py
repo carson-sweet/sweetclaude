@@ -136,9 +136,11 @@ def configured(tmp_path: Path) -> Path:
     for sub in ("backlog/done", "roadmap/epics/done", "roadmap/milestones",
                 "roadmap/issues/done"):
         (root / ".sweetclaude" / "product" / sub).mkdir(parents=True, exist_ok=True)
-    (root / ".sweetclaude" / "artifact-privacy.yaml").write_text(
-        (REPO_ROOT / ".sweetclaude" / "artifact-privacy.yaml").read_text(encoding="utf-8"),
-        encoding="utf-8")
+    (root / ".sweetclaude" / "artifact-privacy.yaml").write_text(yaml.safe_dump({
+        "schema_version": 1,
+        "categories": {c: {"privacy": "private", "base_path": f".sweetclaude/{c}"}
+                       for c in ("strategy", "product", "technical", "design")},
+    }, sort_keys=False), encoding="utf-8")
     subprocess.run(["git", "init", "-q", "-b", "main", str(root)],
                    capture_output=True, timeout=30)
     return root
