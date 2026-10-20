@@ -5,6 +5,7 @@ decisions:
   work_types: Keep the 19 work types and 6 shapes only where a phase or hard gate depends on them. Retire claims that /sweetclaude:go classifies requests into work types, shapes or entry categories. Decided 2026-10-20.
   setup_promises: Setup gains a pre-sweetclaude snapshot branch and a mode question (implement). The git init offer, strategy/ folder and deference question are dropped from the docs (retire-claim). Decided 2026-10-20.
   release_split: Phase 0 shipped as 5.0.2. Phases 1-6 ship as 5.1.0, headlined 'enforcement activated across TDD, WIP, sprint and phase policies', only after the live enforcement suite passes. Decided 2026-10-20.
+  uncovered_promises: 'Implement all six uncovered promises in 5.1: TDD override logging (R-250), the commit gate requiring failing tests (R-251), CLAUDE.md written by setup (R-034), sprint planning surfacing scope changes (R-180), Flow thin artifacts (R-124) and automatic assumption-register capture (R-178). Decided 2026-10-20.'
 rows:
 - id: R-001
   source: phase0
@@ -489,7 +490,7 @@ rows:
   test_level:
   - contract
   status: open
-  notes: No decision covers this. Recommend implement because master preflight checks for the section; if a human prefers retiring the claim, master Step 2 must stop requiring it. Needs verification whether master Step 2 treats a missing CLAUDE.md section as unconfigured.
+  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-035
   source: A
   docs:
@@ -1580,7 +1581,7 @@ rows:
   - contract
   - unit
   status: open
-  notes: Recommend retire-claim; no recorded decision covers this, so a human decides.
+  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-125
   source: B
   docs:
@@ -2182,7 +2183,7 @@ rows:
   test_level:
   - contract
   status: open
-  notes: Audit suggested retiring the claim; no decision covers it, so disposition is implement.
+  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-179
   source: C
   docs:
@@ -2211,7 +2212,7 @@ rows:
   test_level:
   - contract
   status: open
-  notes: Audit suggested removing the sentence; no decision covers it, so disposition is implement.
+  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-181
   source: C
   docs:
@@ -3251,7 +3252,7 @@ rows:
   - contract
   - unit
   status: open
-  notes: No ledger decision covers retiring this promise, so it is marked implement; retiring it instead needs a product decision.
+  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-251
   source: D
   docs:
@@ -3267,7 +3268,7 @@ rows:
   - contract
   - live
   status: open
-  notes: No ledger decision covers retiring this promise, so it is marked implement.
+  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-252
   source: D
   docs:
