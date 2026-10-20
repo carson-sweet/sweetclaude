@@ -4,6 +4,16 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [4.5.3] — 2026-10-16
+
+### Fixed — inactive projects do not load SweetClaude rules
+
+Corrected SweetClaude rules to prevent them from loading in some projects where
+SweetClaude is inactive. Doctor and update remove the legacy global rules
+directory, and session startup remains silent for inactive projects.
+
+---
+
 ## [4.5.2] — 2026-08-03
 
 ### Fixed — update offers respect your channel
