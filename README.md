@@ -11,6 +11,8 @@ Start Claude Code and run:
 /plugin marketplace add carson-sweet/sweetclaude@main
 /plugin install sweetclaude@sweetclaude-stable
 /sweetclaude:help
+
+/sweetclaude:go give me an overview of what you can do
 ```
 
 ## What It Is
@@ -32,7 +34,7 @@ Install SweetClaude (below) then run `/sweetclaude:help` to get a guided walk-th
 There's a massive number of Claude Code plugins out there. To help you decide if SweetClaude might be one that's helpful, here are the top principles used when designing SweetClaude:
 
 * **Successful projects take more than code.** If you're here you probably already know this, but really thinking through what you're building, for who, why, and how they'll use it results in a good product that delivers value to users. Unfortunately, that part is a lot less fun than vibe-coding — it's real work. SweetClaude is primarily about taking care of that work — and a bunch of other lessfun work — in a structured, reliable way.
-* **Hide the complexity**. SweetClaude has over 100 skills built natively on Claude Code's Skills framework and Anthropic's multi-agent architecture. These skills compose into dynamic, situation-driven workflows across four operating modes. *Few people want to learn all that.*  To hide the complexity, SweetClaude uses a conversational interface with just a few commands as entry points, and an orchestrator skill does the rest (you can also name a specific workflow after its category, such as `/sweetclaude:configure doctor`).
+* **Hide the complexity**. SweetClaude has over 100 skills built natively on Claude Code's Skills framework and Anthropic's multi-agent architecture. These skills compose into dynamic, situation-driven workflows across four operating modes. *<u>Few people want to learn all that</u>.*  To hide the complexity, SweetClaude uses a conversational interface with just a few commands as entry points, and an orchestrator skill does the rest (you can also name a specific workflow after its category, such as `/sweetclaude:configure doctor`).
 * **Adapt to user preferences as they evolve.** AI assisted vibe-coding is fantastic for rapid experimentation and iteration to see if an idea is viable. An assistant framework should be able to capture things passively without killing the vibe and then be able to use what it captured to dial up the structure and discipline as needed, based on what it learned in the vibe phase. The framework adjusts to the user's preferences — not the other way around — and is designed to dial up or dial back the level of structure mid-project as needed.
 
 
