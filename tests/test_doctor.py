@@ -1404,6 +1404,25 @@ class TestStorageLint:
         assert f.severity == "warning"
         assert f.fix_type == "prompted"
 
+    # Scenario: BL-prefixed files on v5 produce warning
+    def test_bl_prefixed_files_on_v5_produce_warning(self, tmp_path, fake_home):
+        project_dir = build_fixture(tmp_path, overrides={
+            "backlog_files": [
+                {"name": "BL-001-old.md", "content": "# Old item"},
+            ],
+            "sweetclaude_yaml": {
+                "phase_schema_version": 2,
+                "framework": {"installed_version": "5.0.0"},
+            },
+        })
+        state = build_project_state(project_dir)
+        findings = check_storage_lint(state)
+
+        ids = [f.id for f in findings]
+        assert "storage-lint:v3-files-present:backlog" in ids, (
+            f"Expected v3-files-present finding for BL-prefix files on v5, got: {ids}"
+        )
+
     # Scenario: BL-prefixed files on v3 do not produce warning
     def test_bl_prefixed_files_on_v3_no_warning(self, tmp_path, fake_home):
         project_dir = build_fixture(tmp_path, overrides={
