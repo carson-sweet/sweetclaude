@@ -459,6 +459,10 @@ def cmd_sync(args: argparse.Namespace) -> int:
     # Skills → install path
     rsync_dir(f"{source}/skills", f"{install_path}/skills")
 
+    # Workflow library → install path (Tier 1 commands load workflows from it)
+    if os.path.isdir(f"{source}/skill-library"):
+        rsync_dir(f"{source}/skill-library", f"{install_path}/skill-library")
+
     # Hooks → install path
     rsync_dir(f"{source}/hooks", f"{install_path}/hooks")
 
