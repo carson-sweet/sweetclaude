@@ -54,7 +54,6 @@ case "$SKILL_NAME" in
   sweetclaude:purge|\
   sweetclaude:setup|\
   sweetclaude:init|\
-  sweetclaude:adopt|\
   sweetclaude:update)
     echo '{"ok": true}'; exit 0 ;;
 esac
@@ -70,7 +69,7 @@ except Exception:
     print('')
 " 2>/dev/null || true)
   case "${SKILL_ARGS%% *}" in
-    fix-sweetclaude|_migrate|purge|setup|init|adopt|update)
+    fix-sweetclaude|_migrate|purge|setup|init|update)
       echo '{"ok": true}'; exit 0 ;;
   esac
 fi
