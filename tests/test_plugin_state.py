@@ -95,6 +95,26 @@ def test_inspect_detects_stable_channel_from_stable_marketplace(tmp_path):
     assert result["expected_marketplace"] == "sweetclaude-stable"
 
 
+def test_inspect_detects_stable_channel_for_bare_marketplace_5x(tmp_path):
+    install = _install_dir(tmp_path, ".claude", "plugins", "cache", "sweetclaude", "sweetclaude", "5.0.0")
+    _write_installed(tmp_path, {
+        "plugins": {
+            "sweetclaude@sweetclaude": [{
+                "scope": "user",
+                "installPath": install,
+                "version": "5.0.0",
+                "lastUpdated": "2026-10-20T10:00:00Z",
+            }]
+        },
+    })
+
+    result = plugin_state.inspect_state(tmp_path, None, None)
+
+    assert result["channel"] == "stable"
+    assert result["expected_ref"] == "main"
+    assert result["expected_marketplace"] == "sweetclaude-stable"
+
+
 def test_inspect_ignores_local_entry_for_other_project(tmp_path):
     project = tmp_path / "project"
     other_project = tmp_path / "other"

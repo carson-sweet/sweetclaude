@@ -109,6 +109,9 @@ class TestChannelClassification:
         # Post-promotion: a non-prerelease 4.x install defaults to stable.
         assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "4.5.1"}) == "stable"
 
+    def test_bare_marketplace_5x_release_is_stable(self):
+        assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "5.0.0"}) == "stable"
+
     def test_bare_marketplace_3x_is_legacy(self):
         assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "3.68.6"}) == "legacy"
 
