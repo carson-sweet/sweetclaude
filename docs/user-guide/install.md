@@ -1,6 +1,6 @@
 # Installing SweetClaude
 
-SweetClaude 4.x is the stable channel, tracked on `main`.
+SweetClaude 5.x is the stable channel, tracked on `main`.
 
 ## Marketplace Install
 
@@ -17,8 +17,9 @@ Restart Claude Code after install. Then run:
 /sweetclaude:help
 ```
 
-**Upgrading from 3.x:** The stable channel moved from `stable-3.x` to the 4.x
-line on `main`. To switch a 3.x install, re-add the stable marketplace and
+**Upgrading from 4.x:** Run `/sweetclaude:configure update`. See [Upgrading to 5.0](upgrading-to-5.md) for the new command names.
+
+**Upgrading from 3.x:** The stable channel moved from `stable-3.x` to `main`. To switch a 3.x install, re-add the stable marketplace and
 reinstall as above, then run `/sweetclaude:configure update` inside each project to
 migrate your data.
 

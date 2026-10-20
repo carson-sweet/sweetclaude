@@ -1,14 +1,26 @@
 # Changelog
 
-All notable changes to SweetClaude are documented here. SweetClaude ships on the stable channel (4.x, tracked on `main`) with a legacy 3.x maintenance channel; this changelog calls out channel-specific changes explicitly.
+All notable changes to SweetClaude are documented here. SweetClaude ships on the stable channel (5.x, tracked on `main`) with a legacy 3.x maintenance channel; this changelog calls out channel-specific changes explicitly.
 
 ---
 
-## [4.6.0] — 2026-10-20
+## [5.0.0] — 2026-10-20
 
-### Changed — six category commands replace the full skill menu
+### Changed — nine commands replace the full skill menu (breaking)
 
-SweetClaude now shows a short list of commands: `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure` and `/sweetclaude:utils`, plus `status`, `help` and `go`. Specialized workflows live in a library behind these commands. Name the workflow or describe what you need, for example `/sweetclaude:configure doctor` or `/sweetclaude:configure recover`.
+SweetClaude now shows nine commands instead of one per workflow: `/sweetclaude:go`, `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure`, `/sweetclaude:utils`, `/sweetclaude:status` and `/sweetclaude:help`. Specialized workflows live in a library behind these commands. Name the workflow after its category, for example `/sweetclaude:configure doctor`, or describe what you need and SweetClaude picks the workflow. Typing a removed command such as `/sweetclaude:doctor` tells you its new form and runs it. Project data does not change. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping.
+
+### Changed — update prompts respect a declined major version
+
+Declining the 5.0 update stops the prompt for 5.x releases. You are asked again when a later major version ships, and `/sweetclaude:configure update` still updates at any time. Upgrading from 4.x shows a one-time notice explaining the new commands.
+
+### Changed — behavioral-regression workflows retired
+
+The manual `behavioral-regression` and `sweetclaude-behavioral-regression` workflows are retired. The interaction-model contracts now live in `config/behavioral-contracts.md` and are scored with `scripts/behavioral_judge.py`. A cost-capped routing suite checks that requests reach the right category and workflow.
+
+### Fixed — library workflows receive session state
+
+Workflows loaded from the library now receive the project's session state, as they did when each workflow was its own command.
 
 ### Fixed — doctor can roll back removal of legacy global rules
 

@@ -1,9 +1,9 @@
-# SweetClaude 4.x User Guide
+# SweetClaude User Guide
 
 **Version:** 1.4
 **Date:** 2026-08-11
 
-SweetClaude 4.x is the stable channel, tracked on `main`. Plugin update,
+SweetClaude 5.x is the stable channel, tracked on `main`. Plugin update,
 framework sync, project recovery, and taxonomy migration are separate
 safety-gated flows.
 
@@ -80,9 +80,10 @@ If you have it installed and want to understand the design decisions, read
 | [Phases and Workflows](phases-and-workflows.md) | Reference for phases, work types, gates, and workflow shapes. |
 | [Large-Story and Small-Story Workflows](large-story-workflow.md) | Controller-gated, evidence-based workflows for large and bounded work items. |
 | [Planning Concepts](planning-concepts.md) | Backlogs, stories/issues, milestones, epics, sprints, and priorities. |
-| [Skills Reference](skills-reference.md) | 4.x skill surface, including doctor, recover, migrate, and hook repair. |
+| [Upgrading to 5.0](upgrading-to-5.md) | Old commands and their 5.0 replacements. |
+| [Skills Reference](skills-reference.md) | Tier 1 commands and library workflows, including doctor, recover, migrate, and hook repair. |
 | [TDD Levels](tdd.md) | The four enforcement levels and hook-based discipline. |
-| [State and Memory](state-and-memory.md) | 4.x state layout, product artifacts, doctor runs, and recovery runs. |
+| [State and Memory](state-and-memory.md) | State layout, product artifacts, doctor runs, and recovery runs. |
 | [Work-Item Artifacts](work-item-artifacts.md) | Opt-in per-work-item artifact directories, and how to enable and backfill them. |
 | [Hook Development](hook-development.md) | Hook repair and emergency recovery. |
 | [Corpus and RAG](corpus-system.md) | Document pipeline and local semantic search. |

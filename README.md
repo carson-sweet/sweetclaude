@@ -2,7 +2,7 @@
 
 # SweetClaude
 
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-4.6.0-blue)](https://github.com/carson-sweet/sweetclaude/releases/tag/v4.6.0) [![Behavioral Contracts](https://img.shields.io/badge/behavioral_contracts-15%2F15_passing-brightgreen)](docs/user-guide/behavioral-contracts.md)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-5.0.0-blue)](https://github.com/carson-sweet/sweetclaude/releases/tag/v5.0.0)
 
 ## TL;DR
 
@@ -169,6 +169,8 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 
 ## Migrating from Older Channels
 
+**From 4.x:** Run `/sweetclaude:configure update`. Your project data does not change. SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands; for example `/sweetclaude:doctor` is now `/sweetclaude:configure doctor`. Typing an old command tells you its new form. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping.
+
 **From the 4.x beta channel:** The beta channel is being retired. Switch in this order so you are never double-installed (both channels' skills and hooks would load at once):
 
 ```
@@ -181,7 +183,7 @@ Removing the beta marketplace uninstalls its plugin, so add and install stable f
 
 Beta releases before `v4.1.9-beta` had known update/recovery risks. See [4.x Beta Rescue](docs/user-guide/beta-rescue.md) if an existing beta install reports `4.1.8-beta` or older.
 
-**From 3.x:** The 3.x channel has been renamed to `sweetclaude-legacy`. To move a 3.x install onto 4.x:
+**From 3.x:** The 3.x channel has been renamed to `sweetclaude-legacy`. To move a 3.x install onto the stable line:
 
 ```
 /plugin marketplace add carson-sweet/sweetclaude@main

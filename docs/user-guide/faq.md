@@ -87,11 +87,11 @@ If you have an external deadline, set a milestone (`/sweetclaude:plan product-mi
 
 ---
 
-## What is the difference between stable 4.x and legacy 3.x?
+## What is the difference between stable 5.x and legacy 3.x?
 
-Stable 4.x (on `main`) is the recommended channel for normal active project work: update syncs framework files, doctor is the maintenance front door, recovery handles unsafe legacy layouts, and migration runs only after preflight says it is supported. Legacy 3.x receives maintenance only. The 4.x beta channel is retired — see [Installing SweetClaude](install.md) for the one-time switch.
+Stable 5.x (on `main`) is the recommended channel for normal active project work: update syncs framework files, doctor is the maintenance front door, recovery handles unsafe legacy layouts, and migration runs only after preflight says it is supported. Legacy 3.x receives maintenance only. The 4.x beta channel is retired — see [Installing SweetClaude](install.md) for the one-time switch.
 
-Choose the channel through Claude Code plugin marketplace commands. Do not use `/sweetclaude:configure update` to move a legacy 3.x install onto 4.x.
+Choose the channel through Claude Code plugin marketplace commands. Do not use `/sweetclaude:configure update` to move a legacy 3.x install onto the stable line.
 
 ## Can I disable parts I don't want?
 
