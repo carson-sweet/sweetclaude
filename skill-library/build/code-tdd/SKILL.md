@@ -1,0 +1,240 @@
+---
+spdx-license: AGPL-3.0-or-later
+user-invocable: true
+description: "Internal TDD process skill — invoked by code-feature, code-issue, and code-debt."
+---
+
+
+!`bash ${CLAUDE_SKILL_DIR}/../../hooks/read-state.sh session-state`
+
+<preflight-guard>
+STOP. Before executing this skill, check: does .sweetclaude/state/sweetclaude.yaml or .sweetclaude/state/phase.yaml exist in the project directory? If NEITHER, do not proceed. Tell the user: "This project is not set up for SweetClaude. Running the pre-flight check now." Then invoke the sweetclaude master skill (Skill tool, skill: "sweetclaude:master") and run its pre-flight. Return here only after the pre-flight passes.
+</preflight-guard>
+
+# SweetClaude TDD
+
+Tests specify behavior. Implementation satisfies tests. Hooks enforce this. No exceptions.
+
+## Process Control Gate
+
+Before any Level 2 or Level 3 subagent dispatch, and before any QA caucus, read
+`skills/process-controls.md` and create or update
+`.sweetclaude/state/process-control-ledger.yaml`.
+
+Do not spawn a test writer, implementer, reviewer, or caucus if the ledger is
+missing, over budget, stale, or in a stop disposition. Stop and ask the user
+for a bounded decision instead.
+
+Default budget for this skill without explicit user approval:
+
+- one test-writer dispatch;
+- one implementer dispatch;
+- one three-reviewer QA caucus;
+- no more than two caucus/correction rounds for the same story;
+- no more than one blocking caucus failure before user decision or contract
+  reopen.
+
+If repeated caucus findings, repeated failed RED/GREEN correction, WLF/process
+failure records, or pass-state bypasses indicate that the story/test contract is
+unstable, stop. Do not keep patching tests or spawning more agents under the
+same contract.
+
+For large/high-rigor stories, TDD entry requires a frozen
+`success_criteria_contract`, its `success_criteria_contract_hash`, and
+`criterion_ids`. Tests must trace to the frozen criterion ids, and any missing
+coverage becomes either a test gap before lock or a
+`criteria-amendment-request.yaml`; it may not silently expand completion scope.
+Completion of TDD/implementation requires `success-criteria-ledger.json` with
+every frozen criterion evaluated and `all_success_criteria_passed == true`. No
+review, caucus, verification, release, or completion step may add completion
+criteria.
+
+## Branch Check
+
+```bash
+git branch --show-current
+```
+
+If the current branch already starts with an issue ID prefix (e.g., `ISSUE-046/...`, `issue-42/...`) — continue. Branch setup was already handled by the calling skill.
+
+If not (direct invocation): derive a branch name from session state `active_work_item.id` + title or from `$ARGUMENTS`. Format: `{ID}/{slug}`. Offer via AskUserQuestion: **Create branch `{branch-name}`** (Recommended) / **Stay on current branch** / **Something else**.
+
+## Select TDD Level
+
+| Level | When | Process |
+|---|---|---|
+| 0: Hotfix | Production emergency | Fix first. Write regression test in same session. No grace period. |
+| 1: Light | Simple CRUD, config, straightforward | Single-context RED-GREEN-REFACTOR. Tests still first. Still confirmed RED. |
+| 2: Standard | Features, bug fixes, behavior changes | Subagent separation: test writer ≠ implementer. Tests committed before impl. |
+| 3: Full | Net-new features with Gherkin specs | Gherkin → test writer → QA caucus → user approval → implementer → verify |
+
+Propose a level based on work complexity.
+
+Use AskUserQuestion with these options:
+- "Level 0: Hotfix" — production emergency, fix first, regression test immediately
+- "Level 1: Light" — simple change, single-context RED-GREEN-REFACTOR
+- "Level 2: Standard" — separate test writer and implementer, tests committed before implementation
+- "Level 3: Full" — from Gherkin specs with QA caucus review
+
+After the user selects a level, record the selection:
+
+## Level 0: Hotfix
+
+1. Fix the immediate issue
+2. Write a regression test that would have caught it
+3. Confirm the test fails without the fix (revert fix, run test, re-apply fix)
+4. Commit test + fix together
+
+## Level 1: Light
+
+1. **RED:** Write a failing test for the behavior. Use the project's detected test runner.
+2. **Verify RED:** Run the test. It must fail. If it passes, the test is wrong — rewrite it.
+
+   Once RED is confirmed, freeze the tests:
+   ```bash
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py set --phase implementing --project-dir .
+   ```
+   This is what makes "tests are immutable during implementation" real — the
+   guardian hook reads this marker. Skipping it means the rule is documented
+   and unenforced (ISSUE-282).
+
+3. **GREEN:** Write the minimum code to pass the test.
+4. **Verify GREEN:** Run the test. It must pass. All other tests must still pass.
+5. **REFACTOR:** Clean up. Tests must stay green after each change.
+6. **Repeat** for next behavior. Before writing the next test, unfreeze:
+   ```bash
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py set --phase writing_tests --project-dir .
+   ```
+
+## Level 2: Standard
+
+1. **Write tests** in the main context. Design the interface first: function names, module paths, parameter signatures, return types. Then write tests that import from modules that do not exist yet. Tests are complete behavioral contracts: happy path, validation errors, edge cases, side effects.
+
+2. **Verify RED:** Run tests. All must fail (the modules do not exist).
+
+3. **Commit tests:** Auto-commit with `test: RED - [story-id] failing tests`. This is the git checkpoint. Test files are now immutable — record that, or the immutability is a claim rather than a fact:
+   ```bash
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py set --phase implementing --project-dir .
+   ```
+
+4. **Spawn implementer subagent.** The implementer receives:
+   - Test files (READ ONLY)
+   - Existing codebase for context
+   - One instruction: **make the tests pass with minimum code**
+   - The implementer never sees user stories, Gherkin specs, or test-writing reasoning
+
+5. **Implementer works.** If tests fail, the implementer fixes the implementation, never the tests. If a test looks wrong, the implementer reports back. It does not modify test files.
+
+6. **Verify GREEN:** All tests pass.
+
+7. **REFACTOR:** Clean up implementation. Run tests after each change. When the story is done, release the freeze:
+   ```bash
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py clear --project-dir .
+   ```
+
+## Level 3: Full (from Gherkin)
+
+1. **Read Gherkin.** Read the `.feature` file generated by the Gherkin bridge skill.
+
+2. **Create a test-writer worktree.** Run this in the parent session via Bash:
+   ```bash
+   TESTWRITER_ROOT=$(mktemp -d /tmp/sc-tdd-XXXXX) && rmdir "$TESTWRITER_ROOT" && git worktree add "$TESTWRITER_ROOT" HEAD && echo "$TESTWRITER_ROOT"
+   ```
+   Note the path — it is passed to the test-writer subagent.
+
+3. **Spawn test writer subagent.** The test writer receives:
+   - The `.feature` file
+   - The existing codebase (for patterns, imports, conventions)
+   - No knowledge of how the implementation will work
+   - Instruction: **"Your project root is {TESTWRITER_ROOT}. Use this as the base for ALL Read, Write, Edit, and Bash tool calls. `cd {TESTWRITER_ROOT}` before every bash command. Write failing tests that fully specify the behavior in the `.feature` file."**
+
+4. **Identify and copy test files.** After the test writer completes, run in the parent session:
+   ```bash
+   git -C "$TESTWRITER_ROOT" diff --name-only HEAD
+   ```
+   Copy those files to the main project dir:
+   ```bash
+   rsync -a --files-from=<(git -C "$TESTWRITER_ROOT" diff --name-only HEAD) "$TESTWRITER_ROOT/" ./
+   ```
+   Then remove the worktree:
+   ```bash
+   git worktree remove "$TESTWRITER_ROOT"
+   ```
+
+5. **QA Caucus.** Invoke all three reviewer agents **in a single message** (multiple Agent tool calls in one response) so they run in parallel. These agents are read-only — no worktree needed.
+   - `qa-caucus-service` — service/API coverage
+   - `qa-caucus-component` — UI/component coverage (if applicable)
+   - `qa-caucus-integration` — cross-cutting concerns
+
+   Each agent receives the test file paths and the `.feature` file for context. After all three return, consolidate gaps. Present to user for approval. Add approved gaps to test files.
+
+   Before spawn, the process-control ledger must show an available
+   three-reviewer caucus budget. After the caucus, update the ledger with
+   reviewer count, caucus round count, and blocking-finding count. If this is
+   the second blocking caucus failure for the story, stop for user decision or
+   contract reopen before any further test edits or caucus spawn.
+
+6. **Verify RED:** Run tests. All must fail.
+
+7. **User approval.** Present the test files. Wait for explicit approval.
+
+8. **Commit tests.** Git checkpoint.
+
+9. **Spawn implementer subagent.** Same rules as Level 2. Tests are read-only. The implementer runs in the main project dir — it never sees the Gherkin spec or test-writer reasoning.
+
+   Before spawn, the process-control ledger must show implementer budget
+   available and no active stop disposition.
+
+10. **Verify GREEN.** All tests pass.
+
+11. **REFACTOR.**
+
+12. **Optional: Mutation testing.** Run `sweetclaude:library-load code-testing` to verify test quality.
+
+## Rules — Non-Negotiable
+
+### Tests Are Immutable During Implementation
+The test-guardian hook enforces this, but only once this skill has recorded
+that implementation has started. Editing a test file then triggers: "Test files
+are immutable during implementation. Fix your code, not the tests."
+
+The hook reads `work.active.tdd_phase` from `.sweetclaude/state/sweetclaude.yaml`.
+Nothing else writes it. If the `tdd_phase.py set --phase implementing` step is
+skipped, the hook allows every test edit and says nothing — the rule reads as
+enforced and is not. That was the state of things until ISSUE-282.
+
+Override requires explicit user approval.
+
+### No Mocks By Default
+Use real dependencies. Real databases with transaction rollback or fixture cleanup. Real file systems. Real function calls.
+
+Exceptions (require justification):
+- External APIs with rate limits or cost: use contract testing with recorded responses
+- Third-party services not available locally: use contract testing
+- Time-dependent behavior: clock injection, not mocks
+- Never mock the database
+
+### Tests Are Behavioral Specifications
+Tests do not check "does this function exist?" They assert: "when called with X, returns Y and creates Z in the database." Every test is a concrete assertion about expected behavior.
+
+### No Implementation Without Failing Tests
+If you start writing implementation code without failing tests, stop. Write the tests. Watch them fail. Then implement.
+
+### Language Agnostic
+Read the project's `CLAUDE.md` or `project.yaml` for:
+- Test runner command
+- Test file patterns and locations
+- Assertion library
+- Database setup for tests
+
+Never hardcode language-specific commands.
+
+## Common Rationalizations — All Mean "Start Over"
+
+| Excuse | Reality |
+|---|---|
+| "Too simple to test" | Simple code breaks. The test takes 30 seconds. |
+| "I'll test after" | Tests that pass immediately prove nothing. |
+| "Need to explore first" | Fine. Throw away the exploration. Start with TDD. |
+| "Tests are slowing me down" | TDD is faster than debugging. |
+| "Just this once" | No. |

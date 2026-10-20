@@ -962,7 +962,7 @@ class TestSkillDoc:
 
     def test_no_manual_state_edit_instruction(self):
         """
-        SC-009: skills/deploy-ship/SKILL.md must NOT contain:
+        SC-009: skill-library/build/deploy-ship/SKILL.md must NOT contain:
           - any instruction to manually update/edit last_work_item_id
           - any instruction to hand-edit active_work_item in a YAML block
 
@@ -971,7 +971,8 @@ class TestSkillDoc:
         """
         skill_path = (
             Path(__file__).resolve().parent.parent
-            / "skills"
+            / "skill-library"
+            / "build"
             / "deploy-ship"
             / "SKILL.md"
         )
@@ -980,7 +981,7 @@ class TestSkillDoc:
 
         # The skill must not tell the LLM to set or update last_work_item_id manually.
         assert "last_work_item_id" not in content, (
-            "skills/deploy-ship/SKILL.md must not contain 'last_work_item_id'. "
+            "skill-library/build/deploy-ship/SKILL.md must not contain 'last_work_item_id'. "
             "The field must be written deterministically by the controller, not "
             "hand-edited by the LLM following prose instructions."
         )
@@ -994,7 +995,7 @@ class TestSkillDoc:
             re.DOTALL | re.IGNORECASE,
         )
         assert yaml_block_with_active is None, (
-            "skills/deploy-ship/SKILL.md must not contain a YAML code block that "
+            "skill-library/build/deploy-ship/SKILL.md must not contain a YAML code block that "
             "instructs the LLM to hand-edit active_work_item. "
             "Close-out state writes must be owned by the controller."
         )

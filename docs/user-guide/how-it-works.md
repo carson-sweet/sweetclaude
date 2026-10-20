@@ -97,10 +97,10 @@ The work type determines the shape. You do not pick. When you describe the work 
 ## 4.x Beta Operating Model
 
 4.x separates framework update, project repair, recovery, and taxonomy
-migration. `/sweetclaude:update` syncs framework files inside the installed plugin
+migration. `/sweetclaude:configure update` syncs framework files inside the installed plugin
 channel and reports drift. It does not run project-state or taxonomy migrations
 inline. After plugin update and restart, project maintenance starts with
-`/sweetclaude:doctor`.
+`/sweetclaude:configure doctor`.
 
 Doctor is the maintenance front door. It runs deterministic checks over
 state, hooks, storage, migration readiness, config, files, onboarding, and
@@ -108,8 +108,8 @@ environment, then chooses a route:
 
 | Route status | Meaning | Next command |
 |---|---|---|
-| `recovery-available` | The project is stuck or unsafe to migrate. | `/sweetclaude:recover` |
-| `supported-migration-available` | A supported flat v3 `BL-NNN` backlog layout passed preflight. | `/sweetclaude:migrate` |
+| `recovery-available` | The project is stuck or unsafe to migrate. | `/sweetclaude:configure recover` |
+| `supported-migration-available` | A supported flat v3 `BL-NNN` backlog layout passed preflight. | `/sweetclaude:configure migrate` |
 | `compatibility-mode` | Recovery accepted a legacy taxonomy layout without moving artifacts. | Continue normal work. |
 | `no-migration-recommended` | No supported migration is needed. | Continue normal work. |
 
@@ -141,15 +141,15 @@ SweetClaude has four project modes that calibrate structure and enforcement to w
 | **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | Sprint and backlog-triage skills blocked, betting table approval required before implementation, ship/no-ship gate at cycle end |
 | **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship |
 
-There is also **John Wick mode** — an experimental, fully autonomous SDLC pipeline from discovery through PR (TDD Level 3, subagent isolation, QA caucus). Invoked via `/sweetclaude:john-wick`, not through the mode selector.
+There is also **John Wick mode** — an experimental, fully autonomous SDLC pipeline from discovery through PR (TDD Level 3, subagent isolation, QA caucus). Invoked via `/sweetclaude:build john-wick`, not through the mode selector.
 
-Modes are not permanent. `/sweetclaude:project-mode` re-assesses or accepts a direct argument. Every shift snapshots state first.
+Modes are not permanent. `/sweetclaude:configure project-mode` re-assesses or accepts a direct argument. Every shift snapshots state first.
 
 Within the execution layer, the work hierarchy is **Milestone → Sprint → Story** — three levels, that is all. Epics and themes are classification attributes on stories (a `epic_id` and `theme_id` field), not nodes that stories flow through. A sprint in Agile mode anchors to a milestone via `milestone_id`; stories are pulled into it regardless of which epic or theme they belong to. This is the Linear model, not the Jira model — epics are goal lenses and progress metrics, not delivery containers.
 
 Enforcement happens at three layers: (1) `effective-gates.yaml`, compiled at mode selection time into `.sweetclaude/state/`, contains the full rule set for the active mode; (2) `wip-limit.sh`, a PreToolUse hook, blocks tool calls in Kanban mode when the WIP limit is reached; (3) MODE_CHECK blocks inside individual skills reject invocations that are disallowed by the active mode.
 
-Mode selection happens at project init via the `project-assess-shape` five-question interview, and on demand via `/sweetclaude:project-mode`.
+Mode selection happens at project init via the `project-assess-shape` five-question interview, and on demand via `/sweetclaude:configure project-mode`.
 
 ---
 
@@ -286,7 +286,7 @@ This distinction matters because deterministic properties are version-stable (a 
 | Propose-not-ask interaction mode | `interaction-model.md` rule | Claude defaults to making proposals with reasoning rather than asking open-ended questions |
 | Adaptive language matching | `interaction-model.md` rule | Claude matches the user's vocabulary and domain language |
 
-The practical implication: instruction-guided properties are the right implementation choice for behavioral nuance that cannot be mechanically verified. They work well most of the time and degrade gracefully. Deterministic properties are the right choice for correctness guarantees that the framework's value depends on. If a property is described as "load-bearing" in this document and it is instruction-guided, enabling the Protocol Guardian (`/sweetclaude:guardian-on`) upgrades it to deterministic enforcement for that session.
+The practical implication: instruction-guided properties are the right implementation choice for behavioral nuance that cannot be mechanically verified. They work well most of the time and degrade gracefully. Deterministic properties are the right choice for correctness guarantees that the framework's value depends on. If a property is described as "load-bearing" in this document and it is instruction-guided, enabling the Protocol Guardian (`/sweetclaude:configure guardian-on`) upgrades it to deterministic enforcement for that session.
 
 ---
 

@@ -33,7 +33,7 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).parents[1]
-INIT_SKILL = REPO_ROOT / "skills" / "init" / "SKILL.md"
+INIT_SKILL = REPO_ROOT / "skill-library" / "configure" / "init" / "SKILL.md"
 TEMPLATE = REPO_ROOT / "scripts" / "sweetclaude-yaml-template.py"
 DOCTOR = REPO_ROOT / "scripts" / "doctor.py"
 SESSION_STATE = REPO_ROOT / "hooks" / "generate-session-state.sh"
@@ -80,7 +80,7 @@ def test_init_detection_block_is_present_and_runnable() -> None:
 
 def _onboard(project: Path, *, name: str = "fixture", ptype: str = "new",
              stage: str = "IDEA") -> None:
-    """Follow skills/setup/SKILL.md: write state, then build v4 storage."""
+    """Follow skill-library/configure/setup/SKILL.md: write state, then build v4 storage."""
     state = project / ".sweetclaude" / "state"
     state.mkdir(parents=True, exist_ok=True)
     r = subprocess.run(

@@ -105,26 +105,26 @@ fi
 if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
   python3 "$SCRIPT" guard --project-dir . --pretty
 else
-  echo '{"status":"guard-unavailable","message":"Recovery guard unavailable. Run /sweetclaude:update before migration."}'
+  echo '{"status":"guard-unavailable","message":"Recovery guard unavailable. Run /sweetclaude:configure update before migration."}'
 fi
 ```
 
 Parse the guard JSON:
 
 - `run-recover`: output
-  > Your project has old-format work items and recovery detected an unsafe migration/update state. Run `/sweetclaude:recover` before migration. Do not run `/sweetclaude:migrate` yet.
+  > Your project has old-format work items and recovery detected an unsafe migration/update state. Run `/sweetclaude:configure recover` before migration. Do not run `/sweetclaude:configure migrate` yet.
   Then stop.
 - `manual-review` or `missing-product-base`: output the guard `message` and
   stop. Do not recommend migration.
 - `supported-migration-available`: output
-  > Your project has a typed legacy backlog layout that can now be migrated. Run `/sweetclaude:migrate` to convert to the unified ISSUE-NNN taxonomy — it handles typed backlog folders and creates a rollback snapshot before writing.
+  > Your project has a typed legacy backlog layout that can now be migrated. Run `/sweetclaude:configure migrate` to convert to the unified ISSUE-NNN taxonomy — it handles typed backlog folders and creates a rollback snapshot before writing.
   Then stop.
 - `compatibility-mode`: do not stop. Continue to Step 2 and use session-state
   priority logic; old work items may be invisible to cache-backed backlog views,
   but active work and checkpoint state are still usable. Do not recommend
   migration.
 - `migration-may-be-needed`: output
-  > Your project has backlog items in the old format (BL-NNN / STORY-NNN / BUG-NNN). This appears to be a simple migration candidate. Review `/sweetclaude:migrate` before executing it; if there are duplicate IDs, typed backlog folders, stale migration state, or pending doctor prompts, run `/sweetclaude:recover` instead.
+  > Your project has backlog items in the old format (BL-NNN / STORY-NNN / BUG-NNN). This appears to be a simple migration candidate. Review `/sweetclaude:configure migrate` before executing it; if there are duplicate IDs, typed backlog folders, stale migration state, or pending doctor prompts, run `/sweetclaude:configure recover` instead.
   Then stop.
 - `guard-unavailable`: output the guard `message` and stop.
 
@@ -180,8 +180,8 @@ Output the bold header followed by one prose paragraph explaining the proposal. 
 ```
 
 **Drift advisories — append after the proposal paragraph when applicable (do not omit):**
-- If EPIC_GAP is true: `⚠ Active epic advisory: **{ACTIVE_EPIC}** has no open linked stories. Run \`/sweetclaude:epics status {EP-NNN}\` to check criteria or \`/sweetclaude:epics link\` to assign work.`
-- If ITEM_ORPHANED is true: `⚠ Epic drift: this item is not linked to the active epic (**{active epic title}**). Proceeding may not advance your current roadmap target. Run \`/sweetclaude:epics link {ITEM-ID} {EP-NNN}\` to assign it.`
+- If EPIC_GAP is true: `⚠ Active epic advisory: **{ACTIVE_EPIC}** has no open linked stories. Run \`/sweetclaude:plan epics status {EP-NNN}\` to check criteria or \`/sweetclaude:plan epics link\` to assign work.`
+- If ITEM_ORPHANED is true: `⚠ Epic drift: this item is not linked to the active epic (**{active epic title}**). Proceeding may not advance your current roadmap target. Run \`/sweetclaude:plan epics link {ITEM-ID} {EP-NNN}\` to assign it.`
 
 Then immediately call AskUserQuestion with these three options:
 
@@ -212,7 +212,7 @@ Then call AskUserQuestion with two options:
 | **Start planning** | Begin a planning session — milestones, epics, stories, backlog |
 | **Something else** | I have a different direction in mind |
 
-If the user picks Start planning, invoke `sweetclaude:epics add`. If Something else, follow Adaptive Flow.
+If the user picks Start planning, invoke `sweetclaude:library-load epics add`. If Something else, follow Adaptive Flow.
 
 ---
 
@@ -288,7 +288,7 @@ If output starts with `BLOCKED:`, do not invoke any skill. Output the text after
 
 **Pre-routing: PR recording at VERIFY phase entry**
 
-If the routing table resolves to a VERIFY-phase skill (`sweetclaude:code-review`, `sweetclaude:code-testing`, `sweetclaude:documents-update-docs`): before invoking, locate the story file and check its `prs` field.
+If the routing table resolves to a VERIFY-phase skill (`sweetclaude:library-load code-review`, `sweetclaude:library-load code-testing`, `sweetclaude:library-load documents-update-docs`): before invoking, locate the story file and check its `prs` field.
 
 Locate the story file:
 ```bash
@@ -322,7 +322,7 @@ If skipped: continue. Note: "No PR tracked — closeout will skip PR closure."
 
 For all phases other than SHIP: invoke the appropriate skill from the routing table below. One sentence explaining what you're doing.
 
-For SHIP phase (routing to `sweetclaude:deploy-ship`): invoke `sweetclaude:deploy-ship`, then after it completes and the deploy or merge is confirmed, run the **Closeout sequence** below instead of prompting next steps.
+For SHIP phase (routing to `sweetclaude:library-load deploy-ship`): invoke `sweetclaude:library-load deploy-ship`, then after it completes and the deploy or merge is confirmed, run the **Closeout sequence** below instead of prompting next steps.
 
 ---
 
@@ -416,14 +416,14 @@ Report: `✓ origin/{branch} deleted` or `✓ origin/{branch} not present — sk
 **Step C5 — Move story to `done/` and update frontmatter**:
 
 Require a fresh completion evidence receipt for `{STORY-ID}` before closing.
-Use the receipt created by `/sweetclaude:code-verify`; do not self-generate a
+Use the receipt created by `/sweetclaude:build code-verify`; do not self-generate a
 passing receipt from memory or old output. Validate it first:
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.py validate --receipt "{receipt_path}" --subject-id "{STORY-ID}"
 ```
 
-If no valid receipt exists, stop and run `/sweetclaude:code-verify` first.
+If no valid receipt exists, stop and run `/sweetclaude:build code-verify` first.
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/status.py set-terminal --file "{issue_file_path}" --status done --actor go --project-dir . --evidence-receipt "{receipt_path}"
@@ -490,32 +490,32 @@ completes.
 
 | Work type | Phase | Open criterion | Skill |
 |---|---|---|---|
-| any | DISCOVER | No persona or scenario defined | `sweetclaude:product-discovery` |
-| any | DEFINE | Product brief incomplete | `sweetclaude:product-brief` |
-| net-new-feature | DEFINE | PRD not written | `sweetclaude:product-prd` |
-| any | DESIGN | Architecture not written | `sweetclaude:design-architecture` |
-| any | DESIGN | Tech spec not written | `sweetclaude:design-tech-spec` |
-| any | DESIGN | UX flows not documented | `sweetclaude:design-user-flows` |
-| any | DESIGN | Wireframes not generated | `sweetclaude:design-wireframes` |
-| any | DESIGN | UX review not run | `sweetclaude:design-ux-review` |
-| any | DESIGN | Solutioning gate not passed | `sweetclaude:design-solutioning-gate` |
-| any | DESIGN | Data model not designed | `sweetclaude:design-data-model` |
-| any | DESIGN | API contracts not defined | `sweetclaude:design-api-design` |
-| any | PLAN | User stories not written | `sweetclaude:product-user-stories` |
-| any | PLAN | Gherkin specs not generated | `sweetclaude:code-tdd` |
-| any | IMPLEMENT | Tests not written or failing | `sweetclaude:code-tdd` |
-| any | IMPLEMENT | Code not making tests pass | `sweetclaude:code-feature` |
-| tech-debt | SCOPE | Behavior not locked with tests | `sweetclaude:code-tdd` |
-| any | VERIFY | Code review not done | `sweetclaude:code-review` |
-| any | VERIFY | Tests not passing in CI | `sweetclaude:code-testing` |
-| any | VERIFY | Docs not updated | `sweetclaude:documents-update-docs` |
-| any | SHIP | Security review not run and not skipped | `sweetclaude:code-review` (security mode) |
-| bug-fix | DIAGNOSE | Root cause not identified | `sweetclaude:code-issue` |
-| bug-fix | IMPLEMENT | Regression test not written | `sweetclaude:code-tdd` |
-| security-patch | DIAGNOSE | Blast radius not assessed | `sweetclaude:code-review` |
-| performance-optimization | DIAGNOSE | Baseline benchmark not established | `sweetclaude:code-issue` |
-| hotfix | DIAGNOSE | Reproduction case not documented | `sweetclaude:code-issue` |
-| backlog bug/hotfix | any | Open bug or hotfix in backlog | `sweetclaude:code-issue` |
+| any | DISCOVER | No persona or scenario defined | `sweetclaude:library-load product-discovery` |
+| any | DEFINE | Product brief incomplete | `sweetclaude:library-load product-brief` |
+| net-new-feature | DEFINE | PRD not written | `sweetclaude:library-load product-prd` |
+| any | DESIGN | Architecture not written | `sweetclaude:library-load design-architecture` |
+| any | DESIGN | Tech spec not written | `sweetclaude:library-load design-tech-spec` |
+| any | DESIGN | UX flows not documented | `sweetclaude:library-load design-user-flows` |
+| any | DESIGN | Wireframes not generated | `sweetclaude:library-load design-wireframes` |
+| any | DESIGN | UX review not run | `sweetclaude:library-load design-ux-review` |
+| any | DESIGN | Solutioning gate not passed | `sweetclaude:library-load design-solutioning-gate` |
+| any | DESIGN | Data model not designed | `sweetclaude:library-load design-data-model` |
+| any | DESIGN | API contracts not defined | `sweetclaude:library-load design-api-design` |
+| any | PLAN | User stories not written | `sweetclaude:library-load product-user-stories` |
+| any | PLAN | Gherkin specs not generated | `sweetclaude:library-load code-tdd` |
+| any | IMPLEMENT | Tests not written or failing | `sweetclaude:library-load code-tdd` |
+| any | IMPLEMENT | Code not making tests pass | `sweetclaude:library-load code-feature` |
+| tech-debt | SCOPE | Behavior not locked with tests | `sweetclaude:library-load code-tdd` |
+| any | VERIFY | Code review not done | `sweetclaude:library-load code-review` |
+| any | VERIFY | Tests not passing in CI | `sweetclaude:library-load code-testing` |
+| any | VERIFY | Docs not updated | `sweetclaude:library-load documents-update-docs` |
+| any | SHIP | Security review not run and not skipped | `sweetclaude:library-load code-review` (security mode) |
+| bug-fix | DIAGNOSE | Root cause not identified | `sweetclaude:library-load code-issue` |
+| bug-fix | IMPLEMENT | Regression test not written | `sweetclaude:library-load code-tdd` |
+| security-patch | DIAGNOSE | Blast radius not assessed | `sweetclaude:library-load code-review` |
+| performance-optimization | DIAGNOSE | Baseline benchmark not established | `sweetclaude:library-load code-issue` |
+| hotfix | DIAGNOSE | Reproduction case not documented | `sweetclaude:library-load code-issue` |
+| backlog bug/hotfix | any | Open bug or hotfix in backlog | `sweetclaude:library-load code-issue` |
 
 ### Mode-filtered routing
 

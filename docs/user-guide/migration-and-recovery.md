@@ -8,11 +8,11 @@ runs.
 
 1. Update the Claude Code plugin package.
 2. Restart Claude Code.
-3. Run `/sweetclaude:update` to sync framework files.
-4. Run `/sweetclaude:doctor` in the project.
+3. Run `/sweetclaude:configure update` to sync framework files.
+4. Run `/sweetclaude:configure doctor` in the project.
 5. Follow doctor's maintenance route.
 
-Do not start by running `/sweetclaude:migrate` on an unknown project layout.
+Do not start by running `/sweetclaude:configure migrate` on an unknown project layout.
 
 ## What Doctor Decides
 
@@ -26,14 +26,14 @@ The route determines the next user-facing command:
 
 | Route status | What it means | Next command |
 |---|---|---|
-| `recovery-available` | The project has an unsafe or stuck layout that should be stabilized before migration. | `/sweetclaude:recover` |
-| `supported-migration-available` | The flat v3 `BL-*.md` layout passed preflight. | `/sweetclaude:migrate` |
+| `recovery-available` | The project has an unsafe or stuck layout that should be stabilized before migration. | `/sweetclaude:configure recover` |
+| `supported-migration-available` | The flat v3 `BL-*.md` layout passed preflight. | `/sweetclaude:configure migrate` |
 | `compatibility-mode` | Recovery already accepted a legacy taxonomy layout without migration. | Continue; no migration prompt. |
 | `no-migration-recommended` | No supported migration is needed. | Continue normal work. |
 
 ## What Migrate Supports
 
-`/sweetclaude:migrate` is for the supported flat v3 backlog layout:
+`/sweetclaude:configure migrate` is for the supported flat v3 backlog layout:
 
 ```text
 .sweetclaude/product/backlog/BL-001-example.md
@@ -51,7 +51,7 @@ duplicate work-item IDs. Blocked projects route to recovery.
 
 ## What Recovery Does
 
-`/sweetclaude:recover` diagnoses first, plans second, snapshots before mutation,
+`/sweetclaude:configure recover` diagnoses first, plans second, snapshots before mutation,
 and asks before execution. For unsafe typed legacy layouts, recovery stabilizes
 state so SweetClaude stops repeatedly prompting blind migration. It does not move,
 rename, delete, or normalize product artifacts manually.

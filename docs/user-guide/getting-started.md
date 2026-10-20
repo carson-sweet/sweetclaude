@@ -180,11 +180,11 @@ These cost nothing and surface capabilities that are not obvious from the comman
 
 **Skill seems stuck in an interview loop.** Tell SweetClaude "go autonomous and finish the draft." It will conduct the rest of the interview internally and produce a draft for review.
 
-**You want to undo everything SweetClaude added.** If you are on an existing repo, check out the `pre-sweetclaude` branch. If you are mid-session and want to reset state without losing the project, run `/sweetclaude:purge` (it asks for typed confirmation before deleting `.sweetclaude/`).
+**You want to undo everything SweetClaude added.** If you are on an existing repo, check out the `pre-sweetclaude` branch. If you are mid-session and want to reset state without losing the project, run `/sweetclaude:configure purge` (it asks for typed confirmation before deleting `.sweetclaude/`).
 
-**Status fired automatically and you did not want it.** Touch `.sweetclaude/disabled` in the project root. The session-start check will not fire until you run `/sweetclaude` again.
+**Status fired automatically and you did not want it.** Touch `.sweetclaude/disabled` in the project root. The session-start check will not fire until you run `/sweetclaude:go` again.
 
-**Want to keep SweetClaude updated.** Update the Claude Code plugin package first (`/plugin update sweetclaude@sweetclaude-stable`), restart Claude Code, then run `/sweetclaude:update` to sync framework files. Project repair and migration route through `/sweetclaude:doctor`.
+**Want to keep SweetClaude updated.** Update the Claude Code plugin package first (`/plugin update sweetclaude@sweetclaude-stable`), restart Claude Code, then run `/sweetclaude:configure update` to sync framework files. Project repair and migration route through `/sweetclaude:configure doctor`.
 
 ---
 

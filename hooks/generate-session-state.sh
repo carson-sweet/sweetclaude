@@ -10,7 +10,7 @@
 #
 # This script READS from artifact-privacy.yaml and WRITES to session-state.yaml.
 # NEVER write back to artifact-privacy.yaml from here — that file is the source
-# of truth and is mutated only by sweetclaude:setup, sweetclaude:migrate, and
+# of truth and is mutated only by sweetclaude:library-load setup, sweetclaude:library-load migrate, and
 # explicit user action. session-state.yaml is regenerated every session and any
 # divergence between the two is a bug (caught by _health Step 3a).
 

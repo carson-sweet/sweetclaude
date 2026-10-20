@@ -1,0 +1,431 @@
+---
+spdx-license: AGPL-3.0-or-later
+name: sweetclaude:library-load migrate
+description: Migrate legacy work items to unified ISSUE-NNN format. Supports flat BL-NNN layouts and typed legacy backlog layouts (stories/, bugs/, debt/).
+user-invocable: true
+---
+
+This skill is a thin orchestrator that dispatches to the correct migrator based
+on project shape. Two migrators exist:
+
+- **Flat BL migrator** (`scripts/migrate/migrate-v3-to-v4.py`): handles flat
+  `BL-NNN.md` backlogs. Subcommand-based (preflight, validate, plan, execute,
+  verify, finalize).
+- **Taxonomy migrator** (`scripts/migrate/migrate_taxonomy.py`): handles typed
+  legacy layouts (stories/, bugs/, debt/, chores/), accepted-legacy-taxonomy
+  projects, and any multi-prefix layout. Single-call with `--dry-run` for
+  preview.
+
+## Step 0: Route to the correct migrator
+
+```bash
+GUARD_SCRIPT=${CLAUDE_PLUGIN_ROOT}/scripts/recovery/recover_project.py
+if [ ! -f "$GUARD_SCRIPT" ]; then
+  GUARD_SCRIPT=$(find "$(dirname "${CLAUDE_PLUGIN_ROOT}")" -type f -path '*/scripts/recovery/recover_project.py' 2>/dev/null | sort -V | tail -1)
+fi
+if [ -n "$GUARD_SCRIPT" ] && [ -f "$GUARD_SCRIPT" ]; then
+  GUARD_OUT=$(python3 "$GUARD_SCRIPT" guard --project-dir . --pretty)
+  echo "$GUARD_OUT"
+  PROJECT_SHAPE=$(echo "$GUARD_OUT" | python3 -c "import sys, json; print(json.load(sys.stdin).get('project_shape', ''))")
+  MIGRATE_ALLOWED=$(echo "$GUARD_OUT" | python3 -c "import sys, json; print('true' if json.load(sys.stdin).get('migrate_allowed') else 'false')")
+else
+  PROJECT_SHAPE=""
+  MIGRATE_ALLOWED="false"
+fi
+```
+
+If `MIGRATE_ALLOWED` is not `true`: output the guard message and stop. Do not
+proceed.
+
+Route based on `PROJECT_SHAPE`:
+- `typed_legacy_backlog` or `accepted_legacy_taxonomy` → **skip to Step T0
+  (taxonomy migrator flow)** below
+- `flat_bl_backlog` → continue to Step 0b (flat BL migrator flow)
+- Any other shape → output the guard message and stop
+
+---
+
+## Flat BL migrator flow
+
+### Step 0b: Flat BL preflight
+
+```bash
+SCRIPT=${CLAUDE_PLUGIN_ROOT}/scripts/migrate/migrate-v3-to-v4.py
+if [ ! -f "$SCRIPT" ]; then
+  SCRIPT=$(find "$(dirname "${CLAUDE_PLUGIN_ROOT}")" -type f -name 'migrate-v3-to-v4.py' 2>/dev/null | sort -V | tail -1)
+fi
+if [ -z "$SCRIPT" ] || [ ! -f "$SCRIPT" ]; then
+  echo "ERROR: migrate-v3-to-v4.py not found. Run /sweetclaude:configure update first."
+  exit 1
+fi
+
+PREFLIGHT_OUT=$(python3 "$SCRIPT" preflight --project-dir .)
+echo "$PREFLIGHT_OUT"
+MIGRATE_ALLOWED=$(echo "$PREFLIGHT_OUT" | python3 -c "import sys, json; print('true' if json.load(sys.stdin).get('migrate_allowed') else 'false')")
+if [ "$MIGRATE_ALLOWED" != "true" ]; then
+  echo "Migration is blocked for this project layout. Run /sweetclaude:configure recover or follow the preflight recommendation above."
+  exit 1
+fi
+```
+
+Do not create `migration.lock`, backups, copied files, or migration maps unless
+preflight returns `migrate_allowed: true`.
+
+## Step 1: Lock & backup
+
+```bash
+PRODUCT_BASE=$(python3 "$SCRIPT" resolve-base --project-dir . | python3 -c "import sys, json; print(json.load(sys.stdin)['product_base'])")
+V3_BACKLOG="${PRODUCT_BASE}/backlog"
+
+LOCK_FILE=".sweetclaude/state/migration.lock"
+if [ -f "$LOCK_FILE" ]; then
+  echo "ERROR: $LOCK_FILE exists. Previous migration may have crashed."
+  echo "Inspect, then remove manually if safe: rm $LOCK_FILE"
+  exit 1
+fi
+echo "$(date -u +%Y%m%dT%H%M%SZ) $$" > "$LOCK_FILE"
+trap "rm -f $LOCK_FILE" EXIT
+
+BACKUP_DIR=".sweetclaude/state/backups"
+mkdir -p "$BACKUP_DIR"
+BACKUP_DATE=$(date +%Y%m%d-%H%M%S)
+BACKUP_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "nosha")
+BACKUP_FILE="$BACKUP_DIR/pre-v4-${BACKUP_DATE}-${BACKUP_SHA}.tar.gz"
+
+# Include v3 source files in backup. For .sweetclaude/product users they're already
+# inside .sweetclaude/. For docs/product users they're outside it — add them explicitly.
+case "$PRODUCT_BASE" in
+  */.sweetclaude/product)
+    tar -czf "$BACKUP_FILE" .sweetclaude/
+    ;;
+  *)
+    tar -czf "$BACKUP_FILE" .sweetclaude/ "$V3_BACKLOG"/BL-*.md 2>/dev/null || \
+      tar -czf "$BACKUP_FILE" .sweetclaude/
+    ;;
+esac
+tar -tzf "$BACKUP_FILE" > /dev/null || { echo "ERROR: backup verification failed"; exit 1; }
+
+# Retain last 5 — BSD-portable (no xargs -r):
+ls -1t "$BACKUP_DIR"/pre-v4-*.tar.gz 2>/dev/null | tail -n +6 | while IFS= read -r f; do
+  [ -n "$f" ] && rm -f "$f"
+done
+```
+
+## Step 2: Validate
+
+```bash
+VALIDATE_OUT=$(python3 "$SCRIPT" validate --project-dir .)
+echo "$VALIDATE_OUT"
+FAILURE_COUNT=$(echo "$VALIDATE_OUT" | python3 -c "import sys, json; print(len(json.load(sys.stdin).get('failures', [])))")
+```
+
+If `FAILURE_COUNT > 0`: present **AskUserQuestion**:
+- Question: `Validation found N problems in v3 BL files. Run /sweetclaude:configure migrate-diagnose to investigate?`
+- Options: `Yes`, `No`
+- On either choice: release lock (`rm $LOCK_FILE`) and stop. Do not proceed.
+
+## Step 2b: Orphan scan
+
+Scan for work item files that might be lost, abandoned, or orphaned from previous versions — files the primary migration wouldn't find.
+
+```bash
+ORPHAN_OUT=$(python3 "$SCRIPT" scan-orphans --project-dir .)
+ORPHAN_COUNT=$(echo "$ORPHAN_OUT" | python3 -c "import sys, json; print(json.load(sys.stdin).get('orphan_count', 0))")
+```
+
+If `ORPHAN_COUNT > 0`: present findings grouped by category:
+
+```
+Found {N} orphaned work item files outside the primary backlog:
+
+Typed subdirectories (retired in 4.1.0):
+  {file} — {id} — {title} [{status}]
+
+Scratch directory:
+  {file} — {id} — {title} [{status}]
+
+Stray files:
+  {file} — {id} — {title} [{status}]
+```
+
+Then present **AskUserQuestion**:
+- **Question:** `{N} orphaned files found. What should I do with them?`
+- **Options:**
+  1. `Include in migration` → copy each orphaned file into the primary backlog directory (`$V3_BACKLOG/`) as `BL-{NNN}-{slug}.md` so the plan step picks them up. Assign sequential BL IDs starting after the highest existing BL number. For files without frontmatter, create minimal frontmatter from filename.
+  2. `Show me each one` → present each file one at a time with **AskUserQuestion**: `Keep (include in migration)`, `Skip (leave where it is)`, `Delete`. Apply the user's choice per file.
+  3. `Skip all` → proceed without migrating orphaned files. They stay where they are.
+
+After the user's choice is applied, proceed to Step 3.
+
+If `ORPHAN_COUNT == 0`: proceed silently to Step 3.
+
+## Step 3: Done item choice
+
+Count files where `status ∈ {done, cancelled, abandoned}` in the validate output. If count > 0, present **AskUserQuestion**:
+
+- **Question:** `Found N completed items. Migrate them too?`
+- **Options:**
+  1. `Migrate all` → set `INCLUDE_DONE=--include-done`
+  2. `Skip done items` → set `INCLUDE_DONE=` (empty)
+
+Store the user's choice as `$INCLUDE_DONE` for use in Steps 4 and 5.
+
+If count is 0, set `INCLUDE_DONE=--include-done` (no-op — nothing to skip).
+
+## Step 4: Preview
+
+```bash
+PLAN_OUT=$(python3 "$SCRIPT" plan --project-dir . $INCLUDE_DONE)
+echo "$PLAN_OUT" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+items = d['plan_items']
+print(f\"Migration preview — {len(items)} items to migrate\")
+print()
+print('| v3 ID | v3 File | v4 ID | Type | Destination |')
+print('|---|---|---|---|---|')
+for it in items:
+    import os
+    v3_basename = os.path.basename(it['v3_file'])
+    dest_relative = it['dest_path'].split('.sweetclaude/product/backlog/', 1)[-1]
+    print(f\"| {it['v3_id']} | {v3_basename} | {it['v4_id']} | {it['type']} | .sweetclaude/product/backlog/{dest_relative} |\")
+"
+```
+
+Then present **AskUserQuestion**:
+- **Question:** `Proceed with migration?`
+- **Options:**
+  1. `Yes` → continue to Step 5
+  2. `Cancel` → release the lock file (`rm $LOCK_FILE`), exit cleanly. No writes made.
+
+## Step 5: Execute
+
+```bash
+APPROVAL_RECEIPT=".sweetclaude/state/migrations/v3-to-v4-approval-receipt.json"
+mkdir -p "$(dirname "$APPROVAL_RECEIPT")"
+echo "$PLAN_OUT" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+receipt = dict(d['mutation_plan']['approval_receipt_template'])
+receipt['approved'] = True
+json.dump(receipt, open('$APPROVAL_RECEIPT', 'w'), indent=2, sort_keys=True)
+"
+EXEC_OUT=$(python3 "$SCRIPT" execute --project-dir . $INCLUDE_DONE --approval-receipt "$APPROVAL_RECEIPT")
+echo "$EXEC_OUT" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(f\"Wrote {len(d['created_paths'])} ISSUE-NNN files.\")
+"
+# Save created_paths for Step 7 verify
+echo "$EXEC_OUT" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+json.dump(d['created_paths'], open('.sweetclaude/state/.migrate-created-paths.json', 'w'))
+"
+```
+
+The `execute` subcommand performs the per-file transformation and writes `MIGRATION-MAP.md`. After execution, the cache is rebuilt to reflect the new file layout.
+
+## Step 6: Rebuild cache
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cache.py --project-dir . --rebuild 2>/dev/null
+```
+
+## Step 7: Verify
+
+```bash
+VERIFY_OUT=$(python3 "$SCRIPT" verify --project-dir . --created-paths-file .sweetclaude/state/.migrate-created-paths.json)
+VERIFY_FAILURES=$(echo "$VERIFY_OUT" | python3 -c "import sys, json; print(len(json.load(sys.stdin).get('failures', [])))")
+```
+
+If `VERIFY_FAILURES > 0`: invoke Failure handling (below). Print the failures and offer the recovery menu.
+
+If 0: continue to Step 8.
+
+## Step 8: Finalize
+
+```bash
+python3 "$SCRIPT" finalize --project-dir . > /dev/null
+rm -f .sweetclaude/state/.migrate-created-paths.json
+rm -f "$LOCK_FILE"
+```
+
+The `finalize` subcommand sets `categories.product.base_path: docs/product` in `artifact-privacy.yaml` and `framework.installed_version: 4.0.0` in `sweetclaude.yaml`. This is the atomic commit point — only reached when validate + execute + verify all passed.
+
+### Step 8 backup verification and delete
+
+After successful finalize, verify the backup is valid and remove the v3 BL files. The backup tarball is the user's recovery path — keeping v3 files on disk after a completed migration creates a "stuck migration" state in bootstrap (v3 files present + project at 4.x triggers the hard-stop loop forever).
+
+```bash
+tar -tzf "$BACKUP_FILE" > /dev/null && BACKUP_OK=1 || BACKUP_OK=0
+
+if [ "$BACKUP_OK" = "1" ]; then
+  CLEANUP_OUT=$(python3 "$SCRIPT" cleanup-v3-files --project-dir .)
+  V3_REMOVED_COUNT=$(echo "$CLEANUP_OUT" | python3 -c "import sys, json; print(json.load(sys.stdin)['count'])")
+  echo "Removed $V3_REMOVED_COUNT v3 BL-*.md file(s)."
+else
+  echo "WARNING: backup verification failed — leaving v3 BL files in place. Inspect $BACKUP_FILE manually."
+  V3_REMOVED_COUNT=0
+fi
+```
+
+If the backup verification fails, v3 BL files are NOT removed (so the user can recover manually). The summary surfaces this so the user knows to address it.
+
+### Step 8 summary
+
+```
+Migration complete.
+
+  Created:       {count} files in .sweetclaude/product/backlog/
+  Total:         {counter} ISSUE-NNN files created
+  Skipped done:  {skipped_done if any}
+  v3 BL files:   {removed | LEFT IN PLACE — backup invalid, see warning above}
+  Backup:        $BACKUP_FILE
+  Map:           .sweetclaude/product/backlog/MIGRATION-MAP.md
+
+To inspect the original v3 BL files, extract the backup:
+  tar -xzf $BACKUP_FILE -C /tmp/v3-backup
+
+Next session's bootstrap will run any remaining schema migrations
+(e.g. sweetclaude.yaml v1->v2) via the registry-driven runner.
+```
+
+## Failure handling
+
+Invoked by Step 2 (validation failures) or Step 7 (verify failures).
+
+1. **Restore `.sweetclaude/`:**
+   ```bash
+   rm -rf .sweetclaude
+   tar -xzf "$BACKUP_FILE"
+   ```
+
+2. **Remove created files:** Read the saved `.sweetclaude/state/.migrate-created-paths.json` (if Step 5 ran) and delete every path in it. Do not touch anything outside `.sweetclaude/product/backlog/`.
+
+   ```bash
+   python3 -c "
+   import json, os
+   try:
+       paths = json.load(open('.sweetclaude/state/.migrate-created-paths.json'))
+       for p in paths:
+           try: os.remove(p)
+           except OSError: pass
+   except FileNotFoundError:
+       pass
+   "
+   ```
+
+3. **Print failure details** from the JSON failure list (file path, problem).
+
+4. **Present AskUserQuestion:**
+   - Question: `What would you like to do?`
+   - Options:
+     1. `Work through it with me` → invoke `sweetclaude:library-load migrate-diagnose`
+     2. `Reset framework state` → clear `.sweetclaude/` state files only; `/docs/` is untouched. Stop and prompt user to re-run `/sweetclaude:configure migrate`.
+     3. `Wait` → exit. Hard stop remains in effect until migration succeeds.
+
+## Rules
+
+- Flat BL work happens in `scripts/migrate/migrate-v3-to-v4.py`. Taxonomy work happens in `scripts/migrate/migrate_taxonomy.py`. The skill orchestrates only.
+- The flat BL script is idempotent on validate/plan (read-only). `execute` and `finalize` are write operations and assume the lock file is held by the skill.
+- The taxonomy script handles its own snapshot, rollback, and state update internally.
+
+---
+
+## Taxonomy migrator flow
+
+Entered from Step 0 when `PROJECT_SHAPE` is `typed_legacy_backlog` or
+`accepted_legacy_taxonomy`. This flow uses `scripts/migrate/migrate_taxonomy.py`
+which handles typed backlog layouts, accepted-legacy-taxonomy projects, and any
+multi-prefix layout.
+
+### Step T0: Locate taxonomy migrator
+
+```bash
+TAX_SCRIPT=${CLAUDE_PLUGIN_ROOT}/scripts/migrate/migrate_taxonomy.py
+if [ ! -f "$TAX_SCRIPT" ]; then
+  TAX_SCRIPT=$(find "$(dirname "${CLAUDE_PLUGIN_ROOT}")" -type f -name 'migrate_taxonomy.py' 2>/dev/null | sort -V | tail -1)
+fi
+if [ -z "$TAX_SCRIPT" ] || [ ! -f "$TAX_SCRIPT" ]; then
+  echo "ERROR: migrate_taxonomy.py not found. Run /sweetclaude:configure update first."
+  exit 1
+fi
+```
+
+### Step T1: Dry-run preview
+
+```bash
+DRY_OUT=$(python3 "$TAX_SCRIPT" --project-dir . --dry-run --pretty)
+echo "$DRY_OUT"
+DRY_OK=$(echo "$DRY_OUT" | python3 -c "import sys, json; print('true' if json.load(sys.stdin).get('ok') else 'false')")
+```
+
+If `DRY_OK` is not `true`: output the errors from the dry-run result and stop.
+
+If the dry-run shows `moves` is empty and `ok` is true: output "Nothing to
+migrate — project files are already in v4 format. Run `/sweetclaude:configure recover` to
+check graduation eligibility." Stop.
+
+Otherwise, present the planned moves as a table:
+
+```
+Taxonomy migration preview — {N} items to migrate
+
+| Source | Destination | Action |
+|---|---|---|
+| {source_path} | {dest_path} | {action} |
+```
+
+Then present **AskUserQuestion**:
+- **Question:** `Proceed with taxonomy migration? A snapshot will be created before any writes.`
+- **Options:**
+  1. `Yes` → continue to Step T2
+  2. `Cancel` → stop. No writes made.
+
+### Step T2: Execute migration
+
+```bash
+EXEC_OUT=$(python3 "$TAX_SCRIPT" --project-dir . --pretty)
+echo "$EXEC_OUT"
+EXEC_OK=$(echo "$EXEC_OUT" | python3 -c "import sys, json; print('true' if json.load(sys.stdin).get('ok') else 'false')")
+MIGRATED=$(echo "$EXEC_OUT" | python3 -c "import sys, json; print(json.load(sys.stdin).get('migrated', 0))")
+SNAPSHOT=$(echo "$EXEC_OUT" | python3 -c "import sys, json; print(json.load(sys.stdin).get('snapshot', ''))")
+```
+
+If `EXEC_OK` is not `true`: output the errors. The script auto-rolls-back from
+its snapshot on failure. Present:
+
+```
+Migration failed — automatic rollback from snapshot completed.
+Errors: {errors from result}
+Snapshot: {snapshot path}
+```
+
+Present **AskUserQuestion**:
+- **Question:** `What would you like to do?`
+- **Options:**
+  1. `Run /sweetclaude:configure doctor` → invoke `sweetclaude:library-load doctor`
+  2. `Wait` → stop
+
+If `EXEC_OK` is `true`: rebuild cache and present summary.
+
+### Step T3: Rebuild cache
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cache.py --project-dir . --rebuild 2>/dev/null
+```
+
+### Step T4: Summary
+
+```
+Taxonomy migration complete.
+
+  Migrated:  {migrated} files to ISSUE-NNN format
+  Snapshot:  {snapshot path}
+
+To roll back if needed, extract the snapshot:
+  tar -xzf {snapshot path} -C .
+
+Next session's bootstrap will check graduation eligibility.
+```

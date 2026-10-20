@@ -7,7 +7,7 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-UPDATE_SKILL="$REPO_ROOT/skills/update/SKILL.md"
+UPDATE_SKILL="$REPO_ROOT/skill-library/configure/update/SKILL.md"
 FAILED=0
 
 fail() { echo "  FAIL: $1"; FAILED=$((FAILED + 1)); }

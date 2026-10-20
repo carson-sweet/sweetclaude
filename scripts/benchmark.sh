@@ -53,18 +53,18 @@ echo "Date: $(date)"
 echo ""
 
 echo "Navigation & session orientation:"
-run_prompt "P1" "Where are we in this project?" "status|recap|sweetclaude:status|sweetclaude:recap"
+run_prompt "P1" "Where are we in this project?" "status|recap|sweetclaude:status|sweetclaude:utils"
 run_prompt "P2" "Help me decide what to work on next." "sweetclaude:go|/go|backlog|priorit"
 
 echo ""
 echo "Intent-based skill triggering:"
 run_prompt "P3" "There is a bug in production right now. What do I do?" "something-broke|hotfix|incident|sweetclaude:something"
-run_prompt "P4" "I want to build a new feature. Where do I start?" "sweetclaude:code-feature|feature|brainstorm|code-feature"
-run_prompt "P5" "How do I review my code before submitting a PR?" "sweetclaude:code-review|code-review|review"
+run_prompt "P4" "I want to build a new feature. Where do I start?" "sweetclaude:build|feature|brainstorm|code-feature"
+run_prompt "P5" "How do I review my code before submitting a PR?" "sweetclaude:build|code-review|review"
 
 echo ""
 echo "Discovery (ambient skill knowledge):"
-run_prompt "P6" "How do I set up product milestones in SweetClaude?" "milestones|sweetclaude:product-milestones|product-milestones"
+run_prompt "P6" "How do I set up product milestones in SweetClaude?" "milestones|sweetclaude:plan|product-milestones"
 run_prompt "P7" "What testing skills does SweetClaude have?" "testing|sweetclaude:testing|test"
 run_prompt "P8" "How do I use SweetClaude? I am new to it." "sweetclaude:help|sweetclaude:bootstrap|help|bootstrap"
 

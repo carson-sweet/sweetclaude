@@ -50,7 +50,7 @@ def test_notice_names_the_one_time_switch():
 
 
 def test_update_skill_surfaces_beta_migration():
-    skill = (Path(__file__).parents[1] / "skills" / "update" / "SKILL.md").read_text(
+    skill = (Path(__file__).parents[1] / "skill-library" / "configure" / "update" / "SKILL.md").read_text(
         encoding="utf-8"
     )
     assert "beta_stable_migration_notice" in skill or "beta-migration" in skill, (

@@ -922,11 +922,11 @@ def _string_contains_entrypoint(path: Path, entrypoint: str) -> bool:
 
 # Canonical plugin distribution surface. Claude Code installs SweetClaude by
 # cloning the repo (see .claude-plugin/marketplace.json), so the distributable
-# plugin is the clone root: skills/agents/commands load from the root, the
+# plugin is the clone root: skills/skill-library/agents/commands ship from the root, the
 # manifest lives under .claude-plugin/, and hooks/ ship too. The release gate's
 # distribution inventory and entrypoint search must walk this surface, not the
 # manifest dir alone.
-PLUGIN_DISTRIBUTION_ROOTS = ("skills", "agents", "commands", ".claude-plugin")
+PLUGIN_DISTRIBUTION_ROOTS = ("skills", "skill-library", "agents", "commands", ".claude-plugin")
 PLUGIN_HOOK_ROOT = "hooks"
 
 

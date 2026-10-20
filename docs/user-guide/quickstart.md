@@ -26,9 +26,9 @@ Your daily driver. Detects where you are and routes automatically. Empty folder 
 **Suspend or remove SweetClaude:**
 
 ```
-/sweetclaude:off    # suspend — preserves all artifacts, reactivate with /sweetclaude:go
-/sweetclaude:doctor # diagnose and route repair/recovery/migration safely
-/sweetclaude:purge  # delete all artifacts — warns and requires typed confirmation first
+/sweetclaude:configure off    # suspend — preserves all artifacts, reactivate with /sweetclaude:go
+/sweetclaude:configure doctor # diagnose and route repair/recovery/migration safely
+/sweetclaude:configure purge  # delete all artifacts — warns and requires typed confirmation first
 ```
 
 ---
@@ -69,7 +69,7 @@ Run `/sweetclaude:go` and mention the issue number or paste the title. SweetClau
 ### "Production is broken"
 
 ```
-/sweetclaude:something-broke
+/sweetclaude:maintain something-broke
 ```
 
 Classifies severity, decides fix vs. rollback, and routes to the hotfix workflow: DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM. Skips ceremony, keeps discipline.

@@ -548,7 +548,10 @@ def test_every_skill_is_classified() -> None:
     """
     declared = {(v.get("delegate_skill") or "").replace("sweetclaude:", "")
                 for v in led._load_manifest(led.MANIFEST)["capabilities"].values()}
-    skills = {p.parent.name for p in (REPO_ROOT / "skills").glob("*/SKILL.md")}
+    skills = {
+        p.parent.name
+        for p in (REPO_ROOT / "skill-library").glob("*/*/SKILL.md")
+    }
 
     unclassified = sorted(skills - declared)
 

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "preset": "first-tier-routing",
+  "enable": [
+    "entry:command"
+  ],
+  "disable": [],
+  "operation": [
+    "top.go.request",
+    "top.plan.entry",
+    "top.design.entry",
+    "top.build.entry",
+    "top.maintain.entry",
+    "top.configure.entry",
+    "top.utils.entry",
+    "top.status.session",
+    "top.help.menu"
+  ],
+  "exclude_operation": [],
+  "switches": {}
+}

@@ -8,7 +8,7 @@
 # Usage:
 #   bash "${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh" [--from-update] [PROJECT_DIR]
 #
-#   --from-update   Also clears framework.update.declined (running /sweetclaude:update
+#   --from-update   Also clears framework.update.declined (running /sweetclaude:configure update
 #                   is explicit re-engagement; bootstrap should NOT pass this flag).
 #   PROJECT_DIR     Project root (default: git rev-parse --show-toplevel or $PWD).
 #

@@ -30,6 +30,7 @@ import pytest
 from postcondition_verify import (
     BlockNotFound,
     PostconditionFailed,
+    resolve_skill_markdown,
     verify_capability,
 )
 
@@ -47,7 +48,7 @@ def project(tmp_path: Path) -> Path:
 # --- the real check ------------------------------------------------------
 
 def test_deactivate_writes_the_disabled_marker(project: Path) -> None:
-    """skills/off runs `touch .sweetclaude/disabled`; its postcondition says
+    """skill-library/configure/off runs `touch .sweetclaude/disabled`; its postcondition says
     so. Until now nothing asserted the two agreed."""
     result = verify_capability("project.deactivate", project)
     assert result.passed, result.detail
@@ -68,12 +69,12 @@ def test_a_broken_skill_block_fails_the_check(project: Path, tmp_path: Path) -> 
     """
     skills = tmp_path / "skills" / "off"
     skills.mkdir(parents=True)
-    original = (REPO_ROOT / "skills" / "off" / "SKILL.md").read_text(encoding="utf-8")
+    original = (REPO_ROOT / "skill-library" / "configure" / "off" / "SKILL.md").read_text(encoding="utf-8")
     broken = original.replace(
         "touch .sweetclaude/disabled",
         "touch .sweetclaude/disabled\nrm -f .sweetclaude/disabled",
     )
-    assert broken != original, "the mutation did not apply — did skills/off change?"
+    assert broken != original, "the mutation did not apply — did skill-library/configure/off change?"
     (skills / "SKILL.md").write_text(broken, encoding="utf-8")
 
     with pytest.raises(PostconditionFailed):
@@ -85,7 +86,7 @@ def test_a_missing_block_fails_loudly(project: Path, tmp_path: Path) -> None:
     pass on whatever block happens to sit at that index."""
     skills = tmp_path / "skills" / "off"
     skills.mkdir(parents=True)
-    original = (REPO_ROOT / "skills" / "off" / "SKILL.md").read_text(encoding="utf-8")
+    original = (REPO_ROOT / "skill-library" / "configure" / "off" / "SKILL.md").read_text(encoding="utf-8")
     gutted = original.replace("touch .sweetclaude/disabled", "echo nothing")
     (skills / "SKILL.md").write_text(gutted, encoding="utf-8")
 
@@ -184,8 +185,9 @@ def test_help_writes_the_skip_flag_when_asked(configured: Path) -> None:
 def _mutated_skill(tmp_path: Path, skill: str, old: str, new: str) -> Path:
     root = tmp_path / "mutated" / skill
     root.mkdir(parents=True)
-    text = (REPO_ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8")
-    assert old in text, f"mutation target {old!r} not in skills/{skill}/SKILL.md"
+    source = resolve_skill_markdown(skill)
+    text = source.read_text(encoding="utf-8")
+    assert old in text, f"mutation target {old!r} not in {source.relative_to(REPO_ROOT)}"
     (root / "SKILL.md").write_text(text.replace(old, new), encoding="utf-8")
     return tmp_path / "mutated"
 

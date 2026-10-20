@@ -3,7 +3,7 @@
 """
 v3 -> v4 backlog migration core.
 
-Pure, deterministic operations extracted from skills/migrate/SKILL.md so the
+Pure, deterministic operations extracted from skill-library/configure/migrate/SKILL.md so the
 migration can be tested end-to-end without an LLM in the loop. The skill
 remains responsible for: lock/backup (Step 1), user prompts (Step 3 done-
 item choice, Step 4 preview confirmation, Step 8 delete prompt), and the
@@ -341,7 +341,7 @@ def migration_preflight(project_dir: pathlib.Path) -> dict:
     if guard.get("status") == "run-recover":
         blockers.append({
             "code": "recovery-required",
-            "message": "Recovery guard requires /sweetclaude:recover before migration.",
+            "message": "Recovery guard requires /sweetclaude:configure recover before migration.",
             "recovery_route": guard.get("recovery_route"),
         })
     if guard.get("migrate_allowed") is False and project_shape == SUPPORTED_PROJECT_SHAPE:
@@ -388,7 +388,7 @@ def migration_preflight(project_dir: pathlib.Path) -> dict:
     recommendation = (
         "Proceed with v3 flat BL-NNN migration."
         if migrate_allowed
-        else "Do not run this migration. Use /sweetclaude:recover or a layout-specific migration plan."
+        else "Do not run this migration. Use /sweetclaude:configure recover or a layout-specific migration plan."
     )
 
     return {

@@ -4,7 +4,7 @@
 **Subject repo:** `/home/user/sweetclaude` (sweetclaude v4.1.12-beta)
 **Question:** Could native Claude Code plugin-developer capabilities — Plan Mode, subagents/agent-teams, and **dynamic Workflows** — natively carry some of the burden SweetClaude currently implements with custom machinery (23 bash hooks, ~38 Python scripts, an `orchestrator_loop.py`, 113 prose skills, custom YAML state, and shell-preprocessing state injection)?
 
-> **Implementation status (2026-06-28):** Addendum improvements #1 (the `execute_step` yield — model-as-runtime executor), #2 (structured-output contract), #3 (parallel/fan-out step groups), #4 (per-workflow budget), and #5 (adversarial-verify step shape) have all landed in `scripts/orchestrator_loop.py` and `skills/orchestrator/SKILL.md`, each with tests and Gherkin scenarios. The two smaller cleanups have also landed: the artifact pointer is now dropped when exit checks fail on a missing file (exit checks read `state["artifacts"]`, so the pointer must still be set *before* validation — it cannot simply be reordered), and `_save_state` now stages every temp file before swapping any in, narrowing the dual-write half-fail window.
+> **Implementation status (2026-06-28):** Addendum improvements #1 (the `execute_step` yield — model-as-runtime executor), #2 (structured-output contract), #3 (parallel/fan-out step groups), #4 (per-workflow budget), and #5 (adversarial-verify step shape) have all landed in `scripts/orchestrator_loop.py` and `skill-library/build/orchestrator/SKILL.md`, each with tests and Gherkin scenarios. The two smaller cleanups have also landed: the artifact pointer is now dropped when exit checks fail on a missing file (exit checks read `state["artifacts"]`, so the pointer must still be set *before* validation — it cannot simply be reordered), and `_save_state` now stages every temp file before swapping any in, narrowing the dual-write half-fail window.
 
 ---
 
@@ -40,7 +40,7 @@ Everything below turns on one distinction, which SweetClaude's own architecture 
 
 ### 1. Dynamic Workflows ← `orchestrator_loop.py` + prose multi-agent choreography  **(STRONGEST FIT)**
 
-**What SweetClaude does today:** `scripts/orchestrator_loop.py` is a hand-written workflow loop engine that tracks step state, yields gates/failures/escalations, and routes decisions. The TDD pipeline (test-writer → implementer → reviewers) is choreographed by **prose instructions** inside `skills/code-tdd/SKILL.md` and the `agents/*.md` files — i.e., the model is *told* to spawn agents in order and is trusted to do it correctly.
+**What SweetClaude does today:** `scripts/orchestrator_loop.py` is a hand-written workflow loop engine that tracks step state, yields gates/failures/escalations, and routes decisions. The TDD pipeline (test-writer → implementer → reviewers) is choreographed by **prose instructions** inside `skill-library/build/code-tdd/SKILL.md` and the `agents/*.md` files — i.e., the model is *told* to spawn agents in order and is trusted to do it correctly.
 
 **What native Workflows offer:** Deterministic JS orchestration. The script — not the model — decides which agents run, in what order, with what inputs, and how results aggregate. `pipeline()`/`parallel()` give real fan-out (up to 16 concurrent, 1000 total). Structured output schemas force agents to return validated data. This is *exactly* the TDD pipeline and the review caucus: `test-writer → verify RED → implementer → [code-review ∥ security-review ∥ perf-review]`, with adversarial verification of findings.
 
@@ -133,7 +133,7 @@ Everything below turns on one distinction, which SweetClaude's own architecture 
 
 ## Critical files (for whoever executes)
 
-- Orchestration to migrate: `/home/user/sweetclaude/scripts/orchestrator_loop.py`, `/home/user/sweetclaude/skills/code-tdd/SKILL.md`, `/home/user/sweetclaude/agents/{test-writer,implementer,code-reviewer,security-reviewer,performance-reviewer}.md`
+- Orchestration to migrate: `/home/user/sweetclaude/scripts/orchestrator_loop.py`, `/home/user/sweetclaude/skill-library/build/code-tdd/SKILL.md`, `/home/user/sweetclaude/agents/{test-writer,implementer,code-reviewer,security-reviewer,performance-reviewer}.md`
 - Enforcement to keep/modernize: `/home/user/sweetclaude/hooks/hooks.json`, `/home/user/sweetclaude/hooks/test-guardian.sh`, `/home/user/sweetclaude/hooks/master-preflight.sh`
 - State to keep: `/home/user/sweetclaude/scripts/sc-artifact-impl.py`, `/home/user/sweetclaude/skills/master/SKILL.md` (shell-preprocessing line 9)
 - Irreducible core: `/home/user/sweetclaude/rules/phase-gates.md`, `/home/user/sweetclaude/rules/interaction-model.md`
@@ -143,7 +143,7 @@ Everything below turns on one distinction, which SweetClaude's own architecture 
 - **Workflow opt-in spike:** invoke a trivial Workflow from inside a test skill; confirm it runs and returns structured output without breaking the chat turn.
 - **Caucus parity test:** run the same diff through (a) current prose review and (b) Workflow-orchestrated review; compare findings, false-positive rate, wall-clock, token cost.
 - **TDD backstop test:** inside a Workflow-spawned implementer, attempt to edit a test file; confirm `test-guardian.sh` still denies it.
-- **Regression:** run `/sweetclaude:behavioral-regression` (15 contracts) before/after any change to confirm no behavioral drift.
+- **Regression:** use `/sweetclaude:configure` to run the 15-contract behavioral regression before and after any change, confirming no behavioral drift.
 
 ---
 
@@ -181,7 +181,7 @@ def _invoke_agent(*args, **kwargs):
     pass
 ```
 
-Every test in `tests/test-orchestrator-loop.py` **monkeypatches** `_invoke_agent` to actually write an artifact and return a signal (e.g. `lambda **kw: {"status":"success","signal":"done"}`). In production it does nothing, and nothing else fills the gap — `skills/orchestrator/SKILL.md` only runs the loop and routes user gates; it never spawns subagents. A Python subprocess can't spawn Claude subagents anyway (the platform wall above).
+Every test in `tests/test-orchestrator-loop.py` **monkeypatches** `_invoke_agent` to actually write an artifact and return a signal (e.g. `lambda **kw: {"status":"success","signal":"done"}`). In production it does nothing, and nothing else fills the gap — `skill-library/build/orchestrator/SKILL.md` only runs the loop and routes user gates; it never spawns subagents. A Python subprocess can't spawn Claude subagents anyway (the platform wall above).
 
 **Consequence — traced for an artifact step** (`spec`: `output_artifact`, `exit_checks:[file_exists, file_non_empty]`):
 1. gate yields → approve → `resume` re-enters `run_loop`
@@ -264,4 +264,4 @@ The orchestrator's architecture is sound — it's a stronger state machine than 
 ### Verification for the orchestrator work
 - Unit: extend `tests/test-orchestrator-loop.py` to cover the `execute_step` yield, the accept-after-execute re-entry, and join-gate validation for parallel groups. Keep the existing routing/iteration/gate coverage green.
 - End-to-end: run a real `net-new-feature` workflow via `/sweetclaude:go` → orchestrator, confirm it advances past an artifact step in production (the current stall point) without monkeypatching.
-- Regression: `/sweetclaude:behavioral-regression` (15 contracts) before/after.
+- Regression: `/sweetclaude:configure` runs the 15-contract behavioral regression before and after.

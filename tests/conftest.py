@@ -10,6 +10,13 @@ import pytest
 SCRIPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "scripts")
 sys.path.insert(0, os.path.abspath(SCRIPTS_DIR))
 
+collect_ignore = [
+    "test_behavioral_e2e.py",
+    "test_lifecycle_behavioral_e2e.py",
+    "test_behavioral_cluster_selection.py",
+    "test_faux_project_tiered_behavior.py",
+]
+
 
 @pytest.fixture
 def sample_state():

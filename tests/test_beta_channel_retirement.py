@@ -199,7 +199,7 @@ class TestCiRetargeted:
 
 class TestFrontDoorStops:
     """The retired-channel stop is grep-anchored in the front-door skills,
-    like the recovery contract in skills/update/SKILL.md."""
+    like the recovery contract in skill-library/configure/update/SKILL.md."""
 
     # bootstrap and doctor consume preflight.sh shell vars; update consumes
     # update.py preflight JSON fields.
@@ -212,7 +212,9 @@ class TestFrontDoorStops:
         ],
     )
     def test_skill_carries_retired_channel_stop(self, skill, anchor):
-        text = (REPO_ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8")
+        category = {"bootstrap": None, "doctor": "configure", "update": "configure"}[skill]
+        root = REPO_ROOT / "skills" if category is None else REPO_ROOT / "skill-library" / category
+        text = (root / skill / "SKILL.md").read_text(encoding="utf-8")
         assert anchor in text, f"{skill} missing retired-channel stop"
         assert "SweetClaude channel retired." in text, f"{skill} missing retired stop heading"
         for command in SWITCH_COMMANDS:

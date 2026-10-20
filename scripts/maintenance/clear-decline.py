@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Step 0 helper for skills/update/SKILL.md.
+Step 0 helper for skill-library/configure/update/SKILL.md.
 
-Running `/sweetclaude:update` is the user explicitly saying "I want updates
+Running `/sweetclaude:configure update` is the user explicitly saying "I want updates
 again." Clear `framework.update.declined` if it's a legacy boolean or a
 prior version-string decline so the rest of the update flow doesn't
 silently no-op.

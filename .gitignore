@@ -17,10 +17,15 @@ restore-config.sh
 # docs/ — whitelist specific subdirectories
 /docs/*
 !/docs/README.md
+!/docs/skill-disposition.md
 !/docs/user-guide/
 !/docs/user-guide/**
 !/docs/design/
 !/docs/design/**
+!/docs/testing/
+/docs/testing/*
+!/docs/testing/behavioral-e2e/
+!/docs/testing/behavioral-e2e/**
 # Internal-only local evaluation workspaces
 /docs/codex-evaluation/
 # docs/product/ contains real project backlog and roadmap data — never public

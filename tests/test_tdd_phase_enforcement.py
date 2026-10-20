@@ -9,7 +9,7 @@ The existing hook tests passed throughout, because they wrote `tdd_phase`
 into their own fixtures — correct logic, verified against input the system
 never produced. That is the specific failure this file is written to avoid,
 so **no test here hand-writes the marker.** Every one drives
-`scripts/tdd_phase.py`, which is what `skills/code-tdd/SKILL.md` invokes.
+`scripts/tdd_phase.py`, which is what `skill-library/build/code-tdd/SKILL.md` invokes.
 
 The honest limit: a test cannot make the model follow a skill. What is proven
 here is that the mechanism the skill calls produces the enforcement it claims.
@@ -32,7 +32,7 @@ import yaml
 REPO_ROOT = Path(__file__).parents[1]
 TDD_PHASE = REPO_ROOT / "scripts" / "tdd_phase.py"
 GUARDIAN = REPO_ROOT / "hooks" / "test-guardian.sh"
-SKILL = REPO_ROOT / "skills" / "code-tdd" / "SKILL.md"
+SKILL = REPO_ROOT / "skill-library" / "build" / "code-tdd" / "SKILL.md"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import tdd_phase as tp  # noqa: E402

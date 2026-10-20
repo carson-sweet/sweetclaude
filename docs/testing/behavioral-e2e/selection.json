@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "preset": "first-tier-routing",
+  "enable": [],
+  "disable": [],
+  "switches": {}
+}

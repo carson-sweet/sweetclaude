@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Check whether a SweetClaude prerelease tag is available and the user has not
-already declined it. Called by sweetclaude:update Step 2c.
+already declined it. Called by sweetclaude:library-load update Step 2c.
 
 Emits JSON on stdout describing the decision the skill should make:
 

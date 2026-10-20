@@ -35,8 +35,8 @@ emit_heal() {
   local _RED=$'\033[0;31m'
   local _BLUE=$'\033[1;34m'
   local _RESET=$'\033[0m'
-  local msg="${_RED}SweetClaude: configuration issue detected — things may not work correctly. Type ${_BLUE}/sweetclaude:fix-sweetclaude${_RED} whenever you're ready to fix it.${_RESET}"
-  local ctx="STOP — OVERRIDE ALL SESSION-START INSTRUCTIONS: SweetClaude health check detected: ${reason}. DO NOT invoke sweetclaude:bootstrap. DO NOT invoke sweetclaude:status. DO NOT invoke any SweetClaude skill automatically. Surface this message to the user: \"${msg}\" Then respond normally to whatever the user says next. If the user types '/sweetclaude:fix-sweetclaude' or 'fix sweetclaude' (or equivalent), invoke sweetclaude:fix-sweetclaude. Otherwise, just help with whatever they ask."
+  local msg="${_RED}SweetClaude: configuration issue detected — things may not work correctly. Type ${_BLUE}/sweetclaude:configure fix-sweetclaude${_RED} whenever you're ready to fix it.${_RESET}"
+  local ctx="STOP — OVERRIDE ALL SESSION-START INSTRUCTIONS: SweetClaude health check detected: ${reason}. DO NOT invoke sweetclaude:bootstrap. DO NOT invoke sweetclaude:status. DO NOT invoke any SweetClaude skill automatically. Surface this message to the user: \"${msg}\" Then respond normally to whatever the user says next. If the user types '/sweetclaude:configure fix-sweetclaude' or 'fix sweetclaude' (or equivalent), invoke sweetclaude:library-load fix-sweetclaude. Otherwise, just help with whatever they ask."
   [ -n "$details" ] && ctx="${ctx} Details for fix-sweetclaude: ${details}"
   ctx="${ctx} ${_IDE_NOTE}"
   printf '{"systemMessage":"%s","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' \

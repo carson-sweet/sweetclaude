@@ -15,10 +15,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).parents[1]
-SEARCH_ROOTS = ["skills", "hooks", "scripts", "docs/user-guide"]
+SEARCH_ROOTS = ["skills", "skill-library", "hooks", "scripts", "docs/user-guide"]
 
 # Capture the whole token so templated refs (/sweetclaude:corpus-{step}) and
 # angle-bracket placeholders (/sweetclaude:<skill-name>) can be recognized and
@@ -27,12 +25,7 @@ SLASH_REF = re.compile(r"/sweetclaude:([^\s`'\"),.;]+)")
 PLACEHOLDER = re.compile(r"[{<]")
 FRONTMATTER_UI = re.compile(r"^user-invocable:\s*(\S+)\s*$", re.MULTILINE)
 
-# (path suffix, skill name) pairs where naming an internal skill is the point.
-ALLOWLIST = {
-    ("skills/init/SKILL.md", "setup"),
-    ("docs/user-guide/large-story-workflow.md", "large-story"),
-    ("docs/user-guide/large-story-workflow.md", "small-story"),
-}
+ALLOWLIST: set[tuple[str, str]] = set()
 
 
 def _skill_invocability() -> dict[str, bool]:
@@ -92,14 +85,4 @@ def test_no_slash_refs_to_internal_or_missing_skills() -> None:
     assert not bad, (
         "Slash-form references must name existing, user-invocable skills "
         f"(rule R2). {len(bad)} violation(s):\n{rendered}"
-    )
-
-
-@pytest.mark.parametrize("name", sorted(ALLOWLIST))
-def test_allowlist_entries_are_still_real(name: tuple[str, str]) -> None:
-    rel, skill = name
-    path = REPO_ROOT / rel
-    assert path.exists(), f"allowlisted file {rel} no longer exists"
-    assert f"/sweetclaude:{skill}" in path.read_text(encoding="utf-8"), (
-        f"allowlist entry ({rel}, {skill}) is stale — drop it"
     )

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "clusters": [
+    "lifecycle-plan",
+    "lifecycle-design",
+    "lifecycle-build",
+    "lifecycle-document",
+    "lifecycle-test",
+    "lifecycle-deploy",
+    "lifecycle-monitor",
+    "lifecycle-maintain"
+  ]
+}

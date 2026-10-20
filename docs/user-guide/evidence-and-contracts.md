@@ -157,7 +157,7 @@ Contracts and evidence are the backbone of SweetClaude's bounded, evidence-gated
 4. During Implement, the evidence hook records harness-observed activity to `evidence.jsonl`.
 5. At completion, write `success-criteria-ledger.json` and run `validate-workflow --stage completion` before any `done` transition.
 
-Skills such as `/sweetclaude:code-feature`, `/sweetclaude:code-issue`, and `/sweetclaude:code-tdd` may do bounded implementation work inside a workflow, but they inherit the frozen contract from the calling workflow rather than minting their own.
+Skills such as `/sweetclaude:build code-feature`, `/sweetclaude:build code-issue`, and `/sweetclaude:build code-tdd` may do bounded implementation work inside a workflow, but they inherit the frozen contract from the calling workflow rather than minting their own.
 
 See [Large-Story and Small-Story Workflows](large-story-workflow.md) for the
 workflows in full, and [State and Memory](state-and-memory.md) for where these

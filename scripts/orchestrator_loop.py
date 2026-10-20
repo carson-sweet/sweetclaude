@@ -258,7 +258,7 @@ def _update_item_status(project_dir, item_id, result, evidence_receipt=None):
             print(
                 "WARNING: workflow completed, but SweetClaude did not mark {} done "
                 "because no completion evidence receipt was recorded. Run "
-                "/sweetclaude:code-verify, then close the item with the receipt.".format(item_id),
+                "/sweetclaude:build code-verify, then close the item with the receipt.".format(item_id),
                 file=sys.stderr,
             )
             return False

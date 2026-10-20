@@ -215,7 +215,7 @@ open(p, 'w').write(new)
 "
 
     # Run the counter-drift repair (extracted from fix-sweetclaude Step 13).
-    # SOURCE OF TRUTH: skills/fix-sweetclaude/SKILL.md Step 13 counter-drift recipe.
+    # SOURCE OF TRUTH: skill-library/configure/fix-sweetclaude/SKILL.md Step 13 counter-drift recipe.
     (cd "$tmp" && python3 -c "
 import pathlib, yaml, re, datetime
 
@@ -279,7 +279,7 @@ scenario_d_migration_guards_fire() {
     cp -R "$REPO_ROOT/tests/fixtures/migrate-smoke/." "$tmp/"
 
     # Execute the migration-guard bash block isolated.
-    # SOURCE OF TRUTH: skills/project-backlog/SKILL.md (identical block in project-issues
+    # SOURCE OF TRUTH: skill-library/build/project-backlog/SKILL.md (identical block in project-issues
     # and project-backlog-triage). Update all three together.
     local output exit_code
     exit_code=0
@@ -385,11 +385,11 @@ scenario_e_migration_guards_silent
 echo ""
 echo "=== Scenario F: All 5 skills with migration guards have the canonical block ==="
 for skill_path in \
-    "$REPO_ROOT/skills/project-backlog/SKILL.md" \
-    "$REPO_ROOT/skills/project-issues/SKILL.md" \
-    "$REPO_ROOT/skills/project-backlog-triage/SKILL.md" \
-    "$REPO_ROOT/skills/project-gh-import-issues/SKILL.md" \
-    "$REPO_ROOT/skills/project-gh-sync-issues/SKILL.md"; do
+    "$REPO_ROOT/skill-library/build/project-backlog/SKILL.md" \
+    "$REPO_ROOT/skill-library/build/project-issues/SKILL.md" \
+    "$REPO_ROOT/skill-library/build/project-backlog-triage/SKILL.md" \
+    "$REPO_ROOT/skill-library/build/project-gh-import-issues/SKILL.md" \
+    "$REPO_ROOT/skill-library/build/project-gh-sync-issues/SKILL.md"; do
     skill_name=$(basename "$(dirname "$skill_path")")
     # Guard block presence: must mention MIGRATION GUARD and the canonical V3_FILES check
     if grep -q "^## MIGRATION GUARD" "$skill_path" && \

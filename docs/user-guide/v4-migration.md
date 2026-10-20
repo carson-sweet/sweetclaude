@@ -15,21 +15,21 @@ Use this order:
 
 1. Update the Claude Code plugin package with `/plugin update`.
 2. Restart Claude Code.
-3. Run `/sweetclaude:update` to sync framework files.
-4. Run `/sweetclaude:doctor` in the project.
+3. Run `/sweetclaude:configure update` to sync framework files.
+4. Run `/sweetclaude:configure doctor` in the project.
 5. Follow doctor's maintenance route.
 
-Do not start by running `/sweetclaude:migrate` on an unknown old project layout.
+Do not start by running `/sweetclaude:configure migrate` on an unknown old project layout.
 
 ## Routes
 
 | Doctor route | Next step |
 |---|---|
-| `recovery-available` | `/sweetclaude:recover` |
-| `supported-migration-available` | `/sweetclaude:migrate` |
+| `recovery-available` | `/sweetclaude:configure recover` |
+| `supported-migration-available` | `/sweetclaude:configure migrate` |
 | `compatibility-mode` | Continue without migration prompt. |
 | `no-migration-recommended` | Continue normal work. |
 
-`/sweetclaude:migrate` is only for layouts that pass preflight. Unsafe typed
+`/sweetclaude:configure migrate` is only for layouts that pass preflight. Unsafe typed
 legacy backlog directories and duplicate work-item IDs route to recovery instead
 of blind migration.

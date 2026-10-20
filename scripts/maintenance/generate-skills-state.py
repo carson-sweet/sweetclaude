@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
             "path": str(skills_path),
             "detail": (
                 "state directory missing — this project is not initialized; "
-                "run /sweetclaude:init"
+                "run /sweetclaude:configure init"
             ),
         }), file=sys.stderr)
         return 1

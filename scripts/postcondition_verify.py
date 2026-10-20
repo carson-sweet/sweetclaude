@@ -37,6 +37,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = REPO_ROOT / "config" / "capability-manifest.yaml"
 SKILLS_DIR = REPO_ROOT / "skills"
+SKILL_LIBRARY_DIR = REPO_ROOT / "skill-library"
 
 FENCE = re.compile(r"```(?:bash|sh|python|python3)\n(.*?)```", re.S)
 
@@ -100,6 +101,34 @@ def _skill_dir_name(capability: dict) -> str:
     """The manifest names the delegate as `sweetclaude:<skill>`."""
     delegate = capability.get("delegate_skill") or ""
     return delegate.split(":", 1)[-1]
+
+
+def resolve_skill_markdown(skill: str, skills_dir: Path | None = None) -> Path:
+    """Resolve a workflow from its Tier 1 or Tier 2 location.
+
+    Capability records retain the focused workflow name because that is the
+    executable unit whose postcondition is being checked. Public slash
+    commands are now categories, however, and focused workflows live below
+    ``skill-library/<category>/``. Test callers may pass a temporary
+    ``skills_dir`` containing a single workflow; in that case do not search
+    the repository library and accidentally validate the real file.
+    """
+    if skills_dir is not None:
+        return skills_dir / skill / "SKILL.md"
+
+    tier_one = SKILLS_DIR / skill / "SKILL.md"
+    if tier_one.is_file():
+        return tier_one
+
+    matches = sorted(SKILL_LIBRARY_DIR.glob(f"*/{skill}/SKILL.md"))
+    if len(matches) == 1:
+        return matches[0]
+    if not matches:
+        return tier_one
+    raise PostconditionError(
+        f"workflow {skill!r} is ambiguous in the Tier 2 library: "
+        f"{', '.join(str(p.relative_to(REPO_ROOT)) for p in matches)}"
+    )
 
 
 def extract_blocks(skill_md: Path) -> list[str]:
@@ -586,8 +615,7 @@ def verify_capability(
         )
 
     skill = _skill_dir_name(entry)
-    root = skills_dir or SKILLS_DIR
-    skill_md = root / skill / "SKILL.md"
+    skill_md = resolve_skill_markdown(skill, skills_dir)
     if not skill_md.is_file():
         raise BlockNotFound(f"{skill_md} does not exist")
 

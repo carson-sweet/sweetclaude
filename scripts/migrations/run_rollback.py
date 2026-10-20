@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Step 4b helper for skills/_migrate/SKILL.md.
+Step 4b helper for skill-library/configure/_migrate/SKILL.md.
 
 Executes a migration rollback from a SnapshotInfo JSON string and removes
 the pending-migration-snapshot.json marker on success.

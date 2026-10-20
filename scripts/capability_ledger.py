@@ -29,7 +29,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = REPO_ROOT / "config" / "capability-manifest.yaml"
 RULES = REPO_ROOT / "rules" / "interaction-model.md"
-BEHAVIORAL = REPO_ROOT / "skills" / "behavioral-regression" / "SKILL.md"
+BEHAVIORAL = REPO_ROOT / "skill-library" / "configure" / "behavioral-regression" / "SKILL.md"
 
 WORKS = "works"
 COMPROMISED = "compromised"
@@ -53,7 +53,10 @@ def _skill_exists(delegate: str | None) -> bool:
     if not delegate:
         return False
     name = delegate.split(":", 1)[-1]
-    return (REPO_ROOT / "skills" / name).is_dir()
+    return (
+        (REPO_ROOT / "skills" / name).is_dir()
+        or any((REPO_ROOT / "skill-library").glob(f"*/{name}"))
+    )
 
 
 def _executable_exists(entry: dict) -> bool:
@@ -189,7 +192,10 @@ def _behavioral_rows() -> list[dict]:
             "title": section,
             "tier": TIER_BEHAVIORAL,
             "status": UNVERIFIABLE,
-            "reasons": ["scored only by /sweetclaude:behavioral-regression against a live model"],
+            "reasons": [
+                "scored by the behavioral-regression workflow through "
+                "/sweetclaude:configure against a live model"
+            ],
             "contracts": sorted(by_id),
         })
     return rows

@@ -3,9 +3,9 @@
 skills.yaml v1 → v2 migration handler.
 
 Source rules: identical algorithm currently inlined in three places —
-  skills/update/project-migration.md     Step 8f
-  skills/update/capability-surface.md    Step 7a (Step 1)
-  skills/fix-sweetclaude/SKILL.md        Step 5b
+  skill-library/configure/update/project-migration.md     Step 8f
+  skill-library/configure/update/capability-surface.md    Step 7a (Step 1)
+  skill-library/configure/fix-sweetclaude/SKILL.md        Step 5b
 
 Per-entry mapping:
   enabled: true                                  → status: active

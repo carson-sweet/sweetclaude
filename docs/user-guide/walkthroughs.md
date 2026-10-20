@@ -18,7 +18,7 @@ mkdir feedback-tool && cd feedback-tool && claude
 ```
 
 ```
-/sweetclaude
+/sweetclaude:go
 ```
 
 SweetClaude detects the empty folder. It asks if you want a git repo (yes), what deference level (collaborative for the first run), and then asks you to describe the idea.
@@ -37,24 +37,24 @@ SweetClaude conducts the L2 discovery interview, one section at a time. After ea
 - `strategy/personas/` — at least one persona with a real scenario
 - `.sweetclaude/state/decision-log.md` — three decisions captured
 
-Then you run `/sweetclaude:product-brief`. SweetClaude reads the discovery output, presents an outline first, lets you approve or restructure, then writes the brief. You iterate twice. You commit.
+Then you run `/sweetclaude:plan product-brief`. SweetClaude reads the discovery output, presents an outline first, lets you approve or restructure, then writes the brief. You iterate twice. You commit.
 
-Then `/sweetclaude:product-prd` — full PRD with functional requirements, NFRs, and epics. About 90 minutes of work. You commit.
+Then `/sweetclaude:plan product-prd` — full PRD with functional requirements, NFRs, and epics. About 90 minutes of work. You commit.
 
 ### Design
 
-`/sweetclaude:design-architecture`. SweetClaude conducts an architecture interview — language, framework, data store, deployment target. Always offers a recommendation before asking you to decide. Records architectural decisions as ADRs.
+`/sweetclaude:design design-architecture`. SweetClaude conducts an architecture interview — language, framework, data store, deployment target. Always offers a recommendation before asking you to decide. Records architectural decisions as ADRs.
 
-You also run `/sweetclaude:design-data-model` for the schema and `/sweetclaude:design-api-design` for endpoint contracts. Both feed off the architecture state.
+You also run `/sweetclaude:design design-data-model` for the schema and `/sweetclaude:design design-api-design` for endpoint contracts. Both feed off the architecture state.
 
 ### Plan
 
-`/sweetclaude:product-user-stories` produces stories with acceptance criteria for the first epic. `/sweetclaude:product-user-tdd-tests` converts them to Gherkin `.feature` files.
+`/sweetclaude:plan product-user-stories` produces stories with acceptance criteria for the first epic. `/sweetclaude:build product-user-tdd-tests` converts them to Gherkin `.feature` files.
 
 ### Implement
 
 ```
-/sweetclaude:code-feature first feedback-thread feature
+/sweetclaude:build code-feature first feedback-thread feature
 ```
 
 SweetClaude finds the Gherkin specs for that feature. It runs **TDD Level 3**:
@@ -66,7 +66,7 @@ SweetClaude finds the Gherkin specs for that feature. It runs **TDD Level 3**:
 4. The implementer agent (separate context, sees only the tests) makes them pass with minimal code. The test-guardian hook physically blocks any test file edits while it works.
 5. The auto-test-runner hook fires after every source edit. Tests run automatically.
 
-When all tests pass, SweetClaude runs `/sweetclaude:code-review` and `/sweetclaude:code-testing` (PR pre-check), then opens a PR.
+When all tests pass, SweetClaude runs `/sweetclaude:build code-review` and `/sweetclaude:build code-testing` (PR pre-check), then opens a PR.
 
 ### What you have at the end
 
@@ -86,7 +86,7 @@ claude
 ```
 
 ```
-/sweetclaude
+/sweetclaude:go
 ```
 
 The first thing SweetClaude does is create a `pre-sweetclaude` git branch from your current state. That branch is your insurance — if you ever want to undo every byte SweetClaude added to your repo, `git checkout pre-sweetclaude` gets you back. SweetClaude refuses to proceed without this branch.
@@ -107,7 +107,7 @@ Then the four-question interview, one at a time. The fourth question is the impo
 
 Most onboarding flows skip this. SweetClaude treats your answer here as load-bearing.
 
-If you say "the auth code was written under deadline and I am not sure it is right," SweetClaude positions you in the IMPLEMENT phase with a specific first action: `/sweetclaude:code-debt` to lock the existing auth behavior in tests before any refactor.
+If you say "the auth code was written under deadline and I am not sure it is right," SweetClaude positions you in the IMPLEMENT phase with a specific first action: `/sweetclaude:maintain code-debt` to lock the existing auth behavior in tests before any refactor.
 
 If you say "everything is fine, I just want SweetClaude to be available," SweetClaude positions you wherever you want and shows you the menu.
 
@@ -163,7 +163,7 @@ Production restored. A regression test that was missing before. A POST-MORTEM do
 You have thirty strategy documents, fifteen Claude.ai session exports, eight meeting notes, and a Google Drive folder of research PDFs. Some are duplicates. Some are drafts of drafts. You need a clean canonical set of go-forward documents that you can search.
 
 ```
-/sweetclaude:document-corpus
+/sweetclaude:utils document-corpus
 ```
 
 SweetClaude shows the menu with current pipeline state next to each step:
@@ -235,7 +235,7 @@ The reason this exists as its own work type is that pivots without TRIAGE leave 
 You have a planned feature. Specs exist. You want to run the rigorous version end-to-end.
 
 ```
-/sweetclaude:code-feature thread reply feature
+/sweetclaude:build code-feature thread reply feature
 ```
 
 SweetClaude looks for existing specs in this order: Gherkin `.feature` files, current issue/story artifacts in `.sweetclaude/product/`, and PRD material in `docs/`. It finds Gherkin files for "thread reply" and skips the spec-writing step.
@@ -273,7 +273,7 @@ The implementer iterates until all tests pass. If tests cannot be made to pass w
 ### Step 4 — Optional mutation testing
 
 ```
-/sweetclaude:code-testing mutation
+/sweetclaude:build code-testing mutation
 ```
 
 Mutation testing introduces deliberate faults into the implementation and re-runs the test suite. Every mutation that the tests fail to catch is a coverage gap. You decide whether to add a test or accept the gap.
@@ -281,8 +281,8 @@ Mutation testing introduces deliberate faults into the implementation and re-run
 ### Step 5 — Code review and PR pre-check
 
 ```
-/sweetclaude:code-review
-/sweetclaude:code-testing pr-precheck
+/sweetclaude:build code-review
+/sweetclaude:build code-testing pr-precheck
 ```
 
 Adversarial review by the code-reviewer agent — logic errors, edge cases, missing error handling. Then PR pre-check — coverage, changelog, doc updates. PR opens.

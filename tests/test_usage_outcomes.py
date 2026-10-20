@@ -275,13 +275,14 @@ def test_cli_text_output_labels_unknown_as_not_a_success(project: Path,
 @pytest.mark.parametrize("skill", ["doctor", "code-verify"])
 def test_wired_skills_record_their_outcome(skill: str) -> None:
     """The mechanism is worthless if nothing calls it."""
-    text = (REPO_ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8")
+    category = {"doctor": "configure", "code-verify": "build"}[skill]
+    text = (REPO_ROOT / "skill-library" / category / skill / "SKILL.md").read_text(encoding="utf-8")
     assert "record-event.sh skill_completed" in text, (
         f"{skill} does not record an outcome")
-    assert f"skill=sweetclaude:{skill}" in text
+    assert f"skill=sweetclaude:library-load {skill}" in text
 
 
 def test_usage_skill_documents_the_outcome_event() -> None:
-    text = (REPO_ROOT / "skills" / "usage" / "SKILL.md").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "skill-library" / "configure" / "usage" / "SKILL.md").read_text(encoding="utf-8")
     assert "skill_completed" in text
     assert "unobserved" in text

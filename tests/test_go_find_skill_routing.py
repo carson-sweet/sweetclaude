@@ -31,12 +31,12 @@ def test_find_skill_can_route_large_story_requests():
     assert "| Large story / high-rigor story |" in text
     assert "DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP/closeout" in text
     assert "controller-enforced phase gates" in text
-    assert "`sweetclaude:large-story`" in text
+    assert "`sweetclaude:library-load large-story`" in text
 
 
 def test_large_story_is_not_publicly_invocable():
-    frontmatter = _frontmatter("skills/large-story/SKILL.md")
-    text = _read("skills/large-story/SKILL.md")
+    frontmatter = _frontmatter("skill-library/build/large-story/SKILL.md")
+    text = _read("skill-library/build/large-story/SKILL.md")
 
     assert "user-invocable: false" in frontmatter
     assert "Internal bounded, evidence-gated large-story workflow." in frontmatter

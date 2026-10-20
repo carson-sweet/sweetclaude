@@ -5,7 +5,12 @@ ROOT = Path(__file__).parents[1]
 
 
 def _skill(name: str) -> str:
-    return (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+    tier_one = ROOT / "skills" / name / "SKILL.md"
+    if tier_one.is_file():
+        return tier_one.read_text(encoding="utf-8")
+    matches = list((ROOT / "skill-library").glob(f"*/{name}/SKILL.md"))
+    assert len(matches) == 1, f"expected one Tier 2 workflow named {name!r}, got {matches}"
+    return matches[0].read_text(encoding="utf-8")
 
 
 def test_code_verify_writes_completion_evidence_receipts():

@@ -7,6 +7,7 @@ The three reporting skills (big-picture, status, recap) must work with the
 post-migration taxonomy: .sweetclaude/product/ paths, MS/EP/ISSUE prefixes,
 cache.py queries, and milestone-based hierarchy.
 """
+import glob
 import os
 import sys
 import re
@@ -56,6 +57,10 @@ def setup_project(tmp_path):
 def read_skill(skill_name):
     """Read the content of a skill's SKILL.md file."""
     path = os.path.join(_PROJECT_ROOT, "skills", skill_name, "SKILL.md")
+    if not os.path.exists(path):
+        matches = glob.glob(os.path.join(_PROJECT_ROOT, "skill-library", "*", skill_name, "SKILL.md"))
+        assert len(matches) == 1, f"expected one library skill named {skill_name}, found {matches}"
+        path = matches[0]
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -418,9 +423,9 @@ class TestStatusHasMigrationGuard:
     def test_routes_unsafe_guard_context_to_recover(self):
         content = read_skill("status")
         assert "guard --project-dir . --pretty" in content
-        assert "/sweetclaude:recover" in content
-        assert "Do not run /sweetclaude:migrate yet" in content
-        assert "run `/sweetclaude:migrate` first" not in content
+        assert "/sweetclaude:configure recover" in content
+        assert "Do not run /sweetclaude:configure migrate yet" in content
+        assert "run `/sweetclaude:configure migrate` first" not in content
         assert "`.sweetclaude/product/` not found" not in content
 
 

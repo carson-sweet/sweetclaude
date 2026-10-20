@@ -84,7 +84,7 @@ _esc() {
 
 if [ "$NEW_COUNT" -ge 10 ]; then
   # Hard-block.
-  MSG="⛔ Pending migration decision (turn $NEW_COUNT/10 — limit reached). You MUST pick Accept or Initiate rollback before continuing. Snapshot: $SNAP_INFO. Resolve by invoking the sweetclaude:_migrate skill, or a manual rollback."
+  MSG="⛔ Pending migration decision (turn $NEW_COUNT/10 — limit reached). You MUST pick Accept or Initiate rollback before continuing. Snapshot: $SNAP_INFO. Resolve by invoking the sweetclaude:library-load _migrate skill, or a manual rollback."
   CTX="A migration completed but has not been accepted. The Defer decision window has expired. STOP all other work. Surface this message to the user and ask: Accept the migration (clears the marker) or Initiate rollback (typed confirmation required). Do not proceed with any other task until the marker file at .sweetclaude/state/pending-migration-decision.yaml is cleared."
   printf '{"continue":false,"systemMessage":"%s","hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"%s"}}\n' \
     "$(_esc "$MSG")" "$(_esc "$CTX")"

@@ -112,7 +112,7 @@ def beta_stable_migration_notice(*, channel, installed_version, stable_tags):
         "  /plugin install sweetclaude@sweetclaude-stable\n"
         "  /plugin marketplace remove sweetclaude-beta\n\n"
         "(Removing the beta marketplace uninstalls its plugin, so add and "
-        "install stable first.) Then run /sweetclaude:update on the stable "
+        "install stable first.) Then run /sweetclaude:configure update on the stable "
         "channel; your project data migrates normally."
     )
 

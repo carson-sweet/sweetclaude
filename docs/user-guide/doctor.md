@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Date:** 2026-06-10
 
-`/sweetclaude:doctor` is the single place to start whenever a project feels
+`/sweetclaude:configure doctor` is the single place to start whenever a project feels
 wrong after an update, a migration, or a long gap: noisy prompts, confusing
 state, broken hooks, half-finished migrations, or files in the wrong place.
 Doctor scans the project, tells you exactly what it found, and — only with your
@@ -16,14 +16,14 @@ makes is backed up first and fully reversible.
 
 ## When to run it
 
-- After `/plugin update` or `/sweetclaude:update`.
+- After `/plugin update` or `/sweetclaude:configure update`.
 - When SweetClaude gives confusing migration advice or won't pick up your work.
 - When prompts repeat, hooks misbehave, or status looks inconsistent.
 - Any time you're unsure whether the project is healthy — it's read-only until
   you say otherwise.
 
 ```text
-/sweetclaude:doctor
+/sweetclaude:configure doctor
 ```
 
 ## What it checks
@@ -66,7 +66,7 @@ good luck" reports:
   misfiled file, renumber a duplicate, or exit compatibility mode). You choose;
   Doctor executes through the same backed-up pipeline.
 - **Delegate** — problems owned by another flow (taxonomy migration, project
-  recovery) are handed off to `/sweetclaude:migrate` or `/sweetclaude:recover`,
+  recovery) are handed off to `/sweetclaude:configure migrate` or `/sweetclaude:configure recover`,
   which run their own preflight, approval, and rollback. Doctor re-scans after.
 - **Terminal fallback** — if a project is too far gone for in-place repair,
   Doctor surfaces the last-resort options: re-onboard from a clean state, or
@@ -87,7 +87,7 @@ good luck" reports:
 ## Rolling back a run
 
 If a run did something you didn't want, you can restore the project to its
-pre-run state. Run `/sweetclaude:doctor` and choose the rollback option (it lists
+pre-run state. Run `/sweetclaude:configure doctor` and choose the rollback option (it lists
 recent runs and the files each one changed), or tell Doctor you want to undo the
 last run. Restore rewrites each changed file from its archived before-image and
 reverses any moves.
@@ -99,12 +99,12 @@ rather than acting outside its lane:
 
 | Route status | Next step |
 |---|---|
-| `recovery-available` | `/sweetclaude:recover` |
-| `supported-migration-available` | `/sweetclaude:migrate` |
+| `recovery-available` | `/sweetclaude:configure recover` |
+| `supported-migration-available` | `/sweetclaude:configure migrate` |
 | `compatibility-mode` | Continue without the migration prompt. |
 | `no-migration-recommended` | Continue normal work. |
 
-Do not start by running `/sweetclaude:migrate` on an unknown old layout — start
+Do not start by running `/sweetclaude:configure migrate` on an unknown old layout — start
 with Doctor.
 
 ## Related

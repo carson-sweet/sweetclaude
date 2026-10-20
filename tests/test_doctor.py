@@ -9480,7 +9480,7 @@ class TestP1Suppress:
         # Structural: the SKILL.md suppress flow must invoke the suppress
         # subcommand and contain NO inline file write to doctor-suppressions.json.
         skill = (
-            Path(__file__).parents[1] / "skills" / "doctor" / "SKILL.md"
+            Path(__file__).parents[1] / "skill-library" / "configure" / "doctor" / "SKILL.md"
         ).read_text(encoding="utf-8")
 
         assert "doctor.py suppress" in skill, (
@@ -9528,6 +9528,7 @@ _CONTENT_MUTATING_ACTIONS = frozenset({
     "hook_restore",
     "file_move",
     "renumber_duplicate",
+    "remove_global_rules",
 })
 
 # Backed-up subprocess actions — run an external script/rebuild but capture the
@@ -9549,7 +9550,7 @@ _BACKED_UP_SUBPROCESS_ACTIONS = frozenset({
 # never quietly grow an un-backed-up mutation under this banner: any new action
 # placed here is a deliberate, reviewed exception, and the partition test still
 # forces every supported action into exactly one class.
-_REVERSIBLE_FALSE_ACTIONS = frozenset({"remove_global_rules"})
+_REVERSIBLE_FALSE_ACTIONS = frozenset()
 
 # Presentation-only — surfaced for user approval, never executed by the
 # executor as a file mutation.
@@ -9671,6 +9672,15 @@ def _capstone_build_content_mutation(tmp_path, action):
         # the before-image is keyed to the ORIGINAL path; restore reverses the
         # rename + id rewrite.
         return project_dir, archive, recipe, target, target.read_bytes()
+
+    if action == "remove_global_rules":
+        rules_dir = Path.home() / ".claude" / "rules" / "sweetclaude"
+        rules_dir.mkdir(parents=True, exist_ok=True)
+        rule = rules_dir / "interaction-model.md"
+        rule.write_text("# legacy rule\n")
+        archive = create_archive(project_dir)
+        recipe = {"action": "remove_global_rules", "file": str(rules_dir)}
+        return project_dir, archive, recipe, rule, rule.read_bytes()
 
     raise AssertionError(f"no capstone builder for content-mutating action {action!r}")
 
@@ -9968,7 +9978,7 @@ class TestP1ExecutorInvariants:
         # through a doctor.py subcommand. Only READ-ONLY inline python may
         # remain. This is the structural backstop that keeps every mutation on
         # the backed-up executor path.
-        skill_path = Path(__file__).parents[1] / "skills" / "doctor" / "SKILL.md"
+        skill_path = Path(__file__).parents[1] / "skill-library" / "configure" / "doctor" / "SKILL.md"
         skill = skill_path.read_text(encoding="utf-8")
 
         # No write-mode file opens in inline python (open(..., "w"/"a"/"x"...)).
@@ -10308,7 +10318,7 @@ class TestP2SkillRendersTier4:
 
     def _skill(self):
         return (
-            Path(__file__).parents[1] / "skills" / "doctor" / "SKILL.md"
+            Path(__file__).parents[1] / "skill-library" / "configure" / "doctor" / "SKILL.md"
         ).read_text(encoding="utf-8")
 
     def test_skill_has_step_2c_reading_terminal_fallback_triggers(self):
@@ -10333,11 +10343,11 @@ class TestP2SkillRendersTier4:
             "(archives .sweetclaude/ — no skill-side mv)")
         assert "re_adopt.py execute" in skill, (
             "Step 2c re-onboard route must call the execute subcommand")
-        assert "sweetclaude:init" in skill, (
-            "Step 2c re-onboard route hands off to sweetclaude:init")
+        assert "sweetclaude:library-load init" in skill, (
+            "Step 2c re-onboard route hands off to sweetclaude:library-load init")
         # Remove route delegates to the purge skill (clean break).
-        assert "sweetclaude:purge" in skill, (
-            "Step 2c remove route must delegate to sweetclaude:purge")
+        assert "sweetclaude:library-load purge" in skill, (
+            "Step 2c remove route must delegate to sweetclaude:library-load purge")
         # legacy archive is preserved, not auto-imported
         assert ".sweetclaude.legacy" in skill, (
             "Step 2c must state the re-onboard archives to .sweetclaude.legacy/")
@@ -10430,7 +10440,7 @@ class TestT3bTaxonomyMigrationRoutesToMigrate:
 
     def test_skill_step7_routes_taxonomy_to_migrate_not_blocked(self):
         skill = (
-            Path(__file__).parents[1] / "skills" / "doctor" / "SKILL.md"
+            Path(__file__).parents[1] / "skill-library" / "configure" / "doctor" / "SKILL.md"
         ).read_text(encoding="utf-8")
         start = skill.index("## Step 7")
         nxt = skill.find("\n## ", start)
@@ -10440,8 +10450,8 @@ class TestT3bTaxonomyMigrationRoutesToMigrate:
         assert "migrate_taxonomy.py" in section, (
             "Step 7 must still describe the taxonomy-migration handler"
         )
-        assert "sweetclaude:migrate" in section, (
-            "Step 7 must route taxonomy migration to sweetclaude:migrate"
+        assert "sweetclaude:library-load migrate" in section, (
+            "Step 7 must route taxonomy migration to sweetclaude:library-load migrate"
         )
         # The old block-and-route-to-recover language must be gone.
         assert "route the\n  user to `/sweetclaude:recover` or manual review" not in section, (
@@ -10513,7 +10523,7 @@ class TestT3eStep7RescanAfterDelegation:
 
     def _step7(self):
         skill = (
-            Path(__file__).parents[1] / "skills" / "doctor" / "SKILL.md"
+            Path(__file__).parents[1] / "skill-library" / "configure" / "doctor" / "SKILL.md"
         ).read_text(encoding="utf-8")
         start = skill.index("## Step 7")
         nxt = skill.find("\n## ", start)

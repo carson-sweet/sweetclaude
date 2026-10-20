@@ -48,7 +48,7 @@ When you turn it on for the first time, its onboarding flow runs automatically.
 
 ## The Skill
 
-Everything is driven by `/sweetclaude:work-item-artifacts`. The argument you pass selects the flow.
+Everything is driven by `/sweetclaude:configure work-item-artifacts`. The argument you pass selects the flow.
 
 ### `onboard`
 

@@ -405,7 +405,7 @@ echo "$PF_MISSING_OUT" | grep -q '^SC_PLUGIN_STALE_BETA=true$' \
 
 echo "[9] update skill guards channel source and metadata repair"
 
-UPDATE_SKILL="$REPO_ROOT/skills/update/SKILL.md"
+UPDATE_SKILL="$REPO_ROOT/skill-library/configure/update/SKILL.md"
 grep -q 'SC_PLUGIN_EXPECTED_REF' "$UPDATE_SKILL" \
   && pass "update skill consumes expected channel ref" \
   || fail "update skill does not consume SC_PLUGIN_EXPECTED_REF"

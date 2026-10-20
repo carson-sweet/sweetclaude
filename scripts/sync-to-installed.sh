@@ -199,9 +199,10 @@ chmod +x "$INSTALL_PATH/hooks/"*.sh 2>/dev/null || true
 
 # ── Sync non-hook artifacts ──────────────────────────────────────────────────
 
-echo "Syncing skills, scripts, config..."
+echo "Syncing Tier 1 skills, Tier 2 library, scripts, config..."
 
 rsync -a "$REPO_ROOT/skills/" "$INSTALL_PATH/skills/" || echo "WARNING: skills sync failed (non-fatal)" >&2
+rsync -a "$REPO_ROOT/skill-library/" "$INSTALL_PATH/skill-library/" || echo "WARNING: skill library sync failed (non-fatal)" >&2
 rsync -a --exclude='__pycache__' --exclude='*.pyc' "$REPO_ROOT/scripts/" "$INSTALL_PATH/scripts/" || echo "WARNING: scripts sync failed (non-fatal)" >&2
 
 if [ -d "$REPO_ROOT/config" ]; then
@@ -220,8 +221,9 @@ if [ -n "$INSTALL_PATH" ] && [ -n "$MANIFEST_VER" ]; then
   PLUGIN_CACHE_PARENT=$(dirname "$INSTALL_PATH")
   VERSION_DIR="$PLUGIN_CACHE_PARENT/$MANIFEST_VER"
   if [ "$VERSION_DIR" != "$INSTALL_PATH" ] && [ -d "$PLUGIN_CACHE_PARENT" ]; then
-    mkdir -p "$VERSION_DIR/skills" "$VERSION_DIR/hooks" "$VERSION_DIR/scripts"
+    mkdir -p "$VERSION_DIR/skills" "$VERSION_DIR/skill-library" "$VERSION_DIR/hooks" "$VERSION_DIR/scripts"
     rsync -a "$REPO_ROOT/skills/" "$VERSION_DIR/skills/" || echo "WARNING: version-dir skills sync failed (non-fatal)" >&2
+    rsync -a "$REPO_ROOT/skill-library/" "$VERSION_DIR/skill-library/" || echo "WARNING: version-dir skill library sync failed (non-fatal)" >&2
     rsync -a "$REPO_ROOT/hooks/" "$VERSION_DIR/hooks/" || echo "WARNING: version-dir hooks sync failed (non-fatal)" >&2
     rsync -a --exclude='__pycache__' --exclude='*.pyc' "$REPO_ROOT/scripts/" "$VERSION_DIR/scripts/" || echo "WARNING: version-dir scripts sync failed (non-fatal)" >&2
     [ -d "$REPO_ROOT/.claude-plugin" ] && rsync -a "$REPO_ROOT/.claude-plugin/" "$VERSION_DIR/.claude-plugin/" || true

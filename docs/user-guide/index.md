@@ -23,7 +23,7 @@ commands. To update:
 
 ```text
 /plugin update sweetclaude@sweetclaude-stable
-/sweetclaude:update
+/sweetclaude:configure update
 ```
 
 If `/plugin list` shows the legacy key `sweetclaude@sweetclaude`, update
@@ -34,7 +34,7 @@ that exact key first.
 For project problems after update, start with:
 
 ```text
-/sweetclaude:doctor
+/sweetclaude:configure doctor
 ```
 
 Doctor scans read-only, then routes to one of these outcomes (see
@@ -42,12 +42,12 @@ Doctor scans read-only, then routes to one of these outcomes (see
 
 | Route status | Next step |
 |---|---|
-| `recovery-available` | `/sweetclaude:recover` |
-| `supported-migration-available` | `/sweetclaude:migrate` |
+| `recovery-available` | `/sweetclaude:configure recover` |
+| `supported-migration-available` | `/sweetclaude:configure migrate` |
 | `compatibility-mode` | Continue without migration prompt. |
 | `no-migration-recommended` | Continue normal work. |
 
-Do not start by running `/sweetclaude:migrate` on an unknown old project layout.
+Do not start by running `/sweetclaude:configure migrate` on an unknown old project layout.
 
 ## Where To Begin
 
@@ -100,7 +100,7 @@ If you have it installed and want to understand the design decisions, read
 /sweetclaude:go       Pick up where you left off
 /sweetclaude:status   Project status
 /sweetclaude:help     Conversational help
-/sweetclaude:doctor   Maintenance front door
-/sweetclaude:recover  Recovery for stuck project states
-/sweetclaude:migrate  Supported taxonomy migration only after preflight
+/sweetclaude:configure doctor   Maintenance front door
+/sweetclaude:configure recover  Recovery for stuck project states
+/sweetclaude:configure migrate  Supported taxonomy migration only after preflight
 ```

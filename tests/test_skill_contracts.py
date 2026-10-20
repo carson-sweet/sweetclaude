@@ -26,12 +26,15 @@ import pytest
 
 REPO_ROOT = Path(__file__).parents[1]
 SKILLS_DIR = REPO_ROOT / "skills"
+LIBRARY_DIR = REPO_ROOT / "skill-library"
 AGENTS_DIR = REPO_ROOT / "agents"
 
-SKILL_NAMES = sorted(d.name for d in SKILLS_DIR.iterdir() if d.is_dir())
+CORE_SKILL_NAMES = {d.name for d in SKILLS_DIR.iterdir() if d.is_dir()}
+LIBRARY_SKILL_NAMES = {p.parent.name for p in LIBRARY_DIR.glob("*/*/SKILL.md")}
+SKILL_NAMES = sorted(CORE_SKILL_NAMES | LIBRARY_SKILL_NAMES)
 AGENT_NAMES = sorted(p.stem for p in AGENTS_DIR.glob("*.md"))
 
-SKILL_MDS = sorted(SKILLS_DIR.glob("*/SKILL.md"))
+SKILL_MDS = sorted([*SKILLS_DIR.glob("*/SKILL.md"), *LIBRARY_DIR.glob("*/*/SKILL.md")])
 
 REF = re.compile(r"(?<![/\w])sweetclaude:([a-z0-9_/-]+)")
 

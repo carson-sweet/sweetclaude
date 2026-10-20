@@ -48,14 +48,32 @@ esac
 # Lifecycle skills exempt from ALL checks.
 case "$SKILL_NAME" in
   sweetclaude:bootstrap|\
+  sweetclaude:configure|\
   sweetclaude:fix-sweetclaude|\
   sweetclaude:_migrate|\
   sweetclaude:purge|\
   sweetclaude:setup|\
   sweetclaude:init|\
+  sweetclaude:adopt|\
   sweetclaude:update)
     echo '{"ok": true}'; exit 0 ;;
 esac
+
+# Library-loaded lifecycle workflows are exempt the same way.
+if [ "$SKILL_NAME" = "sweetclaude:library-load" ]; then
+  SKILL_ARGS=$(printf '%s' "$INPUT" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('tool_input', {}).get('args', ''))
+except Exception:
+    print('')
+" 2>/dev/null || true)
+  case "${SKILL_ARGS%% *}" in
+    fix-sweetclaude|_migrate|purge|setup|init|adopt|update)
+      echo '{"ok": true}'; exit 0 ;;
+  esac
+fi
 
 # Resolve project root.
 PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || true)
@@ -80,9 +98,9 @@ except Exception:
     print('A')
 " "$DRIFT_MARKER" 2>/dev/null)
   if [ "$CASE" = "B" ]; then
-    echo '{"ok": false, "reason": "BLOCKED: SweetClaude artifact drift (out-of-support-window). Run /sweetclaude:purge to remove, or re-onboard with /sweetclaude:init after archiving .sweetclaude/ manually."}'
+    echo '{"ok": false, "reason": "BLOCKED: SweetClaude artifact drift (out-of-support-window). Run /sweetclaude:configure purge to remove, or re-onboard with /sweetclaude:configure init after archiving .sweetclaude/ manually."}'
   else
-    echo '{"ok": false, "reason": "BLOCKED: SweetClaude artifact drift — migration required. Invoke the sweetclaude:_migrate skill to migrate, or run /sweetclaude:purge to remove SweetClaude."}'
+    echo '{"ok": false, "reason": "BLOCKED: SweetClaude artifact drift — migration required. Invoke the sweetclaude:library-load _migrate skill to migrate, or run /sweetclaude:configure purge to remove SweetClaude."}'
   fi
   exit 0
 fi

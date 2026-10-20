@@ -62,7 +62,7 @@ restart Claude Code before running any SweetClaude commands.
 After restart, run:
 
 ```
-/sweetclaude:update
+/sweetclaude:configure update
 ```
 
 The 4.1.9 and later beta update path preserves the stable/beta channel boundary, ignores
@@ -79,7 +79,7 @@ not run migration commands directly.
 If a project was left in a bad migration, doctor, update, or repair state:
 
 ```
-/sweetclaude:recover
+/sweetclaude:configure recover
 ```
 
 Recovery diagnoses first, shows a plan, snapshots before mutation, and asks
@@ -114,10 +114,10 @@ and install the beta marketplace.
 
 Do not install old 4.x beta tags on active projects.
 
-Do not run `/sweetclaude:migrate`, `/sweetclaude:doctor` autofixes, or
-`/sweetclaude:fix-sweetclaude` as the first response to a broken beta install.
+Do not run `/sweetclaude:configure migrate`, `/sweetclaude:configure doctor` autofixes, or
+`/sweetclaude:configure fix-sweetclaude` as the first response to a broken beta install.
 First update the plugin package, restart Claude Code, then use
-`/sweetclaude:update` or `/sweetclaude:recover`.
+`/sweetclaude:configure update` or `/sweetclaude:configure recover`.
 
 Do not mix stable and beta marketplaces for the same install. Use the exact
 plugin key shown by `/plugin list`.

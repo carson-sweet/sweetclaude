@@ -13,13 +13,18 @@ python3 scripts/sweetclaude-yaml-template.py \
 [ -f "$TEST_TMPDIR/sweetclaude.yaml" ] || { echo "FAIL: file not written"; exit 1; }
 
 # Verify it parses as valid YAML
-python3 -c "
+TEST_TEMPLATE="$TEST_TMPDIR/sweetclaude.yaml" python3 - <<'PY'
+import os
+import subprocess
+import tempfile
 import yaml
-with open('$TEST_TMPDIR/sweetclaude.yaml') as f:
+
+with open(os.environ['TEST_TEMPLATE']) as f:
     d = yaml.safe_load(f)
-assert d['schema_version'] == 1, 'schema_version must be 1'
+assert d['schema_version'] == 2, 'schema_version must be 2'
 assert d['project']['name'] == 'test-project'
 assert d['project']['type'] == 'existing-code'
+assert d['project']['issue_tracker'] == 'local'
 assert d['framework']['setup_complete'] == False
 assert d['framework']['migration_status'] is None, f"fresh install should have None migration_status"
 assert 'features' in d
@@ -34,8 +39,12 @@ for feat in ['product_milestones','product_backlog','product_personas','product_
 assert 'session' in d, 'missing key: session'
 assert 'work' in d, 'missing key: work'
 
+github = subprocess.run(['python3', 'scripts/sweetclaude-yaml-template.py',
+    '--name', 'github-proj', '--issue-tracker', 'github', '--output', '-'],
+    capture_output=True, text=True, check=True)
+assert yaml.safe_load(github.stdout)['project']['issue_tracker'] == 'github'
+
 # Also test migrated-from path
-import subprocess, tempfile, os
 with tempfile.NamedTemporaryFile(suffix='.yaml', delete=False) as tmp:
     tmp_path = tmp.name
 subprocess.run(['python3', 'scripts/sweetclaude-yaml-template.py',
@@ -46,4 +55,4 @@ os.unlink(tmp_path)
 assert dm['framework']['migrated_from'] == '2.39.0', 'migrated_from not set'
 assert dm['framework']['migrated_at'] is not None, 'migrated_at should be set'
 print('PASS')
-"
+PY

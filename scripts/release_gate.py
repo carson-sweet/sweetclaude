@@ -916,7 +916,7 @@ def generate_release_evidence(
     channel: str,
     branch: str,
     installed_path: Path | None = None,
-    installed_entrypoint: str = "/sweetclaude:recover",
+    installed_entrypoint: str = "/sweetclaude:configure recover",
 ) -> dict:
     project_dir = project_dir.resolve()
     version = _version_from_tag(tag)
@@ -1233,7 +1233,7 @@ def main(argv: list[str] | None = None) -> int:
     p_generate.add_argument("--channel", required=True, choices=["stable", "legacy"])
     p_generate.add_argument("--branch", required=True)
     p_generate.add_argument("--installed-path", type=Path, default=None)
-    p_generate.add_argument("--installed-entrypoint", default="/sweetclaude:recover")
+    p_generate.add_argument("--installed-entrypoint", default="/sweetclaude:configure recover")
 
     args = parser.parse_args(argv)
 

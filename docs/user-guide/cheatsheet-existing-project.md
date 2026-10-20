@@ -52,7 +52,7 @@ Based on the scan and your answers, SweetClaude proposes where your project sits
 - Actively building → IMPLEMENT
 - Code exists but untested → IMPLEMENT (lock behavior with tests)
 - Feature-complete → VERIFY
-- Shipping → use `/sweetclaude` for each piece of work
+- Shipping → use `/sweetclaude:go` for each piece of work
 
 You confirm or adjust. SweetClaude does not assume it knows better than you.
 
@@ -75,22 +75,22 @@ If you are in the middle of implementation, these are your daily tools:
 
 | Command | When to use it |
 |---|---|
-| `/sweetclaude:code-feature` | Build a new feature end-to-end (Gherkin → TDD Level 3 → PR) |
-| `/sweetclaude:code-issue` | Implement a GitHub issue end to end |
-| `/sweetclaude:code-debt` | Clean up tech debt (tests before touch, always) |
-| `/sweetclaude:code-testing` | Run tests, mutation, security review, and/or PR pre-check |
-| `/sweetclaude:code-review` | Code, security, and compliance review |
-| `/sweetclaude:product-milestones` | Track roadmap targets across strategy and product work |
+| `/sweetclaude:build code-feature` | Build a new feature end-to-end (Gherkin → TDD Level 3 → PR) |
+| `/sweetclaude:build code-issue` | Implement a GitHub issue end to end |
+| `/sweetclaude:maintain code-debt` | Clean up tech debt (tests before touch, always) |
+| `/sweetclaude:build code-testing` | Run tests, mutation, security review, and/or PR pre-check |
+| `/sweetclaude:build code-review` | Code, security, and compliance review |
+| `/sweetclaude:plan product-milestones` | Track roadmap targets across strategy and product work |
 
 ### Fix Configuration Issues
 
 If SweetClaude detected mismatches between its configuration and your actual project state:
 
 ```text
-/sweetclaude:doctor
+/sweetclaude:configure doctor
 ```
 
-Doctor scans state, hooks, storage, migration, config, files, onboarding, and environment. It proposes fixes, routes unsafe legacy migration states to `/sweetclaude:recover`, and does not mutate files until the relevant safety flow confirms the action.
+Doctor scans state, hooks, storage, migration, config, files, onboarding, and environment. It proposes fixes, routes unsafe legacy migration states to `/sweetclaude:configure recover`, and does not mutate files until the relevant safety flow confirms the action.
 
 ### Add Strategic Foundation (Even Mid-Project)
 
@@ -98,31 +98,31 @@ Your project may already have code, but you might not have documented the strate
 
 **Articulate what you are building:**
 ```
-/sweetclaude:product-discovery
+/sweetclaude:plan product-discovery
 ```
 Establish what is being built, for whom, and why. Three depth levels from quick intent to full pain thesis. Even mid-project, making this explicit helps you prioritize features, write better marketing copy, and have sharper investor conversations.
 
 **Define your users:**
 ```
-/sweetclaude:user-personas
+/sweetclaude:plan user-personas
 ```
 Who specifically has this pain? Define users — who they are, what they need to do, and what success looks like. Includes triggers and deal-breakers.
 
 **Analyze the competitive landscape:**
 ```
-/sweetclaude:product-competition
+/sweetclaude:plan product-competition
 ```
 Who else operates in this space, how they are positioned, where the gaps are. Three depth levels — survey, matrix comparison, or feature-deep analysis.
 
 **Craft market messaging:**
 ```
-/sweetclaude:product-market-messaging
+/sweetclaude:plan product-market-messaging
 ```
 Elevator pitches, value propositions, and key messages per audience.
 
 **Define positioning:**
 ```
-/sweetclaude:product-positioning-statement
+/sweetclaude:plan product-positioning-statement
 ```
 For/who/that/unlike framework.
 
@@ -131,7 +131,7 @@ For/who/that/unlike framework.
 If you have strategy documents, brainstorming exports, meeting notes, or research scattered across folders, Claude.ai sessions, or Google Drive downloads, run:
 
 ```
-/sweetclaude:document-corpus
+/sweetclaude:utils document-corpus
 ```
 
 The skill presents a menu: consolidate raw files → triage (classify each file) → reconcile (draft canonical documents) → promote (finalize with provenance, archive, RAG index). Select **Status** at any point to see where the pipeline stands. The pipeline enforces ordering — skipping steps produces degraded or misleading results, and the skill explains why if you try. Every canonical document traces back to its source files.
@@ -141,7 +141,7 @@ This is especially useful for projects that started with lots of brainstorming i
 ### Prepare for Meetings
 
 ```
-/sweetclaude:misc-meeting-prep
+/sweetclaude:utils misc-meeting-prep
 ```
 
 Tell it who you are meeting, when, and what the purpose is. It pulls context from your strategy documents, drafts an agenda, talking points with confidence levels, anticipated questions with prepared responses, and leave-behinds. After the meeting, it captures your debrief.
@@ -149,13 +149,13 @@ Tell it who you are meeting, when, and what the purpose is. It pulls context fro
 ### Write or Improve Documentation
 
 ```
-/sweetclaude:documents-update-docs
+/sweetclaude:utils documents-update-docs
 ```
 
 After implementation changes behavior, this scans existing docs for stale references and proposes updates.
 
 ```
-/sweetclaude:design-manage-decisions
+/sweetclaude:design design-manage-decisions
 ```
 
 Record architecture or design decisions with context, options considered, and rationale. Query them later: "Why did we choose X?"
@@ -163,7 +163,7 @@ Record architecture or design decisions with context, options considered, and ra
 ### Track Roadmap Milestones
 
 ```
-/sweetclaude:product-milestones add
+/sweetclaude:plan product-milestones add
 ```
 
 Create outcome-driven roadmap targets like "Exit Stealth" or "MVP Shipped" with measurable success criteria. Link user stories and backlog items to milestones. Track progress, identify blockers, and mark milestones achieved with follow-up capture. Sprint planning automatically reports which milestones a sprint advances.
@@ -171,7 +171,7 @@ Create outcome-driven roadmap targets like "Exit Stealth" or "MVP Shipped" with 
 ### Set Up Semantic Search
 
 ```
-/sweetclaude:document-corpus
+/sweetclaude:utils document-corpus
 ```
 
 Index your project documents for semantic search. Ask questions about your codebase and docs by meaning, not just keyword matching.
@@ -193,6 +193,6 @@ You can change this mid-session.
 - **You do not have to use every skill.** If you only want TDD enforcement, just use the code skills. If you only want strategic help, just use the strategy skills. There is no required sequence.
 - **Strategic work on existing projects is valuable.** Many projects have implicit strategy that was never documented. Making it explicit helps you prioritize, communicate with stakeholders, and make better decisions.
 - **SweetClaude does not judge your code.** When adopting a project, it treats your codebase like an archaeologist treats a dig site — understanding before changing, respecting what is already there.
-- **Status fires automatically at session start.** For active projects, SweetClaude shows status without being asked. Run `/sweetclaude` to immediately pick up where you left off.
-- **Keep SweetClaude updated.** Update the Claude Code plugin package, restart Claude Code, then run `/sweetclaude:update` to sync framework files inside the installed channel.
+- **Status fires automatically at session start.** For active projects, SweetClaude shows status without being asked. Run `/sweetclaude:go` to immediately pick up where you left off.
+- **Keep SweetClaude updated.** Update the Claude Code plugin package, restart Claude Code, then run `/sweetclaude:configure update` to sync framework files inside the installed channel.
 - **Version bumping is explicit.** Run `scripts/bump-version.sh patch|minor|major` to bump the version in `package.json` and `CHANGELOG.md`. There is no automatic version bump on commit.
