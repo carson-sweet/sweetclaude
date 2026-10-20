@@ -1,0 +1,3780 @@
+# Remediation ledger for 5.1.0. Contract: tests/test_remediation_ledger.py. Source: 2026-10-20 docs audit.
+schema_version: 1
+decisions:
+  progressive_disclosure: Retire progressive disclosure. No runtime reads it, and 5.0 routing (category, then workflow) replaced stage-based visibility. Remove the config block and every claim. Decided 2026-10-20.
+  work_types: Keep the 19 work types and 6 shapes only where a phase or hard gate depends on them. Retire claims that /sweetclaude:go classifies requests into work types, shapes or entry categories. Decided 2026-10-20.
+  setup_promises: Setup gains a pre-sweetclaude snapshot branch and a mode question (implement). The git init offer, strategy/ folder and deference question are dropped from the docs (retire-claim). Decided 2026-10-20.
+  release_split: Phase 0 shipped as 5.0.2. Phases 1-6 ship as 5.1.0, headlined 'enforcement activated across TDD, WIP, sprint and phase policies', only after the live enforcement suite passes. Decided 2026-10-20.
+rows:
+- id: R-001
+  source: phase0
+  docs:
+  - path: docs/user-guide/install.md
+    line: 70
+  claim: /sweetclaude:configure update syncs framework files, but the update sync never copied skill-library/, so updates left category commands without their workflows.
+  evidence: scripts/update.py:463 now rsyncs skill-library into the install path; before 5.0.2 cmd_sync copied only skills, hooks, scripts, rules, config and .claude-plugin.
+  class: code-bug
+  disposition: fix-code
+  phase: 4
+  acceptance: cmd_sync copies skill-library/ into the install path and removes library workflows that no longer exist in the source.
+  test_level:
+  - unit
+  status: closed
+  commits:
+  - '434a0710'
+  - '2089fc75'
+  notes: 'Fixed in phase 0, released as 5.0.2. Test: tests/test_update_commands.py::test_sync_copies_the_workflow_library.'
+- id: R-002
+  source: phase0
+  docs:
+  - path: README.md
+    line: 174
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 9
+  - path: docs/user-guide/beta-rescue.md
+    line: 1
+  claim: Upgrade instructions for 4.x, 3.x and retired-beta readers named commands that do not exist on the reader's version, and the 3.x upgrade sequence removed the marketplace it had just installed from.
+  evidence: tests/test_docs_upgrade_paths.py:85 asserts that only /plugin commands appear before the restart; .claude-plugin/marketplace.json:2 names the stable marketplace sweetclaude-stable.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: Every upgrade passage gives only /plugin commands before the restart, pairs each marketplace ref with the matching plugin key, and never removes the marketplace it installs from.
+  test_level:
+  - docs-claims
+  status: closed
+  commits:
+  - '91197280'
+  - '62ba0b9f'
+  - '803585a5'
+  - '1e4b904b'
+  notes: Fixed in phase 0, released as 5.0.2.
+- id: R-010
+  source: A
+  docs:
+  - path: README.md
+    line: 13
+  - path: README.md
+    line: 49
+  claim: The TL;DR and Quick Start blocks go straight from `/plugin install` to `/sweetclaude:help` with no restart step.
+  evidence: docs/user-guide/install.md:14 and docs/user-guide/getting-started.md:34 both require restarting Claude Code after install; plugin commands are not loaded until restart.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: README.md TL;DR and Quick Start code blocks each contain a restart Claude Code step between `/plugin install sweetclaude@sweetclaude-stable` and `/sweetclaude:help`.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-011
+  source: A
+  docs:
+  - path: README.md
+    line: 72
+  - path: README.md
+    line: 129
+  - path: README.md
+    line: 150
+  claim: '"Full skills reference", "complete skills reference" and "All skills by category" links point to docs/user-guide/index.md.'
+  evidence: docs/user-guide/index.md:67 is the guide's table of contents; the skills reference is docs/user-guide/skills-reference.md (linked as such at docs/user-guide/getting-started.md:197).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: Every README.md link labelled as a skills reference targets docs/user-guide/skills-reference.md.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-012
+  source: A
+  docs:
+  - path: README.md
+    line: 123
+  claim: '"Full architecture and design decisions" links to docs/user-guide/index.md.'
+  evidence: docs/user-guide/index.md:62-63 names docs/user-guide/how-it-works.md as the design-decisions page.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The README.md "Full architecture and design decisions" link targets docs/user-guide/how-it-works.md.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-013
+  source: A
+  docs:
+  - path: README.md
+    line: 97
+  claim: 'Agile mode: "SweetClaude won''t let you implement work that isn''t in the active sprint."'
+  evidence: 'config/mode-gates.yaml:55-56 blocks only when no sprint is active; config/mode-gates.yaml:59-60 sets `issue_not_in_sprint` to `action: warn`, so out-of-sprint work is warned, not blocked.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: README.md Agile bullet states that implementation is blocked when no sprint is active and warned when the issue is outside the active sprint, matching config/mode-gates.yaml.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-014
+  source: A
+  docs:
+  - path: README.md
+    line: 113
+  claim: '"16 behavioral properties scored against each Claude model version. Hook-enforced properties are deterministic; instruction-guided properties are scored by a transcript judge."'
+  evidence: config/behavioral-contracts.md:9 starts 16 contracts, all instruction-guided. docs/user-guide/behavioral-contracts.md:417-425 records one model (claude-sonnet-4-6), self-reported 15/15, predating the current model; docs/user-guide/behavioral-contracts.md:291 says the judge scores 6 contracts and docs/user-guide/behavioral-contracts.md:71 says 4 are never scored.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: README.md behavioral-contracts bullet states 16 instruction-guided contracts, that a transcript judge scores 6 of them, that 4 are not judgeable from transcripts, and that hook-enforced properties are tracked separately from the 16.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-015
+  source: A
+  docs:
+  - path: README.md
+    line: 174
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 25
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 27
+  - path: docs/user-guide/getting-started.md
+    line: 171
+  claim: '`/sweetclaude:help` lists the nine 5.0 commands ("lists the new ones", "The command list and examples", "All commands grouped by category, one line each").'
+  evidence: skills/help/SKILL.md:34-39 opens a four-option conversational menu (Phases, Modes, Workflows, Your project) and no step lists the nine commands. hooks/legacy-command-redirect.sh:46 also tells users to "Run /sweetclaude:help to see the available commands".
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: Invoking `/sweetclaude:help` prints all nine commands (go, plan, design, build, maintain, configure, utils, status, help) with a one-line purpose each before or alongside the conversational menu.
+  test_level:
+  - contract
+  - docs-claims
+  status: open
+  notes: Core user value and cheap; legacy-command-redirect.sh already sends users here for the command list.
+- id: R-016
+  source: A
+  docs:
+  - path: README.md
+    line: 176
+  - path: docs/README.md
+    line: 65
+  - path: docs/user-guide/install.md
+    line: 34
+  - path: skill-library/configure/update/SKILL.md
+    line: 81
+  claim: Beta-to-stable switch "in this order so you are never double-installed".
+  evidence: README.md:179-181 installs sweetclaude@sweetclaude-stable before removing sweetclaude-beta, so both are installed until step 3; the order guarantees you are never left with nothing installed. Same wording in skill-library/configure/update/SKILL.md:81.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: None of the four listed locations contains "never double-installed"; each states the order keeps SweetClaude installed throughout, both channels are installed briefly, and all three steps finish before restarting.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-017
+  source: A
+  docs:
+  - path: README.md
+    line: 184
+  claim: After the beta switch, "Then run `/sweetclaude:configure update` on the stable channel" with no restart.
+  evidence: docs/README.md:74 and docs/user-guide/install.md:43 both require restarting Claude Code before `/sweetclaude:configure update`; the 5.0 commands are not loaded until restart (docs/user-guide/upgrading-to-5.md:11).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: README.md beta-switch paragraph says to restart Claude Code before running `/sweetclaude:configure update`.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-018
+  source: A
+  docs:
+  - path: docs/user-guide/install.md
+    line: 43
+  - path: skill-library/configure/update/SKILL.md
+    line: 88
+  claim: After the beta switch, run `/sweetclaude:configure update`; "your project data migrates normally".
+  evidence: skill-library/configure/update/SKILL.md:40-42 says update never mutates project state, runs no migrations inline and routes repair to `/sweetclaude:configure doctor`.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: Neither listed location says project data migrates on update; both direct the user to `/sweetclaude:configure doctor` when the project needs repair or migration.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-019
+  source: A
+  docs:
+  - path: docs/user-guide/install.md
+    line: 84
+  claim: Firecrawl enhances `sweetclaude:product-research` and `sweetclaude:product-competition`.
+  evidence: skill-library/plan/INDEX.md:13 and skill-library/plan/INDEX.md:22 place both workflows under plan; hooks/legacy-command-redirect.sh:24 limits commands to the nine Tier 1 names, so the forms are `/sweetclaude:plan product-research` and `/sweetclaude:plan product-competition`.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: install.md Firecrawl section names `/sweetclaude:plan product-research` and `/sweetclaude:plan product-competition`.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-020
+  source: A
+  docs:
+  - path: docs/user-guide/install.md
+    line: 111
+  claim: 'Local RAG setup is a global MCP entry `"command": "mcp-local-rag", "args": []`.'
+  evidence: skill-library/utils/corpus-rag-setup/SKILL.md:90-104 writes a per-project .mcp.json using `npx -y mcp-local-rag` with BASE_DIR, DB_PATH=./.rag-index/lancedb and CACHE_DIR; skill-library/utils/document-corpus/SKILL.md:24 looks for .rag-index/lancedb/, which the documented config never sets.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: install.md Local RAG section either directs the user to `/sweetclaude:utils corpus-rag-setup` or shows JSON identical to the .mcp.json block in corpus-rag-setup/SKILL.md, including DB_PATH ./.rag-index/lancedb.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-021
+  source: A
+  docs:
+  - path: docs/user-guide/install.md
+    line: 126
+  claim: Reindex later with `/sweetclaude:utils document-corpus reindex`.
+  evidence: skill-library/utils/document-corpus/SKILL.md:65 accepts `rag-reindex`, not `reindex`; skill-library/utils/document-corpus/SKILL.md:159 itself documents `/sweetclaude:utils corpus-rag-reindex`.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: install.md reindex instruction reads `/sweetclaude:utils corpus-rag-reindex`.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-022
+  source: A
+  docs:
+  - path: docs/user-guide/install.md
+    line: 136
+  - path: docs/user-guide/quickstart.md
+    line: 29
+  - path: docs/user-guide/getting-started.md
+    line: 185
+  - path: docs/user-guide/faq.md
+    line: 104
+  - path: skill-library/configure/off/SKILL.md
+    line: 23
+  - path: skill-library/configure/off/SKILL.md
+    line: 40
+  claim: Running `/sweetclaude:go` reactivates a project suspended with `.sweetclaude/disabled`.
+  evidence: No skill, hook or script deletes .sweetclaude/disabled; skills/go/SKILL.md never checks it. skills/master/SKILL.md:22-25 offers activation by invoking setup without removing the flag, skill-library/configure/init/SKILL.md:28 tells the user to remove it by hand, and hooks/master-preflight.sh:86, hooks/session-preflight.sh:76 and hooks/drift-gate.sh:37 keep skipping while it exists.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: In a project containing .sweetclaude/disabled, `/sweetclaude:go` offers reactivation, and on confirmation deletes .sweetclaude/disabled so that hooks/session-preflight.sh no longer exits early on the next session.
+  test_level:
+  - contract
+  - unit
+  status: open
+  notes: Core user value and cheap. The off skill's own confirmation text makes this promise.
+- id: R-023
+  source: A
+  docs:
+  - path: docs/user-guide/index.md
+    line: 69
+  claim: The Install page covers "Beta install, update, optional integrations, and suspension".
+  evidence: docs/user-guide/install.md:3 documents the stable 5.x install and docs/user-guide/install.md:32 says the beta channel is retired.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: index.md Install row reads "Stable install, update, optional integrations, and suspension" or equivalent with no beta install claim.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-024
+  source: A
+  docs:
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 80
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 81
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 82
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 93
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 106
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 107
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 108
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 109
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 126
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 142
+  claim: john-wick-checkin, large-story, orchestrator, small-story, _features, _health, _migrate, claude-config-audit, setup and next-steps are listed as old commands typed after `/sweetclaude:`.
+  evidence: 'In v4.5.3 every one of these has `user-invocable: false` (e.g. `git show v4.5.3:skills/setup/SKILL.md` frontmatter), so none was a 4.x slash command; the table header at docs/user-guide/upgrading-to-5.md:31 says the names "was typed after /sweetclaude:".'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The upgrading-to-5.md mapping table either omits these ten names or marks each "(internal in 4.x)".
+  test_level:
+  - docs-claims
+  status: open
+- id: R-025
+  source: A
+  docs:
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 29
+  claim: The old-command mapping table covers every 4.x user command.
+  evidence: 'behavioral-regression and sweetclaude-behavioral-regression were `user-invocable: true` in v4.5.3, are absent from skill-library/, and hooks/legacy-command-redirect.sh:46 answers them with "not a SweetClaude command".'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: upgrading-to-5.md contains a "Retired in 5.0" note naming behavioral-regression and sweetclaude-behavioral-regression as having no replacement.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-026
+  source: A
+  docs:
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 109
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 112
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 116
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 119
+  - path: skill-library/configure/INDEX.md
+    line: 10
+  - path: skill-library/configure/INDEX.md
+    line: 13
+  - path: skill-library/configure/INDEX.md
+    line: 17
+  - path: skill-library/configure/INDEX.md
+    line: 20
+  claim: claude-config-audit, fix-sweetclaude, hook-repair and migrate-diagnose "Redirect to sweetclaude:library-load doctor".
+  evidence: 'skills/library-load/SKILL.md:3 is `user-invocable: false`, so users cannot type it; the user-facing form is `/sweetclaude:configure doctor`. The text is copied from skill-library/configure/claude-config-audit/SKILL.md:4 and sibling descriptions.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: No user-facing description in upgrading-to-5.md, skill-library/configure/INDEX.md or the four redirect SKILL.md descriptions names `sweetclaude:library-load`; each says it redirects to `/sweetclaude:configure doctor`.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-027
+  source: A
+  docs:
+  - path: docs/user-guide/upgrading-to-5.md
+    line: 87
+  - path: skill-library/build/INDEX.md
+    line: 28
+  claim: 'project-epics: "DEPRECATED — use /sweetclaude:plan instead."'
+  evidence: skill-library/build/project-epics/SKILL.md:4 and skill-library/build/project-epics/SKILL.md:12 redirect to `/sweetclaude:plan epics`, not bare `/sweetclaude:plan`.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: Both listed rows read "use /sweetclaude:plan epics instead".
+  test_level:
+  - docs-claims
+  status: open
+- id: R-028
+  source: A
+  docs:
+  - path: docs/user-guide/quickstart.md
+    line: 3
+  claim: '"You have SweetClaude 4.x installed."'
+  evidence: .claude-plugin/plugin.json:4 is version 5.0.2 and the page uses 5.0 command forms (docs/user-guide/quickstart.md:29).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: quickstart.md opening line says SweetClaude 5.x.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-029
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 86
+  - path: docs/user-guide/getting-started.md
+    line: 155
+  - path: docs/user-guide/getting-started.md
+    line: 183
+  - path: docs/user-guide/quickstart.md
+    line: 54
+  claim: Setup on an existing codebase creates a pre-sweetclaude snapshot branch before touching anything and will not proceed without it.
+  evidence: 'No code creates the branch: skill-library/configure/setup/SKILL.md:105-130 (Branch B) only scans and asks three questions. The only mention is an advisory suggestion in skills/help/SKILL.md:151 (`git checkout -b pre-sweetclaude-snapshot`).'
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: Running setup Branch B or C in a git repository creates a `pre-sweetclaude` branch at the current HEAD before writing any file, and setup stops without writing if the branch cannot be created.
+  test_level:
+  - contract
+  - live
+  status: open
+  notes: 'Decision setup_promises: implement the pre-sweetclaude snapshot branch.'
+- id: R-030
+  source: A
+  docs:
+  - path: docs/user-guide/quickstart.md
+    line: 45
+  - path: docs/user-guide/quickstart.md
+    line: 56
+  claim: Onboarding runs a short mode interview (mode question) to configure enforcement as Flow, Kanban, Shape Up or Agile.
+  evidence: skill-library/configure/setup/SKILL.md:36-39 (Branch A) and skill-library/configure/setup/SKILL.md:116-118 (Branch B) ask only name, description or stage, and tracker, then hand off to _features (skill-library/configure/setup/SKILL.md:103). project-assess-shape is referenced only from skill-library/configure/INDEX.md and config/capability-manifest.yaml; no onboarding path invokes it.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: Setup Branches A, B and C each ask the mode question (Flow, Kanban, Shape Up, Agile) and write the chosen mode to .sweetclaude/state/sweetclaude.yaml before handing off.
+  test_level:
+  - contract
+  - live
+  status: open
+  notes: 'Decision setup_promises: implement the mode question.'
+- id: R-031
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 59
+  - path: docs/user-guide/quickstart.md
+    line: 44
+  claim: Setup on an empty folder offers git init ("asks if you want a git repo", "Set up the project (git, ...)").
+  evidence: skill-library/configure/setup/SKILL.md:36-45 asks three questions and creates only .sweetclaude/ directories; no step in setup runs or offers `git init`.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: getting-started.md and quickstart.md contain no claim that setup offers or runs git init.
+  test_level:
+  - docs-claims
+  status: open
+  decision: setup_promises
+- id: R-032
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 59
+  - path: docs/user-guide/getting-started.md
+    line: 140
+  claim: Setup creates a `strategy/` folder holding concept.md, discovery.md and personas/.
+  evidence: skill-library/configure/setup/SKILL.md:43-45 creates only .sweetclaude/ paths and skill-library/configure/setup/SKILL.md:180-181 defaults the product base to .sweetclaude/product; product discovery writes .sweetclaude/state/discovery.yaml (skill-library/plan/product-discovery/SKILL.md:217).
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: getting-started.md contains no `strategy/` folder in prose or in the first-session tree.
+  test_level:
+  - docs-claims
+  status: open
+  decision: setup_promises
+- id: R-033
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 59
+  - path: docs/user-guide/getting-started.md
+    line: 112
+  claim: Setup asks a deference question ("how collaborative you want to be this session"), and "every session, SweetClaude asks how collaborative to be".
+  evidence: 'scripts/sweetclaude-yaml-template.py:50 writes `deference_level: collaborative` at setup, and skills/master/SKILL.md:62 asks only "If not set in state", so after setup the question is never asked.'
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: getting-started.md contains no claim that setup or each session asks for a deference level; it states the default is Collaborative and how to change it.
+  test_level:
+  - docs-claims
+  status: open
+  decision: setup_promises
+- id: R-034
+  source: A
+  docs:
+  - path: docs/user-guide/quickstart.md
+    line: 44
+  - path: docs/user-guide/getting-started.md
+    line: 144
+  claim: Setup on a new project writes a CLAUDE.md that teaches future sessions about the project.
+  evidence: Only Branch C generates CLAUDE.md (skill-library/configure/setup/SKILL.md:141); Branches A and B do not. skills/master/SKILL.md:36 checks whether CLAUDE.md exists with a SweetClaude section as part of the configured-project test.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: After setup Branch A or B completes, the project CLAUDE.md exists and contains a SweetClaude section that passes the skills/master/SKILL.md Step 2 check.
+  test_level:
+  - contract
+  status: open
+  notes: No decision covers this. Recommend implement because master preflight checks for the section; if a human prefers retiring the claim, master Step 2 must stop requiring it. Needs verification whether master Step 2 treats a missing CLAUDE.md section as unconfigured.
+- id: R-035
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 88
+  - path: docs/user-guide/quickstart.md
+    line: 57
+  claim: Existing-codebase onboarding interviews the user about current work, biggest frustration and anything messy, then positions the project in the pipeline and proposes a first action.
+  evidence: skill-library/configure/setup/SKILL.md:116-118 asks name, stage (Early prototype / Active development / Approaching launch / In production) and issue tracker, then skill-library/configure/setup/SKILL.md:130 hands off to _features.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: getting-started.md Pattern B and quickstart.md existing-codebase steps list exactly the questions setup Branch B asks (name, stage, tracker) and the Branch C assessment, with no frustration or messy-area interview.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-036
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 35
+  claim: After install, SweetClaude skills are available as `/sweetclaude:<skill-name>` commands.
+  evidence: hooks/legacy-command-redirect.sh:24 defines the nine Tier 1 commands; README.md:119 says library workflows are not slash-addressable and are reached as `/sweetclaude:<category> <workflow>`.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: getting-started.md install section states that nine commands are available and workflows are run as `/sweetclaude:<category> <workflow>`.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-037
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 106
+  claim: When resuming, go "either advances or tells you what is missing. It does not show a menu. It just goes."
+  evidence: 'skills/go/SKILL.md:12: "Assess. Propose. Wait. Do not act until the user says proceed."'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: getting-started.md Pattern C says go proposes the next step and waits for the user's go-ahead.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-038
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 135
+  - path: docs/user-guide/faq.md
+    line: 141
+  claim: '`.sweetclaude/state/project.yaml` holds language, framework and build commands / project metadata after setup.'
+  evidence: skill-library/configure/setup/SKILL.md:43-45 and the v4 storage block never write project.yaml; it is only read, at hooks/auto-test-runner.sh:34.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: getting-started.md tree and faq.md crash-survival list either omit state/project.yaml or label it optional and not created by setup.
+  test_level:
+  - docs-claims
+  status: open
+  notes: auto-test-runner.sh depending on a file nothing writes is covered by the inert-hook rows.
+- id: R-039
+  source: A
+  docs:
+  - path: docs/user-guide/getting-started.md
+    line: 131
+  claim: The "What You Will Have After Your First Session" tree shows the files setup and discovery create.
+  evidence: Setup also creates .sweetclaude/product/, .sweetclaude/plans and .claude/settings*.json (skill-library/configure/setup/SKILL.md:206-209), none of which appear; discovery output is .sweetclaude/state/discovery.yaml (skill-library/plan/product-discovery/SKILL.md:217), not the files shown.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: Every path in the getting-started.md first-session tree is created by setup or product discovery, and the tree includes .sweetclaude/product/, .sweetclaude/plans and .sweetclaude/state/discovery.yaml.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-040
+  source: A
+  docs:
+  - path: docs/user-guide/faq.md
+    line: 86
+  claim: '"Milestones have target dates."'
+  evidence: 'skill-library/plan/product-milestones/SKILL.md:199: "No time estimates. Status taxonomy and Now/Next/Later bucketing replace date-based roadmapping."; no milestone operation has a date field.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: faq.md says milestones track a strategic target in Now/Next/Later buckets and that an external deadline goes in the milestone notes, with no target-date claim.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-041
+  source: A
+  docs:
+  - path: docs/user-guide/faq.md
+    line: 103
+  claim: Disable TDD hooks globally by editing ~/.claude/settings.json; "the installer wires them in".
+  evidence: scripts/maintenance/ensure-global-hooks.py:5-8 says hooks are plugin-native in hooks/hooks.json and "no longer belong in ~/.claude/settings.json".
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: faq.md TDD-hooks row says hooks come from the plugin's hooks/hooks.json and names the actual supported way to turn TDD enforcement off, with no ~/.claude/settings.json instruction.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-042
+  source: A
+  docs:
+  - path: docs/user-guide/faq.md
+    line: 105
+  claim: Skills are individual .md files in ~/.claude/skills/sweetclaude/; delete a skill's directory to disable it.
+  evidence: scripts/maintenance/cleanup-legacy-paths.py:6 treats ~/.claude/skills/sweetclaude/ as a legacy path it removes; skills now live in the plugin cache (skills/ and skill-library/<category>/<workflow>/), and deleting from the cache is undone by `/plugin update`.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: faq.md "Specific skills" row points to `/sweetclaude:configure _features` or is removed, and the page contains no ~/.claude/skills/sweetclaude/ path.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-043
+  source: A
+  docs:
+  - path: docs/user-guide/faq.md
+    line: 178
+  claim: Contributors read skills in ~/.claude/skills/sweetclaude/; skill frontmatter has `name` and `description`.
+  evidence: skills/go/SKILL.md:2-4 frontmatter is spdx-license, user-invocable and description with no name; scripts/maintenance/cleanup-legacy-paths.py:6 marks ~/.claude/skills/sweetclaude/ legacy.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: faq.md contribute section points to the repo's skills/ and skill-library/<category>/<workflow>/ and lists frontmatter keys spdx-license, user-invocable and description.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-044
+  source: A
+  docs:
+  - path: docs/user-guide/faq.md
+    line: 186
+  claim: Planned work includes a focus-group caucus skill, the skill generator, and `allowed-tools` enforcement for subagents.
+  evidence: The focus-group skill already ships (skill-library/plan/product-user-focus-group, gated at rules/phase-gates.md:668); ROADMAP.md:16-23 Next lists behavioral regression CI and standalone init/adopt, with no skill generator or allowed-tools item.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: faq.md "What's planned?" lists only items present in ROADMAP.md and does not describe the shipped focus-group skill as planned.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-070
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 162
+  - path: docs/user-guide/how-it-works.md
+    line: 255
+  - path: docs/user-guide/how-it-works.md
+    line: 273
+  - path: docs/user-guide/glossary.md
+    line: 32
+  claim: test-guardian.sh blocks edits to test files during IMPLEMENT (PreToolUse); tests cannot be modified during implementation.
+  evidence: 'hooks/test-guardian.sh:6-7 reads the unofficial $CLAUDE_FILE_PATH/$CLAUDE_TOOL_NAME env vars and hooks/test-guardian.sh:152 ''blocks'' by printing {"ok": false} with exit 0, which command hooks ignore (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9-31). Registered at hooks/hooks.json:47.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: With phase IMPLEMENT and tdd_phase implementing, a PreToolUse Write/Edit payload on stdin targeting a test file makes test-guardian.sh emit hookSpecificOutput.permissionDecision deny (or exit 2), and a live session edit of a test file is refused.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-071
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 289
+  claim: tdd-prewrite-guardian.sh (Protocol Guardian TDD bypass check) blocks source writes until test files exist.
+  evidence: 'hooks/tdd-prewrite-guardian.sh:8-9 reads $CLAUDE_FILE_PATH/$CLAUDE_TOOL_NAME and hooks/tdd-prewrite-guardian.sh:113 emits {"ok": false} with exit 0, ignored for command hooks (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9-31). Registered at hooks/hooks.json:56.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: With the guardian flag set and phase IMPLEMENT, a PreToolUse Write payload on stdin for a source file with no test files written makes tdd-prewrite-guardian.sh return permissionDecision deny, and a live session source write is refused.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-072
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 163
+  - path: docs/user-guide/how-it-works.md
+    line: 274
+  - path: docs/user-guide/glossary.md
+    line: 35
+  claim: auto-test-runner.sh (PostToolUse) runs the test suite automatically after every source edit.
+  evidence: hooks/auto-test-runner.sh:6-7 takes the edited file and tool from the unofficial $CLAUDE_FILE_PATH/$CLAUDE_TOOL_NAME env vars, so the file is always empty in current Claude Code (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9). Registered at hooks/hooks.json:103.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a PostToolUse Write payload on stdin for a source file during IMPLEMENT with tdd_phase implementing and a configured test command, auto-test-runner.sh runs that command, verified by a contract test and a live session edit.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-073
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 140
+  - path: docs/user-guide/how-it-works.md
+    line: 150
+  - path: docs/user-guide/how-it-works.md
+    line: 275
+  - path: docs/user-guide/planning-concepts.md
+    line: 113
+  - path: docs/user-guide/planning-concepts.md
+    line: 115
+  - path: docs/user-guide/planning-concepts.md
+    line: 180
+  - path: docs/user-guide/planning-concepts.md
+    line: 183
+  - path: docs/user-guide/glossary.md
+    line: 62
+  claim: wip-limit.sh (PreToolUse) hard-blocks new in-progress work in Kanban mode when the WIP limit of 3 is reached.
+  evidence: 'hooks/wip-limit.sh:14 blocks by printing {''ok'': False} with exit 0, which command hooks ignore (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9-31). Registered at hooks/hooks.json:74.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: In Kanban mode with the WIP limit reached, wip-limit.sh returns permissionDecision deny (or exit 2) for the guarded tool call, verified by a contract test on stdin payloads and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-074
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 214
+  claim: preflight-guard.sh, a project-gated enforcement hook, blocks all tool calls in a project flagged as needing SweetClaude configuration.
+  evidence: 'hooks/preflight-guard.sh:42 blocks by printing {"ok": false} with exit 0, which command hooks ignore (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9-31). Registered with no matcher at hooks/hooks.json:38.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: With the needs-preflight flag present and no sweetclaude.yaml or .sweetclaude-skip, preflight-guard.sh returns permissionDecision deny (or exit 2) for a tool call, verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-075
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 277
+  claim: phase-dwelling-guard.sh (Stop hook) blocks responses containing advancement-pushing phrases when the Protocol Guardian is active.
+  evidence: hooks/phase-dwelling-guard.sh:33 reads the transcript from the unofficial $CLAUDE_TRANSCRIPT_PATH env var instead of transcript_path on stdin (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9), so it never sees the response text.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a Stop payload on stdin whose transcript_path points at a transcript ending in 'ready to move on?', with the guardian flag set, phase-dwelling-guard.sh returns decision block with a reason, verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-076
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 214
+  claim: master-preflight.sh, a project-gated enforcement hook, blocks sweetclaude:* Skill calls when bootstrap has not run or a drift decision is pending.
+  evidence: 'hooks/master-preflight.sh:25-26 exits early unless the unofficial $CLAUDE_TOOL_NAME equals Skill, and hooks/master-preflight.sh:112 blocks with {"ok": false} and exit 0, which command hooks ignore (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9-31). Registered at hooks/hooks.json:29.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a PreToolUse Skill payload on stdin for a sweetclaude:* skill with no bootstrap flag, master-preflight.sh returns permissionDecision deny (or exit 2), verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-077
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 140
+  - path: docs/user-guide/planning-concepts.md
+    line: 113
+  claim: The Kanban WIP limit counts issues in active status toward the limit of 3.
+  evidence: hooks/wip-limit.sh:57-62 counts .sweetclaude/artifacts/issues/*.yaml with status in_progress, but issues are .md files under product/backlog and product/roadmap/issues (hooks/sc-artifact-impl.py:89) and the canonical in-flight status is active (scripts/status.py:32-35).
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: With three .md issues in status active under .sweetclaude/product/roadmap/issues and Kanban mode, wip-limit.sh counts 3 and denies starting a fourth, verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-078
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 150
+  - path: docs/user-guide/how-it-works.md
+    line: 275
+  claim: wip-limit.sh blocks tool calls that would create new in-progress work when the WIP limit is reached.
+  evidence: hooks/hooks.json:69-74 registers wip-limit.sh only for the Bash matcher, and hooks/wip-limit.sh:47 allows everything unless work.active.phase is already IMPLEMENT, so moving an issue to active through Write/Edit or before IMPLEMENT is never checked.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: A tool call that sets a fourth issue to status active in Kanban mode, through Bash or Write/Edit and in any phase, is denied by the WIP-limit hook, verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-079
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 163
+  - path: docs/user-guide/how-it-works.md
+    line: 226
+  - path: docs/user-guide/glossary.md
+    line: 35
+  claim: The auto-test-runner runs the project's tests after source edits once SweetClaude is set up.
+  evidence: hooks/auto-test-runner.sh:93 reads the command from '  test_command:' in .sweetclaude/state/project.yaml (hooks/auto-test-runner.sh:34), but no setup or workflow writes project.yaml (skill-library/configure/setup/SKILL.md:147-229 never creates it).
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: After onboarding a fixture project with a detectable test command, .sweetclaude/state/project.yaml contains test_command and the auto-test-runner executes it on the next source edit during IMPLEMENT.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-080
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 163
+  - path: docs/user-guide/glossary.md
+    line: 35
+  claim: Auto-test-runner gives instant feedback on whether the change moved tests from RED to GREEN.
+  evidence: hooks/auto-test-runner.sh:100-101 runs the suite in the background and sends output only to stderr, so the result never reaches Claude or the user.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: After a source edit during IMPLEMENT, the auto-test-runner returns the test result to Claude through hookSpecificOutput.additionalContext (or systemMessage), verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-081
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 289
+  claim: The Protocol Guardian TDD bypass check applies during IMPLEMENT on onboarded projects.
+  evidence: hooks/tdd-prewrite-guardian.sh:34-38 allows everything when .sweetclaude/state/phase.yaml is missing and reads the phase only from it, but onboarding never creates phase.yaml (skill-library/configure/setup/SKILL.md:147-229); work.active.phase in sweetclaude.yaml is canonical (hooks/wip-limit.sh:26-28).
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: On a project with only sweetclaude.yaml (work.active.phase IMPLEMENT) and the guardian flag set, tdd-prewrite-guardian.sh denies a source write when no test file has been written.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-082
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 277
+  - path: docs/user-guide/how-it-works.md
+    line: 283
+  claim: The Protocol Guardian Stop hook phase-dwelling-guard.sh is active when the guardian is enabled.
+  evidence: hooks/hooks.json:167-182 registers only the large/small story stop guards; hooks/hooks-manifest.json:140-145 says guardian-on registers phase-dwelling-guard.sh, but skill-library/configure/guardian-on/SKILL.md:22-50 only touches a flag file and writes session JSON.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: After /sweetclaude:configure guardian-on, phase-dwelling-guard.sh is registered as a Stop hook (statically in hooks/hooks.json gated on the flag, or by guardian-on), and a live session response containing 'ready to move on?' is blocked.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-083
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 162
+  - path: docs/user-guide/glossary.md
+    line: 29
+  - path: docs/user-guide/glossary.md
+    line: 32
+  claim: Test-guardian blocks test edits whenever the phase is IMPLEMENT and is active at TDD Levels 1-3 (Level 2 per the TDD Level entry).
+  evidence: hooks/test-guardian.sh:107-111 also requires tdd_phase implementing, which only code-tdd sets via scripts/tdd_phase.py (skill-library/build/code-tdd/SKILL.md:95,117,202).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md and glossary.md state that test-guardian applies only after code-tdd marks tdd_phase implementing during IMPLEMENT, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-084
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 273
+  claim: When test-guardian blocks a test edit, the user can override via tool approval.
+  evidence: 'hooks/test-guardian.sh:152 emits a non-blocking {"ok": false}, so no approval prompt exists today (.sweetclaude/efforts/large-story-implementation/process-control-redesign/13-hook-protocol-reference.md:9); the override path depends on the permissionDecision the phase-2 port emits.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The Enforcement Tiers row for test-guardian names the override path the ported hook actually provides (ask prompt or explicit user approval), and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-085
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 274
+  claim: The user can override the auto-test-runner via tool approval.
+  evidence: hooks/hooks.json:98-103 registers auto-test-runner.sh as PostToolUse, which runs after the tool call and has no approval step.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The Enforcement Tiers row for the auto-test-runner contains no tool-approval override claim, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-086
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 289
+  claim: Enabling the Protocol Guardian upgrades instruction-guided properties (deference, improvement register, propose-not-ask, language matching) to deterministic enforcement.
+  evidence: skill-library/configure/guardian-on/SKILL.md:12-15 covers only skill skipping, artifact skipping and TDD bypass; nothing in it touches deference, the improvement register, propose-not-ask or language matching.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md:289 lists exactly the three protections guardian-on provides and makes no claim about the instruction-guided rows, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-087
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 276
+  claim: TDD Level 2-3 context isolation is a deterministic, hook-enforced property.
+  evidence: Isolation is code-tdd skill prose that dispatches subagents (skill-library/build/code-tdd/SKILL.md:120-126,145-185); no hook in hooks/hooks.json:1-185 enforces it.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The TDD Level 2-3 isolation row appears under Instruction-guided in how-it-works.md Enforcement Tiers, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-088
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 164
+  claim: At TDD Level 2-3 the test writer and implementer are different agents in different contexts.
+  evidence: At Level 2 tests are written in the main context and only the implementer is a subagent (skill-library/build/code-tdd/SKILL.md:111,120).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md states that at Level 2 only the implementer is a separate subagent and at Level 3 the test writer is also a subagent, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-089
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 140
+  claim: Kanban mode blocks sprint-planning skills.
+  evidence: config/mode-gates.yaml:19-20 blocks only project-sprints; skill-library/build/product-sprint-plan/SKILL.md:128-134 has no mode check and runs in Kanban.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: Invoking product-sprint-plan in Kanban mode stops with a mode refusal, verified by a contract test on the workflow's mode check and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-090
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 141
+  claim: Shape Up blocks the sprint and backlog-triage skills.
+  evidence: config/mode-gates.yaml:31-33 blocks project-sprints and project-backlog; skill-library/build/project-backlog-triage/SKILL.md:40 has no mode check and is not blocked.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md names project-sprints and project-backlog as the skills disabled in Shape Up, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-091
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 141
+  - path: docs/user-guide/planning-concepts.md
+    line: 135
+  - path: docs/user-guide/planning-concepts.md
+    line: 183
+  - path: docs/user-guide/glossary.md
+    line: 41
+  - path: docs/user-guide/glossary.md
+    line: 68
+  claim: Shape Up blocks implementation until the betting table approves the pitch.
+  evidence: The only check is Python embedded in go Step 5 that reads .sweetclaude/artifacts/issues/<id>.yaml (skills/go/SKILL.md:268-274), a path nothing writes (issues are .md under product/, hooks/sc-artifact-impl.py:89), so the check always reports BLOCKED.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: In Shape Up mode, an active issue whose .md frontmatter has betting_table_approved true passes the gate and one without it is denied before IMPLEMENT, verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-092
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 189
+  - path: docs/user-guide/how-it-works.md
+    line: 141
+  - path: docs/user-guide/how-it-works.md
+    line: 142
+  claim: Hard block means SweetClaude will not let you proceed until the mode condition is met.
+  evidence: Mode IMPLEMENT gates are evaluated only in go Step 5 prose (skills/go/SKILL.md:255-284); /sweetclaude:build and direct workflow invocation never evaluate config/mode-gates.yaml:35-57.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: Entering IMPLEMENT through /sweetclaude:build or a direct workflow invocation evaluates the same mode gates as /sweetclaude:go and is denied when a block gate fails, verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-093
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 141
+  claim: Shape Up enforces a ship/no-ship gate at cycle end.
+  evidence: config/mode-gates.yaml:39-42 defines condition ship_no_ship_decision with action required; no script, hook or skill reads that condition (only consumer of mode gates is skills/go/SKILL.md:263-282, which handles IMPLEMENT block gates only).
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: In Shape Up mode, advancing past VERIFY without a recorded ship/no-ship decision is refused, and recording one allows the advance, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: open
+- id: R-094
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 142
+  - path: docs/user-guide/planning-concepts.md
+    line: 156
+  - path: docs/user-guide/planning-concepts.md
+    line: 178
+  - path: docs/user-guide/planning-concepts.md
+    line: 183
+  - path: docs/user-guide/glossary.md
+    line: 44
+  claim: Agile mode hard-blocks implementation without an active sprint.
+  evidence: go Step 5 looks for sprints in .sweetclaude/artifacts/sprints/*.yaml (skills/go/SKILL.md:276-280), but sprints are stored as product/sprints/SP-*.md (hooks/sc-artifact-impl.py:71), so an active sprint is never found.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: In Agile mode, a project with an SP-*.md sprint in status active passes the IMPLEMENT gate and a project without one is denied, verified by a contract test and a live session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-095
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 142
+  claim: Agile mode requires sprint close before ship.
+  evidence: config/mode-gates.yaml:62-65 defines sprint_complete as action prompt, and nothing reads it (skills/go/SKILL.md:263 filters to IMPLEMENT block gates).
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: In Agile mode, entering SHIP while the active sprint has all issues done and is not closed produces the sprint-close requirement, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: open
+- id: R-096
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 135
+  - path: docs/user-guide/how-it-works.md
+    line: 152
+  claim: 'A mode question runs at init: you pick a mode during onboarding via the project-assess-shape five-question interview, and enforcement is immediate.'
+  evidence: Setup writes mode None (scripts/sweetclaude-yaml-template.py:21); no onboarding path invokes project-assess-shape (skill-library/configure/init/SKILL.md:100-104, skill-library/configure/setup/SKILL.md:103,130), despite skill-library/configure/project-assess-shape/SKILL.md:12 claiming it runs during onboarding.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: Onboarding a fixture project through /sweetclaude:configure init asks the mode question, writes the chosen mode to sweetclaude.yaml, and generates .sweetclaude/state/effective-gates.yaml.
+  test_level:
+  - contract
+  - unit
+  status: duplicate
+  duplicate_of: R-030
+- id: R-097
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 148
+  claim: Stories carry epic_id and theme_id fields.
+  evidence: The cache indexes frontmatter epic and theme (scripts/cache.py:265,269); sc-artifact maps epic_id to epic and theme_id to theme (hooks/sc-artifact-impl.py:507).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md names the story fields epic and theme, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-098
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 56
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 12
+  - path: docs/user-guide/glossary.md
+    line: 20
+  claim: 'Phase gates: the framework will not advance past a phase whose exit criteria are unmet.'
+  evidence: No code checks exit criteria; the only rule text is in skills/master/SKILL.md:106-114, reached only through the pre-flight fallback, and rules/phase-gates.md is read as instructions. Nothing writes or checks a phase transition against it.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: A phase-advance request for a work item whose current-phase exit criteria are unmet is refused by a code check that names the unmet criteria, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: open
+- id: R-099
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 60
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 126
+  - path: docs/user-guide/glossary.md
+    line: 20
+  claim: Soft gates are bypassed with the phrase 'I've addressed this informally — proceed', and the override is logged.
+  evidence: config/workflow-templates.yaml:152 defines soft_gate_escape, but nothing reads hard_gate_policy (no consumer in scripts/, hooks/, skills/ or skill-library/), and no code logs an override.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: Using the soft-gate escape phrase on an unmet soft gate advances the phase and appends an override entry to .sweetclaude/state/decision-log.md, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: open
+- id: R-100
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 60
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 128
+  - path: docs/user-guide/glossary.md
+    line: 20
+  claim: Hard gate overrides require explicit risk acceptance, logged to the decision log.
+  evidence: config/workflow-templates.yaml:153 defines hard_gate_override, but nothing reads hard_gate_policy and no code records risk acceptance.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: Overriding an unmet hard gate requires an explicit risk-acceptance confirmation and appends a risk-acceptance entry to .sweetclaude/state/decision-log.md; the soft-gate phrase alone does not pass a hard gate, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: open
+- id: R-101
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 134
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 36
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 87
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 104
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 105
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 112
+  claim: Hard gates block high-blast-radius work at GA+ stages (data-migration ASSESS/VERIFY, infrastructure-change DESIGN, technology-migration DESIGN/CUTOVER, security-patch VERIFY).
+  evidence: config/workflow-templates.yaml:151-167 lists hard_gate_tasks and hard_gates_apply_at, but nothing in scripts/, hooks/, skills/ or skill-library/ reads them.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: For a GA project, advancing a data-migration, infrastructure-change, technology-migration or security-patch work item past a listed hard-gate phase without its prerequisites is refused, verified by a contract test per gate.
+  test_level:
+  - contract
+  - unit
+  status: open
+  notes: Needs the work type of the active item; see the work_types row R-105 for the narrow tagging the gates depend on.
+- id: R-102
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 136
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 137
+  claim: The hard-gate table lists the full prerequisites for each hard gate.
+  evidence: config/workflow-templates.yaml:159-164 also requires change-impact-analysis for infrastructure-change and change-impact-analysis plus parallel-run-plan for technology-migration; the table omits them.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The hard-gate table in phases-and-workflows.md lists every prerequisite in config/workflow-templates.yaml hard_gate_tasks, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-103
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 184
+  claim: The solutioning gate triggers automatically when a hard-gate work type reaches DESIGN.
+  evidence: skill-library/design/design-solutioning-gate/SKILL.md:14-29 is run only on request; nothing invokes it on DESIGN entry for hard-gate types (config/workflow-templates.yaml:156-164 is never read).
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: When a GA hard-gate work item enters DESIGN, the solutioning gate runs or its pass record is required before DESIGN exits, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: open
+- id: R-104
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 178
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 181
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 182
+  claim: The solutioning gate confirms an alternative was considered and rejected with rationale and a step-by-step rollback plan is documented.
+  evidence: skill-library/design/design-solutioning-gate/SKILL.md:18-29 checks architecture and tech spec against the PRD, risks and assumptions, and logs pass/fail; it has no alternatives or rollback-plan step.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: The solutioning gate workflow fails when no rejected alternative with rationale or no step-by-step rollback plan is recorded, verified by a contract test on the workflow.
+  test_level:
+  - contract
+  - unit
+  status: open
+- id: R-105
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 93
+  - path: docs/user-guide/how-it-works.md
+    line: 26
+  - path: docs/user-guide/how-it-works.md
+    line: 82
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 59
+  claim: /sweetclaude:go classifies the work into one of the 19 work types, reads the workflow shape from config, and starts at that shape's first phase.
+  evidence: go Step 0 hands off to find-skill (skills/go/SKILL.md:22-27), which picks one of six categories (skills/find-skill/SKILL.md:12-19); nothing on the 5.0 routing path reads config/workflow-templates.yaml:1-146 or writes work.active.type/workflow.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: how-it-works.md and phases-and-workflows.md describe routing as category selection and present work types only where a gate uses them, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+  decision: work_types
+  notes: The hard-gate row R-101 needs the active item's work type for the six hard-gate types; that narrow tagging survives this retirement.
+- id: R-106
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 147
+  claim: Every work item is classified into one of three entry categories (cold-start, mid-project-planned, mid-project-reactive) that control prerequisite strictness.
+  evidence: No 5.0 code classifies entry category; the only writers set small-story or large-story (scripts/small_story_controller.py:2078, scripts/large_story_controller.py:2109).
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: phases-and-workflows.md contains no entry-category classification claim, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: duplicate
+  duplicate_of: R-022
+  decision: work_types
+- id: R-107
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 48
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 73
+  claim: course-correction and security-planning use the full-pipeline shape (course-correction with TRIAGE).
+  evidence: config/workflow-templates.yaml:39 gives course-correction [DISCOVER, DEFINE, TRIAGE, SHIP] and config/workflow-templates.yaml:45 gives security-planning [DISCOVER, DEFINE, SHIP].
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The shape tables in phases-and-workflows.md match the phase sequences in config/workflow-templates.yaml for course-correction and security-planning, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+  notes: Section may be removed entirely under the work_types decision.
+- id: R-108
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 49
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 96
+  claim: tech-debt uses the abbreviated shape with SCOPE added.
+  evidence: 'config/workflow-templates.yaml:57 gives tech-debt [DEFINE, SCOPE, IMPLEMENT, VERIFY, SHIP]: SCOPE replaces DESIGN.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: phases-and-workflows.md shows the tech-debt sequence as DEFINE, SCOPE, IMPLEMENT, VERIFY, SHIP, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+  notes: Section may be removed entirely under the work_types decision.
+- id: R-109
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 52
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 97
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 98
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 105
+  - path: docs/user-guide/how-it-works.md
+    line: 90
+  claim: api-deprecation, data-migration and dependency-upgrade use the migration shape.
+  evidence: config/workflow-templates.yaml:125 (data-migration), :134 (api-deprecation [ASSESS, DEFINE, IMPLEMENT, VERIFY, SHIP, CLEANUP]) and :140 (dependency-upgrade [ASSESS, IMPLEMENT, VERIFY, SHIP]) do not match the migration shape at config/workflow-templates.yaml:19.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The docs list the actual per-type phase sequences from config/workflow-templates.yaml for these three work types, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+  notes: Section may be removed entirely under the work_types decision.
+- id: R-110
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 39
+  - path: docs/user-guide/how-it-works.md
+    line: 41
+  - path: docs/user-guide/how-it-works.md
+    line: 45
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 202
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 204
+  claim: Example state shows active item id WI-014 with a workflow list and entry_category mid-project-planned.
+  evidence: Issue IDs are ISSUE-NNN from the next-id query (scripts/cache.py:426) and nothing on the 5.0 path writes workflow; controllers set entry_category small-story/large-story (scripts/small_story_controller.py:2078).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The example state blocks in how-it-works.md and phases-and-workflows.md use an ID format and fields that 5.0 code writes, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-111
+  source: B
+  docs:
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 211
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 200
+  claim: work.last_item_id is a monotonic counter that keeps IDs from repeating.
+  evidence: go closeout sets last_item_id to the ID of the item just closed (skills/go/SKILL.md:454-459); new IDs come from the next-id cache query (scripts/cache.py:415-426).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: phases-and-workflows.md describes work.last_item_id as the most recently closed work item, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-112
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 48
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 6
+  - path: docs/user-guide/phases-and-workflows.md
+    line: 161
+  - path: docs/user-guide/glossary.md
+    line: 38
+  - path: skills/master/SKILL.md
+    line: 178
+  claim: 'Progressive disclosure: the work types visible depend on version_stage (PROTOTYPE hides compliance, GA surfaces it automatically, MAINTAINED de-emphasizes features).'
+  evidence: config/workflow-templates.yaml:209-225 defines progressive_disclosure, but no script, hook or skill reads it; the only mention is prose at skills/master/SKILL.md:178 about the retired bucket model.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: No user-guide page or skill prose claims stage-dependent visibility of work types, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+  decision: progressive_disclosure
+- id: R-113
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 24
+  - path: docs/user-guide/glossary.md
+    line: 38
+  claim: version_stage values are PROTOTYPE, ALPHA, BETA, GA, SCALED, MAINTAINED; new projects may carry an informal IDEA or PRE-ALPHA label.
+  evidence: Setup writes IDEA as the actual stage for new and early-prototype projects (skill-library/configure/setup/SKILL.md:60,121); nothing writes PROTOTYPE and PRE-ALPHA appears nowhere in code.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md and glossary.md list IDEA as the onboarding stage alongside ALPHA, BETA and GA, with no PRE-ALPHA, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-114
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 97
+  claim: The maintenance section is the '4.x Beta Operating Model'.
+  evidence: The plugin is 5.0.2 (.claude-plugin/plugin.json:4) and the 4.x beta channel is retired (docs/user-guide/glossary.md:97).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md has no 4.x beta heading or 4.x framing for current maintenance behavior, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-115
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 114
+  - path: docs/user-guide/how-it-works.md
+    line: 109
+  claim: Doctor route statuses are recovery-available, supported-migration-available, compatibility-mode and no-migration-recommended.
+  evidence: The no-op status is no-maintenance-action (scripts/doctor.py:2669); doctor also returns manual-review (:2657), graduation-available (:2704), graduation-blocked (:2731) and migration-blocked (:2834). no-migration-recommended does not exist.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The route table in how-it-works.md lists exactly the status strings scripts/doctor.py can return, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-116
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 112
+  - path: docs/user-guide/how-it-works.md
+    line: 116
+  claim: Supported migration handles only flat v3 BL-NNN; typed stories/, bugs/, debt/, chores/ layouts route to recovery until a layout-specific migrator exists.
+  evidence: Typed layouts route to migration (scripts/doctor.py:2755 'typed-legacy projects now route here directly'); skill-library/configure/migrate/SKILL.md:4,14-15 handles stories/, bugs/, debt/, chores/; skills/go/SKILL.md:119-120 recommends migrate for typed layouts.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md states that /sweetclaude:configure migrate handles flat BL-NNN and typed legacy layouts and that recovery handles unsafe states, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-117
+  source: B
+  docs:
+  - path: docs/user-guide/glossary.md
+    line: 89
+  claim: Compatibility Mode is a 4.x beta maintenance state.
+  evidence: Compatibility mode is a current 5.x doctor route (scripts/doctor.py:2778-2790).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The glossary Compatibility Mode entry carries no 4.x beta qualifier, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-118
+  source: B
+  docs:
+  - path: docs/user-guide/glossary.md
+    line: 93
+  - path: docs/user-guide/glossary.md
+    line: 91
+  claim: The Stable 3.x Channel is the recommended plugin channel, installed with carson-sweet/sweetclaude@stable-3.x.
+  evidence: The stable channel is the 5.x line on main (.claude-plugin/marketplace.json:3,14); docs/user-guide/install.md:10-11,22 installs from @main.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The glossary describes the stable channel as 5.x on main installed with carson-sweet/sweetclaude@main, labels stable-3.x as legacy, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-119
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 178
+  claim: The John Wick escalation pattern is a privileged subagent for enforcement tasks.
+  evidence: agents/ holds 11 definitions and none is such an agent; agents/workflow-guardian.md:4 reviews GitHub Actions security.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md names only subagent patterns that exist in agents/, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-120
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 190
+  claim: Saying 'switch to guided' makes SweetClaude immediately update sweetclaude.yaml.
+  evidence: rules/interaction-model.md:14 says only to respect the change; no code or instruction persists deference_level on a mid-session change.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md describes the mid-session deference change without claiming it is written to sweetclaude.yaml, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-121
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 212
+  claim: The plugin bundle layout is skills/ (all skills), agents/, hooks/, rules/, config/.
+  evidence: skills/ holds the public commands and internal routers (skills/go/SKILL.md:1-4, skills/_route); workflows live in skill-library/<category>/ (skill-library/configure/INDEX.md:1) and scripts/ (e.g. scripts/cache.py:1) is omitted.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The What Lives Where tree lists skill-library/ and scripts/ and describes skills/ as public commands and internal routers, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-122
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 226
+  claim: state/project.yaml holds the project's language, framework and commands.
+  evidence: No onboarding or workflow creates project.yaml; it is only read by skill-library/build/code-testing/SKILL.md:43 and hooks/auto-test-runner.sh:93 for test_command.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md describes project.yaml with the fields SweetClaude actually reads and states when it is created, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-123
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 257
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 137
+  claim: The corpus pipeline is a state machine that refuses out-of-order operations.
+  evidence: Ordering checks are prose in each sub-skill reading corpus-pipeline.yaml (skill-library/utils/corpus-triage/SKILL.md:22-24, skill-library/utils/corpus-reconcile/SKILL.md:22).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: how-it-works.md and cheatsheet-existing-project.md describe corpus ordering as instruction-guided checks of pipeline state, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-124
+  source: B
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 139
+  - path: docs/user-guide/glossary.md
+    line: 59
+  claim: Flow mode quietly accumulates thin artifacts (mini brief, architecture sketch, decision entries) in the background.
+  evidence: The only sources are descriptive prose (skills/help/modes-content.md:27, skill-library/configure/project-mode/SKILL.md:76); no hook, script or workflow writes background artifacts in Flow mode.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: In Flow mode, completing a work item leaves the named thin artifacts under .sweetclaude/, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: open
+  notes: Recommend retire-claim; no recorded decision covers this, so a human decides.
+- id: R-125
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 31
+  - path: docs/user-guide/planning-concepts.md
+    line: 211
+  claim: Story status values are new, ready, active, blocked, deferred, done, abandoned.
+  evidence: The canonical set has 11 values, adding in-review, on-hold, declined and superseded (scripts/status.py:32-39).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: planning-concepts.md lists all 11 canonical statuses and the four terminal ones, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-126
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 32
+  - path: docs/user-guide/planning-concepts.md
+    line: 227
+  claim: Story priority values are next, sooner, soon, later, someday.
+  evidence: next is not recognized; the cache sort uses P0, now, P1, sooner, P2, soon, P3, later, someday (scripts/cache.py:397-406), and project-issues creates P0-P3 (skill-library/build/project-issues/SKILL.md:240,322).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: planning-concepts.md lists priority values the cache sort recognizes, with now in place of next and P0-P3 as the project-issues default, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-127
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 47
+  - path: docs/user-guide/planning-concepts.md
+    line: 87
+  - path: docs/user-guide/glossary.md
+    line: 47
+  claim: Moving a story from the backlog to the roadmap physically moves it and assigns it to an epic.
+  evidence: project-issues triage moves backlog/ to roadmap/issues/ and sets ready without assigning an epic (skill-library/build/project-issues/SKILL.md:477-497); project-backlog promote only sets the sprint field (skill-library/build/project-backlog/SKILL.md:153-166).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: planning-concepts.md and glossary.md state that triage moves the file to roadmap/issues/ and that epic and milestone linking are separate steps, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-128
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 59
+  - path: docs/user-guide/glossary.md
+    line: 56
+  claim: A milestone is complete when all its stories (planning-concepts) or all its epics (glossary) are complete.
+  evidence: Milestones become achieved when all criteria are met and the user confirms (skill-library/plan/product-milestones/SKILL.md:156); complete is a manual subcommand (:95).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: planning-concepts.md and glossary.md both say a milestone is marked achieved when its success criteria are met and the user confirms, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-129
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 77
+  - path: docs/user-guide/planning-concepts.md
+    line: 85
+  claim: The roadmap hierarchy is Milestone, Epic, Sprint, Story, and a sprint can attach to a milestone or an epic.
+  evidence: Sprints carry only milestone_id (skill-library/build/project-sprints/SKILL.md:142); skill-library/build/project-themes/SKILL.md:16 and docs/user-guide/how-it-works.md:148 define Milestone, Sprint, Story with epics as attributes.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: planning-concepts.md shows Milestone, Sprint, Story with epics and themes as story attributes and sprints anchored to a milestone, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-130
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 158
+  - path: docs/user-guide/planning-concepts.md
+    line: 177
+  - path: docs/user-guide/planning-concepts.md
+    line: 188
+  - path: docs/user-guide/glossary.md
+    line: 62
+  claim: Epics are surfaced only in Agile mode; in other modes they do not appear in status views or big-picture renders.
+  evidence: skills/status/SKILL.md and skill-library/utils/big-picture/SKILL.md:4 apply no mode filter, and go proposes active-epic stories in every mode (skills/go/SKILL.md:147-154).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: planning-concepts.md and glossary.md make no mode-dependent epic surfacing claim, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+  notes: Alternative is to implement mode filtering; recorded as fix-doc because no view has ever filtered.
+- id: R-131
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 176
+  claim: Agile mode requires milestones.
+  evidence: Nothing requires them; product-sprint-plan only suggests setting milestones up and allows skip (skill-library/build/product-sprint-plan/SKILL.md:130-133).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The Choosing a Mode table marks Agile milestones as recommended, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-132
+  source: B
+  docs:
+  - path: docs/user-guide/planning-concepts.md
+    line: 181
+  - path: docs/user-guide/planning-concepts.md
+    line: 221
+  claim: Kanban mode has board columns with statuses as columns.
+  evidence: The only board view is the sprint board in skill-library/build/project-sprints/SKILL.md:199-225, which is disabled in Kanban (config/mode-gates.yaml:19-20, skill-library/build/project-sprints/SKILL.md:35).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: planning-concepts.md makes no Kanban board-column claim and points to project-issues lists, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-133
+  source: B
+  docs:
+  - path: docs/user-guide/skills-reference.md
+    line: 45
+  claim: /sweetclaude:design review the checkout flow for accessibility is a design workflow example.
+  evidence: find-skill routes accessibility testing to build (skills/find-skill/SKILL.md:17); accessibility audits are skill-library/build/testing-accessibility and design-ux-review has no accessibility content.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: skills-reference.md has no accessibility example under /sweetclaude:design, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-134
+  source: B
+  docs:
+  - path: docs/user-guide/skills-reference.md
+    line: 83
+  claim: /sweetclaude:configure covers SweetClaude's own regression checks.
+  evidence: skill-library/configure/INDEX.md:1-40 lists no regression workflow; behavioral-regression workflows are retired.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: skills-reference.md:83 lists only workflows present in skill-library/configure/INDEX.md, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-135
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 181
+  - path: docs/user-guide/glossary.md
+    line: 14
+  claim: A deference question is asked at session start ('When SweetClaude starts, it asks how much control you want').
+  evidence: Setup writes deference_level collaborative by default (scripts/sweetclaude-yaml-template.py:50); the ask happens only if unset and only in master or the interaction-model rule (skills/master/SKILL.md:61, rules/interaction-model.md:7).
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: cheatsheet-existing-project.md and glossary.md state that deference defaults to Collaborative and is changed by saying so, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: duplicate
+  duplicate_of: R-033
+  decision: setup_promises
+- id: R-136
+  source: B
+  docs:
+  - path: docs/user-guide/glossary.md
+    line: 77
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 192
+  claim: Commit the whole .sweetclaude/ directory to git.
+  evidence: Setup gitignores .sweetclaude/state/recovery-runs/ (skill-library/configure/setup/SKILL.md:157-165), guardian-on gitignores guardian-enabled (skill-library/configure/guardian-on/SKILL.md:34-36), and docs/user-guide/how-it-works.md:204 says to keep caches and snapshots out.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: glossary.md and cheatsheet-existing-project.md say to commit .sweetclaude/ except derived caches, recovery snapshots and the guardian flag, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-137
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 15
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 18
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 17
+  claim: Running /sweetclaude:go in a new or existing project onboards it; SweetClaude takes over from there.
+  evidence: go never invokes setup or init (skills/go/SKILL.md:16-27); session-start is silent without .sweetclaude/ (hooks/session-preflight.sh:66-71); onboarding is init then setup (skill-library/configure/init/SKILL.md:100-104).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: Both cheatsheets tell the user to run /sweetclaude:configure init (or the equivalent set-up request) to onboard, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-138
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 25
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 26
+  claim: Setup offers to git init the project (creates a git repository if you want one).
+  evidence: No setup branch runs git init (skill-library/configure/setup/SKILL.md:42-99,109-130,147-229).
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: Neither cheatsheet claims setup creates or offers to create a git repository, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: duplicate
+  duplicate_of: R-031
+  decision: setup_promises
+- id: R-139
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 27
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 63
+  claim: Setup creates a strategy/ folder for strategic documents.
+  evidence: Setup creates .sweetclaude/{state,product,plans,traceability} only (skill-library/configure/setup/SKILL.md:43-45,187-207); no strategy/ directory.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: Neither cheatsheet claims setup creates a strategy/ folder, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: duplicate
+  duplicate_of: R-032
+  decision: setup_promises
+- id: R-140
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 28
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 64
+  claim: Setup creates or updates CLAUDE.md for every new and existing project.
+  evidence: Only Branch C (messy codebase) generates CLAUDE.md (skill-library/configure/setup/SKILL.md:141); Branches A and B do not (skill-library/configure/setup/SKILL.md:41-103,105-130).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The cheatsheets list only the files setup creates in each branch, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-141
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 30
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 36
+  claim: Concept Articulation and product discovery run automatically after setup.
+  evidence: Setup hands off to _features (skill-library/configure/setup/SKILL.md:103), which only onboards optional features (skill-library/configure/_features/SKILL.md:119-131); init never runs product discovery (skill-library/configure/init/SKILL.md:149-150).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-new-project.md says to start discovery with /sweetclaude:plan product-discovery after setup and feature selection, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-142
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 37
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 39
+  claim: Discovery depths are Quick intent, Standard and Full pain thesis (11-section).
+  evidence: Levels are L1 Intent and boundaries, L2 Problem and success, L3 Full pain thesis (skill-library/plan/product-discovery/SKILL.md:26-28); L3 questions run to 17 (:133).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-new-project.md uses the L1/L2/L3 names from product-discovery and no section count, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-143
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 43
+  claim: Discovery output is written to strategy/.
+  evidence: product-discovery writes .sweetclaude/state/discovery.yaml and .sweetclaude/state/compliance-context.yaml (skill-library/plan/product-discovery/SKILL.md:198,217).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-new-project.md names .sweetclaude/state/discovery.yaml as the discovery output, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-144
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 83
+  claim: The milestones link command is product-milestones link US-XXX MS-XXX.
+  evidence: The signature is link <ISSUE-NNN> <MS-NNN> (skill-library/plan/product-milestones/SKILL.md:92).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-new-project.md shows product-milestones link ISSUE-NNN MS-NNN, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-145
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 101
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 198
+  claim: Users bump their version by running scripts/bump-version.sh patch|minor|major.
+  evidence: bump-version.sh is a maintainer script in the plugin repo, absent from user projects, and exits without package.json at the git root (scripts/bump-version.sh:22-26).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: Neither user cheatsheet instructs running scripts/bump-version.sh, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-146
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-new-project.md
+    line: 105
+  claim: /sweetclaude:go reads your phase state and acts.
+  evidence: 'go proposes and waits: ''Propose, do not act'' (skills/go/SKILL.md:535, skills/go/SKILL.md:12).'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-new-project.md says /sweetclaude:go reads state and proposes the next item, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-147
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 24
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 191
+  claim: Setup creates a pre-sweetclaude snapshot branch before changing anything and will not proceed without it.
+  evidence: No setup or init code creates a branch (skill-library/configure/setup/SKILL.md:105-130); the only mention recommends a manual pre-sweetclaude-snapshot branch (skills/help/SKILL.md:151).
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: Onboarding an existing git project creates a pre-sweetclaude-snapshot branch at the pre-onboarding HEAD before writing any file, and refuses to proceed if the branch cannot be created, verified by a contract test.
+  test_level:
+  - contract
+  - unit
+  status: duplicate
+  duplicate_of: R-029
+- id: R-148
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 30
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 31
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 34
+  claim: The project scan reports test coverage, open GitHub issues and PRs, and strategy documents.
+  evidence: Branch B runs only ls -la, head README.md and git log -10 (skill-library/configure/setup/SKILL.md:109-113); Branch C runs a free-form assessment; there is no issue or PR scan.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-existing-project.md describes only the scan setup actually runs, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-149
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 41
+  claim: 'Setup asks four questions: project maturity, current work, biggest problem, anything messy.'
+  evidence: 'Branch B asks three: project name, stage (four options) and issue tracker (skill-library/configure/setup/SKILL.md:115-118).'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-existing-project.md lists the three Branch B questions, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-150
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 47
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 49
+  claim: Setup proposes a pipeline position (DISCOVER, PLAN/DESIGN, IMPLEMENT, VERIFY) from the scan.
+  evidence: Setup maps the stage answer only to version_stage IDEA/ALPHA/BETA/GA (skill-library/configure/setup/SKILL.md:120-124); no phase is proposed.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-existing-project.md states that the stage answer sets version_stage and contains no pipeline-positioning step, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-151
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 62
+  claim: Setup creates .sweetclaude/ with a decision log.
+  evidence: Branch B creates no decision log (skill-library/configure/setup/SKILL.md:126,147-229).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-existing-project.md lists only the directories and files setup creates, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-152
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 66
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 68
+  claim: Setup ends by suggesting a first action based on the stated frustration.
+  evidence: Branch B ends with a status line and _features (skill-library/configure/setup/SKILL.md:128-130); a top recommendation exists only in Branch C (:143).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-existing-project.md says setup then offers optional features, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-153
+  source: B
+  docs:
+  - path: docs/user-guide/cheatsheet-existing-project.md
+    line: 196
+  claim: /sweetclaude:status fires automatically at session start.
+  evidence: Bootstrap Step 8 prints a one-line project and active-item summary and a two-option prompt (skills/bootstrap/SKILL.md:575-607); it does not run /sweetclaude:status.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: cheatsheet-existing-project.md says a short status line appears at session start, and the docs-claims check passes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-170
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 41
+  - path: docs/user-guide/state-and-memory.md
+    line: 28
+  claim: state/evidence/ is written by the controller-gated story workflows.
+  evidence: Only scripts/control_receipts.py:240 writes .sweetclaude/state/evidence/ (control-lint receipts for the release gate). The story controller writes evidence under reports/large-story/<id>/evidence (scripts/large_story_controller.py:671).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: state-and-memory.md attributes contracts/, reports/ and state/workflows/ to the story workflows and describes state/evidence/ as release-gate control receipts written by scripts/control_receipts.py.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-171
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 60
+  - path: docs/user-guide/state-and-memory.md
+    line: 107
+  claim: 'The sweetclaude.yaml example shows schema_version: 1 and framework.update.declined: false.'
+  evidence: scripts/sweetclaude-yaml-template.py:16 writes schema_version 2 and :45 writes declined None; config/migration-registry.yaml:52 sets current_version 2 and the v1-to-v2 migration clears boolean declined.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: 'The state-and-memory.md example shows schema_version: 2 and declined: null, and the example validates against the current sweetclaude.yaml template keys.'
+  test_level:
+  - docs-claims
+  status: open
+- id: R-172
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 113
+  claim: version_stage values are PROTOTYPE -> ALPHA -> BETA -> GA -> SCALED -> MAINTAINED.
+  evidence: scripts/sweetclaude-yaml-template.py:88 defaults --version-stage to IDEA; skill-library/configure/setup/SKILL.md:60 passes IDEA and :121 maps Early prototype to IDEA.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The version_stage row in state-and-memory.md lists IDEA as the first stage and states that setup writes IDEA for new projects and early prototypes.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-173
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 113
+  claim: version_stage controls progressive disclosure of work types.
+  evidence: config/workflow-templates.yaml:209 defines a progressive_disclosure block, but only prose at skills/master/SKILL.md:178 refers to it; no script or hook reads it.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: state-and-memory.md no longer states that version_stage controls progressive disclosure.
+  test_level:
+  - docs-claims
+  status: open
+  decision: progressive_disclosure
+- id: R-174
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 115
+  claim: project.type is cold-start or existing-code.
+  evidence: skill-library/configure/setup/SKILL.md:59 passes --type new for Branch A and :126 writes existing-code for Branch B; nothing writes cold-start.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The project.type row in state-and-memory.md lists new and existing-code as the values.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-175
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 116
+  - path: docs/user-guide/state-and-memory.md
+    line: 65
+  claim: project.safety_snapshot records the pre-sweetclaude git branch created during onboarding.
+  evidence: scripts/sweetclaude-yaml-template.py:25 writes safety_snapshot as an empty string and no setup step creates a branch; the only mention is a manual suggestion at skills/help/SKILL.md:151.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: Running setup in a git repository creates a pre-sweetclaude branch at the pre-setup HEAD before any .sweetclaude/ file is written, and sweetclaude.yaml project.safety_snapshot equals pre-sweetclaude.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-029
+  notes: 'decision setup_promises: snapshot branch is implement.'
+- id: R-176
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 119
+  claim: Feature status lifecycle is not_configured -> active or declined.
+  evidence: scripts/sweetclaude-yaml-template.py:10 writes status not_offered for every feature; not_configured is only the missing-key fallback at skill-library/configure/_features/SKILL.md:29-30.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The features.* row in state-and-memory.md describes not_offered (or a missing key) moving to active or declined.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-177
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 123
+  claim: In 4.x, /sweetclaude:configure update reports drift without running migrations inline.
+  evidence: /sweetclaude:configure is the 5.x Tier 1 command (skill-library/configure/doctor/SKILL.md:52 runs it only after the 5.x switch); config/capability-manifest.yaml:10-19 marks the 4.x beta channel retired, and 4.x installs expose /sweetclaude:update instead.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: state-and-memory.md names /sweetclaude:update for 4.x and /sweetclaude:configure update for 5.x.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-178
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 221
+  claim: SweetClaude writes the assumption register automatically during structured interviews when it detects assumption-shaped statements.
+  evidence: Only skill-library/design/design-ux-review/SKILL.md:167 and skill-library/plan/product-user-focus-group/SKILL.md:330 append to assumption-register.md; skill-library/plan/product-discovery/SKILL.md:217 writes discovery.yaml and nothing else detects assumptions.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: product-discovery appends at least one ASM-NNN entry to .sweetclaude/state/assumption-register.md when an interview answer is recorded as an assumption, and a contract test asserts that write step exists in the discovery skill.
+  test_level:
+  - contract
+  status: open
+  notes: Audit suggested retiring the claim; no decision covers it, so disposition is implement.
+- id: R-179
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 234
+  claim: At session start SweetClaude acknowledges 'I have N learnings from previous sessions - still apply?'.
+  evidence: skills/go/SKILL.md:135 says to apply learnings silently and 'Do not announce this'; skills/master/SKILL.md:58 also applies them silently.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: state-and-memory.md states that improvement-register learnings are applied silently at session start.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-180
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 259
+  claim: Sprint planning surfaces scope changes since the last sprint.
+  evidence: skill-library/plan/product-manage-scope/SKILL.md:28 is the scope-changes.md writer; neither skill-library/build/product-sprint-plan/SKILL.md:1 nor skill-library/build/project-sprints/SKILL.md:1 reads scope-changes.md.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: product-sprint-plan reads .sweetclaude/state/scope-changes.md and lists entries dated after the previous sprint start in its plan output.
+  test_level:
+  - contract
+  status: open
+  notes: Audit suggested removing the sentence; no decision covers it, so disposition is implement.
+- id: R-181
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 271
+  claim: product-user-stories writes the story-to-requirement map and the implementer agent updates the implementation column.
+  evidence: No traceability write exists in skill-library/plan/product-user-stories/SKILL.md or agents/; actual writers are skill-library/build/product-user-tdd-tests/SKILL.md:50, skill-library/build/code-testing/SKILL.md:178, skill-library/utils/documents-update-docs/SKILL.md:35 and skill-library/design/mockup-graduate/SKILL.md:234, and setup creates requirements-map.md (skill-library/configure/setup/SKILL.md:197).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The Traceability section of state-and-memory.md names setup, product-user-tdd-tests, code-testing, documents-update-docs and mockup-graduate as the writers and does not name product-user-stories or the implementer agent.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-182
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 285
+  claim: Running /sweetclaude:go removes .sweetclaude/disabled and reactivates SweetClaude.
+  evidence: skills/go/SKILL.md has no handling of .sweetclaude/disabled; skills/master/SKILL.md:22-25 asks and then runs setup without removing the file; skill-library/configure/init/SKILL.md:28 tells the user to remove it.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: When .sweetclaude/disabled exists, /sweetclaude:go offers reactivation, and on yes the file no longer exists and the session-start health check runs.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-022
+  notes: Doc also gains a mention of /sweetclaude:configure off as the supported way to disable.
+- id: R-183
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 290
+  - path: docs/user-guide/state-and-memory.md
+    line: 293
+  claim: Uninstall globally with ~/.claude/sweetclaude-uninstall.sh, which the installer wrote.
+  evidence: No install.sh exists and nothing writes sweetclaude-uninstall.sh (it appears only in this doc); 5.x is plugin-only and uninstall.sh:8 targets legacy ~/.claude directories.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: state-and-memory.md gives /plugin uninstall sweetclaude@sweetclaude-stable for global removal and /sweetclaude:configure purge for project artifacts, and contains no reference to sweetclaude-uninstall.sh.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-184
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 305
+  claim: The git-checkpoint hook commits at phase transitions.
+  evidence: hooks/git-checkpoint.sh is not registered in hooks/hooks.json; hooks/hooks-manifest.json:132 lists it as a utility with no event, and no skill or script invokes it. Commits come from skills, e.g. skill-library/build/code-tdd/SKILL.md:115.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: state-and-memory.md attributes surviving commits to commits made by skills (for example the TDD RED commit) and does not mention a git-checkpoint hook.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-185
+  source: C
+  docs:
+  - path: docs/user-guide/state-and-memory.md
+    line: 32
+  claim: .sweetclaude/product/ holds 4.x product artifacts.
+  evidence: skill-library/configure/setup/SKILL.md:178 sets .sweetclaude/product as the 5.x product base_path and :44 creates its backlog and stories directories.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The directory layout in state-and-memory.md labels product/ as product artifacts (backlog, roadmap, issues) without a 4.x qualifier.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-186
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 24
+  claim: Setup on an empty folder offers to git init a repository.
+  evidence: skill-library/configure/setup/SKILL.md:37-39 asks only project name, one-sentence pitch and issue tracker; no step runs or offers git init.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: walkthroughs.md section 1 Setup describes the three Branch A questions (name, one-sentence description, issue tracker) and contains no git init offer.
+  test_level:
+  - docs-claims
+  status: duplicate
+  duplicate_of: R-031
+  decision: setup_promises
+- id: R-187
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 24
+  claim: Setup asks which deference level to use.
+  evidence: scripts/sweetclaude-yaml-template.py:50 presets deference_level collaborative, so the ask at skills/master/SKILL.md:62 (only when unset) never fires after setup.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: walkthroughs.md section 1 Setup contains no deference-level question and states the default is collaborative.
+  test_level:
+  - docs-claims
+  status: duplicate
+  duplicate_of: R-033
+  decision: setup_promises
+- id: R-188
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 36
+  - path: docs/user-guide/walkthroughs.md
+    line: 37
+  claim: Discovery outputs strategy/discovery.md and strategy/personas/.
+  evidence: skill-library/plan/product-discovery/SKILL.md:217 writes .sweetclaude/state/discovery.yaml; personas are written by user-personas to .sweetclaude/state/personas.yaml and {base_path}/personas/ (skill-library/plan/user-personas/SKILL.md:97-98). No skill creates a strategy/ folder.
+  class: unimplemented-promise
+  disposition: retire-claim
+  phase: 5
+  acceptance: walkthroughs.md lists .sweetclaude/state/discovery.yaml as the discovery output, attributes personas to user-personas, and contains no strategy/ path.
+  test_level:
+  - docs-claims
+  status: duplicate
+  duplicate_of: R-032
+  decision: setup_promises
+- id: R-189
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 92
+  - path: docs/user-guide/walkthroughs.md
+    line: 116
+  claim: Onboarding an existing codebase creates a pre-sweetclaude git branch first and refuses to proceed without it.
+  evidence: No setup step creates or checks a pre-sweetclaude branch (skill-library/configure/setup/SKILL.md:107-126); the only mention is the manual pre-sweetclaude-snapshot suggestion at skills/help/SKILL.md:151.
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: Running setup on an existing git repository creates branch pre-sweetclaude at the pre-setup HEAD before writing .sweetclaude/, and setup stops with an error when the branch cannot be created.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-029
+  notes: 'decision setup_promises: snapshot branch is implement.'
+- id: R-190
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 104
+  - path: docs/user-guide/walkthroughs.md
+    line: 106
+  claim: Existing-codebase onboarding runs a four-question interview whose fourth question asks what is messy or worrying.
+  evidence: Branch B asks three questions (name, stage, issue tracker) at skill-library/configure/setup/SKILL.md:116-118; messy codebases are detected at :28 and routed to Branch C (:132).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: walkthroughs.md section 2 describes the Branch B three-question interview and the Branch C assessment path, and contains no four-question interview or 'messy' question.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-191
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 132
+  - path: docs/user-guide/walkthroughs.md
+    line: 137
+  claim: Hotfix asks impact / temporary mitigation / rollback-faster triage questions and routes to rollback-revert when rollback is faster.
+  evidence: skill-library/maintain/hotfix/SKILL.md:30-32 asks failure, severity and scope; rollback-revert is suggested only when the shipped fix does not resolve the issue (:155).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: walkthroughs.md section 3 lists the failure, severity and scope questions and describes rollback-revert as the fallback after an unresolved fix.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-192
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 151
+  claim: The hotfix post-mortem is spawned automatically and is not optional.
+  evidence: skill-library/maintain/hotfix/SKILL.md:173-174 offers 'Create POST-MORTEM backlog item now' or 'Skip - I'll create it later', and :206 logs a skip to the decision log.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: walkthroughs.md states the post-mortem is logged as required and that the user is offered a backlog item now or later.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-193
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 153
+  claim: SweetClaude creates a follow-on tech-debt work item when the hotfix was a workaround.
+  evidence: skill-library/maintain/hotfix/SKILL.md:196 only adds a reminder in the post-mortem item body to create a tech-debt follow-up.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: walkthroughs.md states that the post-mortem item reminds the user to create a tech-debt follow-up.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-194
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 193
+  claim: The local RAG index lives at corpus/rag/.
+  evidence: skill-library/utils/corpus-rag-setup/SKILL.md:99 sets DB_PATH ./.rag-index/lancedb.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: walkthroughs.md names .rag-index/ as the RAG index location and contains no corpus/rag/ path.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-195
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 241
+  claim: code-feature looks for story artifacts in .sweetclaude/product/ when locating specs.
+  evidence: skill-library/build/code-feature/SKILL.md:65 looks for user stories in .sweetclaude/stories/, a directory setup never creates; setup creates .sweetclaude/product/stories at skill-library/configure/setup/SKILL.md:44.
+  class: code-bug
+  disposition: fix-code
+  phase: 4
+  acceptance: code-feature Step 1 searches the configured product base (default .sweetclaude/product/) for story and issue artifacts, and walkthroughs.md section 6 lists the same search order as the skill.
+  test_level:
+  - unit
+  status: open
+- id: R-196
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 247
+  claim: code-feature always creates a US-042-style story branch and main is untouched until a PR is opened.
+  evidence: skill-library/build/code-feature/SKILL.md:52 uses ISSUE-NNN IDs (example ISSUE-046), :55 makes branch creation an optional recommended choice, and :142 offers 'Commit, merge, and push' to main.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: walkthroughs.md section 6 Step 0 uses an ISSUE-NNN example, describes branch creation as recommended, and mentions the merge-to-main close-out option.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-197
+  source: C
+  docs:
+  - path: docs/user-guide/walkthroughs.md
+    line: 189
+  claim: Corpus steps cannot be skipped; the state machine refuses.
+  evidence: skill-library/utils/corpus-reconcile/SKILL.md:25 and skill-library/utils/corpus-promote/SKILL.md:25 let the user proceed after typing 'I accept the risk of corpus corruption'; skill-library/utils/document-corpus/SKILL.md:120 answers 'Yes, technically' to skipping.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: walkthroughs.md section 4 states that each corpus step checks the previous one and explains why, and that the user can override by typing the risk-acceptance phrase.
+  test_level:
+  - docs-claims
+  status: open
+  notes: From the audit's could-not-verify list; verified against corpus skills.
+- id: R-198
+  source: C
+  docs:
+  - path: docs/user-guide/doctor.md
+    line: 84
+  claim: Any doctor run can be fully reversed from its archive.
+  evidence: skill-library/configure/doctor/SKILL.md:119-123 reports actions without an archived before-image (reversible:false) as skipped by restore and points to the safety branch as fallback.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: doctor.md states that archived changes are reversible, that non-reversible actions are listed as skipped on restore, and that the safety branch is the fallback.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-199
+  source: C
+  docs:
+  - path: docs/user-guide/doctor.md
+    line: 105
+  - path: docs/user-guide/doctor.md
+    line: 100
+  claim: Doctor route table lists no-migration-recommended and omits other route statuses.
+  evidence: scripts/doctor.py:2669 emits no-maintenance-action; scripts/doctor.py:2704, :2731, :2834 and :2850 emit graduation-available, graduation-blocked, migration-blocked and manual-review; no code emits no-migration-recommended. Handling for each lives at skill-library/configure/doctor/SKILL.md:181-268.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The doctor.md route table lists exactly the statuses emitted by scripts/doctor.py maintenance-route (recovery-available, supported-migration-available, compatibility-mode, graduation-available, graduation-blocked, migration-blocked, manual-review, no-maintenance-action) with their handling.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-200
+  source: C
+  docs:
+  - path: docs/user-guide/doctor.md
+    line: 102
+  - path: docs/user-guide/doctor.md
+    line: 69
+  claim: Doctor routes the user to run /sweetclaude:configure recover or migrate as separate commands.
+  evidence: skill-library/configure/doctor/SKILL.md:153-179 presents recovery or migration itself and invokes recover or migrate inline via library-load, then re-scans.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: doctor.md describes doctor offering to run recovery or migration itself and does not instruct the user to run recover or migrate as a separate next command.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-201
+  source: C
+  docs:
+  - path: docs/user-guide/doctor.md
+    line: 58
+  claim: 'Doctor findings resolve through four kinds: auto-fix, prompted fix, delegate, terminal fallback.'
+  evidence: scripts/doctor.py:160-163 defines auto-fixable, guided-manual, accepted-no-action and terminal-fallback, and :179-180 classifies report-only info findings as accepted-no-action.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: doctor.md lists an accepted / report-only resolution kind alongside auto-fix, prompted, delegate and terminal fallback.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-202
+  source: C
+  docs:
+  - path: docs/user-guide/doctor.md
+    line: 62
+  claim: Auto-fixes are applied only after the user approves the batch.
+  evidence: skill-library/configure/doctor/SKILL.md:445 skips the pre-fix menu when a stored menu_default of proceed exists and --interactive was not passed.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: doctor.md states that a remembered proceed choice skips the approval menu and that --interactive restores it.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-203
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 22
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 46
+  claim: Doctor and the v3 migrator run from python3 ~/.claude/scripts/sweetclaude/.
+  evidence: scripts/maintenance/cleanup-legacy-paths.py:8 and :31 treat ~/.claude/scripts/sweetclaude/ as a legacy directory to delete; skills call ${CLAUDE_PLUGIN_ROOT}/scripts/doctor.py (skill-library/configure/doctor/SKILL.md:133).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: migration-and-recovery.md shows python3 "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.py" maintenance-route --project-dir . and the plugin-root migrator path, and contains no ~/.claude/scripts/sweetclaude/ path.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-204
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 9
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 11
+  claim: Safe order step 1 is to update the Claude Code plugin package and then run /sweetclaude:configure update.
+  evidence: config/capability-manifest.yaml:10-19 marks the beta channel retired, so /plugin update on the beta key stays on 4.x, where /sweetclaude:configure does not exist; the switch commands are at skill-library/configure/doctor/SKILL.md:48-50.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: migration-and-recovery.md Safe Order links to upgrading-to-5.md, gives the stable and beta-switch commands, and runs /sweetclaude:configure update only after the 5.x install and a restart.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-205
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 32
+  claim: Migration route table lists no-migration-recommended and omits other route statuses.
+  evidence: scripts/doctor.py:2669 emits no-maintenance-action; scripts/doctor.py:2704, :2731, :2834 and :2850 emit graduation-available, graduation-blocked, migration-blocked and manual-review; no code emits no-migration-recommended. Handling for each lives at skill-library/configure/doctor/SKILL.md:181-268.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The migration-and-recovery.md route table lists exactly the statuses emitted by scripts/doctor.py maintenance-route with their meaning and next step.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-206
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 30
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 36
+  claim: supported-migration-available means a flat v3 BL-*.md layout passed preflight, and migrate is only for that layout.
+  evidence: config/capability-manifest.yaml:4493-4497 maps typed_legacy_backlog to supported-migration-available; scripts/doctor.py:2754-2763 reports a typed legacy layout; skill-library/configure/migrate/SKILL.md:3 and :13-16 route typed layouts to scripts/migrate/migrate_taxonomy.py.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: migration-and-recovery.md defines supported-migration-available as a flat BL-NNN layout passing preflight or a typed legacy layout handled by the taxonomy migrator.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-207
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 30
+  claim: Doctor's supported-migration prompt describes every candidate as a flat BL-NNN layout.
+  evidence: skill-library/configure/doctor/SKILL.md:170 says 'Doctor found a supported flat BL-NNN migration candidate' for every supported-migration-available route, while scripts/doctor.py:2754-2763 also emits that status for typed legacy layouts.
+  class: code-bug
+  disposition: fix-code
+  phase: 4
+  acceptance: For a typed legacy fixture, the doctor supported-migration prompt names the typed legacy layout, and for a flat BL fixture it names the flat BL-NNN layout.
+  test_level:
+  - unit
+  status: open
+  notes: Found while re-verifying the migration-and-recovery route rows.
+- id: R-208
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 49
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 50
+  claim: Migration is blocked by typed legacy backlog directories or duplicate IDs, and blocked projects route to recovery.
+  evidence: scripts/recovery/recover_project.py:2052-2066 routes typed layouts to migration and surfaces duplicate IDs as duplicate-ids blockers delegated to doctor; only the flat preflight rejects non-flat shapes.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: migration-and-recovery.md states that typed layouts route to the taxonomy migrator and that duplicate IDs appear as blockers resolved through doctor.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-209
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 71
+  claim: No layout-specific migrator yet exists for typed backlog directories.
+  evidence: scripts/migrate/migrate_taxonomy.py exists and skill-library/configure/migrate/SKILL.md:13-16 dispatches typed layouts (stories/, bugs/, debt/, chores/) to it.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: migration-and-recovery.md contains no 'Until a layout-specific migrator exists' clause and names migrate_taxonomy.py as the typed-layout migrator.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-210
+  source: C
+  docs:
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 82
+  - path: docs/user-guide/migration-and-recovery.md
+    line: 83
+  claim: With accepted legacy taxonomy state, doctor collapses noise and shows no migration prompt.
+  evidence: scripts/recovery/recover_project.py:2088-2100 routes accepted state with old prefixes still on disk to typed_legacy_backlog (a migration prompt); :2072-2087 offers graduation when none remain; compatibility collapse applies only to compatibility-mode (scripts/doctor.py:2904).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: 'migration-and-recovery.md describes the three outcomes for accepted legacy state: migration prompt when old prefixes remain, graduation offer when none remain, and compatibility mode otherwise.'
+  test_level:
+  - docs-claims
+  status: open
+- id: R-211
+  source: C
+  docs:
+  - path: docs/user-guide/v4-migration.md
+    line: 3
+  - path: docs/user-guide/v4-migration.md
+    line: 5
+  claim: The 4.x guide is for the 4.x beta channel and stable users are on 3.x.
+  evidence: config/capability-manifest.yaml:3-9 sets stable to major 5 on main; :17 retires beta; :20-25 makes 3.x the sweetclaude-legacy channel.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: v4-migration.md frames the page for 4.x users moving to 5.x, states the beta channel is retired, and names sweetclaude-legacy as the 3.x channel.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-212
+  source: C
+  docs:
+  - path: docs/user-guide/v4-migration.md
+    line: 16
+  claim: Step 1 is to update the plugin with /plugin update.
+  evidence: On the retired beta key /plugin update does not reach 5.x (config/capability-manifest.yaml:17-18); scripts/maintenance/plugin-state.py:102-104 and skill-library/configure/doctor/SKILL.md:48-50 give the three-command marketplace switch.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: v4-migration.md gives the three-command switch for beta installs and the upgrading-to-5.md commands for stable 4.x installs, and contains no bare /plugin update step.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-213
+  source: C
+  docs:
+  - path: docs/user-guide/v4-migration.md
+    line: 18
+  - path: docs/user-guide/v4-migration.md
+    line: 26
+  claim: 4.x users run /sweetclaude:configure update, doctor, recover and migrate.
+  evidence: /sweetclaude:configure is a 5.x command (skill-library/configure/doctor/SKILL.md:52 runs it only after the switch and restart); it is unknown on a 4.x install.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: v4-migration.md states that the /sweetclaude:configure commands run only after 5.x is installed and Claude Code is restarted.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-214
+  source: C
+  docs:
+  - path: docs/user-guide/v4-migration.md
+    line: 31
+  claim: v4 route table lists no-migration-recommended and omits other route statuses.
+  evidence: scripts/doctor.py:2669 emits no-maintenance-action; scripts/doctor.py:2704, :2731, :2834 and :2850 emit graduation-available, graduation-blocked, migration-blocked and manual-review; no code emits no-migration-recommended. Handling for each lives at skill-library/configure/doctor/SKILL.md:181-268.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The v4-migration.md route table lists exactly the statuses emitted by scripts/doctor.py maintenance-route.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-215
+  source: C
+  docs:
+  - path: docs/user-guide/v4-migration.md
+    line: 33
+  - path: docs/user-guide/v4-migration.md
+    line: 34
+  claim: Unsafe typed legacy backlog directories and duplicate work-item IDs route to recovery instead of migration.
+  evidence: scripts/recovery/recover_project.py:2052-2066 routes typed layouts to migration and reports duplicate IDs as duplicate-ids blockers delegated to doctor; config/capability-manifest.yaml:4493-4497 maps typed_legacy_backlog to supported-migration-available.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: v4-migration.md states that typed legacy layouts route to the taxonomy migrator and duplicate IDs are resolved through doctor before migration.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-216
+  source: C
+  docs:
+  - path: docs/user-guide/beta-rescue.md
+    line: 24
+  - path: docs/user-guide/beta-rescue.md
+    line: 29
+  claim: The beta switch commands work for the legacy bare key sweetclaude@sweetclaude.
+  evidence: scripts/maintenance/plugin-state.py:119-125 classifies a bare sweetclaude marketplace with a prerelease version as beta, and :100-104 always emits '/plugin marketplace remove sweetclaude-beta', which leaves the bare sweetclaude marketplace installed alongside sweetclaude-stable.
+  class: code-bug
+  disposition: fix-code
+  phase: 4
+  acceptance: For an installed key sweetclaude@sweetclaude on a prerelease version, plugin-state emits '/plugin marketplace remove sweetclaude' as the third switch command, and beta-rescue.md gives the matching command for the legacy key.
+  test_level:
+  - unit
+  status: open
+  notes: Extends the audit's unverified legacy-key item; verified against plugin-state.py.
+- id: R-217
+  source: C
+  docs:
+  - path: docs/user-guide/large-story-workflow.md
+    line: 50
+  - path: docs/user-guide/large-story-workflow.md
+    line: 51
+  claim: After freeze and init, any contract edit raises an approval prompt only the user can answer.
+  evidence: scripts/large_story_controller.py:1631-1632 denies contract edits outright; hooks/large-story-gate.sh:83-88 documents that ask is unreliable in auto mode so amendment is blocked and is a human action.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: large-story-workflow.md states that direct contract edits are blocked and that the user amends by running the contract commands, then re-freezing and re-running init.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-218
+  source: C
+  docs:
+  - path: docs/user-guide/large-story-workflow.md
+    line: 50
+  claim: The large-story skill tells the model that contract edits raise a user approval prompt.
+  evidence: skill-library/build/large-story/SKILL.md:122-124 says an edit 'raises an approval prompt that only the user can answer', while scripts/large_story_controller.py:1631-1632 denies the edit and hooks/large-story-gate.sh:83-88 explains why ask is not used.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: skill-library/build/large-story/SKILL.md describes contract edits as denied, names the human-run amendment commands, and contains no 'approval prompt' wording for contract edits.
+  test_level:
+  - contract
+  status: open
+- id: R-219
+  source: C
+  docs:
+  - path: docs/user-guide/large-story-workflow.md
+    line: 41
+  - path: docs/user-guide/large-story-workflow.md
+    line: 116
+  claim: The gate hook denies direct writes to all of .sweetclaude/state/ and .sweetclaude/reports/.
+  evidence: scripts/large_story_controller.py:110-122 protects only state/workflows/, state/phase.yaml, reports/ and contracts/; :1633-1634 allows other .sweetclaude/ paths as non-protected project state.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: large-story-workflow.md lists exactly state/workflows/, state/phase.yaml, reports/ and contracts/ as the controller-protected paths.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-220
+  source: C
+  docs:
+  - path: docs/user-guide/large-story-workflow.md
+    line: 122
+  claim: The stop guard blocks the session from ending while the workflow is non-terminal.
+  evidence: hooks/large-story-stop-guard.sh:4-9 blocks once, records a deliberate second stop as an intentional pause, and stays silent until the story progresses.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: large-story-workflow.md describes the one-time stop block, the recorded intentional pause on a second stop, and the re-armed reminder after progress.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-221
+  source: C
+  docs:
+  - path: docs/user-guide/large-story-workflow.md
+    line: 151
+  - path: docs/user-guide/large-story-workflow.md
+    line: 152
+  claim: Large-story state lives in .sweetclaude/state/large-story.yaml (or workflows/{id}.yaml) and small-story in small-story.yaml.
+  evidence: init writes state/workflows/{workflow_id}.yaml (scripts/large_story_controller.py:1605, hooks/large-story-gate.sh:22); large-story.yaml is read only as a legacy pointer (scripts/large_story_controller.py:2516-2519), likewise small-story.yaml (scripts/small_story_controller.py:2485).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: large-story-workflow.md names .sweetclaude/state/workflows/{workflow_id}.yaml as the primary state path and describes large-story.yaml and small-story.yaml as legacy pointers read only if present.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-222
+  source: C
+  docs:
+  - path: docs/user-guide/work-item-artifacts.md
+    line: 81
+  - path: docs/user-guide/work-item-artifacts.md
+    line: 84
+  claim: Users can run python3 scripts/backfill_work_item_artifacts.py directly from their project.
+  evidence: The script ships in the plugin (scripts/backfill_work_item_artifacts.py:320-323 defines --project-dir, --dry-run, --item and --json); user projects have no scripts/ folder.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: work-item-artifacts.md shows python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py" --project-dir . with --dry-run, --item and --json documented, and contains no bare scripts/backfill path.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-223
+  source: C
+  docs:
+  - path: docs/user-guide/work-item-artifacts.md
+    line: 81
+  claim: The work-item-artifacts skill runs the backfill script from a project-relative scripts/ path.
+  evidence: skill-library/configure/work-item-artifacts/SKILL.md:24, :52 and :76 call python3 scripts/backfill_work_item_artifacts.py, which does not exist in user projects; compare plugin-root resolution at skill-library/build/large-story/SKILL.md:38-50.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: Every backfill invocation in skill-library/configure/work-item-artifacts/SKILL.md resolves the script under ${CLAUDE_PLUGIN_ROOT} (or the skill base directory), and a contract test finds no bare scripts/backfill_work_item_artifacts.py invocation in skill-library.
+  test_level:
+  - contract
+  status: open
+- id: R-224
+  source: C
+  docs:
+  - path: docs/user-guide/work-item-artifacts.md
+    line: 39
+  claim: work_item_artifacts status is active, declined, or not_configured.
+  evidence: scripts/sweetclaude-yaml-template.py:10 and :69 write status not_offered for work_item_artifacts in new projects.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: work-item-artifacts.md lists not_offered as the initial status alongside active and declined.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-225
+  source: C
+  docs:
+  - path: docs/user-guide/work-item-artifacts.md
+    line: 27
+  claim: The per-item contracts/ subdirectory holds API and other contracts.
+  evidence: scripts/backfill_work_item_artifacts.py:175 pulls contracts/ entries from .sweetclaude/contracts/, which holds success-criteria contracts.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: work-item-artifacts.md describes the contracts/ subdirectory as success-criteria contracts.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-226
+  source: C
+  docs:
+  - path: skill-library/build/large-story/SKILL.md
+    line: 166
+  claim: The large-story workflow and controller tell the model to run python3 scripts/large_story_controller.py ship, a repo-relative path that does not exist in user projects.
+  evidence: scripts/large_story_controller.py:1624 emits the repo-relative command; skill-library/build/large-story/SKILL.md:166 repeats it.
+  class: code-bug
+  disposition: fix-code
+  phase: 4
+  acceptance: Every controller command the large-story and small-story workflows tell the model to run resolves from ${CLAUDE_PLUGIN_ROOT}, and a test fails if any skill or controller message names a bare scripts/ path.
+  test_level:
+  - unit
+  status: open
+  notes: Found while building the ledger (group C agent). Same class of bug as the work-item-artifacts backfill path.
+- id: R-230
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 18
+  - path: docs/user-guide/tdd.md
+    line: 77
+  - path: docs/user-guide/tdd.md
+    line: 126
+  - path: docs/user-guide/tdd.md
+    line: 156
+  - path: docs/user-guide/behavioral-contracts.md
+    line: 16
+  - path: docs/user-guide/hook-development.md
+    line: 14
+  claim: test-guardian.sh (PreToolUse Write|Edit) blocks edits to test files during IMPLEMENT, so hook-enforced test immutability does not degrade with model upgrades.
+  evidence: 'hooks/test-guardian.sh:6-7 reads CLAUDE_FILE_PATH and CLAUDE_TOOL_NAME, which Claude Code does not set (tool input arrives as stdin JSON), so TOOL is empty and hooks/test-guardian.sh:10-12 allows every call. The block at hooks/test-guardian.sh:152-153 prints {"ok": false} with exit 0, which Claude Code ignores. The working deny protocol is documented at hooks/large-story-gate.sh:8-11. Tests inject the env vars by hand (tests/test_hook_behavior.py:255, tests/test_tdd_phase_enforcement.py:82), so they never exercise the real input path.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a PreToolUse stdin JSON payload for an Edit of tests/test_x.py while work.active.phase is IMPLEMENT and tdd_phase is implementing, hooks/test-guardian.sh emits hookSpecificOutput.permissionDecision "deny", and in a live --plugin-dir session the same Edit is refused.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-070
+- id: R-231
+  source: D
+  docs:
+  - path: skill-library/configure/guardian-on/SKILL.md
+    line: 15
+  - path: docs/user-guide/tdd.md
+    line: 158
+  claim: With Protocol Guardian on, tdd-prewrite-guardian.sh blocks source file writes until test files exist.
+  evidence: 'hooks/tdd-prewrite-guardian.sh:8-9 reads CLAUDE_FILE_PATH and CLAUDE_TOOL_NAME (unset at runtime), so hooks/tdd-prewrite-guardian.sh:12-14 allows every call. Its block at hooks/tdd-prewrite-guardian.sh:113-114 prints {"ok": false} with exit 0, which Claude Code ignores.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a PreToolUse stdin JSON payload for a Write of src/app.py with guardian-enabled present, phase IMPLEMENT and no test evidence, hooks/tdd-prewrite-guardian.sh emits hookSpecificOutput.permissionDecision "deny", and in a live --plugin-dir session the same Write is refused.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-071
+- id: R-232
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 19
+  - path: docs/user-guide/tdd.md
+    line: 79
+  - path: docs/user-guide/tdd.md
+    line: 127
+  claim: auto-test-runner.sh (PostToolUse) runs tests automatically after every source edit, so a failure is immediate.
+  evidence: hooks/auto-test-runner.sh:6-7 reads CLAUDE_FILE_PATH and CLAUDE_TOOL_NAME (unset at runtime), so the tool check at hooks/auto-test-runner.sh:10-11 exits 0 on every call and no test command ever runs.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a PostToolUse stdin JSON payload for an Edit of src/app.py while phase is IMPLEMENT, tdd_phase is implementing and a test command is configured, hooks/auto-test-runner.sh executes that test command, and in a live --plugin-dir session a source Edit triggers the run.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-072
+- id: R-233
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 19
+  - path: docs/user-guide/how-it-works.md
+    line: 150
+  - path: docs/user-guide/how-it-works.md
+    line: 275
+  claim: wip-limit.sh (PreToolUse Bash) blocks tool calls in Kanban mode when the WIP limit is reached.
+  evidence: 'hooks/wip-limit.sh:14 blocks by printing {"ok": false, "reason": ...} with exit 0, which Claude Code ignores, so the limit is never enforced. The hook also never reads the stdin tool payload, so it cannot tell which command it is gating.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: With effective-gates.yaml mode kanban, phase IMPLEMENT and in_progress items at the limit, hooks/wip-limit.sh fed a PreToolUse Bash stdin payload for a gated command emits hookSpecificOutput.permissionDecision "deny", and a live --plugin-dir session refuses that command.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-073
+- id: R-234
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 20
+  claim: preflight-guard.sh blocks tool calls until SweetClaude is configured for the project.
+  evidence: 'hooks/preflight-guard.sh:42-43 blocks by printing {"ok": false, "reason": "BLOCKED: ..."} with exit 0, which Claude Code ignores, so an unconfigured project is never gated. Registered with matcher "" at hooks/hooks.json:34.'
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: With the /tmp/.sweetclaude-needs-preflight-<hash> flag present and no state files, hooks/preflight-guard.sh fed a PreToolUse stdin payload for a Write emits hookSpecificOutput.permissionDecision "deny", and a live --plugin-dir session refuses that Write.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-074
+- id: R-235
+  source: D
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 277
+  claim: phase-dwelling-guard.sh (Stop hook) blocks responses containing phase advancement phrases such as "ready to move on?" when Protocol Guardian is active.
+  evidence: hooks/phase-dwelling-guard.sh:33 reads the transcript from a CLAUDE_TRANSCRIPT_PATH env var; Stop hooks receive transcript_path in stdin JSON, so RESPONSE_TEXT stays empty and hooks/phase-dwelling-guard.sh:66-67 allows. Its block at hooks/phase-dwelling-guard.sh:78-85 writes the reason to stdout with exit 2, where Claude Code only feeds stderr back on exit 2.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a Stop stdin JSON payload whose transcript_path points at a transcript ending in an assistant turn containing "ready to move on?", with guardian-enabled present, hooks/phase-dwelling-guard.sh blocks the stop with the revision reason on stderr (or decision "block" JSON), and a live --plugin-dir session shows the response revised.
+  test_level:
+  - contract
+  - live
+  status: duplicate
+  duplicate_of: R-075
+- id: R-236
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 18
+  claim: artifact-guardian.sh (PreToolUse Bash) warns when committing without required phase artifacts.
+  evidence: hooks/artifact-guardian.sh:6-11 exits 0 unless CLAUDE_TOOL_NAME is Bash, and that env var is unset at runtime, so no warning is ever produced. hooks/artifact-guardian.sh:15 also reads .command at the top level of the stdin JSON instead of .tool_input.command.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 2
+  acceptance: Given a PreToolUse stdin JSON payload for Bash with tool_input.command "git commit -m x", guardian-enabled present and required artifacts missing, hooks/artifact-guardian.sh writes its "[Protocol Guardian] WARNING" line, and a live --plugin-dir session shows the warning on a real commit.
+  test_level:
+  - contract
+  - live
+  status: open
+  notes: Not in the brief's hook list; same protocol defect, found while re-verifying hook-development.md:18.
+- id: R-237
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 20
+  claim: git-checkpoint auto-commits state at phase transitions, including when failing tests are written and before implementation begins.
+  evidence: hooks/hooks-manifest.json:136 says git-checkpoint.sh is "NOT an event hook" and it is absent from hooks/hooks.json; hooks/git-checkpoint.sh:4 says it is called by skills, but no skill in skills/ or skill-library/ invokes it. code-tdd makes its own RED commit (skill-library/build/code-tdd/SKILL.md:115).
+  class: unimplemented-promise
+  disposition: implement
+  phase: 3
+  acceptance: The RED-commit step of every code-tdd level in skill-library/build/code-tdd/SKILL.md invokes hooks/git-checkpoint.sh, and a contract test asserts that invocation is present.
+  test_level:
+  - contract
+  status: open
+- id: R-238
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 128
+  claim: git-checkpoint commits the failing tests immediately, so the test writer's intent survives between sessions.
+  evidence: hooks/git-checkpoint.sh:24-32 stages only .sweetclaude/ and strategy/, so test files are never part of a checkpoint commit.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: 'In a temporary git repo with a new untracked tests/test_x.py, running hooks/git-checkpoint.sh "test: RED - X" tests/test_x.py produces a commit that contains tests/test_x.py, asserted by a unit test.'
+  test_level:
+  - unit
+  status: open
+- id: R-239
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 19
+  claim: auto-test-runner runs the project's tests after source edits without any manual test configuration.
+  evidence: hooks/auto-test-runner.sh:34-38 exits unless .sweetclaude/state/project.yaml exists, and hooks/auto-test-runner.sh:93-96 exits unless it contains an indented test_command key. Nothing in scripts/, skills/ or skill-library/ writes that key; skill-library/build/code-tdd/SKILL.md:224 only reads project.yaml.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: In a project set up by /sweetclaude:configure init with no hand-written project.yaml, hooks/auto-test-runner.sh resolves a test command and runs it after a source Edit during implementing, verified by a contract test and a live --plugin-dir session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-240
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 127
+  claim: When auto-test-runner runs tests after a source edit, a test failure is surfaced immediately.
+  evidence: hooks/auto-test-runner.sh:100-103 runs the test command in the background, pipes output to stderr and always exits 0, so a failing run is never returned to Claude.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: When the configured test command fails after a source Edit during implementing, hooks/auto-test-runner.sh returns the failing output to Claude (PostToolUse exit 2 with output on stderr, or additionalContext JSON), verified by a contract test and a live --plugin-dir session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-241
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 126
+  claim: test-guardian prevents the implementer from editing a test to make it pass.
+  evidence: hooks/hooks.json:43 registers test-guardian.sh with matcher Write|Edit only, and hooks/test-guardian.sh:10 allows any tool other than Write or Edit, so a Bash redirect or a NotebookEdit into a test file is never checked.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: During implementing, a Bash command that writes into tests/test_x.py and a NotebookEdit of a test-pattern notebook are both denied by test-guardian, verified by contract tests and a live --plugin-dir session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-242
+  source: D
+  docs:
+  - path: docs/user-guide/platform-dependencies.md
+    line: 6
+  claim: The TDD hooks depend only on the Claude Code platform, so test immutability holds wherever SweetClaude is installed.
+  evidence: hooks/test-guardian.sh:47 parses state with an inline python3 that imports yaml and discards errors; if PyYAML is missing, PHASE and TDD_PHASE come back empty and hooks/test-guardian.sh:108-110 allows every edit silently.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: When python3 cannot import yaml and .sweetclaude/state/sweetclaude.yaml exists, hooks/test-guardian.sh denies a Write to a test-pattern file with a reason naming the missing dependency, verified by a contract test that hides yaml from python3 and by a live --plugin-dir session.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-243
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 19
+  claim: wip-limit.sh blocks only IMPLEMENT entry in Kanban mode at the WIP limit, so recovery commands such as cp are not blocked.
+  evidence: hooks/wip-limit.sh:3 says it blocks IMPLEMENT entry, but hooks/wip-limit.sh:67-68 blocks whenever in_progress reaches the limit without inspecting the command, so once enforcement is real every Bash call (including recovery cp) is denied in that state.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: In kanban mode at the WIP limit, hooks/wip-limit.sh denies only a command that moves a new item into in_progress and allows `cp`, `git status` and `bash -n` invocations, asserted by contract tests.
+  test_level:
+  - contract
+  status: open
+- id: R-244
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 20
+  claim: preflight-guard.sh blocks until the first valid invocation, which the user makes by running /sweetclaude:configure init or creating .sweetclaude-skip.
+  evidence: hooks/hooks.json:34 registers preflight-guard.sh with matcher "" (every tool, including Skill and Bash), and hooks/preflight-guard.sh:9-43 has no exemption for the remedy its own message names at hooks/preflight-guard.sh:42, so once enforcement is real the configure Skill call and the touch of .sweetclaude-skip are both denied.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: With the needs-preflight flag set and no state files, hooks/preflight-guard.sh allows a Skill call for sweetclaude:configure and a Bash `touch .sweetclaude-skip`, and denies a Write, asserted by contract tests.
+  test_level:
+  - contract
+  status: open
+- id: R-245
+  source: D
+  docs:
+  - path: docs/user-guide/how-it-works.md
+    line: 277
+  claim: When Protocol Guardian is active, the phase-dwelling-guard.sh Stop hook runs on every response.
+  evidence: hooks/hooks-manifest.json:144 says phase-dwelling-guard.sh is "registered by guardian-on skill", but skill-library/configure/guardian-on/SKILL.md:27-31 only touches the guardian-enabled flag and the Stop section at hooks/hooks.json:167 does not list the hook, so nothing ever registers it.
+  class: inert-enforcement
+  disposition: fix-code
+  phase: 3
+  acceptance: After /sweetclaude:configure guardian-on, phase-dwelling-guard.sh is a registered Stop hook shown by /hooks in a live --plugin-dir session, and a contract test asserts its registration path.
+  test_level:
+  - contract
+  - live
+  status: open
+- id: R-246
+  source: D
+  docs:
+  - path: skill-library/configure/guardian-on/SKILL.md
+    line: 15
+  claim: tdd-prewrite-guardian.sh enforces test-first source writes on current (v4+) SweetClaude projects during IMPLEMENT.
+  evidence: hooks/tdd-prewrite-guardian.sh:34-41 reads the phase only from the phase.yaml mirror, which onboarding never creates; the other hooks were moved to sweetclaude.yaml work.active.phase for ISSUE-281 (hooks/test-guardian.sh:42-45). On a project with only sweetclaude.yaml the guardian allows every write.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: With guardian-enabled present, .sweetclaude/state/sweetclaude.yaml setting work.active.phase IMPLEMENT, no phase.yaml and no test evidence, hooks/tdd-prewrite-guardian.sh denies a Write of src/app.py, asserted by a contract test.
+  test_level:
+  - contract
+  status: open
+  notes: The git-status test-evidence check at hooks/tdd-prewrite-guardian.sh:104-106 only matches names ending in test.<ext> or spec.<ext>, so Python-style test_x.py files do not count as evidence; fix alongside.
+- id: R-247
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 61
+  claim: scripts/emergency-hook-restore.sh restores hooks from inside a deadlocked session with zero dependencies on SweetClaude infrastructure.
+  evidence: 'scripts/emergency-hook-restore.sh:79 matches installed_plugins.json entries keyed exactly "sweetclaude", but real installs are keyed "sweetclaude@sweetclaude-stable"; the find fallback at scripts/emergency-hook-restore.sh:100 matches */sweetclaude/sweetclaude/*, which misses cache/sweetclaude-stable/sweetclaude/<ver>. A --dry-run against the installed 5.0.2 plugin prints "FATAL: Cannot find installed hooks path." and the hint at scripts/emergency-hook-restore.sh:114 names the wrong directory.'
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: With HOME pointing at a fixture whose installed_plugins.json is keyed sweetclaude@sweetclaude-stable and whose cache holds sweetclaude-stable/sweetclaude/5.0.2/hooks, `bash scripts/emergency-hook-restore.sh --dry-run` prints "Resolved install path:" with that directory, asserted by a unit test.
+  test_level:
+  - unit
+  status: open
+- id: R-248
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 72
+  claim: If no hooks.bak/ backup exists, the emergency restore script copies hooks directly from the repo.
+  evidence: scripts/emergency-hook-restore.sh:53-54 sets REPO_ROOT to the script's own parent directory. Run from the installed plugin copy, REPO_ROOT is the broken install itself, so the fallback at scripts/emergency-hook-restore.sh:216 copies the broken hooks over themselves and reports them RESTORED.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: When REPO_ROOT resolves to the same directory as INSTALL_PATH and no hooks.bak/ exists, scripts/emergency-hook-restore.sh exits non-zero without copying and names the source options, asserted by a unit test.
+  test_level:
+  - unit
+  status: open
+- id: R-249
+  source: D
+  docs:
+  - path: docs/user-guide/behavioral-contracts.md
+    line: 8
+  - path: docs/user-guide/behavioral-contracts.md
+    line: 449
+  claim: '`python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN` scores a session transcript against a contract.'
+  evidence: scripts/behavioral_judge.py:731 defaults score --backend to stub, which scripts/behavioral_judge.py:28-29 describes as a "deterministic keyword heuristic ... Never for real scoring", so the documented command yields keyword-heuristic verdicts.
+  class: code-bug
+  disposition: fix-code
+  phase: 3
+  acceptance: '`scripts/behavioral_judge.py score` run without --backend exits non-zero with a message naming the real backends, and `--backend stub` is refused unless an explicit stub opt-in flag is passed, asserted by unit tests.'
+  test_level:
+  - unit
+  status: open
+- id: R-250
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 24
+  - path: docs/user-guide/tdd.md
+    line: 156
+  claim: Test immutability can be overridden with explicit user approval, and the override is logged.
+  evidence: 'No override path or override log exists: hooks/test-guardian.sh:150-151 records only tdd_guardian_block events, and scripts/tdd_phase.py:114 clear_phase drops the freeze without recording anything.'
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: Releasing the test freeze for an approved test edit writes an override event naming the file and approval to the event log, and a contract test asserts the event is recorded when scripts/tdd_phase.py releases the freeze mid-implementation.
+  test_level:
+  - contract
+  - unit
+  status: open
+  notes: No ledger decision covers retiring this promise, so it is marked implement; retiring it instead needs a product decision.
+- id: R-251
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 158
+  claim: If you try to commit implementation without prior failing tests, the workflow refuses to advance.
+  evidence: 'No commit gate exists: hooks/artifact-guardian.sh:4 is warn-only, and hooks/tdd-prewrite-guardian.sh:25-30 is opt-in behind guardian-enabled and gates writes, not commits.'
+  class: unimplemented-promise
+  disposition: implement
+  phase: 4
+  acceptance: 'With TDD level 1-3 active on a story branch, a `git commit` adding non-test source files with no earlier `test: RED` commit on that branch is denied by a PreToolUse Bash hook, verified by a contract test and a live --plugin-dir session.'
+  test_level:
+  - contract
+  - live
+  status: open
+  notes: No ledger decision covers retiring this promise, so it is marked implement.
+- id: R-252
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 16
+  claim: 'The TDD mechanism is three native Claude Code hooks: test-guardian, auto-test-runner and git-checkpoint.'
+  evidence: git-checkpoint.sh is not an event hook (hooks/hooks-manifest.json:136), while the third registered TDD hook, tdd-prewrite-guardian.sh (hooks/hooks.json:56), is not mentioned.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/tdd.md lists exactly the TDD hooks registered in hooks/hooks.json, including tdd-prewrite-guardian, and does not call git-checkpoint a hook, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-253
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 18
+  - path: docs/user-guide/tdd.md
+    line: 126
+  claim: test-guardian blocks edits to test files during the IMPLEMENT phase, at the OS level.
+  evidence: hooks/test-guardian.sh:108 blocks only when phase is IMPLEMENT and tdd_phase is implementing, which only `tdd_phase.py set --phase implementing` writes (skill-library/build/code-tdd/SKILL.md:117). A Claude Code hook gates tool calls; it is not OS-level.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/tdd.md states test-guardian is active only once code-tdd has set tdd_phase to implementing and contains no "OS level" wording, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-254
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 50
+  claim: At Level 0 you write the one test that would have caught the bug before you fix the bug.
+  evidence: skill-library/build/code-tdd/SKILL.md:66 says "Fix first. Write regression test in same session", and skill-library/build/code-tdd/SKILL.md:82-85 orders fix, regression test, confirm it fails without the fix, commit together.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/tdd.md Level 0 gives the order fix, regression test, confirm failure without the fix, commit together, matching code-tdd, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-255
+  source: D
+  docs:
+  - path: docs/user-guide/tdd.md
+    line: 75
+  - path: docs/user-guide/tdd.md
+    line: 81
+  claim: At Level 2 a test writer agent writes failing tests in an isolated context and you watch the test writer commit them.
+  evidence: skill-library/build/code-tdd/SKILL.md:111 has Level 2 tests written "in the main context"; a test-writer subagent and worktree appear only at Level 3 (skill-library/build/code-tdd/SKILL.md:139).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/tdd.md Level 2 says tests are written in the main context and reserves the test-writer subagent for Level 3, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-256
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 7
+  - path: docs/user-guide/hook-development.md
+    line: 11
+  claim: 'A broken hook makes Claude Code return {"ok": false} on every Write or Edit call.'
+  evidence: '{"ok": false} is only printed by deliberate block branches (hooks/test-guardian.sh:152, hooks/tdd-prewrite-guardian.sh:113); a hook with a bash syntax error exits with status 2, which Claude Code reports as a blocking hook error with the syntax error on stderr.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: 'docs/user-guide/hook-development.md describes the broken-hook symptom as a hook error (exit 2 with stderr) and does not cite {"ok": false} as the symptom, checked by the docs-claims suite.'
+  test_level:
+  - docs-claims
+  status: open
+- id: R-257
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 8
+  - path: docs/user-guide/hook-development.md
+    line: 28
+  - path: docs/user-guide/hook-development.md
+    line: 125
+  claim: '`/sweetclaude:configure hook-repair` diagnoses broken hooks, offers to restore from hooks.bak/, and verifies the restoration.'
+  evidence: skill-library/configure/hook-repair/SKILL.md:4 is a redirect stub to doctor; doctor's hook_restore copies from the plugin source {plugin}/hooks/{name} (skill-library/configure/doctor/SKILL.md:627), not hooks.bak/.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md directs hook repair to `/sweetclaude:configure doctor` (hook_health category) and describes its restore source as the plugin hooks directory, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-258
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 12
+  - path: docs/user-guide/hook-development.md
+    line: 59
+  claim: The Bash tool is unaffected by Write|Edit hook failures and is never gated.
+  evidence: Bash is matched by preflight-guard.sh (matcher "" at hooks/hooks.json:34) and by large-story-gate.sh and small-story-gate.sh (matcher Write|Edit|NotebookEdit|Bash at hooks/hooks.json:79 and hooks/hooks.json:88).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md names every PreToolUse hook whose matcher covers Bash in hooks/hooks.json and contains no "never gated" claim for Bash, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-259
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 13
+  claim: The two hooks most commonly involved in Write|Edit blockages are test-guardian.sh and auto-test-runner.sh, both firing during an active implementation phase.
+  evidence: auto-test-runner.sh is PostToolUse (hooks/hooks.json:99) and cannot block a write; the PreToolUse Write|Edit hooks are test-guardian.sh, tdd-prewrite-guardian.sh (hooks/hooks.json:52), preflight-guard.sh and the large/small story gates, all of which fire on every matching call with phase checks inside the script.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md names only PreToolUse hooks as able to block a Write or Edit, checked by the docs-claims suite against hooks/hooks.json.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-260
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 17
+  claim: Three other hooks also match Bash.
+  evidence: 'Five PreToolUse hooks match Bash: artifact-guardian.sh (hooks/hooks.json:61), wip-limit.sh (hooks/hooks.json:70), preflight-guard.sh (hooks/hooks.json:34), large-story-gate.sh (hooks/hooks.json:79) and small-story-gate.sh (hooks/hooks.json:88), plus two PostToolUse evidence hooks.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The count of Bash-matching hooks in docs/user-guide/hook-development.md equals the count derived from hooks/hooks.json, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-261
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 19
+  claim: wip-limit.sh does not block during recovery.
+  evidence: 'hooks/wip-limit.sh has no recovery exemption: it checks only kanban mode (hooks/wip-limit.sh:24), phase IMPLEMENT (hooks/wip-limit.sh:47) and the in-progress count (hooks/wip-limit.sh:67).'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md describes the wip-limit conditions exactly as hooks/wip-limit.sh implements them and contains no recovery exemption, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-262
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 20
+  claim: preflight-guard.sh clears automatically once phase.yaml exists.
+  evidence: hooks/preflight-guard.sh:18 blocks only while the SessionStart flag /tmp/.sweetclaude-needs-preflight-<hash> exists, and hooks/preflight-guard.sh:27 clears when sweetclaude.yaml, phase.yaml or .sweetclaude-skip exists.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md lists the needs-preflight flag as the block condition and sweetclaude.yaml, phase.yaml or .sweetclaude-skip as the clear conditions, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-263
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 38
+  - path: docs/user-guide/hook-development.md
+    line: 49
+  claim: Installed hooks live at ~/.claude/plugins/cache/sweetclaude/sweetclaude/<ver>/ with a hooks.bak/ backup beside them.
+  evidence: The marketplace is sweetclaude-stable (.claude-plugin/marketplace.json:2), so the install is ~/.claude/plugins/cache/sweetclaude-stable/sweetclaude/<ver>/. hooks.bak/ is created only by the dev sync (scripts/sync-to-installed.sh:136, CONTRIBUTING.md:72).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md uses cache/sweetclaude-stable/sweetclaude/<ver>/ in every path and states hooks.bak/ exists only after scripts/sync-to-installed.sh, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-264
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 61
+  claim: From inside a deadlocked session, run `bash scripts/emergency-hook-restore.sh`.
+  evidence: The relative path works only with the SweetClaude repo as cwd, and the script derives its repo from its own location (scripts/emergency-hook-restore.sh:53-54), so in a user project the command is not found.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md gives the emergency restore command with a path that resolves outside the SweetClaude repo, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-265
+  source: D
+  docs:
+  - path: docs/user-guide/hook-development.md
+    line: 106
+  claim: Uninstall the marketplace copy with `/plugin` as sweetclaude@sweetclaude.
+  evidence: The plugin id is sweetclaude@sweetclaude-stable (.claude-plugin/marketplace.json:2).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/hook-development.md names the plugin as sweetclaude@sweetclaude-stable, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-266
+  source: D
+  docs:
+  - path: docs/user-guide/evidence-and-contracts.md
+    line: 45
+  claim: '`init-contract` refuses to overwrite while an active large-story workflow exists.'
+  evidence: scripts/success_criteria_contracts.py:1029 refuses when an active large or small workflow exists for a different story; scripts/success_criteria_contracts.py:1038 refuses when no backlog file exists for --story-id; scripts/success_criteria_contracts.py:1050 refuses when a contract exists unless --force is passed.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/evidence-and-contracts.md lists the three init-contract refusal conditions (another story's active workflow, missing backlog file, existing contract without --force), checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-267
+  source: D
+  docs:
+  - path: docs/user-guide/evidence-and-contracts.md
+    line: 118
+  claim: Large/small-story VERIFY is blocked if evidence.jsonl is empty.
+  evidence: VERIFY is blocked when the log has no file-path entries, even if command entries exist (scripts/large_story_controller.py:635, scripts/small_story_controller.py:636).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/evidence-and-contracts.md states VERIFY is blocked when no hook-observed file changes were recorded, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-268
+  source: D
+  docs:
+  - path: docs/user-guide/behavioral-contracts.md
+    line: 450
+  claim: After a model upgrade, record results for each contract as PASS / FAIL / PARTIAL.
+  evidence: Verdicts are pass, fail and n/a only (scripts/behavioral_judge.py:55). score refuses any contract without a three-way fixture set (scripts/behavioral_judge.py:748-753), leaving 01-05, 09-14 and 16, and session-state contracts 06, 07, 08 and 15 are not judgeable (scripts/behavioral_judge.py:313-317).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/behavioral-contracts.md tells the reader to score the validated contracts and record pass/fail/n/a, and names 06, 07, 08 and 15 as not judgeable, checked by the docs-claims suite against scripts/behavioral_judge.py.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-269
+  source: D
+  docs:
+  - path: docs/user-guide/behavioral-contracts.md
+    line: 69
+  claim: The contracts needing no context are 01, 02, 04, 05, 11, 13 and 14.
+  evidence: CONTRACT-16 is also needs_context none (config/behavioral-rubrics.yaml:317).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The needs-context table in docs/user-guide/behavioral-contracts.md lists exactly the contracts config/behavioral-rubrics.yaml marks needs_context none, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-270
+  source: D
+  docs:
+  - path: docs/user-guide/behavioral-contracts.md
+    line: 157
+  claim: Continuous Improvement has five triggers and only the first has a contract; the friction trigger is not covered by anything.
+  evidence: config/behavioral-rubrics.yaml:358 maps Continuous Improvement to CONTRACT-11, CONTRACT-12 and CONTRACT-15; CONTRACT-12 covers the misalignment/correction (friction) trigger and CONTRACT-15 the session-start trigger.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/behavioral-contracts.md states three of the five Continuous Improvement triggers have contracts (11, 12, 15), matching config/behavioral-rubrics.yaml rule_sections, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-271
+  source: D
+  docs:
+  - path: docs/user-guide/behavioral-contracts.md
+    line: 477
+  claim: The contract quick reference lists CONTRACT-01 through CONTRACT-15.
+  evidence: config/behavioral-contracts.md:146 defines CONTRACT-16 (Bounded Decisions Use the Menu), which the quick reference omits.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: The quick-reference table in docs/user-guide/behavioral-contracts.md has one row per contract heading in config/behavioral-contracts.md, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-272
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger.md
+    line: 18
+  claim: CI runs the capability ledger on every pull request.
+  evidence: .github/workflows/test.yml:7-10 triggers only on pull requests into main, and .github/workflows/test.yml:56 runs the ledger with --no-behavioral.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger.md states CI runs the ledger on pull requests to main without behavioral rows, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-273
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger.md
+    line: 30
+  claim: A broken row can mean the capability has no verification_commands, no resolvable delegate_skill, or no entrypoint.
+  evidence: scripts/capability_ledger.py:89-98 marks broken only for a declared delegate that does not resolve or a declared script that does not exist; a missing entrypoint is not a cause. scripts/capability_ledger.py:100-108 adds missing verification_commands and a mutating capability without working rollback.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger.md lists exactly the broken causes in scripts/capability_ledger.py _classify, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-274
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger.md
+    line: 40
+  claim: A compromised row includes capabilities with unsupported states.
+  evidence: scripts/capability_ledger.py:120-129 downgrades only unsupported states whose behavior is not block, diagnose_only or escalate; declared, handled states do not downgrade.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger.md defines compromised as unsupported states with no defined handling, rollback limitations, or coverage below the bar, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-275
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger.md
+    line: 41
+  claim: A broken row means a verification fails.
+  evidence: The ledger never runs verification_commands; scripts/capability_ledger.py:100 only checks that they are declared.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger.md does not say the ledger runs verifications and defines broken by declaration checks only, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-276
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger.md
+    line: 42
+  claim: not-mechanically-verifiable rows are scored only by scripts/behavioral_judge.py against a live model.
+  evidence: 'All 22 manifest Tier-3 rows report "Tier 3 with no instrument: no rubric covers this postcondition, so nothing scores it today" (scripts/capability_ledger.py:171).'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger.md says a not-mechanically-verifiable row is scored by behavioral_judge.py only when a rubric covers it and otherwise by nothing, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-277
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger.md
+    line: 57
+  claim: Tier 3 rows are always reported as not-mechanically-verifiable and carry their contract ids.
+  evidence: scripts/capability_ledger.py:220 converts only Tier-3 rows whose status is works, so quality.rubric_judge stays broken and code.deploy_ship and code.rollback_revert stay compromised. Only the optional interaction-model rows carry contracts, and they list every contract id (scripts/capability_ledger.py:198).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger.md states Tier-3 rows keep a broken or compromised status when one applies and that contract ids appear only on interaction-model rows, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-278
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger.md
+    line: 65
+  claim: A manifest entry needs at minimum title, verification_commands, and either a delegate_skill or a command_entrypoint.
+  evidence: The validator requires title (scripts/maintenance/capability_manifest.py:177), supports_project_shapes (scripts/maintenance/capability_manifest.py:178), mutates_project and requires_approval (scripts/maintenance/capability_manifest.py:184-185), and a mutating mutation_class (scripts/maintenance/capability_manifest.py:199); it does not require verification_commands or a delegate/entrypoint.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger.md lists the fields scripts/maintenance/capability_manifest.py requires and states that verification_commands and a delegate or entrypoint are needed only to avoid a broken row, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-279
+  source: D
+  docs:
+  - path: docs/user-guide/capability-ledger-table.md
+    line: 3
+  claim: 'The committed capability ledger table shows 132 declared capabilities: 103 works, 27 compromised, 2 broken, 0 not mechanically verifiable.'
+  evidence: The file has 131 rows and is not self-consistent; `python3 scripts/capability_ledger.py --no-behavioral --format markdown` now reports 131 / 83 / 24 / 2 / 22, with 22 rows moved to tier-3-behavioral by scripts/capability_ledger.py:220 and many tier assignments changed.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/capability-ledger-table.md is byte-identical to the stdout of `python3 scripts/capability_ledger.py --no-behavioral --format markdown`, asserted by a test.
+  test_level:
+  - docs-claims
+  - contract
+  status: open
+  notes: Regenerate without --coverage so the committed table is deterministic; CI's coverage-based artifact (.github/workflows/test.yml:55-56) stays the per-run view.
+- id: R-280
+  source: D
+  docs:
+  - path: docs/user-guide/corpus-system.md
+    line: 26
+  - path: docs/user-guide/corpus-system.md
+    line: 44
+  claim: The four corpus steps are strictly ordered and enforced by a state machine, so you cannot skip steps.
+  evidence: 'The gates accept an override phrase: skill-library/utils/corpus-promote/SKILL.md:25 requires "I accept the risk of corpus corruption", and skill-library/utils/corpus-rag-reindex/SKILL.md:20 requires an override phrase when the pipeline is not idle.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/corpus-system.md describes the steps as gated with an explicit override phrase and contains no "cannot skip" claim, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-281
+  source: D
+  docs:
+  - path: docs/user-guide/corpus-system.md
+    line: 62
+  claim: Set up RAG indexes your canonical documents.
+  evidence: By default skill-library/utils/corpus-rag-setup/SKILL.md:123 indexes every .pdf, .docx, .txt and .md in the project minus default excludes; canonical-only is option B (skill-library/utils/corpus-rag-setup/SKILL.md:119).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/corpus-system.md states Set up RAG indexes all supported document types by default and canonical folders only when chosen, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-282
+  source: D
+  docs:
+  - path: docs/user-guide/corpus-system.md
+    line: 68
+  claim: Reindex RAG lets you scope the rebuild to one collection, several, or everything.
+  evidence: skill-library/utils/corpus-rag-reindex/SKILL.md:27-29 offers exactly Canonical, Raw or All.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/corpus-system.md lists the reindex scopes as Canonical, Raw or All, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-283
+  source: D
+  docs:
+  - path: docs/user-guide/corpus-system.md
+    line: 18
+  claim: The corpus menu lets you pick one or more modes.
+  evidence: skill-library/utils/document-corpus/SKILL.md:49-58 maps one selection to one sub-skill, and option 6 is labelled "Update RAG" once an index exists (skill-library/utils/document-corpus/SKILL.md:28).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/corpus-system.md says the menu routes one selection to one sub-skill and names the Update RAG label, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-284
+  source: D
+  docs:
+  - path: docs/user-guide/platform-dependencies.md
+    line: 6
+  claim: SweetClaude depends on one external plugin plus the Claude Code platform itself.
+  evidence: mcp-local-rag is an npm MCP server launched through npx (skill-library/utils/corpus-rag-setup/SKILL.md:82, skill-library/utils/corpus-rag-setup/SKILL.md:95), not a plugin.
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/platform-dependencies.md describes mcp-local-rag as an npm MCP server run via npx and does not call it a plugin, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-285
+  source: D
+  docs:
+  - path: docs/user-guide/platform-dependencies.md
+    line: 6
+  claim: The dependency list covers everything SweetClaude needs to run beyond Claude Code and mcp-local-rag.
+  evidence: 'Unlisted hard dependencies: python3 with PyYAML (hooks/test-guardian.sh:47, hooks/wip-limit.sh:19), jq (hooks/tdd-prewrite-guardian.sh:97, hooks/artifact-guardian.sh:15) and git (hooks/git-checkpoint.sh:15). Optional: the codex CLI or openai package for real scoring in scripts/behavioral_judge.py:28.'
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/platform-dependencies.md lists python3 with PyYAML, jq and git as required and the codex CLI or openai package as optional, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
+- id: R-286
+  source: D
+  docs:
+  - path: docs/user-guide/platform-dependencies.md
+    line: 32
+  - path: docs/user-guide/platform-dependencies.md
+    line: 36
+  claim: The `/sweetclaude:utils document-corpus rag` mode, and the rag/reindex modes of document-corpus, are where mcp-local-rag is used.
+  evidence: document-corpus accepts rag-setup and rag-reindex, not rag (skill-library/utils/document-corpus/SKILL.md:65).
+  class: doc-wrong
+  disposition: fix-doc
+  phase: 5
+  acceptance: docs/user-guide/platform-dependencies.md names the rag-setup and rag-reindex arguments, and every document-corpus argument it cites appears in skill-library/utils/document-corpus/SKILL.md, checked by the docs-claims suite.
+  test_level:
+  - docs-claims
+  status: open
