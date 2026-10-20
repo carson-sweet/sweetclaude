@@ -4,6 +4,18 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [4.6.0] — 2026-10-20
+
+### Changed — six category commands replace the full skill menu
+
+SweetClaude now shows a short list of commands: `/sweetclaude:plan`, `/sweetclaude:design`, `/sweetclaude:build`, `/sweetclaude:maintain`, `/sweetclaude:configure` and `/sweetclaude:utils`, plus `status`, `help` and `go`. Specialized workflows live in a library behind these commands. Name the workflow or describe what you need, for example `/sweetclaude:configure doctor` or `/sweetclaude:configure recover`.
+
+### Fixed — doctor can roll back removal of legacy global rules
+
+When doctor removes the legacy `~/.claude/rules/sweetclaude/` directory, each rule file is now backed up through doctor's normal pipeline, so doctor rollback restores it. An empty legacy rules directory is no longer reported.
+
+---
+
 ## [4.5.3] — 2026-10-16
 
 ### Fixed — inactive projects do not load SweetClaude rules
