@@ -33,7 +33,7 @@ SCRIPT = REPO_ROOT / "scripts" / "behavioral_judge.py"
 RUBRICS = REPO_ROOT / "config" / "behavioral-rubrics.yaml"
 CORPUS = REPO_ROOT / "tests" / "fixtures" / "behavioral"
 CONTRACTS_SKILL = (
-    REPO_ROOT / "skill-library" / "configure" / "behavioral-regression" / "SKILL.md"
+    REPO_ROOT / "config" / "behavioral-contracts.md"
 )
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
@@ -1114,7 +1114,7 @@ def test_the_new_contract_is_declared_everywhere_it_must_be() -> None:
     """A contract in the suite with no rubric cannot be judged; a rubric with no
     suite entry describes nothing."""
     import re as _re
-    suite = (REPO_ROOT / "skill-library" / "configure" / "behavioral-regression" / "SKILL.md").read_text(
+    suite = (REPO_ROOT / "config" / "behavioral-contracts.md").read_text(
         encoding="utf-8")
 
     assert "### CONTRACT-16:" in suite

@@ -61,7 +61,7 @@ The body is instruction text that Claude follows when the skill is invoked. No c
 
 **Don't touch `sweetclaude.yaml` from product or design skills.** Those skills have isolated state footprints by design. Phase state is managed by the orchestration layer (the `/sweetclaude` front door and its internal sub-skills).
 
-**Don't add behavioral claims that aren't tested.** If you add a property like "always asks for a concrete example," verify it holds during testing. See `skills/behavioral-regression/SKILL.md` for the test protocol.
+**Don't add behavioral claims that aren't tested.** If you add a property like "always asks for a concrete example," verify it holds during testing. See `config/behavioral-contracts.md` for the contracts and `scripts/behavioral_judge.py` for scoring.
 
 **Sync to installed locations after editing.** Skills in the repo are not automatically live. After editing, run:
 
@@ -120,7 +120,7 @@ does both. Re-run it after changing the pinned `playwright` version in
 After any significant skill edit, run the behavioral regression tests to check that the change doesn't break existing contracts:
 
 ```
-/sweetclaude:behavioral-regression
+python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN
 ```
 
 This runs 15 tests against the current model version. If your change causes a FAIL on a contract that was previously PASS, investigate before submitting.
@@ -142,7 +142,7 @@ git config core.hooksPath .githooks
 1. Fork the repo
 2. Make your change in a branch
 3. Test in a real Claude Code session
-4. Run `/sweetclaude:behavioral-regression` if you touched a skill with behavioral contracts
+4. Score a session with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN` if you touched a skill with behavioral contracts
 5. Open a PR with: what you changed, why, and what you tested
 
 PRs that include test results from a real session are much more likely to be merged quickly.

@@ -8,7 +8,7 @@ This inventory covers every skill packaged with SweetClaude. The disposition is 
 | `_health` | Consistency scan and version check. | Keep — internal |
 | `_migrate` | Migration orchestrator. Wraps the runner with snapshot, recovery menus, and end-of-session report. | Keep — internal |
 | `_route` | Natural language classifier — maps user text to the right internal skill. | Keep — internal |
-| `behavioral-regression` | Run SweetClaude's behavioral regression test suite. | Keep — on-demand |
+| `behavioral-regression` | Run SweetClaude's behavioral regression test suite. | Retired 2026-10-20 — contracts moved to `config/behavioral-contracts.md`, scored by `scripts/behavioral_judge.py` |
 | `big-picture` | Show the full project at a glance — the roadmap pipeline with its milestones, epics and issues. Covers whole-project status, overview, and where any piece of work currently sits. | Keep — on-demand |
 | `bootstrap` | Session startup skill — pre-flight checks, drift/update offers, and initial routing. | Keep — internal |
 | `claude-config-audit` | Redirects to sweetclaude:doctor. Config compatibility checks are now part of the doctor system. | Keep — internal |
@@ -114,7 +114,7 @@ This inventory covers every skill packaged with SweetClaude. The disposition is 
 | `small-story` | Internal bounded, evidence-gated small-story workflow. | Keep — internal |
 | `something-broke` | Reactive production incident skill. | Keep — on-demand |
 | `status` | Orient to the current project. | Keep — on-demand |
-| `sweetclaude-behavioral-regression` | Validates that mode enforcement is working correctly across all four modes. | Keep — on-demand |
+| `sweetclaude-behavioral-regression` | Validates that mode enforcement is working correctly across all four modes. | Retired 2026-10-20 |
 | `testing-accessibility` | WCAG 2.1 Level AA audit. | Keep — on-demand |
 | `testing-compliance` | Compliance control testing and evidence collection. | Keep — on-demand |
 | `testing-performance` | Define load scenarios, establish performance baselines, set thresholds. | Keep — on-demand |

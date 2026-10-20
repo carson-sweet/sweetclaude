@@ -37,12 +37,11 @@ EXPLICIT_ONLY = [
     "update", "usage", "user-personas",
 ]
 
-# Group C — user-invocable: false (11 skills after on/adopt deletion)
+# Group C — user-invocable: false (9 skills)
 INTERNAL_ALSO_NOT_INVOCABLE = [
-    "behavioral-regression", "claude-config-audit", "code-tdd",
+    "claude-config-audit", "code-tdd",
     "design-solutioning-gate", "documents-update-docs", "guardian-off",
     "guardian-on", "john-wick-checkin", "next-steps", "setup",
-    "sweetclaude-behavioral-regression",
 ]
 
 # Skills that must NOT be edited

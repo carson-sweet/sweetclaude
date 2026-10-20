@@ -514,64 +514,6 @@ def _verify_no_mutation(
     return result
 
 
-def _verify_set_complete(
-    capability_id: str,
-    postcondition: dict,
-    spec: dict,
-    skill_md: Path,
-    skill: str,
-) -> VerifyResult:
-    """A completeness claim: the block covers every item some config declares.
-
-    testing.mode_regression promises "each of the four modes is exercised" via
-    `for mode in flow kanban shape_up agile`. Executing that block is the wrong
-    instrument — it also runs three nested test suites and reads repo-relative
-    paths, so it cannot run against an isolated fixture at all. What the
-    postcondition actually claims is set equality between the modes the block
-    iterates and the modes the config declares, and that is checkable exactly.
-
-    This reads the block instead of running it, which is weaker than either
-    unaided or substituted evidence, so it reports `evidence: static`. It still
-    fails when either side changes: add a mode to the config, or drop one from
-    the loop.
-    """
-    code = select_block(extract_blocks(skill_md), spec["block"], skill=skill)
-    found = re.search(spec["block_pattern"], code)
-    if not found:
-        raise BlockNotFound(
-            f"{capability_id}: block_pattern {spec['block_pattern']!r} did not "
-            f"match the selected block — the loop changed shape."
-        )
-    in_block = set(found.group(1).split())
-
-    declared_file = REPO_ROOT / spec["declared_in"]
-    if not declared_file.is_file():
-        raise PostconditionFailed(
-            f"{capability_id}: {spec['declared_in']} does not exist.")
-    node = yaml.safe_load(declared_file.read_text(encoding="utf-8")) or {}
-    for key in spec.get("declared_path", []):
-        node = (node or {}).get(key) or {}
-    declared = set(node)
-
-    result = VerifyResult(
-        capability=capability_id,
-        postcondition_id=postcondition["id"],
-        passed=False,
-        evidence="static",
-    )
-    result.paths_checked.append(spec["declared_in"])
-    if in_block != declared:
-        raise PostconditionFailed(
-            f"{capability_id}: the block covers {sorted(in_block)} but "
-            f"{spec['declared_in']} declares {sorted(declared)}. "
-            f"missing from block: {sorted(declared - in_block)}; "
-            f"not declared: {sorted(in_block - declared)}"
-        )
-    result.passed = True
-    result.detail = f"{postcondition['id']}: {postcondition['check']}"
-    return result
-
-
 def verify_capability(
     capability_id: str,
     project: Path,
@@ -607,7 +549,7 @@ def verify_capability(
     spec = postcondition["verify"]
 
     kind = spec.get("kind")
-    NON_BLOCK_KINDS = {"no_mutation", "set_complete"}
+    NON_BLOCK_KINDS = {"no_mutation"}
     if kind not in CHECKS and kind not in NON_BLOCK_KINDS:
         raise PostconditionError(
             f"{capability_id}: unknown verify kind {kind!r}. "
@@ -618,11 +560,6 @@ def verify_capability(
     skill_md = resolve_skill_markdown(skill, skills_dir)
     if not skill_md.is_file():
         raise BlockNotFound(f"{skill_md} does not exist")
-
-    if kind == "set_complete":
-        return _verify_set_complete(
-            capability_id, postcondition, spec, skill_md, skill
-        )
 
     if kind == "no_mutation":
         return _verify_no_mutation(

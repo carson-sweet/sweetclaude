@@ -14,10 +14,16 @@ library.
 |---|---|
 | Product problem, customer, research, scope, priority, roadmap, persona, requirement | `plan` |
 | Architecture, specification, API, data model, UX, wireframe, design decision | `design` |
-| Feature, issue, implementation, test, review, QA, sprint, deploy, ship | `build` |
-| Bug in production, hotfix, refactor, technical debt, dependency upgrade, performance, rollback, postmortem | `maintain` |
+| Feature, issue, issue tracker choice (local or GitHub), implementation, test (including load, performance, accessibility, and security testing), review, QA, sprint, deploy, ship | `build` |
+| Bug in production, hotfix, refactor, technical debt, dependency upgrade, fixing slow existing code, rollback, postmortem | `maintain` |
 | SweetClaude setup, mode, hooks, health, update, migration, recovery, disablement, usage | `configure` |
-| Meeting preparation, session export, corpus, dashboard, bounded cross-cutting utility | `utils` |
+| Meeting preparation, session export, corpus, dashboard, whole-project overview of milestones, epics, and issues, bounded cross-cutting utility | `utils` |
+
+Boundary cases:
+
+- Choosing or switching the project's issue tracker is `build` (`project-issues`), even though the choice is stored in SweetClaude state.
+- Measuring or load-testing against a performance target is `build`; changing existing code to make it faster is `maintain`.
+- A whole-project overview is `utils`; `/sweetclaude:status` is only for current active work and blockers.
 
 If signals compete and the category changes mutation authority or workflow
 gates, ask one focused clarification. Otherwise route directly. The category

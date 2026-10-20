@@ -44,7 +44,6 @@ REF = re.compile(r"(?<![/\w])sweetclaude:([a-z0-9_/-]+)")
 #   placeholders for skills that were designed but never built. The annotation
 #   is what makes them honest; the test requires it.
 #   doctor.py states outright that sweetclaude:adopt does not exist.
-#   benchmark.sh embeds grep alternations, not references.
 INTENTIONAL_MISSING = {
     ("skills/find-skill/routing-tables.md", "concept-framing"),
     ("skills/find-skill/routing-tables.md", "security-planning"),
@@ -53,8 +52,6 @@ INTENTIONAL_MISSING = {
     ("skills/find-skill/routing-tables.md", "external-integration"),
     ("skills/find-skill/routing-tables.md", "break-glass-notes"),
     ("scripts/doctor.py", "adopt"),
-    ("scripts/benchmark.sh", "something"),
-    ("scripts/benchmark.sh", "testing"),
 }
 
 

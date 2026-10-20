@@ -1,5 +1,7 @@
 # Live Mutating E2E Behavioral Test — 2026-10-19
 
+**Superseded 2026-10-20:** the harness that produced this run (`scripts/run_live_tiered_behavior.py`) was removed. Routing is now covered by the suite in `docs/testing/behavioral-e2e/README.md`. This record is kept as history.
+
 ## Scope
 
 Executed against a disposable local Git project and a uniquely created private

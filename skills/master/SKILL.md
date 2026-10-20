@@ -171,7 +171,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/config/phase-skills.yaml` to determine which skills 
 - **`code:`** — TDD, implementation, code review
 - **`project:`** — issues, epics, sprints, backlog, roadmap, scope, milestones, mode
 - **`testing:`** — test plans, security reviews, compliance, manual QA sessions, performance, accessibility
-- **`system:`** — on, off, init, adopt, update, fix-sweetclaude, purge, behavioral-regression, guardian, usage, help
+- **`system:`** — on, off, init, adopt, update, fix-sweetclaude, purge, guardian, usage, help
 - **`deploy:`** — shipping (deferred)
 - **`operations:`** — operations skills (something-broke, postmortem, break-glass-notes, sla-error-budget-review, monitoring-alerting, onboarding-playbook)
 

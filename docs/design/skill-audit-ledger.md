@@ -28,7 +28,7 @@ A disposition can only be executed after the migration gates in the architecture
 | `_health` | Configure | 2 internal | Consolidate | doctor health checks — Its stated consistency scan is a doctor sub-operation. |
 | `_migrate` | Configure | 2 internal | Keep internal | migrate controller — Owns snapshot and runner choreography behind migrate. |
 | `_route` | Build | 1 internal | Retain | Tier 1 request router — Owns fast coarse classification before category indexes. |
-| `behavioral-regression` | Configure | 2 library | Retain | Configure / behavioral regression — Distinct model-behavior test suite. |
+| `behavioral-regression` | Configure | 2 library | Retire | Retired 2026-10-20. Contracts moved to `config/behavioral-contracts.md`; scoring is `scripts/behavioral_judge.py`. |
 | `big-picture` | Utils | 2 library | Consolidate | status view: full — Overlaps status/recap; preserve as a full-status view. |
 | `bootstrap` | Configure | 1 internal | Consolidate | Tier 1 startup controller — Overlaps master pre-flight and initial routing. |
 | `claude-config-audit` | Configure | retire | Retire | doctor — Declared redirect to doctor. |
@@ -134,7 +134,7 @@ A disposition can only be executed after the migration gates in the architecture
 | `small-story` | Build | 2 internal | Keep internal | Build / small-story controller — Distinct controller-backed execution path. |
 | `something-broke` | Maintain | 2 library | Retain | Maintain / something broke — Distinct stated workflow outcome; validate against nearest neighbor during implementation planning. |
 | `status` | Build | 1 public | Retain | Public status — Owns non-mutating project orientation. |
-| `sweetclaude-behavioral-regression` | Configure | 2 library | Retain | Configure / mode regression — Distinct from general behavioral-regression: mode enforcement. |
+| `sweetclaude-behavioral-regression` | Configure | 2 library | Retire | Retired 2026-10-20 with its `testing.mode_regression` capability. |
 | `testing-accessibility` | Build | 2 library | Retain | Build / testing accessibility — Distinct stated workflow outcome; validate against nearest neighbor during implementation planning. |
 | `testing-compliance` | Build | 2 library | Retain | Build / testing compliance — Distinct stated workflow outcome; validate against nearest neighbor during implementation planning. |
 | `testing-performance` | Build | 2 library | Retain | Build / testing performance — Distinct stated workflow outcome; validate against nearest neighbor during implementation planning. |

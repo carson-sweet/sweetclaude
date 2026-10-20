@@ -59,7 +59,7 @@ SweetClaude uses semantic versioning. Version bumps are operator-driven — run 
 After each release, update the two static badges in `README.md` manually:
 
 - **Version badge** — update the version number in the shields.io URL to match the new release
-- **Behavioral contracts badge** — after running `/sweetclaude:behavioral-regression` against the current model, update the pass count and model version in the shields.io URL if either has changed
+- **Behavioral contracts badge** — after scoring the current model with `scripts/behavioral_judge.py`, update the pass count and model version in the shields.io URL if either has changed
 
 ---
 

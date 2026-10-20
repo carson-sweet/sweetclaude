@@ -132,7 +132,6 @@ omitted — an omitted capability is indistinguishable from a working one.
 | `testing.accessibility` | tier-1-structural | **works** |  |
 | `testing.behavioral_regression` | tier-1-structural | **works** |  |
 | `testing.compliance` | tier-1-structural | **works** |  |
-| `testing.mode_regression` | tier-1-structural | **works** |  |
 | `testing.performance` | tier-1-structural | **works** |  |
 | `testing.plan` | tier-1-structural | **works** |  |
 | `testing.security` | tier-1-structural | **works** |  |

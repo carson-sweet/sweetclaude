@@ -31,7 +31,7 @@ def get_status(key):
 
 statuses = {k: get_status(k) for k in [
     'product_milestones', 'product_backlog', 'product_personas',
-    'product_stories', 'document_corpus', 'usage_tracking', 'behavioral_regression',
+    'product_stories', 'document_corpus', 'usage_tracking',
     'work_item_artifacts',
 ]}
 
@@ -67,7 +67,6 @@ Use this table for all feature labels and descriptions:
 | `product_stories` | User stories | Turn ideas into testable acceptance criteria — the direct input to TDD and code |
 | `document_corpus` | Document corpus | Connect your docs for automatic reference — SweetClaude searches them so you don't re-explain context |
 | `usage_tracking` | Usage tracking | Local metrics: skill usage, phase gate outcomes, TDD enforcement — stored in `.sweetclaude/metrics/`, committed with the project, no external services |
-| `behavioral_regression` | Behavioral regression | Verify SweetClaude follows framework rules after model updates — catches regressions in Claude's behavior |
 | `work_item_artifacts` | Work-item artifact directories | Co-locate all artifacts per story, epic, and milestone into `.sweetclaude/work/<ID>/` — find everything about a work item in one place |
 
 If `FIRST_TIME` is `TRUE`:
@@ -129,7 +128,6 @@ For each feature that is newly enabled (was not previously `active`), invoke its
 | `product_stories` | invoke `sweetclaude:library-load product-user-stories` with argument `onboard` |
 | `document_corpus` | invoke `sweetclaude:library-load document-corpus` with argument `onboard` |
 | `usage_tracking` | invoke `sweetclaude:library-load usage on` |
-| `behavioral_regression` | invoke `sweetclaude:library-load behavioral-regression` |
 | `work_item_artifacts` | invoke `sweetclaude:library-load work-item-artifacts` with argument `onboard` |
 
 **Handling a paused onboard:** Some skills (notably `document_corpus`) run multi-step pipelines requiring active user review at each stage. If a skill's onboard output contains a pause marker (e.g. "⏸ … paused … resume with …"), surface that message verbatim, then output: "Moving on — I'll set up the remaining features and you can resume corpus setup at any time." Then continue to the next feature. Do NOT treat a pause marker as onboard completion.

@@ -1,13 +1,13 @@
 # Behavioral E2E Failure Register
 
-Version: 1.0.0
+Version: 1.1.0
 
-Date: 2026-10-19
+Date: 2026-10-20
 
 ## BEH-001 — Lifecycle behavioral suite claimed ready before calibration
 
 - Date observed: 2026-10-19
-- Last updated: 2026-10-19
+- Last updated: 2026-10-20
 - System version/channel/source observed: local SweetClaude checkout; exact runtime version unavailable from the live calibration report.
 - Workflow skill or process used: lifecycle behavioral E2E compiler and runner; `record-workflow-failure` reporting skill.
 - Workflow phase: behavioral-test design, calibration, and live execution.
@@ -31,7 +31,7 @@ Date: 2026-10-19
 - How detected: user challenged readiness; direct inspection of the live calibration report and runner fixture/evaluator confirmed the gap.
 - Why existing prep/gates missed it: the plan stated required fixture, decision, containment, and oracle contracts but no executable readiness gate enforced them before `--execute`.
 - Corrective action taken: full report and this register entry written; execution stopped; no behavior result claimed.
-- Deterministic guard added or changed: none. Required: case-contract completeness, fixture-capability audit, oracle-calibration gate, effect-allowlist gate, driver-protocol gate, live-run freeze gate, and result-classification gate.
-- Status: open.
+- Deterministic guard added or changed (2026-10-20): the lifecycle harness was deleted and replaced by the routing suite in `scripts/routing_behavior.py`. It runs `hooks/session-preflight.sh` against the fixture before any chargeable run; its oracle reads tool calls only and is calibrated against recorded transcripts in `tests/fixtures/routing_transcripts/`; preflight, plugin and catalog failures are classified `harness-error`, never pass or fail; per-case and per-run spend caps are enforced in code. Originally required: case-contract completeness, fixture-capability audit, oracle-calibration gate, effect-allowlist gate, driver-protocol gate, live-run freeze gate, and result-classification gate.
+- Status: closed 2026-10-20. Lifecycle behavior beyond routing remains untested and is not claimed.
 - Recurrence policy: recur if any structural harness result is called behavioral readiness, or any chargeable run begins without a complete calibrated case contract.
 - Full report path: `.sweetclaude/failure-reports/FR-047-behavioral-e2e-false-readiness-2026-10-19.md`

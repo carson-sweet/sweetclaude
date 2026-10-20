@@ -29,7 +29,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = REPO_ROOT / "config" / "capability-manifest.yaml"
 RULES = REPO_ROOT / "rules" / "interaction-model.md"
-BEHAVIORAL = REPO_ROOT / "skill-library" / "configure" / "behavioral-regression" / "SKILL.md"
+BEHAVIORAL = REPO_ROOT / "config" / "behavioral-contracts.md"
 
 WORKS = "works"
 COMPROMISED = "compromised"
@@ -193,8 +193,7 @@ def _behavioral_rows() -> list[dict]:
             "tier": TIER_BEHAVIORAL,
             "status": UNVERIFIABLE,
             "reasons": [
-                "scored by the behavioral-regression workflow through "
-                "/sweetclaude:configure against a live model"
+                "scored by scripts/behavioral_judge.py against a live model"
             ],
             "contracts": sorted(by_id),
         })

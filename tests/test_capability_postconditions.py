@@ -441,34 +441,6 @@ def test_a_capability_with_no_executable_route_is_never_reported_working() -> No
     assert not offenders, f"tier-3 capabilities reported as working: {offenders}"
 
 
-def test_set_complete_fails_when_the_block_drops_a_member(
-    configured: Path, tmp_path: Path
-) -> None:
-    """The completeness claim must break when the loop stops covering a mode."""
-    skills = _mutated_skill(
-        tmp_path, "sweetclaude-behavioral-regression",
-        "for mode in flow kanban shape_up agile",
-        "for mode in flow kanban shape_up",
-    )
-    with pytest.raises(PostconditionFailed):
-        verify_capability("testing.mode_regression", configured, skills_dir=skills)
-
-
-def test_set_complete_fails_when_the_loop_shape_changes(
-    configured: Path, tmp_path: Path
-) -> None:
-    """Selecting by pattern means a rewritten loop is an error, not a pass."""
-    from postcondition_verify import BlockNotFound as _BNF
-
-    skills = _mutated_skill(
-        tmp_path, "sweetclaude-behavioral-regression",
-        "for mode in flow kanban shape_up agile; do",
-        "for mode in $ALL_MODES; do",
-    )
-    with pytest.raises((PostconditionFailed, _BNF)):
-        verify_capability("testing.mode_regression", configured, skills_dir=skills)
-
-
 def test_evidence_grades_are_from_a_known_set() -> None:
     """Three grades, weakest last: a block that ran unaided, a block that ran
     on harness-supplied values, and a block read rather than run. A new grade
@@ -484,14 +456,6 @@ def test_evidence_grades_are_from_a_known_set() -> None:
             if grade not in known:
                 offenders.append(f"{cid}.{pc['id']}: {grade!r}")
     assert not offenders, f"unknown evidence grades: {offenders}"
-
-
-def test_static_evidence_does_not_claim_a_block_ran(configured: Path) -> None:
-    """A static check reads the block. Reporting blocks_run would overstate it."""
-    result = verify_capability("testing.mode_regression", configured)
-    assert result.passed
-    assert result.evidence == "static"
-    assert result.blocks_run == 0
 
 
 def test_a_no_instrument_capability_does_not_claim_to_be_scored() -> None:
@@ -527,7 +491,7 @@ def test_a_no_instrument_capability_does_not_claim_to_be_scored() -> None:
     judged = [r for k, r in rows.items() if k.startswith("interaction-model.")]
     assert judged, "no interaction-model rows in the ledger"
     for row in judged:
-        assert "behavioral-regression" in " ".join(row["reasons"]), (
+        assert "behavioral_judge" in " ".join(row["reasons"]), (
             "interaction-model rules must keep naming the instrument that scores them")
 
 

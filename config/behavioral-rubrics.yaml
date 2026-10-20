@@ -1,6 +1,6 @@
 # Rubrics for judging behavioural contracts from a conversation record (ISSUE-275)
 #
-# The twenty-odd promises in skill-library/configure/behavioral-regression/SKILL.md have never
+# The twenty-odd promises in config/behavioral-contracts.md have never
 # been scored. The obstacle was never the rubric — it was that the obvious
 # assessor is the model being assessed. An independent model removes that.
 #

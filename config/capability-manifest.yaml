@@ -2453,10 +2453,10 @@ capabilities:
     - python3 -m pytest tests/test_capability_postconditions.py -q
   testing.behavioral_regression:
     title: Score the model against the interaction-model behavioral contracts
-    delegate_skill: sweetclaude:behavioral-regression
+    delegate_skill: null
     command_entrypoint:
-      slash_command: /sweetclaude:behavioral-regression
-      script: null
+      slash_command: null
+      script: scripts/behavioral_judge.py
       module: null
     supports_project_shapes:
     - current_layout
@@ -2469,9 +2469,8 @@ capabilities:
     - id: scorecard-complete
       check: every declared contract appears on the scorecard
       not_executable:
-        reason: the scorecard is produced by scoring a live model, so no block can
-          write it. Block 0 stages a /tmp fixture and block 1 checks the CLI
-          version; neither produces a scorecard (ISSUE-299)
+        reason: the scorecard is produced by scoring a live model with
+          scripts/behavioral_judge.py, so no block can write it (ISSUE-299)
         route: no-instrument
     rollback_support:
       supported: true
@@ -2486,45 +2485,6 @@ capabilities:
     verification_tier: tier-3-behavioral
     verification_commands:
     - python3 -m pytest tests/test_behavioral_judge.py -q
-  testing.mode_regression:
-    title: Validate mode enforcement across all four project modes
-    delegate_skill: sweetclaude:sweetclaude-behavioral-regression
-    command_entrypoint:
-      slash_command: /sweetclaude:sweetclaude-behavioral-regression
-      script: null
-      module: null
-    supports_project_shapes:
-    - current_layout
-    mutation_class: read_only
-    mutates_project: false
-    requires_approval: false
-    required_preconditions:
-    - effective-gates.yaml compiled
-    postconditions:
-    - id: all-modes-checked
-      check: each of the four modes is exercised
-      verify:
-        kind: set_complete
-        block: PROJECT_DIR="$tmpdir" bash scripts/generate-effective-gates.sh
-        block_pattern: 'for mode in ([a-z_ ]+); do'
-        declared_in: config/mode-gates.yaml
-        declared_path:
-        - mode_defaults
-        evidence: static
-    rollback_support:
-      supported: true
-      command: "not applicable \u2014 validation writes no project files"
-      limitations: []
-    unsupported_states:
-    - condition: mode_unset
-      behavior: diagnose_only
-    version_metadata:
-      introduced_in: 4.2.0
-      deprecated_in: null
-    verification_tier: tier-2-executable
-    verification_commands:
-    - python3 -m pytest tests/test_capability_manifest.py -q
-    - python3 -m pytest tests/test_capability_postconditions.py -q
   code.feature:
     title: Build a new feature end to end under TDD
     delegate_skill: sweetclaude:code-feature

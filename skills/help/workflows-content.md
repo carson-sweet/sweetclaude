@@ -22,7 +22,7 @@ Here's the full skill set organized by the phase where they're most commonly use
 
 **Implement** — `code-feature`, `code-issue`, `code-debt`, `code-tdd`
 
-**Verify** — `code-review`, `code-verify`, `testing-plan`, `testing-security`, `testing-accessibility`, `testing-performance`, `testing-compliance`, `testing-session`, `behavioral-regression`
+**Verify** — `code-review`, `code-verify`, `testing-plan`, `testing-security`, `testing-accessibility`, `testing-performance`, `testing-compliance`, `testing-session`
 
 **Ship** — `deploy-ship`
 

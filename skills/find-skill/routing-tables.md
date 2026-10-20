@@ -143,7 +143,6 @@ Always visible regardless of `version_stage`. No phases — these are point-in-t
 | Update SweetClaude to the latest version | `sweetclaude:library-load update` |
 | Audit or repair SweetClaude configuration | `sweetclaude:library-load fix-sweetclaude` |
 | Delete all SweetClaude artifacts | `sweetclaude:library-load purge` |
-| Validate framework behavioral contracts | `sweetclaude:library-load behavioral-regression` |
 | Enable protocol enforcement for the session | `sweetclaude:library-load guardian-on` |
 | Disable protocol enforcement | `sweetclaude:library-load guardian-off` |
 | Toggle or view usage tracking | `sweetclaude:library-load usage` |
