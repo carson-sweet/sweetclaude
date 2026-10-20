@@ -4,6 +4,8 @@ user-invocable: false
 description: "Internal Tier 2 library loader."
 ---
 
+!`bash ${CLAUDE_SKILL_DIR}/../../hooks/read-state.sh session-state`
+
 # Tier 2 Library Loader
 
 Arguments are either a category (`plan`, `design`, `build`, `maintain`,
@@ -17,7 +19,8 @@ if it is absent or ambiguous, route through `find-skill` instead.
    Ask one focused question if the choice changes mutation authority, project
    state, or evidence requirements.
 3. Read `${CLAUDE_PLUGIN_ROOT}/skill-library/<category>/<skill>/SKILL.md`.
-4. Follow that workflow exactly. Its gates, hooks, and mutation limits remain
+4. Use the session state shown at the top of this loader as the workflow's pre-loaded state. A workflow read from the library does not run its own preload lines, the lines near the top that call `hooks/read-state.sh <stem> [sentinel]`. For a preload of any other stem, use the Read tool on `.sweetclaude/state/<stem>.yaml` before doing anything else; if that file does not exist, the pre-loaded state is the sentinel (default `STATE_NOT_FOUND`).
+5. Follow that workflow exactly. Its gates, hooks, and mutation limits remain
    authoritative.
 
 Never expose the selected workflow as a new slash command. Report the chosen
