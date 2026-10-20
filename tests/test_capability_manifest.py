@@ -166,3 +166,29 @@ def test_capability_manifest_validate_cli_emits_summary():
     payload = json.loads(completed.stdout)
     assert payload["ok"] is True
     assert "migrate.flat_bl_to_issue" in payload["capabilities"]
+
+
+TIER1_SLASH_COMMANDS = {
+    f"/sweetclaude:{name}"
+    for name in ("go", "plan", "design", "build", "maintain", "configure", "utils", "status", "help")
+}
+
+
+def test_capability_slash_commands_resolve_to_tier1_or_library_workflow():
+    manifest = load_manifest(ROOT / "config" / "capability-manifest.yaml")
+    unresolved = []
+    for capability_id, config in manifest["capabilities"].items():
+        slash_command = (config.get("command_entrypoint") or {}).get("slash_command")
+        if slash_command is None or slash_command in TIER1_SLASH_COMMANDS:
+            continue
+        parts = slash_command.removeprefix("/sweetclaude:").split(" ")
+        if (
+            slash_command.startswith("/sweetclaude:")
+            and len(parts) == 2
+            and f"/sweetclaude:{parts[0]}" in TIER1_SLASH_COMMANDS
+            and (ROOT / "skill-library" / parts[0] / parts[1] / "SKILL.md").is_file()
+        ):
+            continue
+        unresolved.append(f"{capability_id}: {slash_command}")
+
+    assert unresolved == []

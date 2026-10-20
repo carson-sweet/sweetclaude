@@ -39,7 +39,7 @@ capabilities:
     title: Stabilize recoverable legacy layout without taxonomy migration
     delegate_skill: sweetclaude:recover
     command_entrypoint:
-      slash_command: /sweetclaude:recover
+      slash_command: /sweetclaude:configure recover
       script: scripts/recovery/recover_project.py
       module: recovery.recover_project
     supports_project_shapes:
@@ -87,7 +87,7 @@ capabilities:
     delegate_skill: sweetclaude:migrate
     executable: scripts/migrate/migrate-v3-to-v4.py
     command_entrypoint:
-      slash_command: /sweetclaude:migrate
+      slash_command: /sweetclaude:configure migrate
       script: scripts/migrate/migrate-v3-to-v4.py
       module: null
     supports_project_shapes:
@@ -138,7 +138,7 @@ capabilities:
     supported: true
     delegate_skill: sweetclaude:migrate
     command_entrypoint:
-      slash_command: /sweetclaude:migrate
+      slash_command: /sweetclaude:configure migrate
       script: scripts/migrate/migrate_taxonomy.py
       module: migrate.migrate_taxonomy
     supports_project_shapes:
@@ -181,7 +181,7 @@ capabilities:
     supported: true
     delegate_skill: sweetclaude:recover
     command_entrypoint:
-      slash_command: /sweetclaude:doctor
+      slash_command: /sweetclaude:configure doctor
       script: scripts/recovery/recover_project.py
       module: recovery.recover_project
     supports_project_shapes:
@@ -250,7 +250,7 @@ capabilities:
     supported: true
     delegate_skill: sweetclaude:doctor
     command_entrypoint:
-      slash_command: /sweetclaude:doctor
+      slash_command: /sweetclaude:configure doctor
       script: scripts/recovery/recover_project.py
       module: recovery.recover_project
     supports_project_shapes:
@@ -341,7 +341,7 @@ capabilities:
     title: Read-only diagnostic scan across all check categories
     delegate_skill: sweetclaude:doctor
     command_entrypoint:
-      slash_command: /sweetclaude:doctor
+      slash_command: /sweetclaude:configure doctor
       script: scripts/doctor.py
       module: null
     supports_project_shapes:
@@ -373,7 +373,7 @@ capabilities:
     title: Apply safe automatic repairs through the archived, reversible pipeline
     delegate_skill: sweetclaude:doctor
     command_entrypoint:
-      slash_command: /sweetclaude:doctor
+      slash_command: /sweetclaude:configure doctor
       script: scripts/doctor.py
       module: null
     supports_project_shapes:
@@ -415,7 +415,7 @@ capabilities:
     title: Roll back the file changes a previous doctor run made
     delegate_skill: sweetclaude:doctor
     command_entrypoint:
-      slash_command: /sweetclaude:doctor
+      slash_command: /sweetclaude:configure doctor
       script: scripts/doctor.py
       module: null
     supports_project_shapes:
@@ -447,7 +447,7 @@ capabilities:
     title: Route a project to the right onboarding, migration, or repair path
     delegate_skill: sweetclaude:init
     command_entrypoint:
-      slash_command: /sweetclaude:init
+      slash_command: /sweetclaude:configure init
       script: null
       module: null
     supports_project_shapes:
@@ -522,7 +522,7 @@ capabilities:
     title: Delete every SweetClaude artifact from a project
     delegate_skill: sweetclaude:purge
     command_entrypoint:
-      slash_command: /sweetclaude:purge
+      slash_command: /sweetclaude:configure purge
       script: null
       module: null
     supports_project_shapes:
@@ -567,7 +567,7 @@ capabilities:
     title: Channel-aware check for a newer framework version
     delegate_skill: sweetclaude:update
     command_entrypoint:
-      slash_command: /sweetclaude:update
+      slash_command: /sweetclaude:configure update
       script: scripts/update.py
       module: null
     supports_project_shapes:
@@ -599,7 +599,7 @@ capabilities:
     title: Backfill per-work-item artifact directories with symlinked artifacts
     delegate_skill: sweetclaude:work-item-artifacts
     command_entrypoint:
-      slash_command: /sweetclaude:work-item-artifacts
+      slash_command: /sweetclaude:configure work-item-artifacts
       script: scripts/backfill_work_item_artifacts.py
       module: null
     supports_project_shapes:
@@ -631,7 +631,7 @@ capabilities:
     title: Write a product brief
     delegate_skill: sweetclaude:product-brief
     command_entrypoint:
-      slash_command: /sweetclaude:product-brief
+      slash_command: /sweetclaude:plan product-brief
       script: null
       module: null
     supports_project_shapes:
@@ -662,7 +662,7 @@ capabilities:
     title: Write a Product Requirements Document
     delegate_skill: sweetclaude:product-prd
     command_entrypoint:
-      slash_command: /sweetclaude:product-prd
+      slash_command: /sweetclaude:plan product-prd
       script: null
       module: null
     supports_project_shapes:
@@ -693,7 +693,7 @@ capabilities:
     title: Establish what is being built, for whom, and why
     delegate_skill: sweetclaude:product-discovery
     command_entrypoint:
-      slash_command: /sweetclaude:product-discovery
+      slash_command: /sweetclaude:plan product-discovery
       script: null
       module: null
     supports_project_shapes:
@@ -724,7 +724,7 @@ capabilities:
     title: Survey the commercial and open-source solution field
     delegate_skill: sweetclaude:product-research
     command_entrypoint:
-      slash_command: /sweetclaude:product-research
+      slash_command: /sweetclaude:plan product-research
       script: null
       module: null
     supports_project_shapes:
@@ -755,7 +755,7 @@ capabilities:
     title: Competitive analysis at three depth levels
     delegate_skill: sweetclaude:product-competition
     command_entrypoint:
-      slash_command: /sweetclaude:product-competition
+      slash_command: /sweetclaude:plan product-competition
       script: null
       module: null
     supports_project_shapes:
@@ -786,7 +786,7 @@ capabilities:
     title: Manage roadmap milestones
     delegate_skill: sweetclaude:product-milestones
     command_entrypoint:
-      slash_command: /sweetclaude:product-milestones
+      slash_command: /sweetclaude:plan product-milestones
       script: null
       module: null
     supports_project_shapes:
@@ -817,7 +817,7 @@ capabilities:
     title: Guided milestone planning workshop
     delegate_skill: sweetclaude:product-milestone-planning
     command_entrypoint:
-      slash_command: /sweetclaude:product-milestone-planning
+      slash_command: /sweetclaude:plan product-milestone-planning
       script: null
       module: null
     supports_project_shapes:
@@ -858,7 +858,7 @@ capabilities:
     title: Manage the product roadmap and priority stack
     delegate_skill: sweetclaude:product-roadmap
     command_entrypoint:
-      slash_command: /sweetclaude:product-roadmap
+      slash_command: /sweetclaude:plan product-roadmap
       script: null
       module: null
     supports_project_shapes:
@@ -896,7 +896,7 @@ capabilities:
     title: RICE scoring and stack-rank analysis
     delegate_skill: sweetclaude:product-roadmap-analysis
     command_entrypoint:
-      slash_command: /sweetclaude:product-roadmap-analysis
+      slash_command: /sweetclaude:plan product-roadmap-analysis
       script: null
       module: null
     supports_project_shapes:
@@ -948,7 +948,7 @@ capabilities:
     title: Write user stories for a defined scope
     delegate_skill: sweetclaude:product-user-stories
     command_entrypoint:
-      slash_command: /sweetclaude:product-user-stories
+      slash_command: /sweetclaude:plan product-user-stories
       script: null
       module: null
     supports_project_shapes:
@@ -984,7 +984,7 @@ capabilities:
     title: Transition user stories into Gherkin feature files
     delegate_skill: sweetclaude:product-user-tdd-tests
     command_entrypoint:
-      slash_command: /sweetclaude:product-user-tdd-tests
+      slash_command: /sweetclaude:build product-user-tdd-tests
       script: null
       module: null
     supports_project_shapes:
@@ -1015,7 +1015,7 @@ capabilities:
     title: Synthetic panel research using persona archetypes
     delegate_skill: sweetclaude:product-user-focus-group
     command_entrypoint:
-      slash_command: /sweetclaude:product-user-focus-group
+      slash_command: /sweetclaude:plan product-user-focus-group
       script: null
       module: null
     supports_project_shapes:
@@ -1054,7 +1054,7 @@ capabilities:
     title: Define product positioning
     delegate_skill: sweetclaude:product-positioning-statement
     command_entrypoint:
-      slash_command: /sweetclaude:product-positioning-statement
+      slash_command: /sweetclaude:plan product-positioning-statement
       script: null
       module: null
     supports_project_shapes:
@@ -1085,7 +1085,7 @@ capabilities:
     title: Craft external messaging
     delegate_skill: sweetclaude:product-market-messaging
     command_entrypoint:
-      slash_command: /sweetclaude:product-market-messaging
+      slash_command: /sweetclaude:plan product-market-messaging
       script: null
       module: null
     supports_project_shapes:
@@ -1116,7 +1116,7 @@ capabilities:
     title: Maintain a shared domain glossary
     delegate_skill: sweetclaude:product-terminology
     command_entrypoint:
-      slash_command: /sweetclaude:product-terminology
+      slash_command: /sweetclaude:plan product-terminology
       script: null
       module: null
     supports_project_shapes:
@@ -1158,7 +1158,7 @@ capabilities:
     title: Track scope changes in and out
     delegate_skill: sweetclaude:product-manage-scope
     command_entrypoint:
-      slash_command: /sweetclaude:product-manage-scope
+      slash_command: /sweetclaude:plan product-manage-scope
       script: null
       module: null
     supports_project_shapes:
@@ -1189,7 +1189,7 @@ capabilities:
     title: Manage deferred work
     delegate_skill: sweetclaude:product-parking-lot
     command_entrypoint:
-      slash_command: /sweetclaude:product-parking-lot
+      slash_command: /sweetclaude:plan product-parking-lot
       script: null
       module: null
     supports_project_shapes:
@@ -1225,7 +1225,7 @@ capabilities:
     title: Plan a sprint and produce a commitment
     delegate_skill: sweetclaude:product-sprint-plan
     command_entrypoint:
-      slash_command: /sweetclaude:product-sprint-plan
+      slash_command: /sweetclaude:build product-sprint-plan
       script: null
       module: null
     supports_project_shapes:
@@ -1256,7 +1256,7 @@ capabilities:
     title: Define product users and their success criteria
     delegate_skill: sweetclaude:user-personas
     command_entrypoint:
-      slash_command: /sweetclaude:user-personas
+      slash_command: /sweetclaude:plan user-personas
       script: null
       module: null
     supports_project_shapes:
@@ -1292,7 +1292,7 @@ capabilities:
     title: Define system architecture
     delegate_skill: sweetclaude:design-architecture
     command_entrypoint:
-      slash_command: /sweetclaude:design-architecture
+      slash_command: /sweetclaude:design design-architecture
       script: null
       module: null
     supports_project_shapes:
@@ -1323,7 +1323,7 @@ capabilities:
     title: Write the technical specification
     delegate_skill: sweetclaude:design-tech-spec
     command_entrypoint:
-      slash_command: /sweetclaude:design-tech-spec
+      slash_command: /sweetclaude:design design-tech-spec
       script: null
       module: null
     supports_project_shapes:
@@ -1354,7 +1354,7 @@ capabilities:
     title: Design the data model
     delegate_skill: sweetclaude:design-data-model
     command_entrypoint:
-      slash_command: /sweetclaude:design-data-model
+      slash_command: /sweetclaude:design design-data-model
       script: null
       module: null
     supports_project_shapes:
@@ -1385,7 +1385,7 @@ capabilities:
     title: Design API endpoints and contracts
     delegate_skill: sweetclaude:design-api-design
     command_entrypoint:
-      slash_command: /sweetclaude:design-api-design
+      slash_command: /sweetclaude:design design-api-design
       script: null
       module: null
     supports_project_shapes:
@@ -1416,7 +1416,7 @@ capabilities:
     title: Define the visual and interaction design
     delegate_skill: sweetclaude:design-ux
     command_entrypoint:
-      slash_command: /sweetclaude:design-ux
+      slash_command: /sweetclaude:design design-ux
       script: null
       module: null
     supports_project_shapes:
@@ -1447,7 +1447,7 @@ capabilities:
     title: Virtual UX review session
     delegate_skill: sweetclaude:design-ux-review
     command_entrypoint:
-      slash_command: /sweetclaude:design-ux-review
+      slash_command: /sweetclaude:design design-ux-review
       script: null
       module: null
     supports_project_shapes:
@@ -1478,7 +1478,7 @@ capabilities:
     title: Convert user stories into UX flows
     delegate_skill: sweetclaude:design-user-flows
     command_entrypoint:
-      slash_command: /sweetclaude:design-user-flows
+      slash_command: /sweetclaude:design design-user-flows
       script: null
       module: null
     supports_project_shapes:
@@ -1509,7 +1509,7 @@ capabilities:
     title: Generate HTML/CSS wireframes from user flows
     delegate_skill: sweetclaude:design-wireframes
     command_entrypoint:
-      slash_command: /sweetclaude:design-wireframes
+      slash_command: /sweetclaude:design design-wireframes
       script: null
       module: null
     supports_project_shapes:
@@ -1540,7 +1540,7 @@ capabilities:
     title: Validate the proposed solution before implementation
     delegate_skill: sweetclaude:design-solutioning-gate
     command_entrypoint:
-      slash_command: /sweetclaude:design-solutioning-gate
+      slash_command: /sweetclaude:design design-solutioning-gate
       script: null
       module: null
     supports_project_shapes:
@@ -1570,7 +1570,7 @@ capabilities:
     title: Ripple-effect analysis for changes to existing code
     delegate_skill: sweetclaude:design-change-impact-analysis
     command_entrypoint:
-      slash_command: /sweetclaude:design-change-impact-analysis
+      slash_command: /sweetclaude:design design-change-impact-analysis
       script: null
       module: null
     supports_project_shapes:
@@ -1600,7 +1600,7 @@ capabilities:
     title: Record and track design decisions
     delegate_skill: sweetclaude:design-manage-decisions
     command_entrypoint:
-      slash_command: /sweetclaude:design-manage-decisions
+      slash_command: /sweetclaude:design design-manage-decisions
       script: null
       module: null
     supports_project_shapes:
@@ -1631,7 +1631,7 @@ capabilities:
     title: Create and iterate on interactive UI mockups
     delegate_skill: sweetclaude:mockup-sandbox
     command_entrypoint:
-      slash_command: /sweetclaude:mockup-sandbox
+      slash_command: /sweetclaude:design mockup-sandbox
       script: null
       module: null
     supports_project_shapes:
@@ -1670,7 +1670,7 @@ capabilities:
     title: Pull a production component into the mockup sandbox
     delegate_skill: sweetclaude:mockup-extract
     command_entrypoint:
-      slash_command: /sweetclaude:mockup-extract
+      slash_command: /sweetclaude:design mockup-extract
       script: null
       module: null
     supports_project_shapes:
@@ -1706,7 +1706,7 @@ capabilities:
     title: Move an approved mockup into the application
     delegate_skill: sweetclaude:mockup-graduate
     command_entrypoint:
-      slash_command: /sweetclaude:mockup-graduate
+      slash_command: /sweetclaude:design mockup-graduate
       script: null
       module: null
     supports_project_shapes:
@@ -1742,7 +1742,7 @@ capabilities:
     title: Update documentation when behavior changes
     delegate_skill: sweetclaude:documents-update-docs
     command_entrypoint:
-      slash_command: /sweetclaude:documents-update-docs
+      slash_command: /sweetclaude:utils documents-update-docs
       script: null
       module: null
     supports_project_shapes:
@@ -1773,7 +1773,7 @@ capabilities:
     title: Build and query the strategic claim graph
     delegate_skill: sweetclaude:documents-narrative-arc
     command_entrypoint:
-      slash_command: /sweetclaude:documents-narrative-arc
+      slash_command: /sweetclaude:plan documents-narrative-arc
       script: null
       module: null
     supports_project_shapes:
@@ -1804,7 +1804,7 @@ capabilities:
     title: Academic paper development
     delegate_skill: sweetclaude:documents-academic-research
     command_entrypoint:
-      slash_command: /sweetclaude:documents-academic-research
+      slash_command: /sweetclaude:plan documents-academic-research
       script: null
       module: null
     supports_project_shapes:
@@ -1835,7 +1835,7 @@ capabilities:
     title: Prepare for a specific meeting
     delegate_skill: sweetclaude:misc-meeting-prep
     command_entrypoint:
-      slash_command: /sweetclaude:misc-meeting-prep
+      slash_command: /sweetclaude:utils misc-meeting-prep
       script: null
       module: null
     supports_project_shapes:
@@ -1866,7 +1866,7 @@ capabilities:
     title: Export a session as a portable package
     delegate_skill: sweetclaude:session-export
     command_entrypoint:
-      slash_command: /sweetclaude:session-export
+      slash_command: /sweetclaude:utils session-export
       script: null
       module: null
     supports_project_shapes:
@@ -1897,7 +1897,7 @@ capabilities:
     title: Write a structured failure report
     delegate_skill: sweetclaude:report-failure
     command_entrypoint:
-      slash_command: /sweetclaude:report-failure
+      slash_command: /sweetclaude:utils report-failure
       script: null
       module: null
     supports_project_shapes:
@@ -1939,7 +1939,7 @@ capabilities:
     title: Define and maintain a test strategy
     delegate_skill: sweetclaude:testing-plan
     command_entrypoint:
-      slash_command: /sweetclaude:testing-plan
+      slash_command: /sweetclaude:build testing-plan
       script: null
       module: null
     supports_project_shapes:
@@ -1978,7 +1978,7 @@ capabilities:
     title: Structured security review
     delegate_skill: sweetclaude:testing-security
     command_entrypoint:
-      slash_command: /sweetclaude:testing-security
+      slash_command: /sweetclaude:build testing-security
       script: null
       module: null
     supports_project_shapes:
@@ -2016,7 +2016,7 @@ capabilities:
     title: Define load scenarios and performance baselines
     delegate_skill: sweetclaude:testing-performance
     command_entrypoint:
-      slash_command: /sweetclaude:testing-performance
+      slash_command: /sweetclaude:build testing-performance
       script: null
       module: null
     supports_project_shapes:
@@ -2054,7 +2054,7 @@ capabilities:
     title: WCAG 2.1 Level AA audit
     delegate_skill: sweetclaude:testing-accessibility
     command_entrypoint:
-      slash_command: /sweetclaude:testing-accessibility
+      slash_command: /sweetclaude:build testing-accessibility
       script: null
       module: null
     supports_project_shapes:
@@ -2092,7 +2092,7 @@ capabilities:
     title: Compliance control testing and evidence collection
     delegate_skill: sweetclaude:testing-compliance
     command_entrypoint:
-      slash_command: /sweetclaude:testing-compliance
+      slash_command: /sweetclaude:build testing-compliance
       script: null
       module: null
     supports_project_shapes:
@@ -2130,7 +2130,7 @@ capabilities:
     title: Run a manual QA session
     delegate_skill: sweetclaude:testing-session
     command_entrypoint:
-      slash_command: /sweetclaude:testing-session
+      slash_command: /sweetclaude:build testing-session
       script: null
       module: null
     supports_project_shapes:
@@ -2168,7 +2168,7 @@ capabilities:
     title: Deduplicate and stage source files into the corpus inbox
     delegate_skill: sweetclaude:corpus-consolidate
     command_entrypoint:
-      slash_command: /sweetclaude:corpus-consolidate
+      slash_command: /sweetclaude:utils corpus-consolidate
       script: null
       module: null
     supports_project_shapes:
@@ -2204,7 +2204,7 @@ capabilities:
     title: Classify inbox files for keep, reconcile, discard, or defer
     delegate_skill: sweetclaude:corpus-triage
     command_entrypoint:
-      slash_command: /sweetclaude:corpus-triage
+      slash_command: /sweetclaude:utils corpus-triage
       script: null
       module: null
     supports_project_shapes:
@@ -2240,7 +2240,7 @@ capabilities:
     title: Produce approved canonical documents from staged files
     delegate_skill: sweetclaude:corpus-reconcile
     command_entrypoint:
-      slash_command: /sweetclaude:corpus-reconcile
+      slash_command: /sweetclaude:utils corpus-reconcile
       script: null
       module: null
     supports_project_shapes:
@@ -2276,7 +2276,7 @@ capabilities:
     title: Finalize approved documents into the canonical corpus
     delegate_skill: sweetclaude:corpus-promote
     command_entrypoint:
-      slash_command: /sweetclaude:corpus-promote
+      slash_command: /sweetclaude:utils corpus-promote
       script: null
       module: null
     supports_project_shapes:
@@ -2312,7 +2312,7 @@ capabilities:
     title: Report corpus pipeline state
     delegate_skill: sweetclaude:corpus-status
     command_entrypoint:
-      slash_command: /sweetclaude:corpus-status
+      slash_command: /sweetclaude:utils corpus-status
       script: null
       module: null
     supports_project_shapes:
@@ -2347,7 +2347,7 @@ capabilities:
     title: Configure local semantic search over project documents
     delegate_skill: sweetclaude:corpus-rag-setup
     command_entrypoint:
-      slash_command: /sweetclaude:corpus-rag-setup
+      slash_command: /sweetclaude:utils corpus-rag-setup
       script: null
       module: null
     supports_project_shapes:
@@ -2383,7 +2383,7 @@ capabilities:
     title: Rebuild RAG collections from source files
     delegate_skill: sweetclaude:corpus-rag-reindex
     command_entrypoint:
-      slash_command: /sweetclaude:corpus-rag-reindex
+      slash_command: /sweetclaude:utils corpus-rag-reindex
       script: null
       module: null
     supports_project_shapes:
@@ -2414,7 +2414,7 @@ capabilities:
     title: Run the full document corpus pipeline
     delegate_skill: sweetclaude:document-corpus
     command_entrypoint:
-      slash_command: /sweetclaude:document-corpus
+      slash_command: /sweetclaude:utils document-corpus
       script: null
       module: null
     supports_project_shapes:
@@ -2489,7 +2489,7 @@ capabilities:
     title: Build a new feature end to end under TDD
     delegate_skill: sweetclaude:code-feature
     command_entrypoint:
-      slash_command: /sweetclaude:code-feature
+      slash_command: /sweetclaude:build code-feature
       script: null
       module: null
     supports_project_shapes:
@@ -2533,7 +2533,7 @@ capabilities:
     title: Implement a tracked issue end to end
     delegate_skill: sweetclaude:code-issue
     command_entrypoint:
-      slash_command: /sweetclaude:code-issue
+      slash_command: /sweetclaude:build code-issue
       script: null
       module: null
     supports_project_shapes:
@@ -2569,7 +2569,7 @@ capabilities:
     title: Refactor without changing behavior
     delegate_skill: sweetclaude:code-debt
     command_entrypoint:
-      slash_command: /sweetclaude:code-debt
+      slash_command: /sweetclaude:maintain code-debt
       script: null
       module: null
     supports_project_shapes:
@@ -2599,7 +2599,7 @@ capabilities:
     title: Code, security and compliance review
     delegate_skill: sweetclaude:code-review
     command_entrypoint:
-      slash_command: /sweetclaude:code-review
+      slash_command: /sweetclaude:build code-review
       script: null
       module: null
     supports_project_shapes:
@@ -2629,7 +2629,7 @@ capabilities:
     title: Run the TDD pipeline at the selected level
     delegate_skill: sweetclaude:code-tdd
     command_entrypoint:
-      slash_command: /sweetclaude:code-tdd
+      slash_command: /sweetclaude:build code-tdd
       script: null
       module: null
     supports_project_shapes:
@@ -2666,7 +2666,7 @@ capabilities:
     title: Run suite, mutation testing, security review or PR pre-check
     delegate_skill: sweetclaude:code-testing
     command_entrypoint:
-      slash_command: /sweetclaude:code-testing
+      slash_command: /sweetclaude:build code-testing
       script: null
       module: null
     supports_project_shapes:
@@ -2696,7 +2696,7 @@ capabilities:
     title: Produce a completion evidence receipt before closing work
     delegate_skill: sweetclaude:code-verify
     command_entrypoint:
-      slash_command: /sweetclaude:code-verify
+      slash_command: /sweetclaude:build code-verify
       script: scripts/evidence.py
       module: null
     supports_project_shapes:
@@ -2726,7 +2726,7 @@ capabilities:
     title: Bounded evidence-gated small-story workflow
     delegate_skill: sweetclaude:small-story
     command_entrypoint:
-      slash_command: /sweetclaude:small-story
+      slash_command: /sweetclaude:build small-story
       script: scripts/small_story_controller.py
       module: null
     supports_project_shapes:
@@ -2760,7 +2760,7 @@ capabilities:
     title: Bounded evidence-gated large-story workflow
     delegate_skill: sweetclaude:large-story
     command_entrypoint:
-      slash_command: /sweetclaude:large-story
+      slash_command: /sweetclaude:build large-story
       script: scripts/large_story_controller.py
       module: null
     supports_project_shapes:
@@ -2794,7 +2794,7 @@ capabilities:
     title: Execute tracked workflow steps via subagents
     delegate_skill: sweetclaude:orchestrator
     command_entrypoint:
-      slash_command: /sweetclaude:orchestrator
+      slash_command: /sweetclaude:build orchestrator
       script: scripts/orchestrator_loop.py
       module: null
     supports_project_shapes:
@@ -2824,7 +2824,7 @@ capabilities:
     title: Minimal production patch with mandatory post-mortem
     delegate_skill: sweetclaude:hotfix
     command_entrypoint:
-      slash_command: /sweetclaude:hotfix
+      slash_command: /sweetclaude:maintain hotfix
       script: null
       module: null
     supports_project_shapes:
@@ -2860,7 +2860,7 @@ capabilities:
     title: Vulnerability fix with mandatory security review
     delegate_skill: sweetclaude:security-patch
     command_entrypoint:
-      slash_command: /sweetclaude:security-patch
+      slash_command: /sweetclaude:maintain security-patch
       script: null
       module: null
     supports_project_shapes:
@@ -2895,7 +2895,7 @@ capabilities:
     title: Roll back or revert a deployment
     delegate_skill: sweetclaude:rollback-revert
     command_entrypoint:
-      slash_command: /sweetclaude:rollback-revert
+      slash_command: /sweetclaude:maintain rollback-revert
       script: null
       module: null
     supports_project_shapes:
@@ -2937,7 +2937,7 @@ capabilities:
     title: Reactive production incident triage
     delegate_skill: sweetclaude:something-broke
     command_entrypoint:
-      slash_command: /sweetclaude:something-broke
+      slash_command: /sweetclaude:maintain something-broke
       script: null
       module: null
     supports_project_shapes:
@@ -2971,7 +2971,7 @@ capabilities:
     title: Author a post-mortem with timeline and action items
     delegate_skill: sweetclaude:postmortem
     command_entrypoint:
-      slash_command: /sweetclaude:postmortem
+      slash_command: /sweetclaude:maintain postmortem
       script: null
       module: null
     supports_project_shapes:
@@ -3005,7 +3005,7 @@ capabilities:
     title: Autonomous resumable multi-session SDLC pipeline
     delegate_skill: sweetclaude:john-wick
     command_entrypoint:
-      slash_command: /sweetclaude:john-wick
+      slash_command: /sweetclaude:build john-wick
       script: null
       module: null
     supports_project_shapes:
@@ -3039,7 +3039,7 @@ capabilities:
     title: Produce a design-phase architecture plan via ultraplan
     delegate_skill: sweetclaude:ultraplan
     command_entrypoint:
-      slash_command: /sweetclaude:ultraplan
+      slash_command: /sweetclaude:design ultraplan
       script: null
       module: null
     supports_project_shapes:
@@ -3073,7 +3073,7 @@ capabilities:
     title: Create, view, update and close project issues
     delegate_skill: sweetclaude:project-issues
     command_entrypoint:
-      slash_command: /sweetclaude:project-issues
+      slash_command: /sweetclaude:build project-issues
       script: scripts/status.py
       module: null
     supports_project_shapes:
@@ -3105,7 +3105,7 @@ capabilities:
     title: View and manage the unscheduled issue backlog
     delegate_skill: sweetclaude:project-backlog
     command_entrypoint:
-      slash_command: /sweetclaude:project-backlog
+      slash_command: /sweetclaude:build project-backlog
       script: scripts/cache.py
       module: null
     supports_project_shapes:
@@ -3134,7 +3134,7 @@ capabilities:
     title: Structured backlog grooming session
     delegate_skill: sweetclaude:project-backlog-triage
     command_entrypoint:
-      slash_command: /sweetclaude:project-backlog-triage
+      slash_command: /sweetclaude:build project-backlog-triage
       script: scripts/status.py
       module: null
     supports_project_shapes:
@@ -3165,7 +3165,7 @@ capabilities:
     title: Manage epics and objectives
     delegate_skill: sweetclaude:epics
     command_entrypoint:
-      slash_command: /sweetclaude:epics
+      slash_command: /sweetclaude:plan epics
       script: scripts/status.py
       module: null
     supports_project_shapes:
@@ -3196,7 +3196,7 @@ capabilities:
     title: Produce an ordered story list for an epic
     delegate_skill: sweetclaude:epic-design
     command_entrypoint:
-      slash_command: /sweetclaude:epic-design
+      slash_command: /sweetclaude:plan epic-design
       script: null
       module: null
     supports_project_shapes:
@@ -3230,7 +3230,7 @@ capabilities:
     title: Sprint planning, activation, board and close
     delegate_skill: sweetclaude:project-sprints
     command_entrypoint:
-      slash_command: /sweetclaude:project-sprints
+      slash_command: /sweetclaude:build project-sprints
       script: scripts/status.py
       module: null
     supports_project_shapes:
@@ -3261,7 +3261,7 @@ capabilities:
     title: Manage binary business goals
     delegate_skill: sweetclaude:project-goals
     command_entrypoint:
-      slash_command: /sweetclaude:project-goals
+      slash_command: /sweetclaude:plan project-goals
       script: null
       module: null
     supports_project_shapes:
@@ -3297,7 +3297,7 @@ capabilities:
     title: Define and maintain project scope
     delegate_skill: sweetclaude:project-scope
     command_entrypoint:
-      slash_command: /sweetclaude:project-scope
+      slash_command: /sweetclaude:plan project-scope
       script: null
       module: null
     supports_project_shapes:
@@ -3331,7 +3331,7 @@ capabilities:
     title: Manage domain-grouping labels on stories
     delegate_skill: sweetclaude:project-themes
     command_entrypoint:
-      slash_command: /sweetclaude:project-themes
+      slash_command: /sweetclaude:build project-themes
       script: null
       module: null
     supports_project_shapes:
@@ -3368,7 +3368,7 @@ capabilities:
     title: Assess and shift the project mode
     delegate_skill: sweetclaude:project-mode
     command_entrypoint:
-      slash_command: /sweetclaude:project-mode
+      slash_command: /sweetclaude:configure project-mode
       script: null
       module: null
     supports_project_shapes:
@@ -3404,7 +3404,7 @@ capabilities:
     title: Recommend and configure a project mode
     delegate_skill: sweetclaude:project-assess-shape
     command_entrypoint:
-      slash_command: /sweetclaude:project-assess-shape
+      slash_command: /sweetclaude:configure project-assess-shape
       script: null
       module: null
     supports_project_shapes:
@@ -3442,7 +3442,7 @@ capabilities:
     title: Import open GitHub issues into the local store
     delegate_skill: sweetclaude:project-gh-import-issues
     command_entrypoint:
-      slash_command: /sweetclaude:project-gh-import-issues
+      slash_command: /sweetclaude:build project-gh-import-issues
       script: scripts/cache.py
       module: null
     supports_project_shapes:
@@ -3471,7 +3471,7 @@ capabilities:
     title: Bidirectional status sync with GitHub issues
     delegate_skill: sweetclaude:project-gh-sync-issues
     command_entrypoint:
-      slash_command: /sweetclaude:project-gh-sync-issues
+      slash_command: /sweetclaude:build project-gh-sync-issues
       script: scripts/status.py
       module: null
     supports_project_shapes:
@@ -3505,7 +3505,7 @@ capabilities:
     title: Review and maintain the improvement register
     delegate_skill: sweetclaude:retro
     command_entrypoint:
-      slash_command: /sweetclaude:retro
+      slash_command: /sweetclaude:configure retro
       script: null
       module: null
     supports_project_shapes:
@@ -3539,7 +3539,7 @@ capabilities:
     title: Document a pivot and triage in-flight work
     delegate_skill: sweetclaude:course-correction
     command_entrypoint:
-      slash_command: /sweetclaude:course-correction
+      slash_command: /sweetclaude:plan course-correction
       script: scripts/cache.py
       module: null
     supports_project_shapes:
@@ -3655,7 +3655,7 @@ capabilities:
     title: 'Redirect: claude-config-audit sends the user to doctor'
     delegate_skill: sweetclaude:claude-config-audit
     command_entrypoint:
-      slash_command: /sweetclaude:claude-config-audit
+      slash_command: /sweetclaude:configure claude-config-audit
       script: null
       module: null
     supports_project_shapes:
@@ -3679,7 +3679,7 @@ capabilities:
     title: 'Redirect: fix-sweetclaude sends the user to doctor'
     delegate_skill: sweetclaude:fix-sweetclaude
     command_entrypoint:
-      slash_command: /sweetclaude:fix-sweetclaude
+      slash_command: /sweetclaude:configure fix-sweetclaude
       script: null
       module: null
     supports_project_shapes:
@@ -3703,7 +3703,7 @@ capabilities:
     title: 'Redirect: hook-repair sends the user to doctor'
     delegate_skill: sweetclaude:hook-repair
     command_entrypoint:
-      slash_command: /sweetclaude:hook-repair
+      slash_command: /sweetclaude:configure hook-repair
       script: null
       module: null
     supports_project_shapes:
@@ -3727,7 +3727,7 @@ capabilities:
     title: 'Redirect: migrate-diagnose sends the user to doctor'
     delegate_skill: sweetclaude:migrate-diagnose
     command_entrypoint:
-      slash_command: /sweetclaude:migrate-diagnose
+      slash_command: /sweetclaude:configure migrate-diagnose
       script: null
       module: null
     supports_project_shapes:
@@ -3751,7 +3751,7 @@ capabilities:
     title: 'Redirect: project-epics sends the user to epics'
     delegate_skill: sweetclaude:project-epics
     command_entrypoint:
-      slash_command: /sweetclaude:project-epics
+      slash_command: /sweetclaude:build project-epics
       script: null
       module: null
     supports_project_shapes:
@@ -3775,7 +3775,7 @@ capabilities:
     title: 'Session startup: pre-flight, drift and update offers, routing'
     delegate_skill: sweetclaude:bootstrap
     command_entrypoint:
-      slash_command: /sweetclaude:bootstrap
+      slash_command: null
       script: null
       module: null
     supports_project_shapes:
@@ -3801,7 +3801,7 @@ capabilities:
     title: Phase router and session entry point
     delegate_skill: sweetclaude:master
     command_entrypoint:
-      slash_command: /sweetclaude:master
+      slash_command: null
       script: null
       module: null
     supports_project_shapes:
@@ -3827,7 +3827,7 @@ capabilities:
     title: Map natural-language input to the right internal skill
     delegate_skill: sweetclaude:_route
     command_entrypoint:
-      slash_command: /sweetclaude:_route
+      slash_command: null
       script: null
       module: null
     supports_project_shapes:
@@ -3893,7 +3893,7 @@ capabilities:
     title: Find and start the right skill for a piece of work
     delegate_skill: sweetclaude:find-skill
     command_entrypoint:
-      slash_command: /sweetclaude:find-skill
+      slash_command: null
       script: null
       module: null
     supports_project_shapes:
@@ -3973,7 +3973,7 @@ capabilities:
     title: 'Where we are: phase, active item, recent commits, checkpoint'
     delegate_skill: sweetclaude:recap
     command_entrypoint:
-      slash_command: /sweetclaude:recap
+      slash_command: /sweetclaude:utils recap
       script: null
       module: null
     supports_project_shapes:
@@ -4000,7 +4000,7 @@ capabilities:
     title: The full roadmap pipeline at a glance
     delegate_skill: sweetclaude:big-picture
     command_entrypoint:
-      slash_command: /sweetclaude:big-picture
+      slash_command: /sweetclaude:utils big-picture
       script: null
       module: null
     supports_project_shapes:
@@ -4027,7 +4027,7 @@ capabilities:
     title: Walk the pipeline step by step
     delegate_skill: sweetclaude:next-steps
     command_entrypoint:
-      slash_command: /sweetclaude:next-steps
+      slash_command: /sweetclaude:utils next-steps
       script: null
       module: null
     supports_project_shapes:
@@ -4054,7 +4054,7 @@ capabilities:
     title: Show and configure optional features
     delegate_skill: sweetclaude:_features
     command_entrypoint:
-      slash_command: /sweetclaude:_features
+      slash_command: /sweetclaude:configure _features
       script: null
       module: null
     supports_project_shapes:
@@ -4092,7 +4092,7 @@ capabilities:
     title: Consistency scan and version check
     delegate_skill: sweetclaude:_health
     command_entrypoint:
-      slash_command: /sweetclaude:_health
+      slash_command: /sweetclaude:configure _health
       script: null
       module: null
     supports_project_shapes:
@@ -4124,7 +4124,7 @@ capabilities:
     title: Deactivate SweetClaude for this project
     delegate_skill: sweetclaude:off
     command_entrypoint:
-      slash_command: /sweetclaude:off
+      slash_command: /sweetclaude:configure off
       script: null
       module: null
     supports_project_shapes:
@@ -4161,7 +4161,7 @@ capabilities:
     title: Hibernate or wake a project
     delegate_skill: sweetclaude:hibernate
     command_entrypoint:
-      slash_command: /sweetclaude:hibernate
+      slash_command: /sweetclaude:configure hibernate
       script: null
       module: null
     supports_project_shapes:
@@ -4192,7 +4192,7 @@ capabilities:
     title: Enable the Protocol Guardian
     delegate_skill: sweetclaude:guardian-on
     command_entrypoint:
-      slash_command: /sweetclaude:guardian-on
+      slash_command: /sweetclaude:configure guardian-on
       script: null
       module: null
     supports_project_shapes:
@@ -4224,7 +4224,7 @@ capabilities:
     title: Disable the Protocol Guardian
     delegate_skill: sweetclaude:guardian-off
     command_entrypoint:
-      slash_command: /sweetclaude:guardian-off
+      slash_command: /sweetclaude:configure guardian-off
       script: null
       module: null
     supports_project_shapes:
@@ -4256,7 +4256,7 @@ capabilities:
     title: Deploy the local repo to installed locations and rebuild the cache
     delegate_skill: sweetclaude:feature-setup
     command_entrypoint:
-      slash_command: /sweetclaude:feature-setup
+      slash_command: /sweetclaude:configure feature-setup
       script: null
       module: null
     supports_project_shapes:
@@ -4293,7 +4293,7 @@ capabilities:
     title: 'Migration orchestrator: snapshot, recovery menus, end-of-session decision'
     delegate_skill: sweetclaude:_migrate
     command_entrypoint:
-      slash_command: /sweetclaude:_migrate
+      slash_command: /sweetclaude:configure _migrate
       script: null
       module: null
     supports_project_shapes:
@@ -4325,7 +4325,7 @@ capabilities:
     title: 'Local web dashboard: roadmap, releases, epics, backlog, dependencies'
     delegate_skill: sweetclaude:dashboard
     command_entrypoint:
-      slash_command: /sweetclaude:dashboard
+      slash_command: /sweetclaude:utils dashboard
       script: null
       module: null
     supports_project_shapes:
@@ -4361,7 +4361,7 @@ capabilities:
     title: 'SHIP phase: deploy, smoke test, and close out the work item'
     delegate_skill: sweetclaude:deploy-ship
     command_entrypoint:
-      slash_command: /sweetclaude:deploy-ship
+      slash_command: /sweetclaude:build deploy-ship
       script: null
       module: null
     supports_project_shapes:
@@ -4396,7 +4396,7 @@ capabilities:
     title: Internal phase check-in subagent for the John Wick workflow
     delegate_skill: sweetclaude:john-wick-checkin
     command_entrypoint:
-      slash_command: /sweetclaude:john-wick-checkin
+      slash_command: /sweetclaude:build john-wick-checkin
       script: null
       module: null
     supports_project_shapes:
@@ -4422,7 +4422,7 @@ capabilities:
     title: Toggle and view local usage tracking
     delegate_skill: sweetclaude:usage
     command_entrypoint:
-      slash_command: /sweetclaude:usage
+      slash_command: /sweetclaude:configure usage
       script: null
       module: null
     supports_project_shapes:
