@@ -48,9 +48,15 @@ Legacy 3.x uses:
 /plugin install sweetclaude@sweetclaude-legacy
 ```
 
-To move a 3.x project to the stable line, install stable and use
-`/sweetclaude:configure migrate this project`; migration is guarded and
-reversible.
+To move a 3.x project to the stable line, run these in order. Old 3.x installs registered their marketplace as `sweetclaude-stable`, so remove it first:
+
+```text
+/plugin marketplace remove sweetclaude-stable
+/plugin marketplace add carson-sweet/sweetclaude@main
+/plugin install sweetclaude@sweetclaude-stable
+```
+
+Then restart Claude Code and run `/sweetclaude:configure doctor` in each project. Doctor routes legacy project state to recovery or migration; update does not migrate project data.
 
 ## Retired: 4.x Beta
 

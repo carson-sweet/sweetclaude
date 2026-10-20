@@ -13,7 +13,7 @@ Score a session transcript against a contract with `python3 scripts/behavioral_j
 
 SweetClaude separates behavioral properties into two tiers:
 
-- **Deterministic (hook-enforced):** Properties like "test files cannot be edited during IMPLEMENT" are enforced by shell hooks. They do not degrade with model upgrades.
+- **Deterministic (hook-enforced):** Properties like "test files cannot be edited during IMPLEMENT" are enforced by shell hooks. They do not degrade with model upgrades. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 - **Instruction-guided (tracked here):** Properties like "never push for phase advancement" or "always ask for concrete examples" are probabilistic. They can drift when the underlying model changes.
 
 This page tracks the instruction-guided tier.

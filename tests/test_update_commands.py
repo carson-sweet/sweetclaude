@@ -392,6 +392,31 @@ def test_sync_copies_skills_and_hooks(tmp_path: Path) -> None:
     assert not out.get("errors"), out["errors"]
 
 
+def test_sync_copies_the_workflow_library(tmp_path: Path) -> None:
+    """Tier 1 commands load workflows from skill-library/. An update that
+    refreshes skills/ but not the library leaves every category command
+    pointing at missing or stale workflows."""
+    source = tmp_path / "source"
+    install = tmp_path / "install"
+    for d in ("skills", "hooks", "scripts", ".claude-plugin"):
+        (source / d).mkdir(parents=True)
+    (source / ".claude-plugin" / "plugin.json").write_text('{"name": "sweetclaude"}\n', encoding="utf-8")
+    (source / "skill-library" / "build" / "demo").mkdir(parents=True)
+    (source / "skill-library" / "build" / "INDEX.md").write_text("# Build\n", encoding="utf-8")
+    (source / "skill-library" / "build" / "demo" / "SKILL.md").write_text("---\n---\nx\n", encoding="utf-8")
+    (install / "skill-library" / "build" / "retired").mkdir(parents=True)
+    (install / "skill-library" / "build" / "retired" / "SKILL.md").write_text("old\n", encoding="utf-8")
+
+    args = argparse.Namespace(source=str(source), install_path=str(install),
+                              plugin_root="")
+    out = _capture(mod.cmd_sync, args)
+
+    assert (install / "skill-library" / "build" / "INDEX.md").is_file()
+    assert (install / "skill-library" / "build" / "demo" / "SKILL.md").is_file()
+    assert not (install / "skill-library" / "build" / "retired").exists()
+    assert not out.get("errors"), out["errors"]
+
+
 def test_sync_reports_errors_rather_than_raising(tmp_path: Path) -> None:
     """A source that does not exist must produce a reported error, not an
     exception that aborts the update mid-way."""

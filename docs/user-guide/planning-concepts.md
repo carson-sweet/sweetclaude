@@ -110,9 +110,9 @@ The limitation is visibility. A backlog tells you what exists and what is priori
 
 ### Kanban
 
-Kanban keeps a backlog and works stories continuously — no sprints, no cycles, no ceremony around what gets started when. The defining constraint is a **WIP limit**: SweetClaude hard-enforces a maximum of three stories in active status at any time. You cannot start new work until something finishes.
+Kanban keeps a backlog and works stories continuously — no sprints, no cycles, no ceremony around what gets started when. The defining constraint is a **WIP limit**: SweetClaude hard-enforces a maximum of three stories in active status at any time. You cannot start new work until something finishes. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
-The WIP limit is not advisory. It is the entire mechanism. By capping work-in-progress, it forces completion over accumulation — the most common failure mode in solo development is a graveyard of half-done work. The limit keeps the flow moving.
+The WIP limit is not advisory. It is the entire mechanism. By capping work-in-progress, it forces completion over accumulation — the most common failure mode in solo development is a graveyard of half-done work. The limit keeps the flow moving. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 Kanban works well with or without a roadmap. You can run a pure backlog (triage and pull from the top) or organize the backlog behind milestones and epics and still work Kanban-style through execution. The mode governs how you execute, not necessarily how you plan.
 
@@ -132,7 +132,7 @@ The workflow has two phases that alternate:
 
 **Betting.** At the start of each 6-week cycle, a betting table decides which shaped pitches get worked. Pitches that are not bet on do not carry forward automatically — they go back to a pool and must be re-pitched if they are still worth doing. There is no accumulating backlog of promised work.
 
-SweetClaude enforces a hard gate: implementation is blocked until the betting table approves the pitch. This prevents the most common Shape Up failure mode, which is treating pitches as a formality and building before the appetite is agreed.
+SweetClaude enforces a hard gate: implementation is blocked until the betting table approves the pitch. This prevents the most common Shape Up failure mode, which is treating pitches as a formality and building before the appetite is agreed. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 Shape Up has no epics, no sprints, and no milestones in the SweetClaude sense. The cycle is the container. Stories exist but they emerge from pitches rather than from a roadmap.
 
@@ -153,7 +153,7 @@ The dev lead or tech lead then looks at each epic's stories and:
 - Decides the order in which stories should be worked within the epic
 - Organizes stories into sprints, fitting them into time windows and matching available capacity
 
-The result is a roadmap: a structured view of what ships with what, organized around meaningful product outcomes (milestones), with feature-related work bundled together (epics), and specific delivery windows defined (sprints). SweetClaude enforces a hard gate: implementation is blocked unless there is an active sprint.
+The result is a roadmap: a structured view of what ships with what, organized around meaningful product outcomes (milestones), with feature-related work bundled together (epics), and specific delivery windows defined (sprints). SweetClaude enforces a hard gate: implementation is blocked unless there is an active sprint. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 Epics are first-class in Agile mode — they appear in status views, Kanban boards, and big-picture renders. In all other modes, epics are available but not surfaced by default.
 
@@ -177,16 +177,16 @@ If you are not sure which mode fits your situation, this table shows exactly wha
 | **Epics** | Optional, not surfaced | Optional, not surfaced | No | Yes, first-class |
 | **Sprints** | No | No | No — 6-week cycles | Yes (required to implement) |
 | **Structured roadmap** | No | Optional | No | Yes |
-| **WIP limit** | None | 3 active (hard block) | Appetite per pitch | Sprint capacity |
+| **WIP limit** | None | 3 active (hard block) | Appetite per pitch | Sprint capacity (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 | **Kanban board columns** | No | Yes (statuses as columns) | No | Yes |
 | **TDD enforcement** | Level 1 | Level 1 | Level 2 | Level 2 |
-| **Hard gate to implement** | None | WIP limit | Betting table approval | Active sprint required |
+| **Hard gate to implement** | None | WIP limit | Betting table approval | Active sprint required (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 | **Best for** | Solo, exploration, prototypes | Solo or small team, continuous delivery | Product teams, fixed appetite, scope control | Teams, structured iteration, stakeholder delivery |
 
 **How to read the table:**
 - "Optional" means the artifact exists and you can use it, but SweetClaude does not require it or surface it prominently.
 - "Not surfaced" means epics are available in the data model but do not appear in status views or big-picture renders.
-- "Hard block" means SweetClaude will not let you proceed until the condition is met.
+- "Hard block" means SweetClaude will not let you proceed until the condition is met. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 You can switch modes at any time — work already done stays as-is. When switching to a more structured mode, SweetClaude will flag what artifacts are missing and offer to catch up.
 

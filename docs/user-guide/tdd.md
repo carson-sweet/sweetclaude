@@ -11,12 +11,12 @@ This page explains the four enforcement levels, what each one feels like to use,
 
 ## Why Hooks, Not Prompts
 
-Most TDD documentation says "write the test first." SweetClaude does not say it. SweetClaude makes it physically impossible at higher levels to do otherwise.
+Most TDD documentation says "write the test first." SweetClaude does not say it. SweetClaude makes it physically impossible at higher levels to do otherwise. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 The mechanism is three native Claude Code hooks:
 
-- **test-guardian** (PreToolUse) blocks edits to test files during the IMPLEMENT phase. Not warns. Blocks.
-- **auto-test-runner** (PostToolUse) runs tests automatically after every source edit. Not reminds. Runs.
+- **test-guardian** (PreToolUse) blocks edits to test files during the IMPLEMENT phase. Not warns. Blocks. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+- **auto-test-runner** (PostToolUse) runs tests automatically after every source edit. Not reminds. Runs. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 - **git-checkpoint** auto-commits state at phase transitions, including the moment when failing tests are written and before implementation begins.
 
 This sounds extreme until you watch what happens without it: a test passes, you ship, and three weeks later production breaks because the test was passing for the wrong reason. The hooks remove that failure mode. The cost is that you cannot quickly "fix" a test by editing it — and that cost is the whole point.
@@ -74,9 +74,9 @@ The right level depends on the work, not your preference. The framework picks ba
 0. A story branch is created (`{ID}/{slug}`, e.g. `ISSUE-046/git-branch-discipline`) to isolate the work from main.
 1. Test writer agent writes failing tests in an isolated context.
 2. Tests are committed to git.
-3. Test-guardian hook activates — test files become immutable.
+3. Test-guardian hook activates — test files become immutable. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 4. Implementer agent (separate context) makes tests pass with code.
-5. Auto-test-runner hook fires after every source edit.
+5. Auto-test-runner hook fires after every source edit. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 **What it feels like**: choreographed. You watch the test writer commit failing tests. You watch the implementer iterate against them. The implementer never sees your reasoning about what the tests should cover — only the tests themselves.
 
@@ -123,8 +123,8 @@ Concrete failure modes the hooks block:
 
 | Without hooks | With hooks |
 |---|---|
-| Implementer edits a test to make it pass | test-guardian blocks the edit at the OS level |
-| Tests fail silently and ship | auto-test-runner runs after every source edit; failure is immediate |
+| Implementer edits a test to make it pass | test-guardian blocks the edit at the OS level (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
+| Tests fail silently and ship | auto-test-runner runs after every source edit; failure is immediate (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
 | Test writer's intent gets lost between sessions | git-checkpoint commits the failing tests immediately |
 | Spec gets reverse-engineered from passing implementation | subagent isolation hides the spec from the implementer |
 
@@ -153,9 +153,9 @@ These run inside the TDD pipeline. You do not invoke them directly.
 
 Things SweetClaude will catch you doing if you try them:
 
-**Editing a failing test to make it pass.** The test-guardian hook blocks the edit. If you genuinely need to fix a defective test, override with explicit approval — and that override is logged.
+**Editing a failing test to make it pass.** The test-guardian hook blocks the edit. If you genuinely need to fix a defective test, override with explicit approval — and that override is logged. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
-**Writing tests after implementation.** The framework checkpoints failing tests before implementation begins. If you try to commit implementation without prior failing tests, the workflow refuses to advance.
+**Writing tests after implementation.** The framework checkpoints failing tests before implementation begins. If you try to commit implementation without prior failing tests, the workflow refuses to advance. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Mocking the database to "make tests faster".** No mocks by default. If you mock, the reason is explicit and reviewed.
 

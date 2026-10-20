@@ -12,14 +12,14 @@ operations are blocked — the broken hook returns `{"ok": false}` for
 every call. The Bash tool is unaffected because Write|Edit hooks only
 match those two tools. The two hooks most commonly involved in Write|Edit
 blockages are `test-guardian.sh` and `auto-test-runner.sh` — both fire on
-every Write or Edit call during an active implementation phase.
+every Write or Edit call during an active implementation phase. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 Three other hooks also match Bash, but none block a recovery `cp`:
 `artifact-guardian.sh` (warn-only, gates only `git commit`),
 `wip-limit.sh` (blocks only in Kanban mode at WIP limit, not during
 recovery), and `preflight-guard.sh` (blocks until first valid invocation;
 clears automatically once `phase.yaml` exists). In a normal recovery
-scenario all three are either inactive or transparent.
+scenario all three are either inactive or transparent. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
 
 ### Automated repair
 

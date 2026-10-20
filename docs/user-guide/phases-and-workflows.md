@@ -9,7 +9,7 @@ This page is reference. If you want to understand *why* phases work the way they
 
 ## The Seven Standard Phases
 
-A phase is a quality gate, not a time box. It is done when its exit criteria are met. The framework will not advance you past a phase whose criteria are unmet — but it also will not nag you to advance.
+A phase is a quality gate, not a time box. It is done when its exit criteria are met. The framework will not advance you past a phase whose criteria are unmet — but it also will not nag you to advance. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 | Phase | What "done" means |
 |---|---|
@@ -33,7 +33,7 @@ These appear in specific workflows for work that does not fit the standard pipel
 | **ASSESS** | migrations, compliance, dependency-upgrade | Map scope and risk. Rollback plan exists before design starts. |
 | **SCOPE** | tech-debt | Lock existing behavior with tests before refactoring. Tests must fail if any locked behavior changes. |
 | **TRIAGE** | course-correction | Review every in-flight work item: keep / drop / repurpose / defer. Nothing silently abandoned. |
-| **CUTOVER** | technology-migration | Switch traffic from old to new system. Hard gate — human decision required. |
+| **CUTOVER** | technology-migration | (Not currently enforced: the gate is not checked by code yet; Claude applies it as an instruction.) Switch traffic from old to new system. Hard gate — human decision required. |
 | **CLEANUP** | technology-migration, api-deprecation | Remove old system after cutover or sunset date. |
 | **POST-MORTEM** | hotfix, rollback | Required follow-on. Timeline, root cause, action items. |
 
@@ -84,7 +84,7 @@ When you tell `/sweetclaude:go` what you want to do, it classifies the work into
 | Work type | Shape | Notes |
 |---|---|---|
 | `bug-fix` | diagnostic | DIAGNOSE = reproduction case + root cause. Fix targets root cause. |
-| `security-patch` | diagnostic | VERIFY is a hard gate (security review mandatory). Expedited ship. |
+| `security-patch` | diagnostic | VERIFY is a hard gate (security review mandatory). Expedited ship. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 | `hotfix` | compressed | Speed over ceremony. POST-MORTEM is required, not optional. |
 | `rollback-revert` | diagnostic (2-phase) | Spawns POST-MORTEM automatically. |
 | `performance-optimization` | diagnostic + DESIGN | DIAGNOSE = baseline benchmark. VERIFY = benchmark again. |
@@ -101,15 +101,15 @@ When you tell `/sweetclaude:go` what you want to do, it classifies the work into
 
 | Work type | Shape | Notes |
 |---|---|---|
-| `technology-migration` | migration | CUTOVER is a hard gate — human decision required. Old and new run in parallel until cutover. |
-| `data-migration` | migration (no CUTOVER) | VERIFY is a hard gate — integrity checks (row counts, checksums, sample records) mandatory. |
+| `technology-migration` | migration | CUTOVER is a hard gate — human decision required. Old and new run in parallel until cutover. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| `data-migration` | migration (no CUTOVER) | VERIFY is a hard gate — integrity checks (row counts, checksums, sample records) mandatory. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 
 ### Compliance and infrastructure
 
 | Work type | Shape | Notes |
 |---|---|---|
 | `compliance-requirement` | extended-abbreviated | VERIFY includes audit evidence generation. Triggered externally (customer ask, legal) or proactively from security-planning. |
-| `infrastructure-change` | abbreviated | Hard gate at DESIGN for GA+ projects. |
+| `infrastructure-change` | abbreviated | Hard gate at DESIGN for GA+ projects. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 
 ### Onboarding
 
@@ -123,9 +123,9 @@ When you tell `/sweetclaude:go` what you want to do, it classifies the work into
 
 Phase gates have exit criteria. Most criteria are advisory.
 
-**Soft gates** can be bypassed with: *"I've addressed this informally — proceed."* The override is logged. SweetClaude continues.
+**Soft gates** can be bypassed with: *"I've addressed this informally — proceed."* The override is logged. SweetClaude continues. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
-**Hard gates** (⚠️) cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages. Override requires explicit risk acceptance, logged to the decision log.
+**Hard gates** (⚠️) cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages. Override requires explicit risk acceptance, logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 The full list of hard gates:
 
@@ -181,7 +181,7 @@ For high-risk work (infrastructure changes, technology migrations, data migratio
 2. At least one alternative was considered and explicitly rejected with rationale.
 3. A rollback plan is documented in detail. Step-by-step. Not "revert the commit."
 
-You can run the gate explicitly with `/sweetclaude:design` and ask to validate the solution, or it triggers automatically when a hard-gate work type reaches DESIGN.
+You can run the gate explicitly with `/sweetclaude:design` and ask to validate the solution, or it triggers automatically when a hard-gate work type reaches DESIGN. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 ---
 
