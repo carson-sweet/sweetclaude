@@ -4,6 +4,14 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [5.0.1] — 2026-10-20
+
+### Changed — README quick start suggests an overview prompt
+
+The README's TL;DR now ends with `/sweetclaude:go give me an overview of what you can do`, a first prompt for new users.
+
+---
+
 ## [5.0.0] — 2026-10-20
 
 ### Changed — nine commands replace the full skill menu (breaking)
