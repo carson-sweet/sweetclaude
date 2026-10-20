@@ -109,6 +109,9 @@ class TestChannelClassification:
         # Post-promotion: a non-prerelease 4.x install defaults to stable.
         assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "4.5.1"}) == "stable"
 
+    def test_bare_marketplace_5x_release_is_stable(self):
+        assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "5.0.0"}) == "stable"
+
     def test_bare_marketplace_3x_is_legacy(self):
         assert plugin_state._channel("sweetclaude@sweetclaude", {"version": "3.68.6"}) == "legacy"
 
@@ -177,7 +180,11 @@ class TestReleaseGateRefusesRetiredChannel:
             release_gate._validate_channel("4.6.0-beta", "beta", "beta-4.x")
 
     def test_stable_release_still_allowed(self):
-        release_gate._validate_channel("4.6.0", "stable", "main")
+        release_gate._validate_channel("5.0.0", "stable", "main")
+
+    def test_stable_release_rejects_previous_major(self):
+        with pytest.raises(ValueError, match="stable releases must be 5.x"):
+            release_gate._validate_channel("4.6.0", "stable", "main")
 
 
 class TestCiRetargeted:

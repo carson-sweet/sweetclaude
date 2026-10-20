@@ -27,13 +27,13 @@ ROOT = Path(__file__).parents[1]
 
 def test_capability_manifest_loads_channel_facts():
     # ISSUE-239 (decision log #34, #36): promotion-time three-channel model.
-    # stable -> main/major 4; beta unchanged (retired later in ISSUE-241);
+    # stable -> main/major 5 (major 4 until the 5.0.0 release); beta unchanged (retired later in ISSUE-241);
     # legacy -> stable-3.x/major 3.
     manifest = load_manifest(ROOT / "config" / "capability-manifest.yaml")
 
     assert expected_ref("stable", manifest) == "main"
     assert expected_marketplace("stable", manifest) == "sweetclaude-stable"
-    assert manifest["channels"]["stable"]["major_version"] == 4
+    assert manifest["channels"]["stable"]["major_version"] == 5
     assert manifest["channels"]["stable"]["prerelease_allowed"] is False
 
     # beta channel is untouched by this story
@@ -166,3 +166,29 @@ def test_capability_manifest_validate_cli_emits_summary():
     payload = json.loads(completed.stdout)
     assert payload["ok"] is True
     assert "migrate.flat_bl_to_issue" in payload["capabilities"]
+
+
+TIER1_SLASH_COMMANDS = {
+    f"/sweetclaude:{name}"
+    for name in ("go", "plan", "design", "build", "maintain", "configure", "utils", "status", "help")
+}
+
+
+def test_capability_slash_commands_resolve_to_tier1_or_library_workflow():
+    manifest = load_manifest(ROOT / "config" / "capability-manifest.yaml")
+    unresolved = []
+    for capability_id, config in manifest["capabilities"].items():
+        slash_command = (config.get("command_entrypoint") or {}).get("slash_command")
+        if slash_command is None or slash_command in TIER1_SLASH_COMMANDS:
+            continue
+        parts = slash_command.removeprefix("/sweetclaude:").split(" ")
+        if (
+            slash_command.startswith("/sweetclaude:")
+            and len(parts) == 2
+            and f"/sweetclaude:{parts[0]}" in TIER1_SLASH_COMMANDS
+            and (ROOT / "skill-library" / parts[0] / parts[1] / "SKILL.md").is_file()
+        ):
+            continue
+        unresolved.append(f"{capability_id}: {slash_command}")
+
+    assert unresolved == []

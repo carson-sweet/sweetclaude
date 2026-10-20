@@ -1,13 +1,13 @@
 {
   "name": "sweetclaude-stable",
-  "description": "SweetClaude stable channel \u2014 the 4.x line, tracked on main.",
+  "description": "SweetClaude stable channel \u2014 the 5.x line, tracked on main.",
   "owner": {
     "name": "Carson Sweet"
   },
   "plugins": [
     {
       "name": "sweetclaude",
-      "description": "SweetClaude stable channel (4.x).",
+      "description": "SweetClaude stable channel (5.x).",
       "source": {
         "source": "url",
         "url": "https://github.com/carson-sweet/sweetclaude.git",
