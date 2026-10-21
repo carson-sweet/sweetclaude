@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -64,6 +65,34 @@ CRITERIA = {
     "ship_no_ship_decision": "a recorded ship/no-ship decision",
     "issues_from_backlog": "issues derived from an approved pitch",
 }
+
+WORK_TYPE_SECTIONS = {
+    "Net-new feature": "net-new-feature",
+    "External integration": "external-integration",
+    "Course correction": "course-correction",
+    "Security planning": "security-planning",
+    "Enhancement / iteration": "enhancement",
+    "Tech debt / refactor": "tech-debt",
+    "Compliance requirement": "compliance-requirement",
+    "Infrastructure change": "infrastructure-change",
+    "Onboarding flow design": "onboarding-flow-design",
+    "Release planning": "release-planning",
+    "Bug fix": "bug-fix",
+    "Security patch": "security-patch",
+    "Performance optimization": "performance-optimization",
+    "Rollback / revert": "rollback-revert",
+    "Technology migration": "technology-migration",
+    "Data migration": "data-migration",
+    "API deprecation": "api-deprecation",
+    "Dependency upgrade": "dependency-upgrade",
+    "Hotfix": "hotfix",
+}
+
+_PHASE_HEADING = re.compile(r"^\*\*([A-Z][A-Z-]+)\*\*(.*)$")
+_CRITERION_BULLET = re.compile(r"^- (\S.*)$")
+_PHASE_EXIT_KEY = re.compile(r"^[A-Z][A-Z-]+$")
+
+_PHASE_GATES_CACHE: dict | None = None
 
 
 def _load_module(name: str, relative: str):
@@ -272,17 +301,134 @@ def evaluate_gates_for_phase(phase: str, ctx: ProjectContext, override_text: str
     return {"allow": allowed, "reasons": reasons, "unmet": unmet}
 
 
+def parse_phase_gates() -> dict:
+    """rules/phase-gates.md -> {work_type: {PHASE: {"criteria": [str], "hard": bool}}}.
+
+    Tolerant: only '## ' sections whose title maps to a work type are parsed,
+    only top-level bullets under a '**PHASE**' heading become criteria, and a
+    phase heading carrying a HARD GATE marker makes its criteria hard.
+    """
+    global _PHASE_GATES_CACHE
+    if _PHASE_GATES_CACHE is None:
+        _PHASE_GATES_CACHE = _parse_phase_gates_file(REPO_ROOT / "rules" / "phase-gates.md")
+    return _PHASE_GATES_CACHE
+
+
+def _parse_phase_gates_file(path: Path) -> dict:
+    gates: dict = {}
+    if not path.exists():
+        return gates
+    work_type = None
+    phase = None
+    hard = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            work_type = WORK_TYPE_SECTIONS.get(line[3:].strip())
+            phase = None
+            hard = False
+            continue
+        if work_type is None:
+            continue
+        heading = _PHASE_HEADING.match(line)
+        if heading:
+            phase = heading.group(1)
+            hard = "HARD GATE" in heading.group(2).upper()
+            continue
+        if phase is None:
+            continue
+        bullet = _CRITERION_BULLET.match(line)
+        if bullet:
+            criterion = bullet.group(1).strip()
+            if criterion:
+                gates.setdefault(work_type, {}).setdefault(
+                    phase, {"criteria": [], "hard": hard})["criteria"].append(criterion)
+    return gates
+
+
+def active_phase(ctx: ProjectContext) -> str:
+    active = (ctx.sweetclaude.get("work") or {}).get("active") or {}
+    return str(active.get("phase") or "").strip().upper()
+
+
+def active_work_type(ctx: ProjectContext) -> str:
+    active = (ctx.sweetclaude.get("work") or {}).get("active") or {}
+    tagged = str(active.get("type") or "").strip()
+    if tagged:
+        return tagged
+    issue = ctx.active_issue()
+    return str((issue or {}).get("type") or "").strip()
+
+
+def normalize_criterion(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", str(text).casefold()).strip()
+
+
+def phase_exit_records(ctx: ProjectContext) -> tuple[dict[str, list[str]], str]:
+    """work.active.phase_exit -> ({PHASE: [entries]}, current phase).
+
+    Accepts the canonical {PHASE: [criteria]} mapping plus a flat list read as
+    the current phase's records.
+    """
+    active = (ctx.sweetclaude.get("work") or {}).get("active") or {}
+    current = str(active.get("phase") or "").strip().upper()
+    raw = active.get("phase_exit")
+    if isinstance(raw, list):
+        values = [str(v) for v in raw if str(v).strip()]
+        return ({current: values} if current and values else {}), current
+    if not isinstance(raw, dict):
+        return {}, current
+    records: dict[str, list[str]] = {}
+    for key, value in raw.items():
+        if not _PHASE_EXIT_KEY.match(str(key)):
+            continue
+        entries = value if isinstance(value, list) else ([str(value)] if value else [])
+        entries = [str(v) for v in entries if str(v).strip()]
+        if entries:
+            records[str(key).upper()] = entries
+    return records, current
+
+
 def phase_exit_criteria(phase: str, ctx: ProjectContext) -> list[dict]:
-    return []
+    """The exit criteria for the work item's current phase, parsed from
+    rules/phase-gates.md minus the ones recorded as satisfied under
+    work.active.phase_exit, as a list of gate entries. The current phase is
+    read from work.active.phase and the work type from work.active.type
+    (falling back to the active item's frontmatter type); unknown types and
+    missing phases fail open.
+    """
+    current = active_phase(ctx)
+    item_id = ctx.active_work_id
+    if not item_id or not current or current == str(phase).strip().upper():
+        return []
+    wtype = active_work_type(ctx)
+    if not wtype:
+        return []
+    section = parse_phase_gates().get(wtype, {}).get(current)
+    if not section:
+        return []
+    records, _ = phase_exit_records(ctx)
+    satisfied = {normalize_criterion(c) for c in records.get(current, [])}
+    unmet = [c for c in section["criteria"] if normalize_criterion(c) not in satisfied]
+    if not unmet:
+        return []
+    gate_id = f"{wtype}.{current}"
+    listing = "; ".join(unmet)
+    return [{
+        "id": gate_id, "met": False, "action": "block",
+        "reason": (
+            f"Gate {gate_id} unmet: exit criteria for {current} not recorded as satisfied. "
+            f"Unmet: {listing}."
+        ),
+    }]
 
 
 def evaluate_advance(phase: str, override_text: str, ctx: ProjectContext) -> dict:
     result = evaluate_gates_for_phase(phase, ctx, override_text)
-    for criterion in phase_exit_criteria(phase, ctx):
-        if criterion.get("met") is False:
-            result["unmet"].append(str(criterion.get("id") or ""))
-            result["reasons"].append(str(criterion.get("reason") or ""))
-            if criterion.get("action") in HARD_ACTIONS:
+    for entry in phase_exit_criteria(phase, ctx):
+        if entry.get("met") is False:
+            result["unmet"].append(str(entry.get("id") or ""))
+            result["reasons"].append(str(entry.get("reason") or ""))
+            if entry.get("action") in HARD_ACTIONS:
                 result["allow"] = False
     return result
 

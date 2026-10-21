@@ -3,7 +3,7 @@
 # Generated from internal phase/workflow separation design.
 
 Entry and exit criteria for each work type × phase combination.
-A phase cannot advance until exit criteria are met.
+A phase cannot advance until exit criteria are met — `scripts/gate_check.py advance` refuses the advance and names each unmet criterion. Criteria you satisfy are recorded under `work.active.phase_exit` in `.sweetclaude/state/sweetclaude.yaml`, so the check reads: parsed criteria minus satisfied ones.
 User can override with "I've addressed this informally — proceed" (soft gate).
 Hard gates are marked ⚠️ and cannot be soft-bypassed at GA+.
 

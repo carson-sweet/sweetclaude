@@ -38,7 +38,7 @@ DESIGN_CRITERIA = [
 
 DATA_MIGRATION_ASSESS_CRITERIA = [
     "Data to migrate identified: tables, collections, files, volume",
-    "Schema mapping defined: old to new",
+    "Schema mapping defined: old → new",
     "Data quality issues identified: nulls, invalid values, encoding problems",
     "Rollback plan: how to restore from backup if migration fails",
     "Downtime requirement assessed: live migration or maintenance window",
