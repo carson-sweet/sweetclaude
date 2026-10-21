@@ -145,7 +145,10 @@ rows:
   test_level:
   - contract
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 07b5f41c
+  - a7d963c2
   notes: Core user value and cheap; legacy-command-redirect.sh already sends users here for the command list.
 - id: R-016
   source: A
@@ -263,7 +266,10 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 671cf155
+  - 9c514990
   notes: Core user value and cheap. The off skill's own confirmation text makes this promise.
 - id: R-023
   source: A
@@ -403,7 +409,10 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 384c00aa
+  - a841a59c
   notes: 'Decision setup_promises: implement the pre-sweetclaude snapshot branch.'
 - id: R-030
   source: A
@@ -421,7 +430,10 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - eff454f8
+  - a841a59c
   notes: 'Decision setup_promises: implement the mode question.'
 - id: R-031
   source: A
@@ -489,7 +501,10 @@ rows:
   acceptance: After setup Branch A or B completes, the project CLAUDE.md exists and contains a SweetClaude section that passes the skills/master/SKILL.md Step 2 check.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - b0f0639a
+  - a841a59c
   notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-035
   source: A
@@ -656,7 +671,14 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 46e16906
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-071
   source: B
   docs:
@@ -671,7 +693,14 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 46e16906
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-072
   source: B
   docs:
@@ -690,7 +719,14 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 46e16906
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-073
   source: B
   docs:
@@ -719,7 +755,14 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 46e16906
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-074
   source: B
   docs:
@@ -734,7 +777,14 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 46e16906
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-075
   source: B
   docs:
@@ -764,7 +814,14 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 46e16906
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-077
   source: B
   docs:
@@ -1243,7 +1300,10 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 5bd705da
+  - a83d5904
 - id: R-105
   source: B
   docs:
@@ -2182,7 +2242,10 @@ rows:
   acceptance: product-discovery appends at least one ASM-NNN entry to .sweetclaude/state/assumption-register.md when an interview answer is recorded as an assumption, and a contract test asserts that write step exists in the discovery skill.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - 87b6af72
+  - b218124c
   notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-179
   source: C
@@ -2211,7 +2274,10 @@ rows:
   acceptance: product-sprint-plan reads .sweetclaude/state/scope-changes.md and lists entries dated after the previous sprint start in its plan output.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - 0e2aa067
+  - 447e9bcf
   notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-181
   source: C
@@ -2444,7 +2510,7 @@ rows:
   acceptance: code-feature Step 1 searches the configured product base (default .sweetclaude/product/) for story and issue artifacts, and walkthroughs.md section 6 lists the same search order as the skill.
   test_level:
   - unit
-  status: open
+  status: green
 - id: R-196
   source: C
   docs:
@@ -2623,7 +2689,10 @@ rows:
   acceptance: For a typed legacy fixture, the doctor supported-migration prompt names the typed legacy layout, and for a flat BL fixture it names the flat BL-NNN layout.
   test_level:
   - unit
-  status: open
+  status: closed
+  commits:
+  - 0e42737b
+  - d7e1d92b
   notes: Found while re-verifying the migration-and-recovery route rows.
 - id: R-208
   source: C
@@ -2762,7 +2831,7 @@ rows:
   acceptance: For an installed key sweetclaude@sweetclaude on a prerelease version, plugin-state emits '/plugin marketplace remove sweetclaude' as the third switch command, and beta-rescue.md gives the matching command for the legacy key.
   test_level:
   - unit
-  status: open
+  status: green
   notes: Extends the audit's unverified legacy-key item; verified against plugin-state.py.
 - id: R-217
   source: C
@@ -2793,7 +2862,11 @@ rows:
   acceptance: skill-library/build/large-story/SKILL.md describes contract edits as denied, names the human-run amendment commands, and contains no 'approval prompt' wording for contract edits.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - 2a843473
+  - a9267df0
+  - 37c23f04
 - id: R-219
   source: C
   docs:
@@ -2869,7 +2942,10 @@ rows:
   acceptance: Every backfill invocation in skill-library/configure/work-item-artifacts/SKILL.md resolves the script under ${CLAUDE_PLUGIN_ROOT} (or the skill base directory), and a contract test finds no bare scripts/backfill_work_item_artifacts.py invocation in skill-library.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - 159074cb
+  - a0e7f290
 - id: R-224
   source: C
   docs:
@@ -2911,7 +2987,12 @@ rows:
   acceptance: Every controller command the large-story and small-story workflows tell the model to run resolves from ${CLAUDE_PLUGIN_ROOT}, and a test fails if any skill or controller message names a bare scripts/ path.
   test_level:
   - unit
-  status: open
+  status: closed
+  commits:
+  - 2ea31f5a
+  - f4eefce8
+  - 175d440c
+  - 37c23f04
   notes: 'Found while building the ledger (group C agent). Same class of bug as the work-item-artifacts backfill path. Test change reviewed 2026-10-21: tests/test_process_controls_in_skills.py asserted the bare `python3 scripts/success_criteria_contracts.py` form this row declares a bug; that one assertion now expects the ${CLAUDE_PLUGIN_ROOT} form.'
 - id: R-230
   source: D
@@ -3043,7 +3124,16 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 46e16906
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
+  - 250ba233
+  - 40e72478
   notes: Not in the brief's hook list; same protocol defect, found while re-verifying hook-development.md:18.
 - id: R-237
   source: D
@@ -3058,7 +3148,10 @@ rows:
   acceptance: The RED-commit step of every code-tdd level in skill-library/build/code-tdd/SKILL.md invokes hooks/git-checkpoint.sh, and a contract test asserts that invocation is present.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - d5c0cbac
+  - 048e1216
 - id: R-238
   source: D
   docs:
@@ -3072,7 +3165,10 @@ rows:
   acceptance: 'In a temporary git repo with a new untracked tests/test_x.py, running hooks/git-checkpoint.sh "test: RED - X" tests/test_x.py produces a commit that contains tests/test_x.py, asserted by a unit test.'
   test_level:
   - unit
-  status: open
+  status: closed
+  commits:
+  - e48ef495
+  - 22a1310a
 - id: R-239
   source: D
   docs:
@@ -3204,7 +3300,10 @@ rows:
   acceptance: With HOME pointing at a fixture whose installed_plugins.json is keyed sweetclaude@sweetclaude-stable and whose cache holds sweetclaude-stable/sweetclaude/5.0.2/hooks, `bash scripts/emergency-hook-restore.sh --dry-run` prints "Resolved install path:" with that directory, asserted by a unit test.
   test_level:
   - unit
-  status: open
+  status: closed
+  commits:
+  - a881ccca
+  - 3f89f5f5
 - id: R-248
   source: D
   docs:
@@ -3218,7 +3317,10 @@ rows:
   acceptance: When REPO_ROOT resolves to the same directory as INSTALL_PATH and no hooks.bak/ exists, scripts/emergency-hook-restore.sh exits non-zero without copying and names the source options, asserted by a unit test.
   test_level:
   - unit
-  status: open
+  status: closed
+  commits:
+  - 6b14f723
+  - 3f89f5f5
 - id: R-249
   source: D
   docs:
@@ -3234,7 +3336,10 @@ rows:
   acceptance: '`scripts/behavioral_judge.py score` run without --backend exits non-zero with a message naming the real backends, and `--backend stub` is refused unless an explicit stub opt-in flag is passed, asserted by unit tests.'
   test_level:
   - unit
-  status: open
+  status: closed
+  commits:
+  - 4242688f
+  - fcf86af5
 - id: R-250
   source: D
   docs:
@@ -3251,7 +3356,14 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 4b81d9da
+  - 36c5c530
+  - d2a916ad
+  - d2f0168f
+  - cc64619d
+  - 957873fb
   notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-251
   source: D
