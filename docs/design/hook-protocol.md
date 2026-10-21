@@ -26,7 +26,7 @@
 | PreToolUse | stdout `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "<reason>"}}`, exit 0 | The tool call is blocked; the model sees the reason. |
 | PreToolUse | stderr `<reason>`, exit 2 | The tool call is blocked; the model sees the stderr text. |
 | PreToolUse | stdout `{"ok": false}`, exit 0 | Ignored. The tool call runs. |
-| PreToolUse | stdout `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "<text>"}}`, exit 0 | The tool call runs and the text reaches the model (verified 2026-10-21 on Claude Code 2.1.306 by the live R-236 artifact-guardian case). |
+| PreToolUse | stdout `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "<text>"}}`, exit 0 | The tool call runs and the output is accepted as a successful hook response (seen in the `--include-hook-events` stream on Claude Code 2.1.306, live R-236 case, 2026-10-21). Delivery to the model is not yet verified by a model-side probe. |
 | PostToolUse | stdout `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "<text>"}}` | The text reaches the model alongside the tool result. |
 | PostToolUse | stdout `{"decision": "block", "reason": "<text>"}` | The reason reaches the model as hook feedback; the tool has already run. |
 | Stop | stdout `{"decision": "block", "reason": "<text>"}` when `stop_hook_active` is false | The session continues and the model acts on the reason. |
