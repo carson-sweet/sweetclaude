@@ -142,17 +142,47 @@ def run_tests(project: str, command: str, timeout_seconds: int) -> dict | None:
 HEREDOC_OPERATOR = re.compile(r"(?<!<)<<(?!<)-?\s*(?:'([^']*)'|\"([^\"]*)\"|\\?([A-Za-z0-9_]+))")
 
 
+def heredoc_delimiters(line: str, quote: str) -> tuple[list[str], str]:
+    delimiters: list[str] = []
+    index = 0
+    while index < len(line):
+        char = line[index]
+        if quote == "'":
+            if char == "'":
+                quote = ""
+        elif quote == '"':
+            if char == "\\":
+                index += 1
+            elif char == '"':
+                quote = ""
+        elif char == "\\":
+            index += 1
+        elif char in "'\"":
+            quote = char
+        elif line.startswith("<<", index):
+            match = HEREDOC_OPERATOR.match(line, index)
+            if match:
+                delimiters.append(match.group(1) or match.group(2) or match.group(3))
+                index = match.end()
+                continue
+            index += 2 if not line.startswith("<<<", index) else 3
+            continue
+        index += 1
+    return delimiters, quote
+
+
 def strip_heredoc_bodies(command: str) -> str:
     kept = []
     pending: list[str] = []
+    quote = ""
     for line in command.split("\n"):
         if pending:
             if line.strip() == pending[0]:
                 pending.pop(0)
             continue
         kept.append(line)
-        for match in HEREDOC_OPERATOR.finditer(line):
-            pending.append(match.group(1) or match.group(2) or match.group(3))
+        found, quote = heredoc_delimiters(line, quote)
+        pending.extend(found)
     return " ; ".join(kept)
 
 
@@ -165,11 +195,20 @@ def tokenize_shell(command: str) -> list[str]:
         return [token.strip("'\"") for token in re.findall(r"""&>>|&>|>>|>\||>|[;&|()]+|[^\s;&|()<>]+""", command)]
 
 
-TEST_PATH_PATTERNS = ("test/", "tests/", "__tests__/", "spec/", "specs/", ".test.", ".spec.", "_test.", "_spec.", "test_")
+TEST_DIRECTORIES = {"test", "tests", "__tests__", "spec", "specs"}
+DOCUMENTATION_SUFFIXES = (".md", ".rst", ".adoc")
 
 
 def is_test_path(relative: str) -> bool:
-    return relative.endswith(".feature") or any(pattern in relative for pattern in TEST_PATH_PATTERNS)
+    if relative.endswith(".feature"):
+        return True
+    if relative.endswith(DOCUMENTATION_SUFFIXES):
+        return False
+    segments = relative.split("/")
+    name = segments[-1]
+    return (any(segment in TEST_DIRECTORIES for segment in segments[:-1])
+            or name.startswith("test_")
+            or any(marker in name for marker in (".test.", ".spec.", "_test.", "_spec.")))
 
 
 REDIRECT_OPERATORS = {">", ">>", "&>", "&>>", ">|"}
@@ -262,6 +301,47 @@ def copy_destinations(args: list[str], base: str) -> list[str]:
     return [destination]
 
 
+def operand_paths(args: list[str]) -> list[str]:
+    operands: list[str] = []
+    options_ended = False
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        index += 1
+        if not options_ended and arg == "--":
+            options_ended = True
+        elif not options_ended and arg in {"-t", "--target-directory"}:
+            index += 1
+        elif not options_ended and arg.startswith("-") and len(arg) > 1:
+            continue
+        else:
+            operands.append(arg)
+    return operands
+
+
+def git_path_writes(args: list[str]) -> list[str]:
+    index = 0
+    while index < len(args) and args[index].startswith("-"):
+        index += 2 if args[index] in GIT_OPTIONS_WITH_VALUE else 1
+    if index >= len(args):
+        return []
+    subcommand, rest = args[index], args[index + 1:]
+    if subcommand == "checkout":
+        return rest[rest.index("--") + 1:] if "--" in rest else []
+    if subcommand in {"restore", "rm"}:
+        paths: list[str] = []
+        position = 0
+        while position < len(rest):
+            arg = rest[position]
+            position += 1
+            if arg in {"-s", "--source"}:
+                position += 1
+            elif arg != "--" and not arg.startswith("-"):
+                paths.append(arg)
+        return paths
+    return []
+
+
 def written_paths(command: str, base: str, nesting: int = 0) -> list[str]:
     paths: list[str] = []
     for segment in command_segments(tokenize_shell(command)):
@@ -279,6 +359,12 @@ def written_paths(command: str, base: str, nesting: int = 0) -> list[str]:
             paths.extend(sed_in_place_targets(args))
         elif name in {"cp", "mv", "install"}:
             paths.extend(copy_destinations(args, base))
+            if name == "mv":
+                paths.extend(operand_paths(args))
+        elif name in {"rm", "unlink", "rmdir"}:
+            paths.extend(operand_paths(args))
+        elif name == "git":
+            paths.extend(git_path_writes(args))
         elif name in SHELL_INTERPRETERS and nesting < MAX_SHELL_NESTING and "-c" in args:
             position = args.index("-c")
             if position + 1 < len(args):
@@ -308,7 +394,8 @@ def test_targets(data: dict) -> list[str]:
             relative = relative_path(os.path.normpath(absolute), project)
             if os.path.isabs(relative):
                 continue
-        if is_test_path(relative) and relative not in found:
+        names_test_directory = os.path.isdir(os.path.join(project, relative)) and is_test_path(relative.rstrip("/") + "/x")
+        if (is_test_path(relative) or names_test_directory) and relative not in found:
             found.append(relative)
     return found
 
