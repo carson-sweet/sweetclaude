@@ -823,7 +823,13 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 90160d8c
+  - 6d4d6855
+  - aabe600a
+  - ca725949
 - id: R-076
   source: B
   docs:
@@ -862,7 +868,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 565affba
+  - d8f34bdd
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-078
   source: B
   docs:
@@ -879,7 +896,21 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 565affba
+  - 6cf5e07e
+  - d8f34bdd
+  - aab337bd
+  - f85a08b1
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-079
   source: B
   docs:
@@ -898,7 +929,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 6f62db8a
+  - 265b27b8
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-080
   source: B
   docs:
@@ -915,7 +957,13 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-081
   source: B
   docs:
@@ -930,7 +978,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 093f6f85
+  - 8026cefd
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-082
   source: B
   docs:
@@ -947,7 +1006,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - aabe600a
+  - ca725949
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-083
   source: B
   docs:
@@ -3397,7 +3467,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 6f62db8a
+  - 265b27b8
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-240
   source: D
   docs:
@@ -3412,7 +3493,13 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - d0f88d30
+  - 90160d8c
+  - 6d4d6855
+  - 81c1b8ca
+  - da4482b7
 - id: R-241
   source: D
   docs:
@@ -3427,7 +3514,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 05044282
+  - 79c0259d
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-242
   source: D
   docs:
@@ -3442,7 +3540,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - bffde05f
+  - 98162249
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-243
   source: D
   docs:
@@ -3456,7 +3565,18 @@ rows:
   acceptance: In kanban mode at the WIP limit, hooks/wip-limit.sh denies only a command that moves a new item into in_progress and allows `cp`, `git status` and `bash -n` invocations, asserted by contract tests.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - 565affba
+  - d8f34bdd
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-244
   source: D
   docs:
@@ -3470,7 +3590,18 @@ rows:
   acceptance: With the needs-preflight flag set and no state files, hooks/preflight-guard.sh allows a Skill call for sweetclaude:configure and a Bash `touch .sweetclaude-skip`, and denies a Write, asserted by contract tests.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - 409abe8d
+  - a984a5c0
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-245
   source: D
   docs:
@@ -3485,7 +3616,18 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - aabe600a
+  - ca725949
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
 - id: R-246
   source: D
   docs:
@@ -3499,7 +3641,18 @@ rows:
   acceptance: With guardian-enabled present, .sweetclaude/state/sweetclaude.yaml setting work.active.phase IMPLEMENT, no phase.yaml and no test evidence, hooks/tdd-prewrite-guardian.sh denies a Write of src/app.py, asserted by a contract test.
   test_level:
   - contract
-  status: open
+  status: closed
+  commits:
+  - 093f6f85
+  - 8026cefd
+  - 33920482
+  - dae16800
+  - 7153b327
+  - 36a6df41
+  - 7eb75178
+  - 95dadbf7
+  - f22a4928
+  - b00cf567
   notes: The git-status test-evidence check at hooks/tdd-prewrite-guardian.sh:104-106 only matches names ending in test.<ext> or spec.<ext>, so Python-style test_x.py files do not count as evidence; fix alongside.
 - id: R-247
   source: D
