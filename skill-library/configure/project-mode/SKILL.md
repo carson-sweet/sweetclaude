@@ -328,7 +328,15 @@ betting_table:
   approved_at: "{ISO timestamp}"
 ```
 
-Set `betting_table_approved: true` on linked issues. This is the gate the IMPLEMENT phase checks.
+Set `betting_table_approved: true` on each linked issue through the canonical
+store adapter — never by editing the issue file directly:
+
+```bash
+source ${CLAUDE_PLUGIN_ROOT}/hooks/sc-artifact.sh
+sc_artifact_write ISSUE-NNN '{"betting_table_approved": true}'
+```
+
+This is the gate the IMPLEMENT phase checks (`scripts/gate_check.py`).
 
 ---
 

@@ -9,8 +9,8 @@ Ledger rows covered: R-070 test-guardian, R-071 tdd-prewrite-guardian, R-072
 auto-test-runner, R-073 wip-limit, R-074 preflight-guard, R-075
 phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian, the
 phase 3 rows R-077 wip-limit on Write, R-241 test-guardian on Bash and
-R-244 preflight-guard allowing its own remedy, R-251 tdd-commit-gate, and
-R-089 the Kanban blocked-skill denial.
+R-244 preflight-guard allowing its own remedy, R-251 tdd-commit-gate, R-089
+the Kanban blocked-skill denial, and R-091 the Shape Up betting-table gate.
 """
 
 from __future__ import annotations
@@ -340,6 +340,47 @@ def test_library_load_sprint_plan_denied_in_kanban_r089(live_project):
         "Invoke the Skill tool with skill sweetclaude:library-load and args: "
         "product-sprint-plan plan the next sprint. Do nothing else.")
     assert_tool_refused(events, "Skill", r"disabled in kanban mode")
+
+
+def shape_up_gates_state(project: Path, *, approved: bool) -> None:
+    state = project / ".sweetclaude" / "state" / "sweetclaude.yaml"
+    data = yaml.safe_load(state.read_text(encoding="utf-8"))
+    data["work"] = {"active": {"id": "ISSUE-001", "phase": "IMPLEMENT"}}
+    state.write_text(yaml.safe_dump(data), encoding="utf-8")
+    gates = [
+        {"phase": "IMPLEMENT", "requires": "betting_table_approved", "action": "block",
+         "message": "Work must be pitched and bet before implementation begins. "
+                    "Run /sweetclaude:project-issues to create issues from a pitch."},
+    ]
+    (project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
+        yaml.safe_dump({"mode": "shape_up", "default_tdd_level": 2,
+                        "blocked_skills": [], "gates": gates}),
+        encoding="utf-8")
+    folder = project / ".sweetclaude" / "product" / "roadmap" / "issues"
+    folder.mkdir(parents=True, exist_ok=True)
+    approved_line = "betting_table_approved: true\n" if approved else ""
+    (folder / "ISSUE-001-work-item-1.md").write_text(
+        f"---\nid: ISSUE-001\ntitle: Work item 1\nstatus: active\n{approved_line}---\n\n"
+        "# ISSUE-001: Work item 1\n", encoding="utf-8")
+    git_commit_all(project, "shape up state")
+
+
+def test_library_load_implement_denied_without_betting_table_approval_r091(live_project):
+    shape_up_gates_state(live_project, approved=False)
+    events = run_claude(
+        live_project,
+        "Invoke the Skill tool with skill sweetclaude:library-load and args: "
+        "code-feature implement the login form. Do nothing else.")
+    assert_tool_refused(events, "Skill", r"pitched and bet")
+
+
+def test_library_load_implement_allowed_with_betting_table_approval_r091(live_project):
+    shape_up_gates_state(live_project, approved=True)
+    events = run_claude(
+        live_project,
+        "Invoke the Skill tool with skill sweetclaude:library-load and args: "
+        "code-feature implement the login form. Do nothing else.")
+    assert_tool_not_refused(events, "Skill", r"pitched and bet")
 
 
 def test_tdd_commit_gate_refuses_implementation_commit_without_red_r251(live_project):
