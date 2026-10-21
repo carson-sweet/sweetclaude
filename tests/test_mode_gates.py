@@ -488,3 +488,85 @@ class TestR091BettingTableApprovalGate:
         betting = skill[start:skill.index("## ", start + 1)]
         assert "betting_table_approved: true" in betting
         assert "sc_artifact_write" in betting
+
+
+def write_cycle(project: Path, number: int, status: str = "active",
+                ship_no_ship: str | None = None) -> Path:
+    cycle_id = f"CYC-{number:03d}"
+    folder = project / ".sweetclaude" / "product" / "cycles"
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{cycle_id}-cycle-{number}.md"
+    frontmatter = {"id": cycle_id, "title": f"Cycle {number}", "type": "cycle",
+                   "status": status}
+    if ship_no_ship is not None:
+        frontmatter["ship_no_ship"] = ship_no_ship
+    path.write_text(
+        "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n\n"
+        f"# {cycle_id}: Cycle {number}\n",
+        encoding="utf-8")
+    return path
+
+
+class TestR093ShipNoShipGateAtCycleEnd:
+    def test_advance_past_verify_without_a_decision_is_refused(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        write_cycle(project, 1)
+        result = run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is False
+        assert "ship_no_ship_decision" in payload["unmet"]
+        assert any("Ship/no-ship decision required" in reason for reason in payload["reasons"])
+        assert any("Hard gate" in reason for reason in payload["reasons"])
+
+    def test_ship_decision_allows_the_advance(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        write_cycle(project, 1, ship_no_ship="ship")
+        result = run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+    def test_no_ship_decision_still_refuses_the_advance(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        write_cycle(project, 1, ship_no_ship="no-ship")
+        result = run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is False
+        assert "ship_no_ship_decision" in payload["unmet"]
+
+    def test_missing_cycle_file_refuses_the_advance(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        result = run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        assert gate_json(result)["allow"] is False
+
+    def test_entering_verify_needs_no_decision_yet(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        write_cycle(project, 1)
+        result = run_gate_check("advance", "--to", "VERIFY", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result) == {"allow": True, "reasons": [], "unmet": []}
+
+    def test_decision_on_the_active_cycle_is_the_one_read(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        write_cycle(project, 1, status="closed")
+        write_cycle(project, 2, ship_no_ship="ship")
+        result = run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+
+    def test_loading_deploy_ship_is_denied_without_a_decision(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        write_cycle(project, 1)
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "deploy-ship ship the milestone",
+                                "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        assert "ship_no_ship_decision" in gate_json(result)["unmet"]
+
+    def test_cycle_close_step_pins_the_canonical_write(self):
+        skill = (REPO_ROOT / "skill-library" / "configure" / "project-mode" / "SKILL.md").read_text(encoding="utf-8")
+        start = skill.index("## Shape Up — Ship/No-Ship")
+        step = skill[start:skill.index("## ", start + 1)]
+        assert "ship_no_ship" in step
+        assert "sc_artifact_write" in step
