@@ -80,7 +80,7 @@ def write_sprint(project: Path, number: int, status: str, title: str = "sprint")
 
 
 def write_issue(project: Path, number: int, status: str, sprint: str = "", *,
-                directory: str = "roadmap/issues") -> Path:
+                directory: str = "roadmap/issues", extra: dict | None = None) -> Path:
     issue_id = f"ISSUE-{number:03d}"
     folder = project / ".sweetclaude" / "product" / directory
     folder.mkdir(parents=True, exist_ok=True)
@@ -89,6 +89,8 @@ def write_issue(project: Path, number: int, status: str, sprint: str = "", *,
                    "mode_introduced": "agile", "created": "2026-10-01", "updated": "2026-10-01"}
     if sprint:
         frontmatter["sprint"] = sprint
+    if extra:
+        frontmatter.update(extra)
     path.write_text(
         "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n\n"
         f"# {issue_id}: Work item {number}\n\n## Description\n\nDo the thing.\n",
@@ -412,3 +414,77 @@ class TestR089KanbanBlocksSprintPlanningSkills:
         result = run_hook("master-preflight.sh", project, stdin)
         assert_denied(result)
         assert "disabled in kanban mode" in denial_reason(result)
+
+
+SHAPE_UP_GATES = [
+    {"phase": "IMPLEMENT", "requires": "betting_table_approved", "action": "block",
+     "message": "Work must be pitched and bet before implementation begins. Run /sweetclaude:project-issues to create issues from a pitch."},
+    {"phase": "VERIFY", "condition": "ship_no_ship_decision", "action": "required",
+     "message": "Ship/no-ship decision required. Did the core outcome land within appetite?"},
+    {"phase": "PLAN", "condition": "issues_from_backlog", "action": "block",
+     "message": "Shape Up has no backlog. Issues must be derived from an approved pitch."},
+]
+
+
+def shape_up_project(root: Path, *, approved: bool = False,
+                     active_id: str = "ISSUE-001") -> Path:
+    project = root / "project"
+    project.mkdir(parents=True)
+    write_effective_gates(project, "shape_up", SHAPE_UP_GATES)
+    write_sweetclaude_yaml(project, active_id=active_id, mode="shape_up")
+    if active_id:
+        extra = {"betting_table_approved": True} if approved else None
+        write_issue(project, 1, "in_progress", extra=extra)
+    return project
+
+
+class TestR091BettingTableApprovalGate:
+    def test_approved_issue_passes_the_implement_gate(self, tmp_path):
+        project = shape_up_project(tmp_path, approved=True)
+        result = run_gate_check("advance", "--to", "IMPLEMENT", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+    def test_unapproved_issue_is_denied_before_implement(self, tmp_path):
+        project = shape_up_project(tmp_path)
+        result = run_gate_check("advance", "--to", "IMPLEMENT", "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is False
+        assert "betting_table_approved" in payload["unmet"]
+        assert any("pitched and bet" in reason for reason in payload["reasons"])
+        assert any("Hard gate" in reason for reason in payload["reasons"])
+
+    def test_load_matches_advance_for_betting_table(self, tmp_path):
+        project = shape_up_project(tmp_path)
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "code-feature implement the login form",
+                                "--project-dir", str(project))
+        assert result.returncode == 2
+        assert "betting_table_approved" in gate_json(result)["unmet"]
+
+    def test_no_active_issue_is_denied_before_implement(self, tmp_path):
+        project = shape_up_project(tmp_path, active_id="")
+        result = run_gate_check("advance", "--to", "IMPLEMENT", "--project-dir", str(project))
+        assert result.returncode == 2
+
+    def test_betting_table_write_produces_the_gate_flag(self, tmp_path):
+        project = shape_up_project(tmp_path)
+        write = subprocess.run(
+            ["bash", "-c",
+             f"source '{REPO_ROOT / 'hooks' / 'sc-artifact.sh'}' && "
+             "sc_artifact_write ISSUE-001 '{\"betting_table_approved\": true}'"],
+            cwd=project, capture_output=True, text=True, timeout=30)
+        assert write.returncode == 0, write.stderr
+        issue = (project / ".sweetclaude" / "product" / "roadmap" / "issues"
+                 / "ISSUE-001-work-item-1.md").read_text(encoding="utf-8")
+        assert "betting_table_approved: true" in issue
+        allowed = run_gate_check("advance", "--to", "IMPLEMENT", "--project-dir", str(project))
+        assert allowed.returncode == 0, allowed.stdout
+
+    def test_betting_table_step_pins_the_canonical_write(self):
+        skill = (REPO_ROOT / "skill-library" / "configure" / "project-mode" / "SKILL.md").read_text(encoding="utf-8")
+        start = skill.index("## Shape Up — Solo Betting Table")
+        betting = skill[start:skill.index("## ", start + 1)]
+        assert "betting_table_approved: true" in betting
+        assert "sc_artifact_write" in betting
