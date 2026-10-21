@@ -16,6 +16,7 @@ import yaml
 MANIFEST_RELATIVE_PATH = Path("config") / "capability-manifest.yaml"
 MUTATION_CLASSES = {"read_only", "planned_write", "destructive", "release"}
 UNSUPPORTED_STATE_BEHAVIORS = {"diagnose_only", "block", "escalate"}
+LOCAL_PROOF_KINDS = ("live-enforcement", "routing", "upgrade-path", "docs-claims")
 
 
 def _versionless_config_path() -> Path:
@@ -161,6 +162,25 @@ def validate_manifest(data: dict[str, Any]) -> None:
         raise ValueError("Capability manifest must define release")
     _require_string_list(release, "required_evidence_checks", "release")
 
+    local_proofs = release.get("required_local_proofs")
+    if local_proofs is not None:
+        if not isinstance(local_proofs, dict):
+            raise ValueError("Capability manifest release.required_local_proofs must be a mapping")
+        for channel, kinds in local_proofs.items():
+            context = f"release.required_local_proofs.{channel}"
+            if channel not in channels:
+                raise ValueError(f"Capability manifest {context} must name a defined channel")
+            if not isinstance(kinds, list) or not all(isinstance(kind, str) for kind in kinds):
+                raise ValueError(f"Capability manifest {context} must be a string list")
+            unknown = sorted(set(kinds) - set(LOCAL_PROOF_KINDS))
+            if unknown:
+                raise ValueError(
+                    f"Capability manifest {context} references unknown local proof kinds: "
+                    + ", ".join(unknown)
+                )
+            if len(set(kinds)) != len(kinds):
+                raise ValueError(f"Capability manifest {context} must not contain duplicate local proof kinds")
+
     capabilities = data.get("capabilities")
     if not isinstance(capabilities, dict) or not capabilities:
         raise ValueError("Capability manifest must define capabilities")
@@ -295,6 +315,20 @@ def required_release_checks(manifest: dict[str, Any] | None = None) -> set[str]:
     if not isinstance(checks, list) or not all(isinstance(check, str) for check in checks):
         raise ValueError("Capability manifest release.required_evidence_checks must be a string list")
     return set(checks)
+
+
+def required_local_proofs(channel: str, manifest: dict[str, Any] | None = None) -> list[str]:
+    data = manifest or load_manifest()
+    release = data.get("release") or {}
+    scoped = release.get("required_local_proofs") or {}
+    if not isinstance(scoped, dict):
+        raise ValueError("Capability manifest release.required_local_proofs must be a mapping")
+    kinds = scoped.get(channel) or []
+    if not isinstance(kinds, list) or not all(isinstance(kind, str) for kind in kinds):
+        raise ValueError(
+            f"Capability manifest release.required_local_proofs.{channel} must be a string list"
+        )
+    return list(kinds)
 
 
 def capability_config(

@@ -14,7 +14,10 @@ from pathlib import Path
 from control_receipts import (
     PLUGIN_DISTRIBUTION_ROOTS,
     PLUGIN_HOOK_ROOT,
+    RELEASE_PROOF_RECEIPT_TYPES,
+    RELEASE_PROOF_SPEND_CAP_USD,
     hash_file,
+    validate_release_proof_receipt,
     write_control_lint_receipt,
     validate_change_context_receipt,
     validate_contract_test_or_exemption,
@@ -31,6 +34,7 @@ from maintenance.capability_manifest import (
     control_lint_required,
     expected_ref,
     load_manifest,
+    required_local_proofs,
     required_release_checks,
 )
 
@@ -918,6 +922,13 @@ def generate_release_evidence(
     installed_path: Path | None = None,
     installed_entrypoint: str = "/sweetclaude:configure recover",
 ) -> dict:
+    self_asserted = required_release_checks() & RELEASE_PROOF_RECEIPT_TYPES
+    if self_asserted:
+        raise ValueError(
+            "generate-evidence cannot self-assert local proof kinds ("
+            + ", ".join(sorted(self_asserted))
+            + "); produce committed receipts with scripts/release_evidence_local.py"
+        )
     project_dir = project_dir.resolve()
     version = _version_from_tag(tag)
     _validate_channel(version, channel, branch)
@@ -1160,6 +1171,71 @@ def _validate_issue_closeout(project_dir: Path, tag: str, channel: str) -> dict:
     return {"checked": True, "issues": sorted(issue_ids), "unclosed": []}
 
 
+def _release_evidence_dir(project_dir: Path, version: str) -> Path:
+    return project_dir / "docs" / "release-evidence" / version
+
+
+def validate_required_release_proofs(
+    project_dir: Path,
+    *,
+    channel: str,
+    tag: str,
+    release_evidence_dir: str | Path | None = None,
+    now: datetime.datetime | None = None,
+) -> dict:
+    """Validate the committed phase-6 local proof receipts for a release tag."""
+    project_dir = project_dir.resolve(strict=False)
+    version = _version_from_tag(tag)
+    required = required_local_proofs(channel)
+    if not required:
+        return {"checked": False, "reason": "not-required-for-channel"}
+
+    if release_evidence_dir is not None:
+        evidence_dir = Path(release_evidence_dir)
+        if not evidence_dir.is_absolute():
+            evidence_dir = project_dir / evidence_dir
+    else:
+        evidence_dir = _release_evidence_dir(project_dir, version)
+
+    receipts: dict[str, dict] = {}
+    for kind in sorted(required):
+        receipt_path = evidence_dir / f"{kind}.json"
+        if not receipt_path.is_file():
+            raise ValueError(
+                f"release proof '{kind}' receipt missing from "
+                f"{_display_path(project_dir, evidence_dir)}"
+            )
+        receipts[kind] = validate_release_proof_receipt(
+            receipt_path,
+            project_dir=project_dir,
+            kind=kind,
+            expected_tag=tag,
+            now=now,
+        )
+
+    cli_versions = {
+        str(receipt.get("claude_cli_version", "")).strip() for receipt in receipts.values()
+    }
+    if len(cli_versions) > 1:
+        raise ValueError(
+            "release proof receipts disagree on the claude CLI version: "
+            + ", ".join(sorted(cli_versions))
+        )
+    spend = round(sum(float(receipt.get("cost_usd", 0)) for receipt in receipts.values()), 4)
+    if spend > RELEASE_PROOF_SPEND_CAP_USD:
+        raise ValueError(
+            f"release proof spend ${spend:.2f} exceeds the "
+            f"${RELEASE_PROOF_SPEND_CAP_USD:.2f} live+routing cap"
+        )
+    return {
+        "checked": True,
+        "kinds": sorted(required),
+        "receipts": {kind: str(evidence_dir / f"{kind}.json") for kind in sorted(required)},
+        "spend_usd": spend,
+        "claude_cli_version": next(iter(cli_versions), None),
+    }
+
+
 def check_release_readiness(
     project_dir: Path,
     *,
@@ -1169,6 +1245,7 @@ def check_release_readiness(
     branch: str,
     control_lint_receipt_path: str | Path | None = None,
     expected_commit: str | None = None,
+    release_evidence_dir: str | Path | None = None,
 ) -> dict:
     project_dir = project_dir.resolve()
     version = _version_from_tag(tag)
@@ -1200,6 +1277,12 @@ def check_release_readiness(
         expected_commit=actual_commit,
     )
     issue_closeout = _validate_issue_closeout(project_dir, tag, channel)
+    release_proofs = validate_required_release_proofs(
+        project_dir,
+        channel=channel,
+        tag=tag,
+        release_evidence_dir=release_evidence_dir,
+    )
     return {
         "ok": True,
         "tag": tag,
@@ -1210,6 +1293,7 @@ def check_release_readiness(
         "control_lint": control_lint,
         "control_lint_receipt": control_lint.get("receipt"),
         "issue_closeout": issue_closeout,
+        "release_proofs": release_proofs,
         "receipt": str(Path(receipt_path)),
         "checks": sorted(str(c.get("name", "")) for c in receipt.get("checks", [])),
     }
@@ -1225,6 +1309,7 @@ def main(argv: list[str] | None = None) -> int:
     p_check.add_argument("--channel", required=True, choices=["stable", "legacy"])
     p_check.add_argument("--receipt", required=True)
     p_check.add_argument("--control-lint-receipt", default=None)
+    p_check.add_argument("--release-evidence-dir", default=None, type=Path)
     p_check.add_argument("--branch", required=True)
 
     p_generate = sub.add_parser("generate-evidence")
@@ -1246,6 +1331,7 @@ def main(argv: list[str] | None = None) -> int:
                 receipt_path=args.receipt,
                 branch=args.branch,
                 control_lint_receipt_path=args.control_lint_receipt,
+                release_evidence_dir=args.release_evidence_dir,
             )
             print(json.dumps(result))
             return 0
