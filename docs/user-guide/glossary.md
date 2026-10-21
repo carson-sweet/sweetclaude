@@ -1,6 +1,6 @@
 # SweetClaude Glossary
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-10-21
 
 Quick definitions for SweetClaude-specific terms. When you see one of these in the docs and want to know what it means, this is the lookup.
@@ -26,13 +26,13 @@ A separate Claude instance spawned for a specific task — test writing, impleme
 The design principle that test writers and implementers must never share context. Prevents the implementer from knowing what the tests are supposed to prove, which would allow it to write code that passes tests without satisfying the underlying intent. Applies at TDD Levels 2 and 3; Level 1 uses a single context.
 
 **TDD Level**
-The degree of test-driven development enforcement. Four levels: *Level 0* (hotfix — regression test written in same session), *Level 1* (light — test-first, single context), *Level 2* (standard — subagent separation, test-guardian hook active), *Level 3* (full — Gherkin specs, QA caucus, maximum isolation). See [TDD Levels](tdd.md) for full details. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+The degree of test-driven development enforcement. Four levels: *Level 0* (hotfix — regression test written in same session), *Level 1* (light — test-first, single context), *Level 2* (standard — subagent separation, test-guardian hook active), *Level 3* (full — Gherkin specs, QA caucus, maximum isolation). See [TDD Levels](tdd.md) for full details.
 
 **Test-guardian hook**
-A Claude Code hook that physically blocks edits to test files during the IMPLEMENT phase. Prevents the implementer from modifying tests to make them pass. Active at TDD Levels 1–3. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+A Claude Code hook that physically blocks edits to test files once `tdd_phase` is implementing. Prevents the implementer from modifying tests to make them pass. Active at TDD Levels 1–3. Once `tdd_phase` is implementing, the hook denies edits to test files; to override, run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py release --file <path> --approval "<text>"`, which is logged.
 
 **Auto-test-runner hook**
-A Claude Code hook that runs the test suite automatically after every source file edit during IMPLEMENT. Gives instant feedback on whether the change moved the tests from RED to GREEN. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+A Claude Code hook that runs the test suite automatically after source file edits while `tdd_phase` is implementing, using the configured test command or one detected from the project, and reports failures back. Gives instant feedback on whether the change moved the tests from RED to GREEN.
 
 **Version stage**
 Where the project is in its lifecycle. The stages that control which work types and phase gates are visible are PROTOTYPE → ALPHA → BETA → GA → SCALED → MAINTAINED (the six stages the rest of this guide enumerates). Brand-new projects may carry an earlier informal label — IDEA or PRE-ALPHA — before reaching PROTOTYPE. A PROTOTYPE-stage project doesn't see compliance work types; a GA project gets them surfaced automatically.
@@ -59,7 +59,7 @@ A named strategic outcome — a meaningful product state the project is driving 
 SweetClaude's lightest mode. No phase gates, no required artifacts. Backlog and milestones are optional. TDD Level 1. SweetClaude observes quietly and builds what you ask. Best for exploration, prototypes, and personal projects. See [Planning Concepts](planning-concepts.md).
 
 **Kanban mode**
-A continuous-flow mode with a hard WIP limit of 3 in-progress stories. No sprints. Backlog is used but epics are not surfaced. Best for solo developers or small teams who deliver continuously without sprint ceremonies. See [Planning Concepts](planning-concepts.md). (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+A continuous-flow mode with a hard WIP limit of 3 in-progress stories; the WIP limit hook denies activating an issue beyond the limit. No sprints. Backlog is used but epics are not surfaced. Best for solo developers or small teams who deliver continuously without sprint ceremonies. See [Planning Concepts](planning-concepts.md).
 
 **Roadmap-driven development**
 A development approach where stories are organized into milestones and epics, with optional sprint planning for time-boxed execution. Used by product teams delivering software commercially. See [Planning Concepts](planning-concepts.md).

@@ -1,6 +1,6 @@
 # Walkthroughs
 
-**Version:** 1.3
+**Version:** 1.4
 **Date:** 2026-10-21
 
 Seven concrete scenarios end-to-end. Each one shows what you run, what comes back, and what you have when you are done. The interactions are simulated but representative — actual prompts vary slightly with the model and your project state.
@@ -63,8 +63,8 @@ SweetClaude finds the Gherkin specs for that feature. It runs **TDD Level 3**:
 1. The test-writer agent (separate context, no knowledge of planned implementation) writes failing tests.
 2. The QA Caucus — three specialist agents — reviews the test plan from three angles: service/API, component/UI, integration/cross-cutting.
 3. You see the QA findings and approve the test plan.
-4. The implementer agent (separate context, sees only the tests) makes them pass with minimal code. The test-guardian hook physically blocks any test file edits while it works. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
-5. The auto-test-runner hook fires after every source edit. Tests run automatically. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+4. The implementer agent (separate context, sees only the tests) makes them pass with minimal code. The test-guardian hook denies edits to test files while it works (override: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py release --file <path> --approval "<text>"`, logged).
+5. The auto-test-runner hook runs the configured or detected test command after every source edit and reports failures back.
 
 When all tests pass, SweetClaude runs `/sweetclaude:build code-review` and `/sweetclaude:build code-testing` (PR pre-check), then opens a PR.
 
@@ -134,7 +134,7 @@ After the fix ships, SweetClaude checks that the broken behavior is resolved, er
 
 The hotfix workflow is not "skip the test." It is "minimal test, in this session." SweetClaude asks you to identify the broken code and write a regression test that fails on the bug. Then it implements the fix. The test and fix get committed together.
 
-Test-guardian and auto-test-runner hooks are still active. The hotfix shortcut applies to ceremony, not to discipline. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+Test-guardian and auto-test-runner hooks are still active. The hotfix shortcut applies to ceremony, not to discipline.
 
 ### SHIP
 
@@ -260,7 +260,7 @@ The findings are presented to you. You can accept the test plan, request additio
 
 A separate AI agent runs in an isolated context. It can read the tests, the codebase, and the framework. It cannot read the Gherkin specs, the QA findings, or the test writer's reasoning. It only sees the tests as a black-box specification of behavior.
 
-It writes implementation code. The auto-test-runner hook runs the tests after every edit. The test-guardian hook prevents any change to test files. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+It writes implementation code. The auto-test-runner hook runs the tests after each edit and reports failures back. The test-guardian hook denies edits to test files.
 
 The implementer iterates until all tests pass. If tests cannot be made to pass without modifying them, the implementer surfaces the conflict to you — it cannot rationalize a poor test by reasoning about what the spec "really meant," because it has not seen the spec.
 
