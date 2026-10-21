@@ -127,7 +127,7 @@ The workflow has two phases that alternate:
 
 **Betting.** At the start of each 6-week cycle, a betting table decides which shaped pitches get worked. Pitches that are not bet on do not carry forward automatically — they go back to a pool and must be re-pitched if they are still worth doing. There is no accumulating backlog of promised work.
 
-SweetClaude enforces a hard gate: implementation is blocked until the betting table approves the pitch. This prevents the most common Shape Up failure mode, which is treating pitches as a formality and building before the appetite is agreed. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+SweetClaude enforces a hard gate: implementation is blocked until the betting table approves the pitch. This prevents the most common Shape Up failure mode, which is treating pitches as a formality and building before the appetite is agreed.
 
 Shape Up has no epics, no sprints, and no milestones in the SweetClaude sense. The cycle is the container. Stories exist but they emerge from pitches rather than from a roadmap.
 
@@ -174,12 +174,12 @@ If you are not sure which mode fits your situation, this table shows exactly wha
 | **Structured roadmap** | No | Optional | No | Yes |
 | **WIP limit** | None | 3 active (hard block) | Appetite per pitch | None |
 | **TDD enforcement** | Level 1 | Level 1 | Level 2 | Level 2 |
-| **Hard gate to implement** | None | WIP limit | Betting table approval | Active sprint required (Not currently enforced for the betting table and the active sprint: this is not checked by code yet; Claude applies it as an instruction.) |
+| **Hard gate to implement** | None | WIP limit | Betting table approval | Active sprint required |
 | **Best for** | Solo, exploration, prototypes | Solo or small team, continuous delivery | Product teams, fixed appetite, scope control | Teams, structured iteration, stakeholder delivery |
 
 **How to read the table:**
 - "Optional" means the artifact exists and you can use it, but SweetClaude does not require it or surface it prominently.
-- In the WIP limit row, "hard block" means the `wip-limit.sh` hook denies the tool call that would activate a fourth issue. The betting table and active sprint gates are instructions Claude applies, not hook checks. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+- In the WIP limit row, "hard block" means the `wip-limit.sh` hook denies the tool call that would activate a fourth issue. The betting table and active sprint gates are enforced the same way — `scripts/gate_check.py` denies the advance or load until the gate condition is met.
 
 You can switch modes at any time — work already done stays as-is. When switching to a more structured mode, SweetClaude will flag what artifacts are missing and offer to catch up.
 

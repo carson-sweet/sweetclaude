@@ -38,7 +38,7 @@ A Claude Code hook that runs the test suite automatically after source file edit
 Where the project is in its lifecycle: IDEA → ALPHA → BETA → GA → SCALED → MAINTAINED. During onboarding, setup writes IDEA for new projects and early prototypes, and maps the stage you report for an existing project to IDEA, ALPHA, BETA or GA. You declare the stage; the system never advances it.
 
 **Betting table**
-A Shape Up concept (does not exist in Kanban or Agile modes). A decision artifact produced during the DEFINE phase that records: the core outcome if this ships, the rabbit holes (likely scope explosions), and what is explicitly out of scope. Implementation is hard-blocked until the betting table is approved. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+A Shape Up concept (does not exist in Kanban or Agile modes). A decision artifact produced during the DEFINE phase that records: the core outcome if this ships, the rabbit holes (likely scope explosions), and what is explicitly out of scope. Implementation is hard-blocked until the betting table is approved.
 
 **Agile mode**
 SweetClaude's most structured mode. Uses the full hierarchy: milestones, epics, sprints, and stories. Epics are first-class. Implementation is hard-blocked without an active sprint. Best for teams with stakeholder delivery commitments. See [Planning Concepts](planning-concepts.md). (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
@@ -65,7 +65,7 @@ A continuous-flow mode with a hard WIP limit of 3 in-progress stories; the WIP l
 A development approach where stories are organized into milestones and epics, with optional sprint planning for time-boxed execution. Used by product teams delivering software commercially. See [Planning Concepts](planning-concepts.md).
 
 **Shape Up mode**
-A mode based on the Basecamp methodology. Work enters through shaped pitches, not a backlog. A betting table approves pitches before implementation begins (hard gate). 6-week cycles; fixed appetite, variable scope. No milestones, epics, or sprints. See [Planning Concepts](planning-concepts.md). (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+A mode based on the Basecamp methodology. Work enters through shaped pitches, not a backlog. A betting table approves pitches before implementation begins (hard gate). 6-week cycles; fixed appetite, variable scope. No milestones, epics, or sprints. See [Planning Concepts](planning-concepts.md).
 
 **Sprint**
 A fixed-length time container for work (Agile). Groups stories by when they will be worked, not by what they are about. Optional in SweetClaude — solo developers often skip sprints and work directly from epics. See [Planning Concepts](planning-concepts.md).

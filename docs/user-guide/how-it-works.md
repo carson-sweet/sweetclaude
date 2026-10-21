@@ -122,8 +122,8 @@ SweetClaude has four project modes that calibrate structure and enforcement to w
 | Mode | What it signals | TDD level | Key enforcement |
 |---|---|---|---|
 | **Flow Mode** | Solo exploration, early stage, no ceremony needed | Level 1 | No gates, all skills available. Quietly accumulates thin artifacts in the background. |
-| **Kanban** | Continuous delivery, work organized as a flowing board | Level 1 | WIP limit (default 3 in-progress issues, hard block) |
-| **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | `project-sprints` and `project-backlog` skills disabled, betting table approval required before implementation, ship/no-ship gate at cycle end (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| **Kanban** | Continuous delivery, work organized as a flowing board | Level 1 | WIP limit (default 3 in-progress issues, hard block), `project-sprints` and `product-sprint-plan` sprint-planning skills disabled |
+| **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | `project-sprints` and `project-backlog` skills disabled, betting table approval required before implementation, ship/no-ship gate at cycle end |
 | **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 
 There is also **John Wick mode** — an experimental, fully autonomous SDLC pipeline from discovery through PR (TDD Level 3, subagent isolation, QA caucus). Invoked via `/sweetclaude:build john-wick`, not through the mode selector.
@@ -132,7 +132,7 @@ Modes are not permanent. `/sweetclaude:configure project-mode` re-assesses or ac
 
 Within the execution layer, the work hierarchy is **Milestone → Sprint → Story** — three levels, that is all. Epics and themes are classification attributes on stories (the `epic` and `theme` frontmatter fields), not nodes that stories flow through. A sprint in Agile mode anchors to a milestone via `milestone_id`; stories are pulled into it regardless of which epic or theme they belong to. This is the Linear model, not the Jira model — epics are goal lenses and progress metrics, not delivery containers.
 
-Mode rules live in two places: `effective-gates.yaml`, compiled at mode selection time into `.sweetclaude/state/`, and MODE_CHECK blocks inside individual skills that reject invocations the active mode disallows. The sprint and betting table gates in the table above are applied by Claude reading those rules. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+Mode rules live in two places: `effective-gates.yaml`, compiled at mode selection time into `.sweetclaude/state/`, and MODE_CHECK blocks inside individual skills that reject invocations the active mode disallows. The compiled gates are enforced by code: the master preflight hook runs `scripts/gate_check.py` on every skill load and phase advance, denying blocked skills and unmet hard-gate conditions outright.
 
 `wip-limit.sh`, a PreToolUse hook, blocks tool calls in Kanban mode when the call would activate an issue and the WIP limit is already reached. Any other call is allowed.
 
