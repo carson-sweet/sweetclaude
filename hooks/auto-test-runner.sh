@@ -3,8 +3,12 @@
 # SweetClaude Auto-Test Runner Hook
 # PostToolUse — runs relevant tests after source file edits during implementation.
 
-FILE="$CLAUDE_FILE_PATH"
-TOOL="$CLAUDE_TOOL_NAME"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
+
+FILE=$(hook_field tool_input.file_path)
+TOOL=$(hook_field tool_name)
 
 # Only trigger on Write and Edit
 if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" ]]; then
@@ -12,10 +16,7 @@ if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" ]]; then
 fi
 
 # Find project root
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-if [ -z "$PROJECT_DIR" ]; then
-  exit 0
-fi
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 # Resolve state directory — .sweetclaude/ first, legacy fallback
 STATE_DIR=""
@@ -96,8 +97,12 @@ if [ -z "$TEST_CMD" ]; then
   exit 0
 fi
 
-# Run tests in background — don't block the next edit
-echo "Running tests: $TEST_CMD" >&2
-cd "$PROJECT_DIR" && eval "$TEST_CMD" 2>&1 | tail -20 >&2 &
+# Run tests and report a failing run back to the model as additionalContext
+TEST_OUTPUT=$(cd "$PROJECT_DIR" && eval "$TEST_CMD" 2>&1)
+TEST_STATUS=$?
+if [ "$TEST_STATUS" -ne 0 ]; then
+  python3 "$HOOK_IO" context PostToolUse "Tests failed (exit $TEST_STATUS) running: $TEST_CMD
+$(printf '%s\n' "$TEST_OUTPUT" | tail -20)"
+fi
 
 exit 0

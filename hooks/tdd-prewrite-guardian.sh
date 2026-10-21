@@ -5,42 +5,38 @@
 # Complements test-guardian.sh (which blocks test modifications during implementation).
 # This hook blocks source creation before tests are written.
 
-FILE="$CLAUDE_FILE_PATH"
-TOOL="$CLAUDE_TOOL_NAME"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
+
+FILE=$(hook_field tool_input.file_path)
+TOOL=$(hook_field tool_name)
 
 # Only check Write and Edit
 if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" ]]; then
-  echo '{"ok": true}'
   exit 0
 fi
 
 # Find project root
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-if [ -z "$PROJECT_DIR" ]; then
-  echo '{"ok": true}'
-  exit 0
-fi
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 STATE_DIR="$PROJECT_DIR/.sweetclaude/state"
 GUARDIAN_FLAG="$STATE_DIR/guardian-enabled"
 
 # Guardian not enabled — allow
 if [ ! -f "$GUARDIAN_FLAG" ]; then
-  echo '{"ok": true}'
   exit 0
 fi
 
 # No phase file — allow
 PHASE_FILE="$STATE_DIR/phase.yaml"
 if [ ! -f "$PHASE_FILE" ]; then
-  echo '{"ok": true}'
   exit 0
 fi
 
 # Only enforce during implement phase
 PHASE=$(grep "^phase:" "$PHASE_FILE" 2>/dev/null | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
 if [[ "$PHASE" != "implement" ]]; then
-  echo '{"ok": true}'
   exit 0
 fi
 
@@ -52,7 +48,6 @@ TEST_PATTERNS=(
 )
 for pattern in "${TEST_PATTERNS[@]}"; do
   if [[ "$FILE" == *"$pattern"* ]]; then
-    echo '{"ok": true}'
     exit 0
   fi
 done
@@ -68,7 +63,6 @@ fi
 NON_CODE_EXTENSIONS=("md" "json" "yaml" "yml" "toml" "ini" "cfg" "conf" "env" "sh" "bash" "txt" "lock" "log" "gitignore" "editorconfig" "prettierrc" "eslintrc" "babelrc")
 for ext in "${NON_CODE_EXTENSIONS[@]}"; do
   if [[ "$EXT" == "$ext" ]]; then
-    echo '{"ok": true}'
     exit 0
   fi
 done
@@ -77,7 +71,6 @@ done
 NON_CODE_BASENAMES=("Makefile" "Dockerfile" "Rakefile" "Gemfile" "Procfile" "Vagrantfile" "Brewfile" "Justfile" "CMakeLists.txt")
 for name in "${NON_CODE_BASENAMES[@]}"; do
   if [[ "$BASENAME" == "$name" ]]; then
-    echo '{"ok": true}'
     exit 0
   fi
 done
@@ -86,7 +79,6 @@ done
 NON_CODE_PATHS=("docs/" ".sweetclaude/" "config/" ".github/" "scripts/" "dist/" "build/" "node_modules/")
 for path in "${NON_CODE_PATHS[@]}"; do
   if [[ "$FILE" == *"$path"* ]]; then
-    echo '{"ok": true}'
     exit 0
   fi
 done
@@ -96,7 +88,6 @@ SESSION_FILE="$STATE_DIR/session-guardian.json"
 if [ -f "$SESSION_FILE" ]; then
   TEST_COUNT=$(jq '.test_files_written | length' "$SESSION_FILE" 2>/dev/null)
   if [ -n "$TEST_COUNT" ] && [ "$TEST_COUNT" -gt 0 ]; then
-    echo '{"ok": true}'
     exit 0
   fi
 fi
@@ -105,10 +96,9 @@ fi
 if git -C "$PROJECT_DIR" status --short 2>/dev/null | \
    awk '{print $NF}' | \
    grep -qE "(test|spec)\.(js|ts|py|rb|go|java|rs|cpp|c|cs|swift|kt|php|sh)$"; then
-  echo '{"ok": true}'
   exit 0
 fi
 
 # No test evidence found — block
-echo '{"ok": false, "reason": "No test files written yet. Write failing tests before source code (TDD). Run /sweetclaude:configure guardian-off if you need to bypass this check."}'
+python3 "$HOOK_IO" deny "No test files written yet. Write failing tests before source code (TDD). Run /sweetclaude:configure guardian-off if you need to bypass this check."
 exit 0

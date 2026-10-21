@@ -20,17 +20,13 @@
 
 set -u
 
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
-if [ -z "$PROJECT_DIR" ]; then
-  echo '{"ok": true}'
-  exit 0
-fi
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+PROJECT_DIR=$(python3 "$HOOK_IO" project-dir)
 
 MARKER="$PROJECT_DIR/.sweetclaude/state/pending-migration-decision.yaml"
 
 if [ ! -f "$MARKER" ]; then
   # No pending decision — silent.
-  echo '{"ok": true}'
   exit 0
 fi
 
@@ -60,7 +56,6 @@ PY
 
 if [ -z "$NEW_COUNT" ] || [ "$NEW_COUNT" = "-1" ]; then
   # Marker unreadable — fail open.
-  echo '{"ok": true}'
   exit 0
 fi
 

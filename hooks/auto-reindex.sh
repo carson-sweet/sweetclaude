@@ -4,13 +4,18 @@
 # PostToolUse hook — triggers incremental RAG reindex when indexed files change.
 # Requires: mcp-local-rag installed and configured for the project.
 
-FILE="$CLAUDE_FILE_PATH"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
 
-# Find project root and config
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-if [ -z "$PROJECT_DIR" ]; then
+FILE=$(hook_field tool_input.file_path)
+
+if [ -z "$FILE" ]; then
   exit 0
 fi
+
+# Find project root and config
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 CONFIG_FILE="${PROJECT_DIR}/.sweetclaude/state/rag-config.yaml"
 

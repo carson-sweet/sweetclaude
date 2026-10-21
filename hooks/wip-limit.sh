@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # wip-limit.sh — PreToolUse hook on Bash
 # Blocks IMPLEMENT entry in Kanban mode when WIP limit is reached.
-# Returns {"ok": true} to allow or {"ok": false, "reason": "..."} to block.
+# Allows silently or denies through PreToolUse permissionDecision.
 
 set -euo pipefail
 
-PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+PROJECT_DIR=$(python3 "$HOOK_IO" project-dir)
 EFFECTIVE_GATES="$PROJECT_DIR/.sweetclaude/state/effective-gates.yaml"
 PHASE_YAML="$PROJECT_DIR/.sweetclaude/state/phase.yaml"
 SC_YAML="$PROJECT_DIR/.sweetclaude/state/sweetclaude.yaml"
 
-allow()  { echo '{"ok": true}'; exit 0; }
-block() { python3 -c "import json,sys; print(json.dumps({'ok':False,'reason':sys.argv[1]}))" "$1"; exit 0; }
+allow()  { exit 0; }
+block() { python3 "$HOOK_IO" deny "$1"; exit 0; }
 
 [ -f "$EFFECTIVE_GATES" ] || allow
 

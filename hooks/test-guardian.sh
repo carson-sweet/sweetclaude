@@ -3,22 +3,20 @@
 # SweetClaude Test Guardian Hook
 # PreToolUse — blocks Write/Edit to test files during implementation phase.
 
-FILE="$CLAUDE_FILE_PATH"
-TOOL="$CLAUDE_TOOL_NAME"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
+
+FILE=$(hook_field tool_input.file_path)
+TOOL=$(hook_field tool_name)
 
 # Only check Write and Edit operations
 if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" ]]; then
-  echo '{"ok": true}'
   exit 0
 fi
 
 # Find project root and state file
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-
-if [ -z "$PROJECT_DIR" ]; then
-  echo '{"ok": true}'
-  exit 0
-fi
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 # Resolve state files — .sweetclaude/ first, legacy fallback
 SC_YAML=""
@@ -36,7 +34,6 @@ fi
 
 # Neither state file — SweetClaude isn't active, allow
 if [ -z "$SC_YAML" ] && [ -z "$PHASE_FILE" ]; then
-  echo '{"ok": true}'
   exit 0
 fi
 # Resolve phase and tdd_phase from sweetclaude.yaml, which is canonical, and
@@ -94,7 +91,7 @@ PYEOF
     fi
   fi
   if [ "$IS_JW_LOCKED" = "true" ]; then
-    echo '{"ok": false, "reason": "This file is locked by John Wick mode (locked at pipeline step IP5). Test files are immutable for the remainder of the pipeline. To unlock: inspect .sweetclaude/state/john-wick.yaml locked_test_files and get explicit user approval."}'
+    python3 "$HOOK_IO" deny "This file is locked by John Wick mode (locked at pipeline step IP5). Test files are immutable for the remainder of the pipeline. To unlock: inspect .sweetclaude/state/john-wick.yaml locked_test_files and get explicit user approval."
     exit 0
   fi
 fi
@@ -106,7 +103,6 @@ TDD_PHASE=$(printf '%s' "$TDD_STATE" | sed -n '2p')
 
 # Only block during implementation phase when tdd_phase is "implementing"
 if [[ "$PHASE" != "implement" && "$PHASE" != "IMPLEMENT" ]] || [[ "$TDD_PHASE" != "implementing" ]]; then
-  echo '{"ok": true}'
   exit 0
 fi
 
@@ -149,9 +145,8 @@ fi
 if [ "$IS_TEST" = true ]; then
   RECORD_SCRIPT="$(dirname "$0")/../scripts/record-event.sh"
   [ -x "$RECORD_SCRIPT" ] && bash "$RECORD_SCRIPT" tdd_guardian_block "file=$FILE" "tool=$TOOL"
-  echo '{"ok": false, "reason": "Test files are immutable during implementation. Fix your code, not the tests. If the test is genuinely wrong, ask the user for explicit approval to modify it."}'
+  python3 "$HOOK_IO" deny "Test files are immutable during implementation. Fix your code, not the tests. If the test is genuinely wrong, ask the user for explicit approval to modify it."
   exit 0
 fi
 
-echo '{"ok": true}'
 exit 0

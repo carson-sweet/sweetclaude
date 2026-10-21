@@ -6,27 +6,23 @@
 # configured (.sweetclaude/state/sweetclaude.yaml or the legacy phase.yaml
 # exists) or opted out (.sweetclaude-skip).
 
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
 
-# No git repo — allow
-if [ -z "$PROJECT_DIR" ]; then
-  echo '{"ok": true}'
-  exit 0
-fi
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 PROJECT_HASH=$(echo -n "$PROJECT_DIR" | md5 2>/dev/null || echo -n "$PROJECT_DIR" | md5sum 2>/dev/null | cut -d' ' -f1)
 FLAG="/tmp/.sweetclaude-needs-preflight-${PROJECT_HASH}"
 
 # No flag — allow
 if [ ! -f "$FLAG" ]; then
-  echo '{"ok": true}'
   exit 0
 fi
 
 # Flag exists — but maybe the project was configured since it was planted
 if [ -f "$PROJECT_DIR/.sweetclaude/state/sweetclaude.yaml" ] || [ -f "$PROJECT_DIR/.sweetclaude/state/phase.yaml" ] || [ -f "$PROJECT_DIR/.sweetclaude-skip" ]; then
   rm -f "$FLAG"
-  echo '{"ok": true}'
   exit 0
 fi
 
@@ -34,10 +30,9 @@ fi
 LEGACY_REPO="${PROJECT_DIR}-sweetclaude"
 if [ -f "$LEGACY_REPO/state/sweetclaude.yaml" ] || [ -f "$LEGACY_REPO/state/phase.yaml" ]; then
   rm -f "$FLAG"
-  echo '{"ok": true}'
   exit 0
 fi
 
 # Flag exists, project still not configured — BLOCK
-echo '{"ok": false, "reason": "BLOCKED: SweetClaude is not configured for this project. Run /sweetclaude:configure init to set up, or create .sweetclaude-skip to opt out."}'
+python3 "$HOOK_IO" deny "BLOCKED: SweetClaude is not configured for this project. Run /sweetclaude:configure init to set up, or create .sweetclaude-skip to opt out."
 exit 0
