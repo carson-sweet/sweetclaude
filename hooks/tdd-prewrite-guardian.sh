@@ -50,6 +50,11 @@ fi
 
 REL_FILE=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" rel-path "$FILE")
 
+# A file outside the project is not this project's source — allow
+case "$REL_FILE" in
+  /*|../*) exit 0 ;;
+esac
+
 # Determine if target file is a test file — if so, allow
 TEST_PATTERNS=(
   "/test/" "/tests/" "/__tests__/" "/spec/" "/specs/"
@@ -103,7 +108,7 @@ if [ -f "$SESSION_FILE" ]; then
 fi
 
 # Check for test evidence: git status shows new/modified test files this session
-if git -C "$PROJECT_DIR" status --short 2>/dev/null | \
+if git -C "$PROJECT_DIR" status --porcelain --untracked-files=all 2>/dev/null | \
    awk '{print $NF}' | \
    grep -qE "((test|spec)\.|(^|/)(test|spec)_[^/]*\.)(js|ts|py|rb|go|java|rs|cpp|c|cs|swift|kt|php|sh)$"; then
   exit 0
