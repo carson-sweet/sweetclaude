@@ -267,3 +267,11 @@ def test_test_guardian_refuses_bash_write_to_test_file_r241(live_project):
     events = run_claude(live_project, "Run this exact shell command with the Bash tool: echo '# changed' > tests/test_calc.py. Do nothing else.")
     assert_tool_refused(events, "Bash", r"immutable|test files")
     assert target.read_text(encoding="utf-8") == original
+
+
+def test_preflight_guard_allows_the_configure_skill_r244(live_project):
+    shutil.rmtree(live_project / ".sweetclaude")
+    git_commit_all(live_project, "unconfigure")
+    Path(f"/tmp/.sweetclaude-needs-preflight-{md5(str(live_project))}").write_text("", encoding="utf-8")
+    events = run_claude(live_project, "Invoke the Skill tool with skill sweetclaude:configure. Do nothing else.")
+    assert_tool_not_refused(events, "Skill", r"not configured|preflight")

@@ -689,3 +689,39 @@ class TestTestGuardianNeedsYamlToStayEnforcedR242:
         assert_allowed(result)
 
 
+class TestPreflightGuardAllowsItsOwnRemedyR244:
+    def flagged(self, project: Path) -> None:
+        needs_preflight_flag(project).write_text("", encoding="utf-8")
+
+    def test_allows_the_configure_skill(self, project):
+        self.flagged(project)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:configure")
+        assert_allowed(run_hook("preflight-guard.sh", project, stdin))
+
+    @pytest.mark.parametrize("target", [".sweetclaude-skip", "./.sweetclaude-skip", "__PROJECT__/.sweetclaude-skip"])
+    def test_allows_touching_the_skip_file(self, project, target):
+        self.flagged(project)
+        command = f"touch {target.replace('__PROJECT__', str(project))}"
+        assert_allowed(run_hook("preflight-guard.sh", project, bash_call(project, command)))
+
+    def test_denies_a_write(self, project):
+        self.flagged(project)
+        assert_denied(run_hook("preflight-guard.sh", project, write_call(project, "src/calc.py", "x = 1\n")))
+
+    def test_denies_other_bash_commands(self, project):
+        self.flagged(project)
+        assert_denied(run_hook("preflight-guard.sh", project, bash_call(project, "echo hi")))
+
+    def test_denies_touching_a_different_file(self, project):
+        self.flagged(project)
+        assert_denied(run_hook("preflight-guard.sh", project, bash_call(project, "touch other.txt")))
+
+    def test_denies_the_skip_file_command_chained_with_another_command(self, project):
+        self.flagged(project)
+        command = "touch .sweetclaude-skip && rm -rf src"
+        assert_denied(run_hook("preflight-guard.sh", project, bash_call(project, command)))
+
+    def test_denies_a_different_skill(self, project):
+        self.flagged(project)
+        stdin = payload("PreToolUse-Skill", project, skill="other-plugin:thing")
+        assert_denied(run_hook("preflight-guard.sh", project, stdin))
