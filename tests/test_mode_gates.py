@@ -22,6 +22,7 @@ from test_hook_protocol_contract import (  # noqa: E402
     _md5,
     assert_allowed,
     assert_denied,
+    feedback_text,
     payload,
     run_hook,
     stdout_json,
@@ -251,3 +252,71 @@ class TestR092SameGatesOnEveryImplementEntry:
     def test_go_evaluates_the_same_gate_script(self):
         go = (REPO_ROOT / "skills" / "go" / "SKILL.md").read_text(encoding="utf-8")
         assert "scripts/gate_check.py advance --to IMPLEMENT" in go
+
+
+def sprint_project(root: Path, *, issue_status: str = "done", sprint_status: str = "active") -> Path:
+    project = root / "project"
+    project.mkdir(parents=True)
+    write_effective_gates(project, "agile", AGILE_GATES)
+    write_sweetclaude_yaml(project, active_id="ISSUE-001")
+    write_issue(project, 1, issue_status, sprint="SP-001")
+    if sprint_status is not None:
+        write_sprint(project, 1, sprint_status, title="sprint one")
+    return project
+
+
+class TestR095SprintCloseRequirementWhenEnteringShip:
+    def test_all_issues_done_and_sprint_open_prompts_sprint_close(self, tmp_path):
+        project = sprint_project(tmp_path)
+        result = run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is True
+        assert "sprint_complete" in payload["unmet"]
+        assert any("All sprint issues are done" in reason for reason in payload["reasons"])
+        assert any("Soft gate" in reason for reason in payload["reasons"])
+
+    def test_override_text_replaces_the_soft_escape(self, tmp_path):
+        project = sprint_project(tmp_path)
+        result = run_gate_check("advance", "--to", "SHIP",
+                                "--override-text", "close the sprint with /sweetclaude:build project-sprints close",
+                                "--project-dir", str(project))
+        assert any(reason.endswith("close the sprint with /sweetclaude:build project-sprints close.")
+                   for reason in gate_json(result)["reasons"])
+
+    def test_open_issue_suppresses_the_requirement(self, tmp_path):
+        project = sprint_project(tmp_path, issue_status="in_progress")
+        payload = gate_json(run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project)))
+        assert payload == {"allow": True, "reasons": [], "unmet": []}
+
+    def test_closed_sprint_suppresses_the_requirement(self, tmp_path):
+        project = sprint_project(tmp_path, sprint_status="closed")
+        payload = gate_json(run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project)))
+        assert payload == {"allow": True, "reasons": [], "unmet": []}
+
+    def test_no_sprint_suppresses_the_requirement(self, tmp_path):
+        project = sprint_project(tmp_path, sprint_status=None)
+        payload = gate_json(run_gate_check("advance", "--to", "SHIP", "--project-dir", str(project)))
+        assert payload == {"allow": True, "reasons": [], "unmet": []}
+
+    def test_loading_deploy_ship_prompts_sprint_close(self, tmp_path):
+        project = sprint_project(tmp_path)
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "deploy-ship ship the milestone",
+                                "--project-dir", str(project))
+        assert result.returncode == 0
+        assert any("All sprint issues are done" in reason
+                   for reason in gate_json(result)["reasons"])
+
+    def test_preflight_surfaces_the_requirement_as_context(self, tmp_path):
+        project = sprint_project(tmp_path)
+        bootstrap_ran(project)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:library-load",
+                        args="deploy-ship ship the milestone")
+        result = run_hook("master-preflight.sh", project, stdin)
+        assert_allowed(result)
+        assert "All sprint issues are done" in feedback_text(result)
+
+    def test_go_evaluates_the_ship_gate_before_deploy_ship(self):
+        go = (REPO_ROOT / "skills" / "go" / "SKILL.md").read_text(encoding="utf-8")
+        assert "scripts/gate_check.py advance --to SHIP" in go
