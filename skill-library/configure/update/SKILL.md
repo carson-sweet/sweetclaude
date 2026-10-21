@@ -84,8 +84,9 @@ order so you are never double-installed:
 /plugin install sweetclaude@sweetclaude-stable
 /plugin marketplace remove sweetclaude-beta
 
-Then restart Claude Code and run /sweetclaude:configure update; your project data
-migrates normally. No project files were changed.
+Then restart Claude Code and run /sweetclaude:configure update to sync framework
+files. Update does not migrate project data; run /sweetclaude:configure doctor
+when the project needs repair or migration. No project files were changed.
 ```
 
 Stop. Do not invoke any other skill.

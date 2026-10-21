@@ -1,8 +1,8 @@
 # Upgrading to SweetClaude 5.0
 
-**Version:** 1.0
+**Version:** 1.1
 
-**Date:** 2026-10-20
+**Date:** 2026-10-21
 
 SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands. Your project data, state files and issues do not change; only the command names do.
 
@@ -77,20 +77,20 @@ You can name a workflow after its category, for example `/sweetclaude:configure 
 | `code-verify` | `/sweetclaude:build code-verify` | Run verification before claiming work is complete. |
 | `deploy-ship` | `/sweetclaude:build deploy-ship` | SHIP phase skill. |
 | `john-wick` | `/sweetclaude:build john-wick` | Fully autonomous, resumable, multi-session SDLC pipeline. |
-| `john-wick-checkin` | `/sweetclaude:build john-wick-checkin` | Internal John Wick phase check-in subagent. |
-| `large-story` | `/sweetclaude:build large-story` | Internal bounded, evidence-gated large-story workflow. |
-| `orchestrator` | `/sweetclaude:build orchestrator` | Orchestrator main loop — executes tracked workflow steps via subagents. |
+| `john-wick-checkin` | `/sweetclaude:build john-wick-checkin` | Internal John Wick phase check-in subagent. (internal in 4.x) |
+| `large-story` | `/sweetclaude:build large-story` | Internal bounded, evidence-gated large-story workflow. (internal in 4.x) |
+| `orchestrator` | `/sweetclaude:build orchestrator` | Orchestrator main loop — executes tracked workflow steps via subagents. (internal in 4.x) |
 | `product-sprint-plan` | `/sweetclaude:build product-sprint-plan` | Plan a sprint by selecting stories from the backlog, estimating scope, and producing a sprint commitment. |
 | `product-user-tdd-tests` | `/sweetclaude:build product-user-tdd-tests` | Transition user stories into Gherkin .feature files. |
 | `project-backlog` | `/sweetclaude:build project-backlog` | View and manage the unscheduled issue backlog. |
 | `project-backlog-triage` | `/sweetclaude:build project-backlog-triage` | Structured backlog grooming session. |
-| `project-epics` | `/sweetclaude:build project-epics` | DEPRECATED — use /sweetclaude:plan instead. Redirects automatically. |
+| `project-epics` | `/sweetclaude:build project-epics` | DEPRECATED — use /sweetclaude:plan epics instead. Redirects automatically. |
 | `project-gh-import-issues` | `/sweetclaude:build project-gh-import-issues` | Import open GitHub Issues into the local issue store as v4 story files. |
 | `project-gh-sync-issues` | `/sweetclaude:build project-gh-sync-issues` | Bidirectional status sync between local issue files and GitHub Issues. |
 | `project-issues` | `/sweetclaude:build project-issues` | Manage project issues and select the local or GitHub issue tracker — list, view, create, update, close, or change tracker. |
 | `project-sprints` | `/sweetclaude:build project-sprints` | Sprint planning, activation, board view, and close. |
 | `project-themes` | `/sweetclaude:build project-themes` | Manage themes — optional domain-grouping labels on stories. |
-| `small-story` | `/sweetclaude:build small-story` | Internal bounded, evidence-gated small-story workflow. |
+| `small-story` | `/sweetclaude:build small-story` | Internal bounded, evidence-gated small-story workflow. (internal in 4.x) |
 | `testing-accessibility` | `/sweetclaude:build testing-accessibility` | WCAG 2.1 Level AA audit. |
 | `testing-compliance` | `/sweetclaude:build testing-compliance` | Compliance control testing and evidence collection. |
 | `testing-performance` | `/sweetclaude:build testing-performance` | Define load scenarios, establish performance baselines, set thresholds. |
@@ -103,27 +103,27 @@ You can name a workflow after its category, for example `/sweetclaude:configure 
 | `rollback-revert` | `/sweetclaude:maintain rollback-revert` | Roll back or revert a deployment — identify the cause, execute the rollback, confirm recovery. |
 | `security-patch` | `/sweetclaude:maintain security-patch` | Security patch — vulnerability fix with mandatory security review and disclosure tracking. |
 | `something-broke` | `/sweetclaude:maintain something-broke` | Reactive production incident skill. |
-| `_features` | `/sweetclaude:configure _features` | Feature configuration — shows all optional SweetClaude features with descriptions and current status, lets the user enable or disable them. |
-| `_health` | `/sweetclaude:configure _health` | Consistency scan and version check. |
-| `_migrate` | `/sweetclaude:configure _migrate` | Migration orchestrator. Wraps the runner with snapshot, recovery menus, and end-of-session report. |
-| `claude-config-audit` | `/sweetclaude:configure claude-config-audit` | Redirects to sweetclaude:library-load doctor. Config compatibility checks are now part of the doctor system. |
+| `_features` | `/sweetclaude:configure _features` | Feature configuration — shows all optional SweetClaude features with descriptions and current status, lets the user enable or disable them. (internal in 4.x) |
+| `_health` | `/sweetclaude:configure _health` | Consistency scan and version check. (internal in 4.x) |
+| `_migrate` | `/sweetclaude:configure _migrate` | Migration orchestrator. Wraps the runner with snapshot, recovery menus, and end-of-session report. (internal in 4.x) |
+| `claude-config-audit` | `/sweetclaude:configure claude-config-audit` | Redirects to /sweetclaude:configure doctor. Config compatibility checks are now part of the doctor system. (internal in 4.x) |
 | `doctor` | `/sweetclaude:configure doctor` | Diagnostic scan, repair, and rollback. Checks 8 categories (state integrity, hooks, storage, migration, config, files, onboarding, environment), fixes what it safely can, and can restore (roll back / undo / revert) the files a previous doctor run changed. |
 | `feature-setup` | `/sweetclaude:configure feature-setup` | Deploy local repo to installed locations and rebuild the project cache. |
-| `fix-sweetclaude` | `/sweetclaude:configure fix-sweetclaude` | Redirects to sweetclaude:library-load doctor. This skill has been absorbed into the doctor diagnostic system. |
+| `fix-sweetclaude` | `/sweetclaude:configure fix-sweetclaude` | Redirects to /sweetclaude:configure doctor. This skill has been absorbed into the doctor diagnostic system. |
 | `guardian-off` | `/sweetclaude:configure guardian-off` | Disable the Protocol Guardian for the current session |
 | `guardian-on` | `/sweetclaude:configure guardian-on` | Enable the Protocol Guardian — enforces skill invocations, TDD discipline, and artifact saves for the current session |
 | `hibernate` | `/sweetclaude:configure hibernate` | Use when hibernating or unhibernating a project managed by SweetClaude. |
-| `hook-repair` | `/sweetclaude:configure hook-repair` | Redirects to sweetclaude:library-load doctor. Hook diagnostics are now part of the doctor system. |
+| `hook-repair` | `/sweetclaude:configure hook-repair` | Redirects to /sweetclaude:configure doctor. Hook diagnostics are now part of the doctor system. |
 | `init` | `/sweetclaude:configure init` | Entry point for onboarding a project to SweetClaude — reads current state and hands off to the skill that owns the work. |
 | `migrate` | `/sweetclaude:configure migrate` | Migrate legacy work items to unified ISSUE-NNN format. Supports flat BL-NNN layouts and typed legacy backlog layouts (stories/, bugs/, debt/). |
-| `migrate-diagnose` | `/sweetclaude:configure migrate-diagnose` | Redirects to sweetclaude:library-load doctor. File diagnostics are now part of the doctor system. |
+| `migrate-diagnose` | `/sweetclaude:configure migrate-diagnose` | Redirects to /sweetclaude:configure doctor. File diagnostics are now part of the doctor system. |
 | `off` | `/sweetclaude:configure off` | Deactivate SweetClaude for the current project. |
 | `project-assess-shape` | `/sweetclaude:configure project-assess-shape` | Interview user and recommend a SweetClaude project mode (Flow, Kanban, Shape Up, or Agile) |
 | `project-mode` | `/sweetclaude:configure project-mode` | Assess and shift project modes. |
 | `purge` | `/sweetclaude:configure purge` | Delete all SweetClaude artifacts from the current project. |
 | `recover` | `/sweetclaude:configure recover` | Recover or unblock SweetClaude projects left in bad update, migration, doctor, or repair states. |
 | `retro` | `/sweetclaude:configure retro` | Review and maintain the improvement register. |
-| `setup` | `/sweetclaude:configure setup` | Consolidated onboarding skill. |
+| `setup` | `/sweetclaude:configure setup` | Consolidated onboarding skill. (internal in 4.x) |
 | `update` | `/sweetclaude:configure update` | Update SweetClaude to the latest version from GitHub. |
 | `usage` | `/sweetclaude:configure usage` | Toggle and view local usage tracking. |
 | `work-item-artifacts` | `/sweetclaude:configure work-item-artifacts` | Co-locate all artifacts per story, epic, and milestone into .sweetclaude/work/<ID>/. Manages onboarding, backfill, and per-item directory creation. |
@@ -139,7 +139,11 @@ You can name a workflow after its category, for example `/sweetclaude:configure 
 | `document-corpus` | `/sweetclaude:utils document-corpus` | Manage the full document corpus pipeline — consolidate raw files, triage, reconcile into canonical documents, promote, set up semantic search (RAG), and reindex. |
 | `documents-update-docs` | `/sweetclaude:utils documents-update-docs` | Update documentation when implementation changes behavior. |
 | `misc-meeting-prep` | `/sweetclaude:utils misc-meeting-prep` | Prepare for a specific meeting. |
-| `next-steps` | `/sweetclaude:utils next-steps` | Walk through the pipeline step by step. |
+| `next-steps` | `/sweetclaude:utils next-steps` | Walk through the pipeline step by step. (internal in 4.x) |
 | `recap` | `/sweetclaude:utils recap` | Produce a concise 'where we are' summary: current phase, active work item, last 3 commits, checkpoint state, and any open flags. |
 | `report-failure` | `/sweetclaude:utils report-failure` | Write one structured failure report and root cause analysis to .sweetclaude/failure/. Invoke ONLY when the user explicitly asks to record/report a failure, mistake, or incident. Never auto-invoke. |
 | `session-export` | `/sweetclaude:utils session-export` | Export a Claude.ai session as a complete, portable package. |
+
+Rows marked "(internal in 4.x)" were not user-invocable slash commands in 4.x; they are listed so you can find where that behavior lives in 5.0.
+
+**Retired in 5.0:** `behavioral-regression` and `sweetclaude-behavioral-regression` were user commands in 4.x and have no replacement. 5.0 answers both with "not a SweetClaude command".

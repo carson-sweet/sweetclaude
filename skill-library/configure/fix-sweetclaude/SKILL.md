@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Redirects to sweetclaude:library-load doctor. This skill has been absorbed into the doctor diagnostic system."
+description: "Redirects to /sweetclaude:configure doctor. This skill has been absorbed into the doctor diagnostic system."
 ---
 
 
