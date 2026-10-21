@@ -18,6 +18,15 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 GATE_CHECK = REPO_ROOT / "scripts" / "gate_check.py"
 
+from test_hook_protocol_contract import (  # noqa: E402
+    _md5,
+    assert_allowed,
+    assert_denied,
+    feedback_text,
+    payload,
+    run_hook,
+)
+
 AGILE_GATES = [
     {"phase": "IMPLEMENT", "condition": "no_active_sprint", "action": "block",
      "message": "No active sprint. Run /sweetclaude:project-sprints start to activate a sprint."},
@@ -172,3 +181,68 @@ class TestR094AgileImplementGateResolvesActiveSprint:
                                 "--project-dir", str(project))
         assert result.returncode == 0
         assert gate_json(result)["allow"] is True
+
+def bootstrap_ran(project: Path) -> None:
+    Path(f"/tmp/.sweetclaude-bootstrap-ran-{_md5(str(project))}").write_text("", encoding="utf-8")
+
+
+class TestR092SameGatesOnEveryImplementEntry:
+    def prepare(self, tmp_path: Path, *, sprint_status: str | None = None) -> Path:
+        project = agile_project(tmp_path, sprint_status=sprint_status)
+        bootstrap_ran(project)
+        return project
+
+    def test_master_preflight_denies_build_without_active_sprint(self, tmp_path):
+        project = self.prepare(tmp_path)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:build")
+        result = run_hook("master-preflight.sh", project, stdin)
+        assert_denied(result)
+        assert "No active sprint" in feedback_text(result)
+
+    def test_master_preflight_denies_direct_workflow_invocation(self, tmp_path):
+        project = self.prepare(tmp_path)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:library-load",
+                        args="code-feature implement the login form")
+        result = run_hook("master-preflight.sh", project, stdin)
+        assert_denied(result)
+        assert "No active sprint" in feedback_text(result)
+
+    def test_master_preflight_allows_build_with_active_sprint(self, tmp_path):
+        project = self.prepare(tmp_path, sprint_status="active")
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:build")
+        assert_allowed(run_hook("master-preflight.sh", project, stdin))
+
+    def test_master_preflight_allows_the_sprint_remedy(self, tmp_path):
+        project = self.prepare(tmp_path)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:library-load",
+                        args="project-sprints start sprint two")
+        assert_allowed(run_hook("master-preflight.sh", project, stdin))
+
+    def test_master_preflight_allows_unrelated_skills(self, tmp_path):
+        project = self.prepare(tmp_path)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:status")
+        assert_allowed(run_hook("master-preflight.sh", project, stdin))
+
+    def test_master_preflight_fails_open_without_compiled_gates(self, tmp_path):
+        project = tmp_path / "project"
+        project.mkdir()
+        write_sweetclaude_yaml(project)
+        bootstrap_ran(project)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:build")
+        assert_allowed(run_hook("master-preflight.sh", project, stdin))
+
+    def test_load_and_advance_agree_for_the_same_project(self, tmp_path):
+        project = self.prepare(tmp_path)
+        denied = run_gate_check("load", "--skill", "sweetclaude:build", "--project-dir", str(project))
+        advance = run_gate_check("advance", "--to", "IMPLEMENT", "--project-dir", str(project))
+        assert gate_json(denied)["unmet"] == gate_json(advance)["unmet"]
+
+    def test_library_loader_gates_between_selection_and_load(self):
+        loader = (REPO_ROOT / "skills" / "library-load" / "SKILL.md").read_text(encoding="utf-8")
+        assert loader.index("Select exactly one workflow") < loader.index("gate_check.py load")
+        assert loader.index("gate_check.py load") < loader.index("<category>/<skill>/SKILL.md")
+        assert "Output every entry in `reasons` and stop" in loader
+
+    def test_go_evaluates_the_same_gate_script(self):
+        go = (REPO_ROOT / "skills" / "go" / "SKILL.md").read_text(encoding="utf-8")
+        assert "scripts/gate_check.py advance --to IMPLEMENT" in go

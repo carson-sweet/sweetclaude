@@ -275,3 +275,44 @@ def test_preflight_guard_allows_the_configure_skill_r244(live_project):
     Path(f"/tmp/.sweetclaude-needs-preflight-{md5(str(live_project))}").write_text("", encoding="utf-8")
     events = run_claude(live_project, "Invoke the Skill tool with skill sweetclaude:configure. Do nothing else.")
     assert_tool_not_refused(events, "Skill", r"not configured|preflight")
+
+
+def agile_gates_state(project: Path, *, sprint_active: bool) -> None:
+    write_state(project, phase="IMPLEMENT")
+    gates = [
+        {"phase": "IMPLEMENT", "condition": "no_active_sprint", "action": "block",
+         "message": "No active sprint. Run /sweetclaude:project-sprints start to activate a sprint."},
+        {"phase": "SHIP", "condition": "sprint_complete", "action": "prompt",
+         "message": "All sprint issues are done. Run sprint close before shipping."},
+    ]
+    (project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
+        yaml.safe_dump({"mode": "agile", "default_tdd_level": 2, "blocked_skills": [], "gates": gates}),
+        encoding="utf-8")
+    if sprint_active:
+        sprints = project / ".sweetclaude" / "product" / "sprints"
+        sprints.mkdir(parents=True, exist_ok=True)
+        (sprints / "SP-001-sprint-one.md").write_text(
+            "---\nid: SP-001\ntitle: Sprint one\nstatus: active\n---\n\n# SP-001: Sprint one\n",
+            encoding="utf-8")
+
+
+def test_master_preflight_denies_build_without_active_sprint_r092(live_project):
+    agile_gates_state(live_project, sprint_active=False)
+    events = run_claude(live_project, "Invoke the Skill tool with skill sweetclaude:build. Do nothing else.")
+    assert_tool_refused(events, "Skill", r"No active sprint")
+
+
+def test_library_load_implement_allowed_with_active_sprint_r094(live_project):
+    agile_gates_state(live_project, sprint_active=True)
+    events = run_claude(
+        live_project,
+        "Invoke the Skill tool with skill sweetclaude:library-load and args: code-feature implement the login form. Do nothing else.")
+    assert_tool_not_refused(events, "Skill", r"No active sprint")
+
+
+def test_library_load_implement_denied_without_active_sprint_r094(live_project):
+    agile_gates_state(live_project, sprint_active=False)
+    events = run_claude(
+        live_project,
+        "Invoke the Skill tool with skill sweetclaude:library-load and args: code-feature implement the login form. Do nothing else.")
+    assert_tool_refused(events, "Skill", r"No active sprint")
