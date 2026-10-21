@@ -277,7 +277,6 @@ def test_preflight_guard_allows_the_configure_skill_r244(live_project):
     assert_tool_not_refused(events, "Skill", r"not configured|preflight")
 
 
-<<<<<<< HEAD
 def agile_gates_state(project: Path, *, sprint_active: bool) -> None:
     write_state(project, phase="IMPLEMENT")
     gates = [
