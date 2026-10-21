@@ -20,6 +20,8 @@ SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 CHOICES_RE = re.compile(r"\{([\w.-]+(?:,[\w.-]+)*)\}")
 ARG_STOP = re.compile(r"\s*(?:\||;|&&|>|<|#|\\$)")
 
+MARKER_RE = re.compile(r"<!--\s*docs-claims:\s*ignore\s+(\w+):(\S+?)\s*-->")
+
 _help_cache = {}
 
 
@@ -132,19 +134,41 @@ def check_links(root, base, rel, lineno, line):
     return out
 
 
+def marker_matches(marker, f):
+    _, kind, claim, _ = marker
+    return f["kind"] == kind and (f["claim"] == claim or f["claim"].endswith(" " + claim))
+
+
 def check_file(root, path):
     rel = path.relative_to(root).as_posix()
     findings = []
     in_fence = False
-    for lineno, line in enumerate(path.read_text().splitlines(), 1):
+    lines = path.read_text().splitlines()
+    markers = [
+        [lineno, m.group(1), m.group(2), False]
+        for lineno, line in enumerate(lines, 1)
+        for m in MARKER_RE.finditer(line)
+    ]
+    for lineno, line in enumerate(lines, 1):
         if line.lstrip().startswith("```"):
             in_fence = not in_fence
             continue
-        findings += check_slash(root, rel, lineno, line)
-        findings += check_scripts(root, rel, lineno, line)
+        line = MARKER_RE.sub("", line)
+        found = check_slash(root, rel, lineno, line)
+        found += check_scripts(root, rel, lineno, line)
         if not in_fence:
-            findings += check_paths(root, rel, lineno, line)
-            findings += check_links(root, path.parent, rel, lineno, line)
+            found += check_paths(root, rel, lineno, line)
+            found += check_links(root, path.parent, rel, lineno, line)
+        for f in found:
+            hit = [m for m in markers if m[0] in (lineno, lineno - 1) and marker_matches(m, f)]
+            for m in hit:
+                m[3] = True
+            if not hit:
+                findings.append(f)
+    for lineno, kind, claim, used in markers:
+        if not used:
+            findings.append(finding(rel, lineno, "marker", claim,
+                                    f"no {kind} claim {claim} on this line or the next"))
     return findings
 
 
