@@ -23,6 +23,25 @@ ARG_STOP = re.compile(r"\s*(?:\||;|&&|>|<|#|\\$)")
 MARKER_RE = re.compile(r"<!--\s*docs-claims:\s*ignore\s+(\w+):(\S+?)\s*-->")
 
 _help_cache = {}
+_tracked_cache = {}
+
+
+def tracked_files(root):
+    if root not in _tracked_cache:
+        try:
+            res = subprocess.run(["git", "ls-files"], cwd=root, capture_output=True, text=True, timeout=30)
+            _tracked_cache[root] = set(res.stdout.splitlines()) if res.returncode == 0 else None
+        except Exception:
+            _tracked_cache[root] = None
+    return _tracked_cache[root]
+
+
+def repo_path_exists(root, rel):
+    tracked = tracked_files(root)
+    if tracked is None:
+        return (root / rel).exists()
+    rel = rel.rstrip("/")
+    return rel in tracked or any(t.startswith(rel + "/") for t in tracked)
 
 
 def script_help(script, sub=None):
@@ -75,7 +94,7 @@ def check_scripts(root, rel, lineno, line):
     for m in SCRIPT_RE.finditer(line):
         script_rel = m.group(1)
         script = root / script_rel
-        if not script.is_file():
+        if not script.is_file() or not repo_path_exists(root, script_rel):
             out.append(finding(rel, lineno, "script", script_rel, f"{script_rel} does not exist"))
             continue
         tokens = arg_tokens(m.group(2))
@@ -115,7 +134,7 @@ def check_paths(root, rel, lineno, line):
         span = re.sub("^" + PLUGIN_ROOT, "", m.group(1)).rstrip(".,;:")
         if not span.startswith(PATH_PREFIXES) or re.search(r"[*<>{}$|]", span):
             continue
-        if not (root / span).exists():
+        if not repo_path_exists(root, span):
             out.append(finding(rel, lineno, "path", span, f"{span} does not exist"))
     return out
 

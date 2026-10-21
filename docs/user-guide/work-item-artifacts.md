@@ -89,6 +89,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py" --projec
 
 `--dry-run` shows what would be created without making changes. `--item` limits the run to a single ID. `--json` prints the results as JSON. The skill flows above wrap these same commands, so most of the time you do not call the script yourself.
 
+<!-- docs-claims: ignore path:docs/internal/ --><!-- docs-claims: ignore path:docs/plans/ -->
 The scanner builds its list of work items from `work_history` and the active work item in `sweetclaude.yaml`, plus the issue, epic, and milestone files under `.sweetclaude/product/`. It then searches known artifact locations — `.sweetclaude/technical/`, `.sweetclaude/plans/`, `.sweetclaude/contracts/`, `.sweetclaude/reports/`, and the project's `docs/internal/` and `docs/plans/` — for files matching each item ID. It also resolves `STORY-NNN` aliases to their migrated `ISSUE-NNN` IDs and links any matching `.sweetclaude/efforts/` directory. Discovered files are sorted into the matching category subdirectory and symlinked in; the original files are never moved.
 
 An item that already has a work directory is skipped, so re-running backfill is safe.
