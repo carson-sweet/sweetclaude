@@ -169,6 +169,12 @@ if [ -n "$DRY_RUN" ]; then
       [ -f "$_hook" ] || continue
       printf '%s %s\n' "$EHR_WOULD_RESTORE_PREFIX" "$(basename "$_hook")"
     done
+    _lib_src="$DRY_SOURCE/lib"
+    [ -d "$_lib_src" ] || _lib_src="$REPO_ROOT/hooks/lib"
+    for _lib in "$_lib_src"/*; do
+      [ -f "$_lib" ] || continue
+      printf '%s hooks/lib/%s\n' "$EHR_WOULD_RESTORE_PREFIX" "$(basename "$_lib")"
+    done
   fi
   exit 0
 fi
@@ -263,6 +269,15 @@ else
       cp -- "$RESTORE_SOURCE/$_meta" "$HOOKS_DIR/$_meta"
       printf '%s%s%s\n' "$CONTRACT_LINE_RESTORED_PREFIX" "$_meta" "$_restore_suffix"
     fi
+  done
+
+  _lib_src="$RESTORE_SOURCE/lib"
+  [ -d "$_lib_src" ] || _lib_src="$REPO_ROOT/hooks/lib"
+  for _lib in "$_lib_src"/*; do
+    [ -f "$_lib" ] || continue
+    mkdir -p "$HOOKS_DIR/lib"
+    cp -- "$_lib" "$HOOKS_DIR/lib/$(basename "$_lib")"
+    printf '%shooks/lib/%s%s\n' "$CONTRACT_LINE_RESTORED_PREFIX" "$(basename "$_lib")" "$_restore_suffix"
   done
 
   if [ "$RESTORED_COUNT" -eq 0 ]; then
