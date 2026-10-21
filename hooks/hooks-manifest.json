@@ -138,11 +138,12 @@
     },
     {
       "file": "phase-dwelling-guard.sh",
-      "event": null,
-      "matcher": null,
-      "required": false,
-      "purpose": "Protocol guardian only \u2014 registered by guardian-on skill, not in baseline hooks.json. Blocks phase-advancing language.",
-      "command_path": null
+      "event": "Stop",
+      "matcher": "",
+      "required": true,
+      "scope": "plugin-native",
+      "purpose": "Protocol guardian: blocks phase-advancing language in a response; does nothing unless guardian-enabled exists",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/phase-dwelling-guard.sh"
     },
     {
       "file": "auto-reindex.sh",

@@ -181,6 +181,14 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/small-story-stop-guard.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/phase-dwelling-guard.sh"
+          }
+        ]
       }
     ]
   }
