@@ -1,4 +1,5 @@
-"""Contract tests for mode-gate enforcement (ledger rows R-092, R-094, R-095).
+"""Contract tests for mode-gate enforcement (ledger rows R-089, R-091, R-092,
+R-093, R-094, R-095).
 
 scripts/gate_check.py is the single evaluator for the compiled mode gates in
 .sweetclaude/state/effective-gates.yaml. It resolves sprints and issues through
@@ -9,6 +10,7 @@ in Agile mode never plants artifacts under legacy paths.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -320,3 +322,93 @@ class TestR095SprintCloseRequirementWhenEnteringShip:
     def test_go_evaluates_the_ship_gate_before_deploy_ship(self):
         go = (REPO_ROOT / "skills" / "go" / "SKILL.md").read_text(encoding="utf-8")
         assert "scripts/gate_check.py advance --to SHIP" in go
+
+
+KANBAN_GATES = [
+    {"phase": "IMPLEMENT", "condition": "wip_limit_reached", "action": "block",
+     "message": "WIP limit reached ({current}/{limit} items in_progress). Complete or move an item before starting new work."},
+]
+
+
+def kanban_project(root: Path, *, blocked=("project-sprints", "product-sprint-plan"),
+                   active_id: str = "") -> Path:
+    project = root / "project"
+    project.mkdir(parents=True)
+    write_effective_gates(project, "kanban", KANBAN_GATES, blocked_skills=list(blocked))
+    write_sweetclaude_yaml(project, active_id=active_id, mode="kanban")
+    if active_id:
+        write_issue(project, 1, "in_progress")
+    return project
+
+
+class TestR089KanbanBlocksSprintPlanningSkills:
+    def test_product_sprint_plan_is_denied_in_kanban(self, tmp_path):
+        project = kanban_project(tmp_path)
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "product-sprint-plan plan the next sprint",
+                                "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is False
+        assert payload["unmet"] == ["blocked_skill:product-sprint-plan"]
+        assert any("product-sprint-plan is disabled in kanban mode" in reason
+                   for reason in payload["reasons"])
+
+    def test_project_sprints_is_denied_in_kanban(self, tmp_path):
+        project = kanban_project(tmp_path)
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "project-sprints start sprint two",
+                                "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        assert "blocked_skill:project-sprints" in gate_json(result)["unmet"]
+
+    def test_build_route_to_sprint_planning_is_denied(self, tmp_path):
+        project = kanban_project(tmp_path)
+        result = run_gate_check("load", "--skill", "sweetclaude:build",
+                                "--args", "product-sprint-plan plan the next sprint",
+                                "--project-dir", str(project))
+        assert result.returncode == 2
+        assert gate_json(result)["allow"] is False
+
+    def test_compiled_chain_denies_sprint_planning(self, tmp_path):
+        project = tmp_path / "project"
+        project.mkdir(parents=True)
+        write_sweetclaude_yaml(project, mode="kanban")
+        compiled = subprocess.run(
+            ["bash", str(REPO_ROOT / "scripts" / "generate-effective-gates.sh")],
+            env={**os.environ, "PROJECT_DIR": str(project)},
+            capture_output=True, text=True, timeout=30)
+        assert compiled.returncode == 0, compiled.stderr
+        effective = yaml.safe_load(
+            (project / ".sweetclaude" / "state" / "effective-gates.yaml").read_text(encoding="utf-8"))
+        assert "product-sprint-plan" in effective["blocked_skills"]
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "product-sprint-plan plan the next sprint",
+                                "--project-dir", str(project))
+        assert result.returncode == 2
+        assert gate_json(result)["allow"] is False
+
+    def test_issue_workflows_still_load_in_kanban(self, tmp_path):
+        project = kanban_project(tmp_path, active_id="ISSUE-001")
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "code-feature implement the login form",
+                                "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+    def test_agile_sprint_remedy_is_not_blocked(self, tmp_path):
+        project = agile_project(tmp_path, sprint_status=None)
+        result = run_gate_check("load", "--skill", "sweetclaude:library-load",
+                                "--args", "project-sprints start sprint two",
+                                "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+    def test_master_preflight_denies_sprint_planning_in_kanban(self, tmp_path):
+        project = kanban_project(tmp_path)
+        bootstrap_ran(project)
+        stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:library-load",
+                        args="product-sprint-plan plan the next sprint")
+        result = run_hook("master-preflight.sh", project, stdin)
+        assert_denied(result)
+        assert "disabled in kanban mode" in denial_reason(result)
