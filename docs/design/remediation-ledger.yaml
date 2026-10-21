@@ -119,7 +119,10 @@ rows:
   acceptance: README.md Agile bullet states that implementation is blocked when no sprint is active and warned when the issue is outside the active sprint, matching config/mode-gates.yaml.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 86f9d98a
+  - 589662a7
 - id: R-014
   source: A
   docs:
@@ -1260,7 +1263,10 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 9436aecc
+  - b980a2f0
 - id: R-093
   source: B
   docs:
@@ -1298,7 +1304,10 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - 7dd5efed
+  - f3aeabf4
 - id: R-095
   source: B
   docs:
@@ -1313,7 +1322,10 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 91ff0e55
+  - 3c43b9f2
 - id: R-096
   source: B
   docs:
