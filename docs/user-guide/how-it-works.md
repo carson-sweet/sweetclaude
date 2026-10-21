@@ -51,11 +51,11 @@ The two-dimension model keeps the slow question (how mature is the project) apar
 
 The 7-phase pipeline (DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP) looks like the standard SDLC, but it is not used the standard way.
 
-In a typical SDLC, phases are time-boxed: "we are in design this sprint." In SweetClaude, phases are **quality gates**. A phase is done when its exit criteria are met. Not when the calendar says so. Not when you feel like it. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+In a typical SDLC, phases are time-boxed: "we are in design this sprint." In SweetClaude, phases are **quality gates**. A phase is done when its exit criteria are met. Not when the calendar says so. Not when you feel like it.
 
 This is why SweetClaude refuses to give time estimates. The right question is not "how long will design take?" — it is "have we covered the architecture, the data model, the API contracts, and recorded the key decisions?" When the answer is yes, design is done.
 
-There are two kinds of gates. **Soft gates** are advisory — you can override with "I've addressed this informally — proceed." **Hard gates** cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans, technology migration cutover decisions. Where those gates are recorded is listed in the hard gate table in the phases reference. Hard gate overrides require explicit risk acceptance, logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+There are two kinds of gates. **Soft gates** are advisory — you can override with "I've addressed this informally — proceed." **Hard gates** cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans, technology migration cutover decisions. Where those gates are recorded is listed in the hard gate table in the phases reference. Hard gate overrides require explicit risk acceptance, logged to the decision log.
 
 The list of soft and hard gates is in [`phases-and-workflows.md`](phases-and-workflows.md).
 
