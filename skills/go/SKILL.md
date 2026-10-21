@@ -320,7 +320,15 @@ If skipped: continue. Note: "No PR tracked — closeout will skip PR closure."
 
 For all phases other than SHIP: invoke the appropriate skill from the routing table below. One sentence explaining what you're doing.
 
-For SHIP phase (routing to `sweetclaude:library-load deploy-ship`): invoke `sweetclaude:library-load deploy-ship`, then after it completes and the deploy or merge is confirmed, run the **Closeout sequence** below instead of prompting next steps.
+For SHIP phase (routing to `sweetclaude:library-load deploy-ship`): before invoking, evaluate the SHIP mode gates:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gate_check.py advance --to SHIP --project-dir .
+```
+
+Exit 0 prints `{"allow": true, "reasons": [...], "unmet": [...]}`. Read `reasons`: each one carries a soft-gate requirement, such as the Agile sprint-close prompt (all sprint issues done, sprint not closed) — surface every requirement to the user before invoking. If the command exits 2, do not invoke the skill: output every entry in `reasons` and stop.
+
+Then invoke `sweetclaude:library-load deploy-ship`, and after it completes and the deploy or merge is confirmed, run the **Closeout sequence** below instead of prompting next steps.
 
 ---
 
