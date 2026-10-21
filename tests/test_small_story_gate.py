@@ -310,6 +310,15 @@ def test_init_contract_small_story_evidence_paths_match_controller(tmp_path):
         )
 
 
+def _replace_placeholder_commands(project_dir):
+    contract_path = project_dir / ".sweetclaude" / "contracts" / "success-criteria-contract.yaml"
+    contract = yaml.safe_load(contract_path.read_text(encoding="utf-8"))
+    for criterion in contract["success_criteria"]:
+        if criterion.get("measurement_type") == "command":
+            criterion["measurement_command"] = "true"
+    contract_path.write_text(yaml.safe_dump(contract, sort_keys=False), encoding="utf-8")
+
+
 def test_small_story_verify_passes_with_init_contract_generated_contract(tmp_path):
     """End-to-end: a contract scaffolded via init-contract must clear VERIFY.
 
@@ -328,6 +337,7 @@ def test_small_story_verify_passes_with_init_contract_generated_contract(tmp_pat
         criteria_count=1,
         workflow_type="small-story",
     )["ok"]
+    _replace_placeholder_commands(project)
     assert freeze_contract(project_dir=project)["ok"]
     assert init_workflow(project_dir=project, workflow_id="STORY-001")["ok"]
     _advance_to_implement(project, "STORY-001")
@@ -550,6 +560,7 @@ def test_small_story_amend_inflight_then_complete_verify(tmp_path):
         project_dir=project, story_id="STORY-001", criteria_count=1,
         workflow_type="small-story",
     )["ok"]
+    _replace_placeholder_commands(project)
     assert freeze_contract(project_dir=project)["ok"]
     assert init_workflow(project_dir=project, workflow_id="STORY-001")["ok"]
 

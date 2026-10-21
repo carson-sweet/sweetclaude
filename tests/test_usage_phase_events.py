@@ -45,6 +45,7 @@ def workflow_project(tmp_path):
     sc_crit = contract["success_criteria"][0]
     sc_crit["statement"] = "Test criterion passes"
     sc_crit["binary_predicate"] = "true exits with code 0"
+    sc_crit["measurement_command"] = "true"
     contract_path.write_text(yaml.dump(contract, default_flow_style=False))
 
     subprocess.run(

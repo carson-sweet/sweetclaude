@@ -580,12 +580,22 @@ def test_gate_denies_bash_referencing_contracts(tmp_path):
     assert result["decision"] == "deny"
 
 
+def _replace_placeholder_commands(project_dir):
+    contract_path = project_dir / ".sweetclaude" / "contracts" / "success-criteria-contract.yaml"
+    contract = yaml.safe_load(contract_path.read_text(encoding="utf-8"))
+    for criterion in contract["success_criteria"]:
+        if criterion.get("measurement_type") == "command":
+            criterion["measurement_command"] = "true"
+    contract_path.write_text(yaml.safe_dump(contract, sort_keys=False), encoding="utf-8")
+
+
 def test_init_contract_skeleton_freezes_and_validates(tmp_path):
     from success_criteria_contracts import freeze_contract, init_contract
 
     _create_backlog_file(tmp_path, "WI-001")
     created = init_contract(project_dir=tmp_path, story_id="WI-001", criteria_count=3)
     assert created["ok"], created
+    _replace_placeholder_commands(tmp_path)
     frozen = freeze_contract(project_dir=tmp_path)
     assert frozen["ok"], frozen
     assert frozen["contract_hash"].startswith("sha256:")
@@ -637,6 +647,7 @@ def test_freeze_contract_recomputes_hash_after_edit(tmp_path):
 
     _create_backlog_file(tmp_path, "WI-001")
     init_contract(project_dir=tmp_path, story_id="WI-001", criteria_count=1)
+    _replace_placeholder_commands(tmp_path)
     first = freeze_contract(project_dir=tmp_path)
     contract_path = tmp_path / ".sweetclaude" / "contracts" / "success-criteria-contract.yaml"
     contract = yaml.safe_load(contract_path.read_text(encoding="utf-8"))
