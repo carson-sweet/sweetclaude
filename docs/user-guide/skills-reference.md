@@ -1,5 +1,8 @@
 # Commands and Skill Library
 
+**Version:** 1.1
+**Date:** 2026-10-21
+
 SweetClaude has a deliberately small public command surface. You never invoke an individual library workflow with a slash command. State the outcome you want after a category command; SweetClaude selects and loads the one focused workflow it needs.
 
 ## Public commands
@@ -42,7 +45,7 @@ Use `/sweetclaude:design` for: architecture, technology specifications, data mod
 
 ```text
 /sweetclaude:design define the data model for inventory and stock movements
-/sweetclaude:design review the checkout flow for accessibility
+/sweetclaude:design review the checkout flow for usability
 /sweetclaude:design create a mockup sandbox for the account settings flow
 ```
 
@@ -80,7 +83,7 @@ Use `/sweetclaude:maintain` for: debt reduction, production incidents, hotfixes,
 
 ## Configure library
 
-Use `/sweetclaude:configure` for: first-time setup; project mode and feature settings; updates; diagnostics and repair; recovery; supported migration; hibernation; suspension or purge; usage settings; hook repair; and SweetClaude’s own regression checks.
+Use `/sweetclaude:configure` for: first-time setup; project mode and feature settings; updates; diagnostics and repair; recovery; supported migration; hibernation; suspension or purge; usage settings; and hook repair.
 
 ```text
 /sweetclaude:configure set this project up

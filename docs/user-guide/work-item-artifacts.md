@@ -1,7 +1,7 @@
 # Work-Item Artifacts
 
-**Version:** 1.0
-**Date:** 2026-06-10
+**Version:** 1.1
+**Date:** 2026-10-21
 
 Work-item artifact directories are an opt-in feature that co-locates everything produced for a single work item — story, epic, or milestone — under one per-item directory. Design docs, plans, contracts, reports, and decision excerpts all live together, so finding everything about a work item means looking in one place instead of hunting across the project.
 
@@ -24,7 +24,7 @@ When the feature is active, artifacts are written to:
 ├── manifest.yaml   ← item metadata + backfill record
 ├── design/         ← design and technical docs
 ├── plans/          ← plan files
-├── contracts/      ← API and other contracts
+├── contracts/      ← success-criteria contracts
 ├── reports/        ← reports
 ├── decisions/      ← decision excerpts
 └── scratch/        ← working notes
@@ -36,7 +36,7 @@ The `manifest.yaml` records the item ID, item type, title, the path to the item'
 
 ## The Feature Flag
 
-The feature is tracked in `.sweetclaude/state/sweetclaude.yaml` under `features.work_item_artifacts`. Like every optional feature it carries a status (`active`, `declined`, or `not_configured`).
+The feature is tracked in `.sweetclaude/state/sweetclaude.yaml` under `features.work_item_artifacts`. Like every optional feature it carries a status (`not_offered` until the feature is first offered, then `active` or `declined`).
 
 You enable it the same way as any other optional feature — through feature configuration, which lists it as **Work-item artifact directories**:
 
@@ -78,15 +78,16 @@ Reports the current state: how many work-item directories exist in `.sweetclaude
 
 ## Backfilling Existing Items
 
-Backfill is handled by `scripts/backfill_work_item_artifacts.py`. You can run it directly:
+Backfill is handled by `${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py`. The script ships with the plugin, not in your project, so run it from the plugin root:
 
 ```bash
-python3 scripts/backfill_work_item_artifacts.py --project-dir . --dry-run
-python3 scripts/backfill_work_item_artifacts.py --project-dir .
-python3 scripts/backfill_work_item_artifacts.py --project-dir . --item ISSUE-170
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py" --project-dir . --dry-run
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py" --project-dir .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py" --project-dir . --item ISSUE-170
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py" --project-dir . --json
 ```
 
-`--dry-run` shows what would be created without making changes. `--item` limits the run to a single ID. The skill flows above wrap these same commands, so most of the time you do not call the script yourself.
+`--dry-run` shows what would be created without making changes. `--item` limits the run to a single ID. `--json` prints the results as JSON. The skill flows above wrap these same commands, so most of the time you do not call the script yourself.
 
 The scanner builds its list of work items from `work_history` and the active work item in `sweetclaude.yaml`, plus the issue, epic, and milestone files under `.sweetclaude/product/`. It then searches known artifact locations — `.sweetclaude/technical/`, `.sweetclaude/plans/`, `.sweetclaude/contracts/`, `.sweetclaude/reports/`, and the project's `docs/internal/` and `docs/plans/` — for files matching each item ID. It also resolves `STORY-NNN` aliases to their migrated `ISSUE-NNN` IDs and links any matching `.sweetclaude/efforts/` directory. Discovered files are sorted into the matching category subdirectory and symlinked in; the original files are never moved.
 

@@ -1,9 +1,9 @@
 # Platform Dependencies
 
-**Version:** 1.0
-**Date:** 2026-05-01
+**Version:** 1.1
+**Date:** 2026-10-21
 
-SweetClaude depends on one external plugin plus the Claude Code platform itself. This document states what each dependency does, what fails if it goes away, whether a contingency plan exists, and what would trigger a reconsideration of the architecture.
+SweetClaude depends on the Claude Code platform, one external MCP server (mcp-local-rag), and a small set of local tools. This document states what each dependency does, what fails if it goes away, whether a contingency plan exists, and what would trigger a reconsideration of the architecture.
 
 This is transparency, not alarm. These are known and accepted tradeoffs — but a project that depends on commercial platforms owes its users a written answer to "what happens if the platform changes?"
 
@@ -25,17 +25,27 @@ This is transparency, not alarm. These are known and accepted tradeoffs — but 
 
 ## Dependency 2: mcp-local-rag (npm)
 
-**What it is:** mcp-local-rag provides local vector search for the corpus management RAG features. It runs a per-project vector database on your machine with no external services.
+**What it is:** mcp-local-rag is an npm package that runs as an MCP server, launched through `npx` from the `.mcp.json` file the RAG setup writes. It provides local vector search for the corpus management RAG features. It runs a per-project vector database on your machine with no external services.
 
 **License:** MIT
 
-**What fails if it goes unmaintained:** The corpus pipeline's promote step stops auto-indexing. The `/sweetclaude:utils document-corpus rag` mode fails. Everything else in SweetClaude is unaffected — corpus management through the promote step still works, just without the RAG index.
+**What fails if it goes unmaintained:** The corpus pipeline's promote step stops auto-indexing. The `rag-setup` and `rag-reindex` modes of `document-corpus` fail. Everything else in SweetClaude is unaffected — corpus management through the promote step still works, just without the RAG index.
 
 **Contingency plan:** RAG is explicitly optional. If mcp-local-rag becomes unavailable, the behavior reverts to manual semantic search. The canonical documents (produced by the corpus pipeline) still exist and are still organized — they just aren't automatically indexed.
 
-**What would trigger reconsideration:** mcp-local-rag becoming incompatible with current Node.js versions and unforkable under its license. At that point, a swap to a different local vector search library would be straightforward — the dependency is cleanly isolated to the rag/reindex modes of `document-corpus`.
+**What would trigger reconsideration:** mcp-local-rag becoming incompatible with current Node.js versions and unforkable under its license. At that point, a swap to a different local vector search library would be straightforward — the dependency is cleanly isolated to the `rag-setup` and `rag-reindex` arguments of `/sweetclaude:utils document-corpus`.
 
 **Risk assessment:** Low dependency, cleanly isolated, explicitly optional.
+
+---
+
+## Local Tools
+
+**Required:** `python3` with PyYAML, which the hooks and controller scripts use to read and write state; `jq`, which the guardian hooks use to parse tool input; and `git`, which the checkpoint hook and the corpus pipeline use. If one is missing, the hooks that need it cannot run.
+
+**Required for RAG only:** Node.js with `npx`, which launches mcp-local-rag.
+
+**Optional:** the `codex` CLI or the `openai` Python package, used by `scripts/behavioral_judge.py` for real behavioral scoring. Without either, the judge refuses to score and nothing else in SweetClaude is affected.
 
 ---
 
@@ -53,3 +63,4 @@ If you are evaluating SweetClaude for a context where commercial AI platform dep
 |---|---|
 | 2026-05-01 | Initial version |
 | 2026-05-05 | Removed Superpowers dependency — replaced with native sweetclaude:code-verify skill |
+| 2026-10-21 | Described mcp-local-rag as an npm MCP server, listed required and optional local tools, corrected the RAG argument names |

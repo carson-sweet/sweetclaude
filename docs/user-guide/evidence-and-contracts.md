@@ -1,7 +1,7 @@
 # Evidence and Success-Criteria Contracts
 
-**Version:** 1.0
-**Date:** 2026-06-10
+**Version:** 1.1
+**Date:** 2026-10-21
 
 SweetClaude's high-rigor story workflows do not let the model declare its own work "done." Completion is gated on a frozen contract and on evidence the harness observed — not on self-report. This page explains the success-criteria contract, how implementation evidence is captured, and how the verify gate fails closed.
 
@@ -42,7 +42,7 @@ The contract moves through three stages, driven by `scripts/success_criteria_con
    python3 scripts/success_criteria_contracts.py init-contract --story-id ISSUE-123
    ```
 
-   `init-contract` refuses to overwrite while an active large-story workflow exists — post-freeze amendment is human-gated at the file layer.
+   `init-contract` refuses in three cases: an active large-story or small-story workflow exists for a different story, no backlog file exists for the `--story-id`, or a contract already exists at the target path and `--force` was not passed. Post-freeze amendment is human-gated at the file layer.
 
 2. **freeze** — after replacing every placeholder, compute and write the freeze hash:
 
@@ -115,7 +115,7 @@ python3 scripts/success_criteria_contracts.py validate-workflow --stage completi
 - the contract is missing or its hash is stale;
 - any frozen criterion is missing from the ledger, fails, or is unevaluated;
 - a criterion lacks its declared evidence, or that evidence is stale;
-- **no hook-observed implementation evidence was recorded** — large/small-story VERIFY is blocked if `evidence.jsonl` is empty. If a story genuinely changed no project files, verify must be re-run with `--allow-no-file-changes`.
+- **no hook-observed file changes were recorded** — large/small-story VERIFY is blocked when `evidence.jsonl` has no file-path entries, even if it holds command entries. If a story genuinely changed no project files, verify must be re-run with `--allow-no-file-changes`.
 
 Manual "mark done" paths for work flagged as requiring a success-criteria contract also fail closed until completion validation passes. A separate `--allow-missing-evidence` flag may waive the generic receipt requirement, but it does **not** bypass the success-criteria ledger gate.
 
@@ -159,6 +159,4 @@ Contracts and evidence are the backbone of SweetClaude's bounded, evidence-gated
 
 Skills such as `/sweetclaude:build code-feature`, `/sweetclaude:build code-issue`, and `/sweetclaude:build code-tdd` may do bounded implementation work inside a workflow, but they inherit the frozen contract from the calling workflow rather than minting their own.
 
-See [Large-Story and Small-Story Workflows](large-story-workflow.md) for the
-workflows in full, and [State and Memory](state-and-memory.md) for where these
-artifacts live on disk.
+See [Large-Story and Small-Story Workflows](large-story-workflow.md) for the workflows in full, and [State and Memory](state-and-memory.md) for where these artifacts live on disk.

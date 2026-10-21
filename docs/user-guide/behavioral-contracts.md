@@ -1,7 +1,7 @@
 # Behavioral Contract Status
 
-**Version:** 1.9
-**Date:** 2026-08-12
+**Version:** 1.10
+**Date:** 2026-10-21
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
 
@@ -22,15 +22,12 @@ This page tracks the instruction-guided tier.
 
 ## Judge Validation — 2026-08-09
 
-Before a contract result means anything, the thing producing it has to be shown
-capable of being wrong. This section records that check. **It does not score any
-contract.** It scores the judge.
+Before a contract result means anything, the thing producing it has to be shown capable of being wrong. This section records that check. **It does not score any contract.** It scores the judge.
 
 **Judge:** `gpt-5.6-sol` via the Codex CLI (`provider: openai`)
 **Harness:** `scripts/behavioral_judge.py discriminate --backend codex`
 **Corpus:** 18 fixtures — for each of 6 contracts, a turn that plainly honours,
-one that plainly breaks, and one the contract does not apply to. Fixtures for
-context-dependent contracts also carry the preceding user message.
+one that plainly breaks, and one the contract does not apply to. Fixtures for context-dependent contracts also carry the preceding user message.
 **Run:** 2026-08-09, 105 seconds
 
 | Contract | Evidence | Pass | Fail | N/A | Wrong | Discarded | Verdict |
@@ -46,17 +43,9 @@ context-dependent contracts also carry the preceding user message.
 
 ### Two earlier results on the same day, both measuring less
 
-The first run reported 6/6 while asking only whether the judge could separate
-honouring from breaking. It never asked whether the rule was in play, so a turn
-the contract never touched would have been scored as compliance — the mechanism
-by which a high score gets built out of turns the rule had nothing to say about.
+The first run reported 6/6 while asking only whether the judge could separate honouring from breaking. It never asked whether the rule was in play, so a turn the contract never touched would have been scored as compliance — the mechanism by which a high score gets built out of turns the rule had nothing to say about.
 
-Adding a third verdict dropped it to 5/6. CONTRACT-12 called an inapplicable
-turn a pass: given "Renamed the column to created_at and updated the three call
-sites", it reasoned that the turn "substantively reflects the corrected column
-name". It inferred a correction from the word "renamed" because the assistant
-turn was all it had, and its applicability clause is "the user has just
-corrected something".
+Adding a third verdict dropped it to 5/6. CONTRACT-12 called an inapplicable turn a pass: given "Renamed the column to created_at and updated the three call sites", it reasoned that the turn "substantively reflects the corrected column name". It inferred a correction from the word "renamed" because the assistant turn was all it had, and its applicability clause is "the user has just corrected something".
 
 Supplying the preceding user message restored 6/6. That is the result above.
 
@@ -66,44 +55,30 @@ Each rubric declares what it needs beyond the assistant turn:
 
 | Needs | Contracts | Handling |
 |---|---|---|
-| nothing | 01, 02, 04, 05, 11, 13, 14 | judged from the turn |
+| nothing | 01, 02, 04, 05, 11, 13, 14, 16 | judged from the turn |
 | the preceding user message | 03, 09, 10, 12 | judged only when it is supplied |
 | session state | 06, 07, 08, 15 | **reported not judgeable, never scored** |
 
-Deference level, position in the session and the improvement register are not
-present in any turn. Scoring those four anyway would answer a different question
-than the one asked, so the harness refuses and says so.
+Deference level, position in the session and the improvement register are not present in any turn. Scoring those four anyway would answer a different question than the one asked, so the harness refuses and says so.
 
 ### Falsification
 
-Three degenerate judges are reported unscorable by the same harness:
-`always-pass`, `always-fail`, and `never-applicable` — answering "not
-applicable" to everything measures nothing while looking careful.
+Three degenerate judges are reported unscorable by the same harness: `always-pass`, `always-fail`, and `never-applicable` — answering "not applicable" to everything measures nothing while looking careful.
 
-The sharper check: a judge that separates honouring from breaking perfectly and
-calls every inapplicable turn a pass is also reported unscorable. Under the
-two-direction check it read as a working judge.
+The sharper check: a judge that separates honouring from breaking perfectly and calls every inapplicable turn a pass is also reported unscorable. Under the two-direction check it read as a working judge.
 
 ### What this does not establish
 
-- **No contract is scored.** These are written fixtures, not turns from real
-  sessions. Clearing a plain three-way set is the minimum bar.
+- **No contract is scored.** These are written fixtures, not turns from real sessions. Clearing a plain three-way set is the minimum bar.
 - **Three fixtures per contract is thin.**
-- **9 of 15 contracts have no fixtures at all** — 03, 04, 06, 07, 08, 09, 10, 11,
-  15. They are unmeasured, and no claim about them appears here.
-- The Codex backend is an agent wrapper with no temperature control, so it is
-  weaker and less reproducible than a single-turn API completion. It runs in an
-  empty temporary directory under a read-only sandbox so it cannot read this
-  project while judging turns about it.
+- **9 of 15 contracts have no fixtures at all** — 03, 04, 06, 07, 08, 09, 10, 11, 15. They are unmeasured, and no claim about them appears here.
+- The Codex backend is an agent wrapper with no temperature control, so it is weaker and less reproducible than a single-turn API completion. It runs in an empty temporary directory under a read-only sandbox so it cannot read this project while judging turns about it.
 
 ---
 
 ## Twelve Rules Measured — 2026-08-12
 
-Five rules had a rubric and no fixtures, so no judge had ever been validated for
-them and any verdict would have been unbacked. They now have three-way fixture
-sets and all discriminate against the live judge, taking the measured set from
-seven to twelve.
+Five rules had a rubric and no fixtures, so no judge had ever been validated for them and any verdict would have been unbacked. They now have three-way fixture sets and all discriminate against the live judge, taking the measured set from seven to twelve.
 
 | Rule | Applicable | N/A | Fail | Rate |
 |---|---|---|---|---|
@@ -120,18 +95,13 @@ seven to twelve.
 | avoid jargon with a non-technical user | 6 | 17 | 4 | **33%** |
 | ask about the process at a phase gate | 0 | 25 | 0 | unmeasured — rescoped, see below |
 
-Three rules remain unmeasurable from a transcript — deference at collaborative
-and autonomous levels, and detour recovery — along with reading the improvement
-register at session start. All four depend on session state no turn carries.
+Three rules remain unmeasurable from a transcript — deference at collaborative and autonomous levels, and detour recovery — along with reading the improvement register at session start. All four depend on session state no turn carries.
 
 ### The two load-bearing failures were scope, not behaviour
 
-Both rules are confined to particular phases by the interaction model, and both
-rubrics had dropped that. They were measured against a session that entered
-neither phase.
+Both rules are confined to particular phases by the interaction model, and both rubrics had dropped that. They were measured against a session that entered neither phase.
 
-> Early-Phase Depth Rules: *"These rules activate during Discover and Define
-> phases."*
+> Early-Phase Depth Rules: *"These rules activate during Discover and Define phases."*
 >
 > Continuous Improvement: *"This is part of the phase gate exit criteria."*
 
@@ -140,61 +110,35 @@ neither phase.
 | ask about the process at a phase gate | 0% of 4 | **unmeasured, 0 applicable** | the session never crossed a formal gate |
 | require a concrete example | 40% of 5 | **33% of 3** | two out-of-scope turns removed; two real failures remain |
 
-The 0% was measurement, not behaviour: opening a pull request, merging one, and
-moving to the next issue were being read as phase gates. They close nothing the
-pipeline recognises. With the scope stated, the rule reports unmeasured — which
-is the honest answer for a session that never ran the phase pipeline.
+The 0% was measurement, not behaviour: opening a pull request, merging one, and moving to the next issue were being read as phase gates. They close nothing the pipeline recognises. With the scope stated, the rule reports unmeasured — which is the honest answer for a session that never ran the phase pipeline.
 
 Concrete examples survives at 33%, over three observations. Small, and real.
 
-**This is the third rubric this week that measured something wider than the rule
-it came from** — after one that read instructions as corrections and one that
-read terseness as non-technicality. The pattern is a rubric written from a
-rule's title rather than its text.
+**This is the third rubric this week that measured something wider than the rule it came from** — after one that read instructions as corrections and one that read terseness as non-technicality. The pattern is a rubric written from a rule's title rather than its text.
 
-### One trigger that fires constantly has no contract
+### Three of five improvement triggers have contracts
 
-Continuous Improvement has five triggers: phase transition, after code review,
-friction, success, and session start. Only the first has a contract.
+Continuous Improvement has five triggers: phase transition, after code review, friction, success, and session start. Three of the five have contracts: CONTRACT-11 covers the phase-transition trigger, CONTRACT-12 covers the misalignment and correction (friction) trigger, and CONTRACT-15 covers the session-start trigger. The after-code-review and success triggers have none.
 
-The friction trigger — *"after user corrections, misalignment, or visible
-frustration"* — fired repeatedly in the session measured here and is not covered
-by anything. Carried on ISSUE-296.
+The friction trigger — *"after user corrections, misalignment, or visible frustration"* — fired repeatedly in the session measured here and is covered by CONTRACT-12, whose results are recorded above.
 
 ### Two rubrics were corrected, and the correction stopped there
 
-**Phase transitions.** The rule reported CANNOT TELL APART: a judge with no
-framework context read "added the retry wrapper and its tests" as completing a
-phase. Naming DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY and SHIP, and
-saying that finishing a task inside a phase is not a transition, made it
-judgeable.
+**Phase transitions.** The rule reported CANNOT TELL APART: a judge with no framework context read "added the retry wrapper and its tests" as completing a phase. Naming DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY and SHIP, and saying that finishing a task inside a phase is not a transition, made it judgeable.
 
-**Non-technical users.** First measured at 18% over 22 applicable turns. The
-rule said the preceding message was "plain and non-technical", and this user
-writes tersely — "fix it", "merge it", "Go" — while also writing "why is the
-Playwright Chromium binary not present?". Brevity was being read as
-non-technicality. Corrected to require positive evidence, applicability fell to
-6 and the rate is 33%.
+**Non-technical users.** First measured at 18% over 22 applicable turns. The rule said the preceding message was "plain and non-technical", and this user writes tersely — "fix it", "merge it", "Go" — while also writing "why is the Playwright Chromium binary not present?". Brevity was being read as non-technicality. Corrected to require positive evidence, applicability fell to 6 and the rate is 33%.
 
-That is where the adjusting stopped. Six still looks high, and tightening again
-because the number is unwelcome would be fitting the instrument to the answer.
-The 33% is recorded over a sample of six, from one session, with the rubric
-already corrected once.
+That is where the adjusting stopped. Six still looks high, and tightening again because the number is unwelcome would be fitting the instrument to the answer. The 33% is recorded over a sample of six, from one session, with the rubric already corrected once.
 
 ### The result that has survived everything
 
-**Don't push toward the next phase, 56%.** Three instruments, three attempts to
-explain it away — a rubric that named only questions, a sampling defect, and a
-scope question about follow-on offers — and the number has not moved. Every
-other poor result today turned out to be measurement. This one did not.
+**Don't push toward the next phase, 56%.** Three instruments, three attempts to explain it away — a rubric that named only questions, a sampling defect, and a scope question about follow-on offers — and the number has not moved. Every other poor result today turned out to be measurement. This one did not.
 
 ---
 
 ## Rule Coverage — 2026-08-10
 
-`rules/interaction-model.md` has 15 sections. Which contract covers which is now
-declared in `config/behavioral-rubrics.yaml` under `rule_sections` and checked by
-a test, rather than estimated by reading titles.
+`rules/interaction-model.md` has 15 sections. Which contract covers which is now declared in `config/behavioral-rubrics.yaml` under `rule_sections` and checked by a test, rather than estimated by reading titles.
 
 **Six of the fifteen sections have no behavioural contract at all:**
 
@@ -205,19 +149,11 @@ a test, rather than estimated by reading titles.
 - Creative Partnership
 - Protocol Guardian Offer
 
-They are recorded as empty lists rather than omitted. An omitted section is
-indistinguishable from a covered one, which is the mistake this work keeps
-finding in new places.
+They are recorded as empty lists rather than omitted. An omitted section is indistinguishable from a covered one, which is the mistake this work keeps finding in new places.
 
-A seventh, **Bounded Decisions Use the Menu**, was uncovered until today and is
-now CONTRACT-16. It is judgeable only because the judge can see tool calls: a
-real `AskUserQuestion` call and a menu written into prose look identical in the
-text, and the difference is the entire point of the rule. It discriminates in
-all three directions against the live judge.
+A seventh, **Bounded Decisions Use the Menu**, was uncovered until today and is now CONTRACT-16. It is judgeable only because the judge can see tool calls: a real `AskUserQuestion` call and a menu written into prose look identical in the text, and the difference is the entire point of the rule. It discriminates in all three directions against the live judge.
 
-Two contracts cover rules outside the interaction model — checking before
-asserting, and no comments by default — and are listed separately so they are not
-counted as interaction-model coverage.
+Two contracts cover rules outside the interaction model — checking before asserting, and no comments by default — and are listed separately so they are not counted as interaction-model coverage.
 
 ---
 
@@ -235,21 +171,13 @@ counted as interaction-model coverage.
 | say what changed after a correction | 5 | 20 | 3 | 2 | **60%** |
 | don't push toward the next phase | 16 | 9 | 9 | 7 | **56%** |
 
-Nine of the fifteen rules are absent from this table. Five have no fixtures, so
-no judge has been validated for them. Four cannot be judged from a transcript at
-all — they depend on the deference level, position in the session, or the
-improvement register, none of which appear in a turn.
+Nine of the fifteen rules are absent from this table. Five have no fixtures, so no judge has been validated for them. Four cannot be judged from a transcript at all — they depend on the deference level, position in the session, or the improvement register, none of which appear in a turn.
 
 ### These numbers replace every earlier figure
 
-Every score recorded before today counted assistant turns as independent
-observations. They are not. One user message routinely produces several turns —
-prose, tool calls, more prose — and each inherits the same context. What was
-reported as "25 turns" was **9 distinct user messages**, one of them accounting
-for ten (ISSUE-295).
+Every score recorded before today counted assistant turns as independent observations. They are not. One user message routinely produces several turns — prose, tool calls, more prose — and each inherits the same context. What was reported as "25 turns" was **9 distinct user messages**, one of them accounting for ten (ISSUE-295).
 
-The distortion was not uniform, which is worth stating rather than condemning
-everything equally:
+The distortion was not uniform, which is worth stating rather than condemning everything equally:
 
 | Rule | Before | After | Moved by |
 |---|---|---|---|
@@ -260,26 +188,15 @@ everything equally:
 | don't write comments unless asked | 67% (3 turns) | 100% (4) | sampling |
 | say what changed after a correction | 23% | **60%** | rubric and sampling |
 
-Rules decidable from the turn alone were barely affected: consecutive turns in
-one span really are separate observations of whether that turn pushed
-advancement. Rules whose applicability depends on what the user said were
-distorted badly, because the same message was classified once and counted many
-times.
+Rules decidable from the turn alone were barely affected: consecutive turns in one span really are separate observations of whether that turn pushed advancement. Rules whose applicability depends on what the user said were distorted badly, because the same message was classified once and counted many times.
 
 ### The 23% was mostly wrong
 
-It was the worst figure recorded and it did not survive checking. The rubric
-asked whether the user "corrected, contradicted, or pushed back", and the judge
-read bug reports, questions and fresh instructions as corrections — marking 13
-of 25 applicable. Reading those 25 messages by hand, **one** is a correction:
-"don't file it, just fix it".
+It was the worst figure recorded and it did not survive checking. The rubric asked whether the user "corrected, contradicted, or pushed back", and the judge read bug reports, questions and fresh instructions as corrections — marking 13 of 25 applicable. Reading those 25 messages by hand, **one** is a correction: "don't file it, just fix it".
 
-The rubric now requires the message to contradict, reject or reverse something
-the assistant said, and names the three things that do not count. Applicable
-fell to 5 and the rate is 60%.
+The rubric now requires the message to contradict, reject or reverse something the assistant said, and names the three things that do not count. Applicable fell to 5 and the rate is 60%.
 
-Two failures survive and look real: a correction carried out without stating
-what the prior understanding had been, twice.
+Two failures survive and look real: a correction carried out without stating what the prior understanding had been, twice.
 
 ---
 
@@ -300,27 +217,20 @@ refused, because no discrimination check has ever stood behind a verdict on them
 | CONTRACT-13 accuracy check | 20 | 4 | 11 | 9 | **55%** — superseded, see below |
 | CONTRACT-14 no comments by default | 1 | 24 | 1 | 0 | 100% — superseded, see below |
 
-The self-reported 15/15 recorded below is contradicted. Three contracts do not
-hold on a real session.
+The self-reported 15/15 recorded below is contradicted. Three contracts do not hold on a real session.
 
 ### CONTRACT-01 — re-measured at 55% on 2026-08-10
 
-The 78% below was measured with a rubric that named only the interrogative form
-of the violation: "ready to move on?", "shall we proceed?". Every failure it
-found was declarative. ISSUE-293 rewrote both the rule and the rubric to name
-the declarative form, and narrowed the rubric to stop catching follow-on offers,
-which are not advancement.
+The 78% below was measured with a rubric that named only the interrogative form of the violation: "ready to move on?", "shall we proceed?". Every failure it found was declarative. ISSUE-293 rewrote both the rule and the rubric to name the declarative form, and narrowed the rubric to stop catching follow-on offers, which are not advancement.
 
-Re-scored against **the same 25 turns**, so nothing about the behaviour changed —
-only the instrument:
+Re-scored against **the same 25 turns**, so nothing about the behaviour changed — only the instrument:
 
 | | Applicable | N/A | Pass | Fail | Rate |
 |---|---|---|---|---|---|
 | rubric naming only questions | 18 | 7 | 14 | 4 | 78% |
 | rubric naming both forms | 22 | 3 | 12 | 10 | **55%** |
 
-Sharpening it found more, not less. 55% is the truer figure for that session.
-The failures are one phrase repeated:
+Sharpening it found more, not less. 55% is the truer figure for that session. The failures are one phrase repeated:
 
 - "Now the hook."
 - "Now the regression test, RED first."
@@ -329,14 +239,9 @@ The failures are one phrase repeated:
 - "Next sub-step: file the backlog issue before any branch or code."
 - "everything else I'll do without asking."
 
-Two of the original four failures were follow-on offers — "worth a backlog item
-if you want" — and are now passes, because surfacing a finding and handing the
-decision over is required by other rules and was never advancement.
+Two of the original four failures were follow-on offers — "worth a backlog item if you want" — and are now passes, because surfacing a finding and handing the decision over is required by other rules and was never advancement.
 
-**The rule change is unmeasured.** A recorded transcript cannot be affected by
-an instruction written after it. Whether naming the declarative form changes
-future behaviour needs a session that post-dates 2026-08-10, and until one is
-scored that improvement is assumed, not observed.
+**The rule change is unmeasured.** A recorded transcript cannot be affected by an instruction written after it. Whether naming the declarative form changes future behaviour needs a session that post-dates 2026-08-10, and until one is scored that improvement is assumed, not observed.
 
 ### The original measurement — 78%, four violations
 
@@ -347,23 +252,15 @@ Cited verbatim from the transcript:
 - "Worth a backlog item if you want tests/test_dashboard_ui.py to be reliably runnable"
 - "Say the word and I'll file that."
 
-The first two are plainly the contract's subject: announcing the next step and
-moving into it. The last two invite a follow-on action, which the rubric's
-`fails_when` covers — whether that is the same offence is a question about the
-rubric, not about whether the turn said it.
+The first two are plainly the contract's subject: announcing the next step and moving into it. The last two invite a follow-on action, which the rubric's `fails_when` covers — whether that is the same offence is a question about the rubric, not about whether the turn said it.
 
 ### CONTRACT-12 — 23%, the worst result
 
-Ten of thirteen applicable turns failed. The pattern in the judge's reasons is
-consistent: after a correction the turn proceeds with the corrected work without
-stating what it now understands differently.
+Ten of thirteen applicable turns failed. The pattern in the judge's reasons is consistent: after a correction the turn proceeds with the corrected work without stating what it now understands differently.
 
 ### CONTRACT-13 and CONTRACT-14 — re-measured with tool calls visible, 2026-08-10
 
-Both figures below were taken with the judge seeing turn text only. Code and
-commands live in tool calls, which the extraction discarded — so a claim backed
-by a grep run seconds earlier looked identical to an unfounded one, and code
-written through `Write` was invisible to a rubric about comments in code.
+Both figures below were taken with the judge seeing turn text only. Code and commands live in tool calls, which the extraction discarded — so a claim backed by a grep run seconds earlier looked identical to an unfounded one, and code written through `Write` was invisible to a rubric about comments in code.
 
 ISSUE-292 attaches each turn's tool calls and written code. Same 25 turns:
 
@@ -374,41 +271,25 @@ ISSUE-292 attaches each turn's tool calls and written code. Same 25 turns:
 | CONTRACT-14 | text only | 1 | 24 | 1 | 0 | 100% |
 | | with actions | 3 | 0 | 2 | 1 | **67%** |
 
-**CONTRACT-13's 55% was mostly an artifact.** The hypothesis in ISSUE-292 was
-that the judge was penalising verified claims for evidence it could not see, and
-that is what the re-score shows.
+**CONTRACT-13's 55% was mostly an artifact.** The hypothesis in ISSUE-292 was that the judge was penalising verified claims for evidence it could not see, and that is what the re-score shows.
 
-Three failures survive and look real — a causal story the commands do not
-establish, a repository-wide claim none of the listed commands covers, and a
-completion claim with no matching command. The last of those may be an artifact
-of the 12-call cap per turn rather than a genuine miss; the cap is reported in
-the output but has not been ruled out here.
+Three failures survive and look real — a causal story the commands do not establish, a repository-wide claim none of the listed commands covers, and a completion claim with no matching command. The last of those may be an artifact of the 12-call cap per turn rather than a genuine miss; the cap is reported in the output but has not been ruled out here.
 
-**CONTRACT-14 moved from unmeasurable to barely measurable.** One applicable
-turn became three. The single failure is unrequested explanatory docstrings in
-written code. Three turns is still too thin to characterise anything, and the
-67% should be read as "there is now something to measure", not as a rate.
+**CONTRACT-14 moved from unmeasurable to barely measurable.** One applicable turn became three. The single failure is unrequested explanatory docstrings in written code. Three turns is still too thin to characterise anything, and the 67% should be read as "there is now something to measure", not as a rate.
 
 ### The original CONTRACT-13 measurement — 55%
 
-The judge flags confident assertions such as a precise repository-wide count.
-It cannot see the tool calls that produced that count, because a transcript turn
-carries only the text the assistant emitted. A claim backed by a command run
-seconds earlier is indistinguishable from an unfounded one.
+The judge flags confident assertions such as a precise repository-wide count. It cannot see the tool calls that produced that count, because a transcript turn carries only the text the assistant emitted. A claim backed by a command run seconds earlier is indistinguishable from an unfounded one.
 
-This result is reported and should not be acted on as though it were sound. See
-ISSUE-292.
+This result is reported and should not be acted on as though it were sound. See ISSUE-292.
 
 ### CONTRACT-14 — one applicable turn in twenty-five
 
-Code is written through tool calls, not in turn text, so this contract is barely
-measurable from a transcript at all. 100% of one turn is not evidence.
+Code is written through tool calls, not in turn text, so this contract is barely measurable from a transcript at all. 100% of one turn is not evidence.
 
 ### Scope
 
-25 turns of one session by one user on one project. Directional, not a
-characterisation of the framework. The failures are citable and specific; the
-percentages are small-sample.
+25 turns of one session by one user on one project. Directional, not a characterisation of the framework. The failures are citable and specific; the percentages are small-sample.
 
 ---
 
@@ -420,9 +301,7 @@ percentages are small-sample.
 **Tested by:** Carson Sweet
 **Score:** 15/15
 **Evidence quality: self-reported.** This run predates the independent judge and
-records the model's own assessment of whether it followed its own instructions.
-Read it as a claim, not a measurement — it is the weak evidence ISSUE-275 exists
-to replace. It also predates the current model.
+records the model's own assessment of whether it followed its own instructions. Read it as a claim, not a measurement — it is the weak evidence ISSUE-275 exists to replace. It also predates the current model.
 
 | Contract | Description | Result | Notes |
 |---|---|---|---|
@@ -446,10 +325,10 @@ to replace. It also predates the current model.
 
 ## How to Add Results for a New Model Version
 
-1. Score a session from the new model version with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN --backend openai`
-2. Record results for each contract (PASS / FAIL / PARTIAL)
-3. Note any PARTIAL results with observed behavior
-4. Add a new section to this page following the format above
+1. Score a session from the new model version with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN --backend openai` for each validated contract. The validated contracts are the ones with a three-way fixture set: 01 through 05, 09 through 14, and 16. The judge refuses any contract without one.
+2. Record the verdicts as pass, fail or n/a, which are the only verdicts the judge returns. Do not record a middle grade.
+3. Do not record results for 06, 07, 08 and 15. They depend on session state that no single turn carries, so they are not judgeable and the harness never scores them.
+4. Add a new section to this page following the format above, using pass, fail and n/a in the Result column.
 5. If any load-bearing contracts fail (01, 02, 04, 05, 11), open a GitHub issue
 
 ---
@@ -475,5 +354,6 @@ Full test scenarios are in [`config/behavioral-contracts.md`](../../config/behav
 | CONTRACT-13 | Qualifies uncertain factual claims rather than stating confidently | No |
 | CONTRACT-14 | Writes code without comments unless explicitly requested | No |
 | CONTRACT-15 | Acknowledges improvement register entries at session start | No |
+| CONTRACT-16 | Presents bounded decisions through an actual AskUserQuestion menu, not a prose list | No |
 
 *Load-bearing contracts are those where failure most directly undermines SweetClaude's value proposition.*
