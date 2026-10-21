@@ -407,3 +407,72 @@ class TestAutoTestRunnerNeedsNoManualConfigR239:
         assert feedback_text(result) == ""
 
 
+def v4_guardian_project(project: Path, *, phase: str = "IMPLEMENT") -> None:
+    enable_guardian(project)
+    write_sweetclaude_yaml(project, phase=phase)
+    assert not (state_dir(project) / "phase.yaml").exists()
+
+
+class TestTddPrewriteGuardianReadsSweetclaudeYamlR081:
+    def test_denies_source_write_when_only_sweetclaude_yaml_says_implement(self, project):
+        v4_guardian_project(project)
+        assert_denied(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "src/app.py", "x = 1\n")))
+
+    def test_denies_source_edit_when_only_sweetclaude_yaml_says_implement(self, project):
+        v4_guardian_project(project)
+        assert_denied(run_hook("tdd-prewrite-guardian.sh", project, edit_call(project, "src/app.py", "a", "b")))
+
+    def test_denies_when_sweetclaude_yaml_phase_is_lowercase(self, project):
+        v4_guardian_project(project, phase="implement")
+        assert_denied(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "src/app.py", "x = 1\n")))
+
+    def test_sweetclaude_yaml_phase_wins_over_the_phase_yaml_mirror(self, project):
+        v4_guardian_project(project, phase="DESIGN")
+        (state_dir(project) / "phase.yaml").write_text("phase: IMPLEMENT\n", encoding="utf-8")
+        assert_allowed(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "src/app.py", "x = 1\n")))
+
+    def test_allows_source_write_outside_implement_in_sweetclaude_yaml(self, project):
+        v4_guardian_project(project, phase="DESIGN")
+        assert_allowed(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "src/app.py", "x = 1\n")))
+
+    def test_allows_source_write_when_guardian_flag_is_absent(self, project):
+        v4_guardian_project(project)
+        (state_dir(project) / "guardian-enabled").unlink()
+        assert_allowed(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "src/app.py", "x = 1\n")))
+
+
+class TestTddPrewriteGuardianOnCurrentProjectsR246:
+    def test_denies_write_of_src_app_py_with_no_phase_yaml_and_no_test_evidence(self, project):
+        v4_guardian_project(project)
+        assert_denied(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "src/app.py", "x = 1\n")))
+
+    def test_denial_tells_the_model_to_write_tests_first(self, project):
+        v4_guardian_project(project)
+        result = run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "src/app.py", "x = 1\n"))
+        assert_denied(result)
+        assert re.search(r"test", deny_reason(result), re.IGNORECASE)
+
+    def test_python_style_test_file_in_git_status_counts_as_test_evidence(self, project):
+        v4_guardian_project(project)
+        source_write = write_call(project, "src/app.py", "x = 1\n")
+        assert_denied(run_hook("tdd-prewrite-guardian.sh", project, source_write))
+        (project / "tests" / "test_app.py").write_text("def test_app():\n    assert False\n", encoding="utf-8")
+        subprocess.run(["git", "add", "tests/test_app.py"], cwd=project, check=True, capture_output=True, timeout=30)
+        assert_allowed(run_hook("tdd-prewrite-guardian.sh", project, source_write))
+
+    def test_untracked_python_style_test_file_in_a_tracked_directory_counts_as_test_evidence(self, project):
+        v4_guardian_project(project)
+        source_write = write_call(project, "src/app.py", "x = 1\n")
+        assert_denied(run_hook("tdd-prewrite-guardian.sh", project, source_write))
+        (project / "tests" / ".gitkeep").write_text("", encoding="utf-8")
+        git = ["git", "-c", "user.email=t@example.invalid", "-c", "user.name=T"]
+        subprocess.run([*git, "add", "-A"], cwd=project, check=True, capture_output=True, timeout=30)
+        subprocess.run([*git, "commit", "-qm", "scaffold"], cwd=project, check=True, capture_output=True, timeout=30)
+        (project / "tests" / "test_app.py").write_text("def test_app():\n    assert False\n", encoding="utf-8")
+        assert_allowed(run_hook("tdd-prewrite-guardian.sh", project, source_write))
+
+    def test_allows_test_file_write(self, project):
+        v4_guardian_project(project)
+        assert_allowed(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "tests/test_app.py", "x = 1\n")))
+
+
