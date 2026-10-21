@@ -99,4 +99,28 @@ if [ ! -f "$BOOTSTRAP_FLAG" ]; then
   exit 0
 fi
 
+# Check 3: mode gates. The single evaluator (scripts/gate_check.py) decides
+# whether the requested skill or workflow may load in the project's active
+# mode; it fails open when the project has no compiled gates or no active
+# mode. Hard gates deny; soft gates (warn/prompt) surface as context.
+GATE_CHECK="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/gate_check.py"
+SKILL_ARGS=$(hook_field tool_input.args)
+GATE_OUTPUT=$(python3 "$GATE_CHECK" load --skill "$SKILL_NAME" --args "$SKILL_ARGS" --project-dir "$PROJECT_DIR" 2>/dev/null)
+GATE_EXIT=$?
+GATE_REASONS=$(python3 -c 'import json,sys
+data = {}
+try:
+    data = json.loads(sys.stdin.read() or "{}")
+except ValueError:
+    pass
+sys.stdout.write("\n".join(data.get("reasons") or []))' <<< "$GATE_OUTPUT" 2>/dev/null)
+if [ "$GATE_EXIT" -eq 2 ]; then
+  [ -n "$GATE_REASONS" ] || GATE_REASONS="BLOCKED: a mode gate denied this skill. Resolve the gate condition and retry."
+  python3 "$HOOK_IO" deny "$GATE_REASONS"
+  exit 0
+fi
+if [ "$GATE_EXIT" -eq 0 ] && [ -n "$GATE_REASONS" ]; then
+  python3 "$HOOK_IO" context PreToolUse "$GATE_REASONS"
+fi
+
 exit 0

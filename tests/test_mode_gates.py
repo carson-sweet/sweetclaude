@@ -22,10 +22,15 @@ from test_hook_protocol_contract import (  # noqa: E402
     _md5,
     assert_allowed,
     assert_denied,
-    feedback_text,
     payload,
     run_hook,
+    stdout_json,
 )
+
+
+def denial_reason(result) -> str:
+    specific = (stdout_json(result) or {}).get("hookSpecificOutput") or {}
+    return str(specific.get("permissionDecisionReason") or "")
 
 AGILE_GATES = [
     {"phase": "IMPLEMENT", "condition": "no_active_sprint", "action": "block",
@@ -197,7 +202,7 @@ class TestR092SameGatesOnEveryImplementEntry:
         stdin = payload("PreToolUse-Skill", project, skill="sweetclaude:build")
         result = run_hook("master-preflight.sh", project, stdin)
         assert_denied(result)
-        assert "No active sprint" in feedback_text(result)
+        assert "No active sprint" in denial_reason(result)
 
     def test_master_preflight_denies_direct_workflow_invocation(self, tmp_path):
         project = self.prepare(tmp_path)
@@ -205,7 +210,7 @@ class TestR092SameGatesOnEveryImplementEntry:
                         args="code-feature implement the login form")
         result = run_hook("master-preflight.sh", project, stdin)
         assert_denied(result)
-        assert "No active sprint" in feedback_text(result)
+        assert "No active sprint" in denial_reason(result)
 
     def test_master_preflight_allows_build_with_active_sprint(self, tmp_path):
         project = self.prepare(tmp_path, sprint_status="active")
