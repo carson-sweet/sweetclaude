@@ -169,9 +169,7 @@ def release_file(project_dir: Path, file: str | None, approval: str | None) -> d
 def _record_override(project_dir: Path, rel: str, approval: str) -> None:
     import datetime
     metrics = Path(project_dir) / ".sweetclaude" / "metrics"
-    config = metrics / "config.yaml"
-    if not config.is_file() or "enabled: true" not in config.read_text():
-        return
+    metrics.mkdir(parents=True, exist_ok=True)
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     doc = yaml.safe_dump(
         {"timestamp": stamp, "event": "tdd_override", "file": rel, "approval": approval},
