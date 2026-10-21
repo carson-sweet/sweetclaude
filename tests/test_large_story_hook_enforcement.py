@@ -45,13 +45,14 @@ STORY_ID = "WI-001"
 
 
 def _crud_contract() -> dict:
-    def criterion(num: int, outcome: str, statement: str, predicate: str) -> dict:
+    def criterion(num: int, outcome: str, statement: str, predicate: str, command: str) -> dict:
         return {
             "id": f"SC-00{num}",
             "outcome_id": outcome,
             "statement": statement,
             "binary_predicate": predicate,
             "measurement_type": "command",
+            "measurement_command": command,
             "measurement_procedure": f"Measure: {predicate}.",
             "evidence_artifact": f".sweetclaude/reports/large-story/{STORY_ID}/evidence/SC-00{num}.json",
             "evidence_owner": "controller",
@@ -72,8 +73,8 @@ def _crud_contract() -> dict:
         ],
         "non_goals": [{"id": "NONGOAL-001", "statement": "Authentication is excluded."}],
         "success_criteria": [
-            criterion(1, "OUTCOME-001", "The index route returns HTTP 200.", "GET / returns 200"),
-            criterion(2, "OUTCOME-002", "The SQLite database file exists.", "models.db exists"),
+            criterion(1, "OUTCOME-001", "The index route returns HTTP 200.", "GET / returns 200", "test -s app.py"),
+            criterion(2, "OUTCOME-002", "The SQLite database file exists.", "models.db exists", "test -s models.db"),
         ],
         "contract_freeze": {
             "frozen_at": "2026-06-06T12:00:00Z",

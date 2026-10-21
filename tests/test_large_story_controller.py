@@ -107,6 +107,7 @@ def _crud_contract(story_id: str = "STORY-007") -> dict:
                 "statement": "The index route returns HTTP 200.",
                 "binary_predicate": "HTTP GET / returns status 200",
                 "measurement_type": "command",
+                "measurement_command": "test -s templates/index.html",
                 "measurement_procedure": "Run curl against the local index route.",
                 "evidence_artifact": f".sweetclaude/reports/large-story/{story_id}/evidence/SC-001.json",
                 "evidence_owner": "controller",
@@ -122,6 +123,7 @@ def _crud_contract(story_id: str = "STORY-007") -> dict:
                 "statement": "The SQLite database file exists.",
                 "binary_predicate": "models.db exists",
                 "measurement_type": "command",
+                "measurement_command": "test -s models.db",
                 "measurement_procedure": "Run test -s models.db.",
                 "evidence_artifact": f".sweetclaude/reports/large-story/{story_id}/evidence/SC-002.json",
                 "evidence_owner": "controller",
@@ -137,6 +139,7 @@ def _crud_contract(story_id: str = "STORY-007") -> dict:
                 "statement": "The create path stores TestModel.",
                 "binary_predicate": "sqlite query returns TestModel",
                 "measurement_type": "command",
+                "measurement_command": "grep -q TestModel models.db",
                 "measurement_procedure": "Run sqlite3 query for TestModel.",
                 "evidence_artifact": f".sweetclaude/reports/large-story/{story_id}/evidence/SC-003.json",
                 "evidence_owner": "controller",
@@ -326,7 +329,7 @@ def _write_fake_crud_app_files(project: Path) -> list[Path]:
     files[1].parent.mkdir(parents=True, exist_ok=True)
     files[0].write_text("from flask import Flask\napp = Flask(__name__)\n", encoding="utf-8")
     files[1].write_text("<h1>LLM Models</h1>\n", encoding="utf-8")
-    files[2].write_bytes(b"SQLite regression fixture\n")
+    files[2].write_bytes(b"SQLite regression fixture\nTestModel\n")
     return files
 
 

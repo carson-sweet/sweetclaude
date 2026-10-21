@@ -112,6 +112,7 @@ def _minimal_contract(
             "statement": f"The system exits 0 when {cid} is measured.",
             "binary_predicate": f"python3 -m pytest -k {cid} exits 0",
             "measurement_type": "command",
+            "measurement_command": f"python3 -m pytest -k {cid}",
             "measurement_procedure": f"Run: python3 -m pytest -k {cid}",
             "evidence_artifact": f"{evidence_artifact_prefix}/{cid}.json",
             "evidence_owner": "controller",

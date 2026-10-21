@@ -118,6 +118,7 @@ def _contract(story_id="STORY-001"):
             "statement": "The probe check command exits zero.",
             "binary_predicate": "probe measurement command exits with code 0",
             "measurement_type": "command",
+            "measurement_command": "true",
             "measurement_procedure": "Run the probe command; record the exit code.",
             "evidence_artifact": f".sweetclaude/reports/small-story/{story_id}/evidence/SC-001.json",
             "evidence_owner": "controller",
