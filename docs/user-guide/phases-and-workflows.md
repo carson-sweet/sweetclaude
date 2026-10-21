@@ -1,9 +1,9 @@
 # Phases and Workflows
 
-**Version:** 1.0
-**Date:** 2026-05-01
+**Version:** 1.1
+**Date:** 2026-10-21
 
-This page is reference. If you want to understand *why* phases work the way they do, read [How It Works](how-it-works.md) first. This page lists the phases, the work types, the workflow shapes, the gates, and the progressive disclosure rules.
+This page is reference. If you want to understand *why* phases work the way they do, read [How It Works](how-it-works.md) first. This page lists the phases, the work types, the workflow shapes, and the gates.
 
 ---
 
@@ -30,7 +30,7 @@ These appear in specific workflows for work that does not fit the standard pipel
 | Phase | Used in | Purpose |
 |---|---|---|
 | **DIAGNOSE** | bug-fix, hotfix, performance, security-patch, rollback | Establish reproduction case and root cause before touching code. Fix targets root cause, not symptom. |
-| **ASSESS** | migrations, compliance, dependency-upgrade | Map scope and risk. Rollback plan exists before design starts. |
+| **ASSESS** | technology-migration, data-migration, api-deprecation, dependency-upgrade, compliance-requirement | Map scope and risk. Rollback plan exists before design starts. |
 | **SCOPE** | tech-debt | Lock existing behavior with tests before refactoring. Tests must fail if any locked behavior changes. |
 | **TRIAGE** | course-correction | Review every in-flight work item: keep / drop / repurpose / defer. Nothing silently abandoned. |
 | **CUTOVER** | technology-migration | (Not currently enforced: the gate is not checked by code yet; Claude applies it as an instruction.) Switch traffic from old to new system. Hard gate — human decision required. |
@@ -41,81 +41,81 @@ These appear in specific workflows for work that does not fit the standard pipel
 
 ## The Six Workflow Shapes
 
-The shape determines the phase sequence. The work type determines the shape.
+A shape is a phase sequence. Work types follow a shape exactly, or carry their own sequence where they differ. Routing does not pick a shape: `/sweetclaude:go` hands your request to the router, which selects one of six categories (plan, design, build, maintain, configure, utils) and invokes that category command. The shapes and sequences on this page apply where a phase or a hard gate depends on them.
 
-| Shape | Phases | Used by |
+| Shape | Phases | Followed exactly by |
 |---|---|---|
-| `full-pipeline` | DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP | net-new-feature, external-integration, course-correction (with TRIAGE), security-planning |
-| `abbreviated` | DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | enhancement, infrastructure-change, onboarding-flow-design, release-planning, tech-debt (with SCOPE) |
+| `full-pipeline` | DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP | net-new-feature, external-integration |
+| `abbreviated` | DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | enhancement, infrastructure-change, onboarding-flow-design |
 | `extended-abbreviated` | ASSESS → DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | compliance-requirement |
-| `diagnostic` | DIAGNOSE → IMPLEMENT → VERIFY → SHIP | bug-fix, security-patch, performance-optimization, rollback-revert |
-| `migration` | ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → CUTOVER → CLEANUP | technology-migration, data-migration, api-deprecation, dependency-upgrade |
+| `diagnostic` | DIAGNOSE → IMPLEMENT → VERIFY → SHIP | bug-fix, security-patch |
+| `migration` | ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → CUTOVER → CLEANUP | technology-migration |
 | `compressed` | DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM | hotfix |
 
 ---
 
 ## All 19 Work Types
 
-When you tell `/sweetclaude:go` what you want to do, it classifies the work into one of these. The classification determines the workflow shape, the entry category, and which phases apply.
+Each work type has a phase sequence defined in `config/workflow-templates.yaml`. The sequence tells you which phases the work passes through and which hard gates apply.
 
 ### Build new
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `net-new-feature` | full-pipeline | Full SDLC. Use when the problem space is unknown or unvalidated. |
-| `external-integration` | full-pipeline | DISCOVER means understanding the external API: auth, rate limits, contracts, failure modes. |
-| `enhancement` | abbreviated | Use when problem space is known. Skip discovery. |
+| `net-new-feature` | DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP | Full SDLC. Use when the problem space is unknown or unvalidated. |
+| `external-integration` | DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP | DISCOVER means understanding the external API: auth, rate limits, contracts, failure modes. |
+| `enhancement` | DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | Use when problem space is known. Skip discovery. |
 
 ### Pivot
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `course-correction` | full-pipeline + TRIAGE | TRIAGE reviews in-flight work (keep/drop/repurpose). Triggered by aggregated signals or post-incident. |
+| `course-correction` | DISCOVER → DEFINE → TRIAGE → SHIP | TRIAGE reviews in-flight work (keep/drop/repurpose). Triggered by aggregated signals or post-incident. |
 
 ### Strategy
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `security-planning` | full-pipeline (3-phase) | SHIP publishes a roadmap document. No code produced. |
-| `release-planning` | abbreviated (3-phase) | SHIP publishes the release artifact and changelog. |
+| `security-planning` | DISCOVER → DEFINE → SHIP | SHIP publishes a roadmap document. No code produced. |
+| `release-planning` | DEFINE → PLAN → SHIP | SHIP publishes the release artifact and changelog. |
 
 ### Reactive
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `bug-fix` | diagnostic | DIAGNOSE = reproduction case + root cause. Fix targets root cause. |
-| `security-patch` | diagnostic | VERIFY is a hard gate (security review mandatory). Expedited ship. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
-| `hotfix` | compressed | Speed over ceremony. POST-MORTEM is required, not optional. |
-| `rollback-revert` | diagnostic (2-phase) | Spawns POST-MORTEM automatically. |
-| `performance-optimization` | diagnostic + DESIGN | DIAGNOSE = baseline benchmark. VERIFY = benchmark again. |
+| `bug-fix` | DIAGNOSE → IMPLEMENT → VERIFY → SHIP | DIAGNOSE = reproduction case + root cause. Fix targets root cause. |
+| `security-patch` | DIAGNOSE → IMPLEMENT → VERIFY → SHIP | VERIFY is a hard gate (security review mandatory). Expedited ship. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| `hotfix` | DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM | Speed over ceremony. POST-MORTEM is required, not optional. |
+| `rollback-revert` | DIAGNOSE → SHIP | Spawns POST-MORTEM automatically. |
+| `performance-optimization` | DIAGNOSE → DESIGN → IMPLEMENT → VERIFY → SHIP | DIAGNOSE = baseline benchmark. VERIFY = benchmark again. |
 
 ### Cleanup
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `tech-debt` | abbreviated + SCOPE | Lock existing behavior in tests before any refactor. |
-| `dependency-upgrade` | migration (compressed) | ASSESS = review changelog for breaking changes. |
-| `api-deprecation` | migration | CLEANUP fires at sunset date, not immediately after SHIP. |
+| `tech-debt` | DEFINE → SCOPE → IMPLEMENT → VERIFY → SHIP | SCOPE takes the place of DESIGN: lock existing behavior in tests before any refactor. |
+| `dependency-upgrade` | ASSESS → IMPLEMENT → VERIFY → SHIP | ASSESS = review changelog for breaking changes. |
+| `api-deprecation` | ASSESS → DEFINE → IMPLEMENT → VERIFY → SHIP → CLEANUP | CLEANUP fires at sunset date, not immediately after SHIP. |
 
 ### Migration
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `technology-migration` | migration | CUTOVER is a hard gate — human decision required. Old and new run in parallel until cutover. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
-| `data-migration` | migration (no CUTOVER) | VERIFY is a hard gate — integrity checks (row counts, checksums, sample records) mandatory. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| `technology-migration` | ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → CUTOVER → CLEANUP | CUTOVER is a hard gate — human decision required. Old and new run in parallel until cutover. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| `data-migration` | ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP | No CUTOVER. VERIFY is a hard gate — integrity checks (row counts, checksums, sample records) mandatory. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 
 ### Compliance and infrastructure
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `compliance-requirement` | extended-abbreviated | VERIFY includes audit evidence generation. Triggered externally (customer ask, legal) or proactively from security-planning. |
-| `infrastructure-change` | abbreviated | Hard gate at DESIGN for GA+ projects. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| `compliance-requirement` | ASSESS → DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | VERIFY includes audit evidence generation. Triggered externally (customer ask, legal) or proactively from security-planning. |
+| `infrastructure-change` | DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | Hard gate at DESIGN for GA+ projects. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
 
 ### Onboarding
 
-| Work type | Shape | Notes |
+| Work type | Phases | Notes |
 |---|---|---|
-| `onboarding-flow-design` | abbreviated | Produces onboarding flow + playbook update. |
+| `onboarding-flow-design` | DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | Produces onboarding flow + playbook update. |
 
 ---
 
@@ -125,16 +125,16 @@ Phase gates have exit criteria. Most criteria are advisory.
 
 **Soft gates** can be bypassed with: *"I've addressed this informally — proceed."* The override is logged. SweetClaude continues. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
-**Hard gates** (⚠️) cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages. Override requires explicit risk acceptance, logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+**Hard gates** cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages. Override requires explicit risk acceptance, logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
-The full list of hard gates:
+The full list of hard gates, with the prerequisites listed in `config/workflow-templates.yaml`:
 
 | Work type | Phase | What is required |
 |---|---|---|
-| `data-migration` | ASSESS | Solutioning gate + change impact analysis |
+| `data-migration` | ASSESS | Solutioning gate and change impact analysis |
 | `data-migration` | VERIFY | Integrity checks (row counts, checksums, sample records) |
-| `infrastructure-change` | DESIGN | Solutioning gate + rollback plan |
-| `technology-migration` | DESIGN | Solutioning gate |
+| `infrastructure-change` | DESIGN | Solutioning gate, change impact analysis and rollback plan |
+| `technology-migration` | DESIGN | Solutioning gate, change impact analysis and parallel run plan |
 | `technology-migration` | CUTOVER | Human decision, explicit confirmation logged |
 | `security-patch` | VERIFY | Security review post-fix |
 
@@ -142,34 +142,9 @@ The friction these gates add is deliberate. A data migration that ships without 
 
 ---
 
-## Entry Categories
+## Entry Category Field
 
-Every work item is classified into one of three entry categories. The category controls how strict prerequisite checking is.
-
-| Category | What it means | Behavior |
-|---|---|---|
-| `cold-start` | New project, no prior context | Full discovery pipeline. No prerequisites checked. |
-| `mid-project-planned` | Continuing work, following the pipeline | Classify → check prerequisites → flag gaps as advisory → offer to create missing artifacts → proceed. |
-| `mid-project-reactive` | Something happened, immediate response needed | Skip prerequisite checks. Triage questions only. Proceed immediately. Missing prerequisites offered as optional parallel work. |
-
-The `reactive` category is what makes hotfixes work. You cannot stop in the middle of a production incident to ask if your discovery artifacts are populated. The reactive category short-circuits the bureaucracy without disabling the safety mechanisms.
-
----
-
-## Progressive Disclosure by Version Stage
-
-The work types you see depend on the `version_stage` in `sweetclaude.yaml`. This prevents early-stage projects from being overwhelmed by work types they do not need yet.
-
-| Stage | Visible buckets | Notes |
-|---|---|---|
-| `PROTOTYPE` | strategy, product | Early ideation. Code work is hidden. |
-| `ALPHA` | strategy, product, design, code | Core implementation work types only. |
-| `BETA` | strategy, product, design, code, operations | Operations capabilities surface. |
-| `GA` | all | Full catalog including compliance. |
-| `SCALED` | all | Operations surfaced prominently. |
-| `MAINTAINED` | code, operations | Feature work de-emphasized. Bug fixes, security patches, dependency upgrades, compliance. |
-
-You declare the stage. SweetClaude does not auto-advance it. A v2 rewrite resets it.
+The active work item carries an `entry_category` field. The small-story and large-story controllers write it: `small-story` or `large-story` identifies which controller owns the item in flight. Nothing classifies work into other entry categories.
 
 ---
 
@@ -197,18 +172,16 @@ session:
   deference_level: collaborative
 
 work:
-  last_item_id: WI-013
+  last_item_id: ISSUE-013
   active:
-    id: WI-014
-    type: net-new-feature
-    workflow: [DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP]
+    id: ISSUE-014
     phase: IMPLEMENT
     title: "OAuth login flow"
     started: 2026-04-29T14:00:00+00:00
-    entry_category: mid-project-planned
+    entry_category: small-story
 ```
 
-`work.last_item_id` is the monotonic counter — it persists across work item completions so IDs do not repeat.
+`work.last_item_id` records the most recently closed work item. Closeout sets it to the ID of the item just closed, and new IDs come from the next free `ISSUE-NNN` in the roadmap cache.
 
 ---
 

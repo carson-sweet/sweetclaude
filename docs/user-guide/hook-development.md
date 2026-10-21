@@ -1,12 +1,14 @@
 # Hook Development
 
-**Version:** 1.2 / **Date:** 2026-10-21
+**Version:** 1.3 / **Date:** 2026-10-21
 
 ## Recovery
 
 **Symptom:** a tool call fails with a hook error. When an installed hook has a bash syntax error it exits with status 2, and Claude Code reports a blocking hook error with the syntax error on stderr. Run `/sweetclaude:configure doctor` to diagnose and restore.
 
 A hook can stop a tool call only when it is a PreToolUse hook. PostToolUse and Stop hooks run after the tool or response and give feedback; they cannot block the write itself. `auto-test-runner.sh` is a PostToolUse hook, so it reports test results after a Write or Edit and never blocks one.
+
+The hooks that can block a tool call are `test-guardian.sh` (denies test file writes once `tdd_phase` is implementing), `tdd-prewrite-guardian.sh` (denies source writes until test files exist, when the guardian is on), `wip-limit.sh` (blocks only a call that activates an issue in Kanban mode when the WIP limit is already reached), and `preflight-guard.sh` (blocks until first valid invocation of the command that configures the project).
 
 Every PreToolUse hook whose matcher covers Write or Edit can be the source of a blockage: `preflight-guard.sh`, `test-guardian.sh`, `tdd-prewrite-guardian.sh`, `wip-limit.sh`, `large-story-gate.sh` and `small-story-gate.sh`. Bash calls are also checked, so a recovery command is not exempt from hooks. Six PreToolUse hooks match Bash in `hooks/hooks.json`:
 

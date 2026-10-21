@@ -1,7 +1,7 @@
 # TDD Levels
 
-**Version:** 1.1
-**Date:** 2026-05-05
+**Version:** 1.2
+**Date:** 2026-10-21
 
 SweetClaude does not believe in advisory TDD. Advisory TDD fails. The implementer touches the test to make it pass, or writes the test after the code so the test rationalizes the implementation rather than specifying behavior.
 
@@ -11,17 +11,19 @@ This page explains the four enforcement levels, what each one feels like to use,
 
 ## Why Hooks, Not Prompts
 
-Most TDD documentation says "write the test first." SweetClaude does not say it. SweetClaude makes it physically impossible at higher levels to do otherwise. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+Most TDD documentation says "write the test first." SweetClaude says it too, and at the higher levels it adds hooks that block the shortcuts.
 
-The mechanism is three native Claude Code hooks:
+The mechanism is three Claude Code hooks:
 
-- **test-guardian** (PreToolUse) blocks edits to test files during the IMPLEMENT phase. Not warns. Blocks. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
-- **auto-test-runner** (PostToolUse) runs tests automatically after every source edit. Not reminds. Runs. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
-- **git-checkpoint** auto-commits state at phase transitions, including the moment when failing tests are written and before implementation begins.
+- **test-guardian** (PreToolUse) blocks edits to test files during the IMPLEMENT phase, once `code-tdd` has set `tdd_phase` to implementing with `scripts/tdd_phase.py`. Not warns. Blocks.
+- **tdd-prewrite-guardian** (PreToolUse) blocks source file writes during the IMPLEMENT phase while no test files exist, when the Protocol Guardian is on (`/sweetclaude:configure guardian-on`).
+- **auto-test-runner** (PostToolUse) runs tests automatically after every source edit while `tdd_phase` is implementing. Not reminds. Runs.
+
+The failing tests are committed with `git-checkpoint.sh`, which `code-tdd` runs at the end of the RED step, before implementation begins.
 
 This sounds extreme until you watch what happens without it: a test passes, you ship, and three weeks later production breaks because the test was passing for the wrong reason. The hooks remove that failure mode. The cost is that you cannot quickly "fix" a test by editing it — and that cost is the whole point.
 
-You can override test immutability with explicit user approval. The override is per file and logged: `python3 scripts/tdd_phase.py release --file <path> --approval "<the user's words>"` unfreezes that one file and appends a `tdd_override` event naming the file and the approval to `.sweetclaude/metrics/events.log`. This is for the case where a test has a genuine defect, not a coverage gap. The two are different and the framework wants you to be deliberate about which one you are claiming.
+You can override test immutability with explicit user approval. The override is per file and logged: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py release --file <path> --approval "<the user's words>"` unfreezes that one file and appends a `tdd_override` event naming the file and the approval to `.sweetclaude/metrics/events.log`. This is for the case where a test has a genuine defect, not a coverage gap. The two are different and the framework wants you to be deliberate about which one you are claiming.
 
 ---
 
@@ -45,9 +47,9 @@ The right level depends on the work, not your preference. The framework picks ba
 
 **When**: production is degraded, you need to fix it now.
 
-**The discipline**: fix the immediate problem, write a regression test in the same session. Not within 48 hours. Now. Test and fix get committed together.
+**The discipline**: fix the immediate problem, write a regression test in the same session, confirm the test fails without the fix, then commit the test and the fix together. Not within 48 hours. Now.
 
-**What it feels like**: pressure. The hotfix workflow shape (DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM) compresses everything except the regression test. You are not writing exhaustive coverage. You are writing the one test that would have caught this bug, before you fix the bug, and committing them together. POST-MORTEM follows as a separate work item. It is not optional.
+**What it feels like**: pressure. The hotfix workflow shape (DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM) compresses everything except the regression test. You are not writing exhaustive coverage. You are writing the one test that would have caught this bug, after the fix, then reverting the fix to confirm the test fails without the fix, re-applying it, and committing the test and the fix together. POST-MORTEM follows as a separate work item. It is not optional.
 
 **What it prevents**: the same bug shipping twice. Without the regression test, the next change in the area could re-introduce the failure. With it, the test fails immediately if anyone tries.
 
@@ -72,15 +74,15 @@ The right level depends on the work, not your preference. The framework picks ba
 **The discipline**:
 
 0. A story branch is created (`{ID}/{slug}`, e.g. `ISSUE-046/git-branch-discipline`) to isolate the work from main.
-1. Test writer agent writes failing tests in an isolated context.
-2. Tests are committed to git.
-3. Test-guardian hook activates — test files become immutable. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
-4. Implementer agent (separate context) makes tests pass with code.
-5. Auto-test-runner hook fires after every source edit. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+1. Failing tests are written in the main context, against interfaces designed first.
+2. Tests are verified RED and committed to git.
+3. `code-tdd` sets `tdd_phase` to implementing. Test-guardian hook activates — test files become immutable.
+4. Implementer agent (a subagent in a separate context) makes tests pass with code.
+5. Auto-test-runner hook fires after every source edit.
 
-**What it feels like**: choreographed. You watch the test writer commit failing tests. You watch the implementer iterate against them. The implementer never sees your reasoning about what the tests should cover — only the tests themselves.
+**What it feels like**: choreographed. You write the failing tests with Claude in the main context and commit them. You watch the implementer subagent iterate against them. The implementer never sees your reasoning about what the tests should cover — only the tests themselves.
 
-**What it prevents**: the implementer rationalizing a poor test. If the implementer can read the spec or your notes, it can argue that a test "really means" something other than what it says. With the spec hidden, the implementer has to make the actual tests pass with actual code.
+**What it prevents**: the implementer rationalizing a poor test. If the implementer can read the spec or your notes, it can argue that a test "really means" something other than what it says. The implementer subagent is dispatched with the tests, not your notes. It has to make the actual tests pass with actual code.
 
 ---
 
@@ -92,7 +94,7 @@ The right level depends on the work, not your preference. The framework picks ba
 
 0. A story branch is created (`{ID}/{slug}`) before any test or implementation work begins.
 1. **Gherkin specs** — user stories converted to `.feature` files with Given/When/Then scenarios.
-2. **Test writer agent** — reads Gherkin in an isolated context, writes failing test code, has no knowledge of planned implementation.
+2. **Test writer agent** — a subagent that reads Gherkin in an isolated context, writes failing test code, has no knowledge of planned implementation.
 3. **QA Caucus** — three specialist agents review the test plan in parallel:
    - **Service/API expert**: tenant isolation, state transitions, concurrency, inter-service interactions.
    - **Component/UI expert**: accessibility, loading states, user interaction edge cases.
@@ -123,10 +125,10 @@ Concrete failure modes the hooks block:
 
 | Without hooks | With hooks |
 |---|---|
-| Implementer edits a test to make it pass | test-guardian blocks the edit at the OS level (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
-| Tests fail silently and ship | auto-test-runner runs after every source edit; failure is immediate (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
-| Test writer's intent gets lost between sessions | git-checkpoint commits the failing tests immediately |
-| Spec gets reverse-engineered from passing implementation | subagent isolation hides the spec from the implementer |
+| Implementer edits a test to make it pass | test-guardian blocks the edit at the tool call level once `tdd_phase` is implementing |
+| Tests fail silently and ship | auto-test-runner runs after every source edit; failure is immediate |
+| Test writer's intent gets lost between sessions | the failing tests are committed with `git-checkpoint.sh` before implementation begins |
+| Spec gets reverse-engineered from passing implementation | the implementer subagent is dispatched without the spec (instruction-guided, not a hook) |
 
 If you disable the hooks, you also disable these protections. The framework still nominally tracks TDD level, but Level 2-3 without the hooks is approximately Level 1 in practice.
 
@@ -153,7 +155,7 @@ These run inside the TDD pipeline. You do not invoke them directly.
 
 Things SweetClaude will catch you doing if you try them:
 
-**Editing a failing test to make it pass.** The test-guardian hook blocks the edit. If you genuinely need to fix a defective test, override with explicit approval — and that override is logged. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+**Editing a failing test to make it pass.** The test-guardian hook blocks the edit. If you genuinely need to fix a defective test, release that one file with `tdd_phase.py release` and explicit approval — and that override is logged.
 
 **Writing tests after implementation.** The framework checkpoints failing tests before implementation begins. If you try to commit implementation without prior failing tests, the workflow refuses to advance. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 

@@ -175,7 +175,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/config/phase-skills.yaml` to determine which skills 
 - **`deploy:`** — shipping (deferred)
 - **`operations:`** — operations skills (something-broke, postmortem, break-glass-notes, sla-error-budget-review, monitoring-alerting, onboarding-playbook)
 
-When the user asks to do something, the `find-skill` skill classifies it into the right bucket and surfaces relevant skills. Skills from other buckets are available on request. Progressive disclosure: only surface work types appropriate for the current `version_stage` (see `config/workflow-templates.yaml` → `progressive_disclosure`).
+When the user asks to do something, the `find-skill` skill classifies it into the right bucket and surfaces relevant skills. Skills from other buckets are available on request.
 
 ## Delegation Depth
 

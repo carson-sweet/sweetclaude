@@ -1,7 +1,7 @@
 # Planning Concepts
 
-**Version:** 1.1
-**Date:** 2026-05-10
+**Version:** 1.2
+**Date:** 2026-10-21
 
 This page explains the building blocks SweetClaude uses to plan and track software work — what they are, how they relate to each other, and the four development modes that use them differently.
 
@@ -28,8 +28,8 @@ This is the atomic unit of development work. The term "story" ties well to user-
 For the rest of this doc, we define a story as something describing something a user or the system needs to do, with enough specificity to know what success looks like when it has been implemented, that a developer (human or agent) actually implements. Stories are what you actually work on and ship. If a story is too big to be done as one task, SweetClaude can help you break it down into smaller stories. This is how epics often get created: a big story that needs to be broken down becomes an epic with new, smaller stories that make up the epic.
 
 In SweetClaude, every story should have:
-- A **status**: new → ready → active → blocked → deferred → done → abandoned
-- A **priority**: next · sooner · soon · later · someday
+- A **status**, one of eleven values: new, ready, active, in-review, blocked, on-hold, deferred, done, declined, abandoned, superseded (see the [reference](#status-and-priority-reference))
+- A **priority**: P0 · now · P1 · sooner · P2 · soon · P3 · later · someday
 - An optional **tag** for the system or component it touches (see [Tags](#tags) below)
 
 Stories can have more or less detail depending on the discipline level being implemented. For example, Test Driven Development (TDD) demands that before a line of code is written for a story, a test is written in advance to make sure that code does what's expected; in that case, the developer (human or agent) uses the test to determine how to implement code.
@@ -44,11 +44,11 @@ The backlog needs to be managed, otherwise it gets unwieldy quickly. This manage
 
 You can ask SweetClaude to help you think through this process anytime.
 
-The backlog is a completely separate structure from the roadmap. Backlog stories do not require epics or milestone assignments. When a story moves from the backlog to the roadmap, it is physically moved and assigned to an epic. A story ID never appears in both the backlog and the roadmap at the same time.
+The backlog is a completely separate structure from the roadmap. Backlog stories do not require epics or milestone assignments. Triage moves a story from the backlog to the roadmap: the file moves to `roadmap/issues/` and its status becomes ready. Linking the story to an epic or a milestone is a separate step. A story ID never appears in both the backlog and the roadmap at the same time.
 
 ### Epic
 
-A named bundle of stories that are related by feature area or functional domain. An epic groups stories that belong together conceptually — all the stories for a given feature, subsystem, or capability. Epics typically live inside milestones on a roadmap. In the full hierarchy, an epic belongs to exactly one milestone. Stories within an epic are worked closely together because they share context, touch the same code, or have technical dependencies on each other.
+A named bundle of stories that are related by feature area or functional domain. An epic groups stories that belong together conceptually — all the stories for a given feature, subsystem, or capability. Epics are a classification attribute of stories: a story carries an `epic` field, and an epic can be linked to a milestone. Stories within an epic are worked closely together because they share context, touch the same code, or have technical dependencies on each other.
 
 Epics are a product-level concept — they answer "what are we building?" A sprint is the execution-level complement that answers "when are we building it?"
 
@@ -56,13 +56,13 @@ Epics are a product-level concept — they answer "what are we building?" A spri
 
 A named strategic outcome — a meaningful product state the project is driving toward. Examples: "Platform Foundation Complete," "Web UI Shipped," "Auth Alpha-Ready."
 
-They are checkpoints that define what "done enough to move on" means for a significant phase of work. A milestone is complete when all its stories (which are usually in epics or sprints) are complete.
+They are checkpoints that define what "done enough to move on" means for a significant phase of work. A milestone is marked achieved when its success criteria are met and you confirm it.
 
 ### Sprint
 
 A fixed-length time container for work, used in Agile. A sprint groups stories by when they will be worked, not by what they are about. Where an epic bundles stories because they are feature-related, a sprint bundles stories because they fit within a constrained block of time — typically one to four weeks.
 
-Sprints are most useful for teams coordinating parallel work, tracking velocity, and managing delivery commitments. Solo developers often skip sprints entirely and work directly from epics or the backlog.
+Sprints are most useful for teams coordinating parallel work, tracking velocity, and managing delivery commitments. Solo developers often skip sprints entirely and work directly from the backlog.
 
 ---
 
@@ -71,20 +71,15 @@ Sprints are most useful for teams coordinating parallel work, tracking velocity,
 When you use the full structure, work organizes into the less-structured backlog and the strictly-structured roadmap. You perform triage regularly to move things from the backlog to the roadmap.
 
 ```
-Backlog (stands alone)
-    └── Story
-
 Roadmap
   └── Milestone
-              └── Epic
-                    └── Sprint (optional)
-                          └── Story
-
+        └── Sprint (optional)
+              └── Story
 ```
 
-In SweetClaude's default opinionated structure, a story belongs to one epic. An epic belongs to one milestone. A sprint is optional and can be attached to either a milestone or an epic — it provides a time-slice view of whichever level it is attached to. If you are not using sprints, stories live directly under their epic.
+The backlog stands alone as a flat list of stories outside the roadmap. In SweetClaude's default opinionated structure, the work hierarchy is Milestone, Sprint, Story. A sprint is anchored to a milestone through its `milestone_id`, and stories are pulled into the sprint. Epics and themes are classification attributes on stories (each story can carry an `epic` and a `theme`), not levels of the hierarchy: they give you goal and domain lenses over the same stories without adding a node stories must pass through. If you are not using sprints, stories hang directly off their milestone.
 
-The **backlog** sits completely outside this hierarchy — it has no milestone and no epic. Promoting a story from the backlog means physically moving it to an epic (which implies a milestone). The story ID does not change on promotion.
+The **backlog** sits completely outside this hierarchy — it has no milestone and no epic. Triaging a story out of the backlog moves its file to `roadmap/issues/`; linking it to an epic or a milestone happens afterward as its own step. The story ID does not change on triage.
 
 ---
 
@@ -110,9 +105,9 @@ The limitation is visibility. A backlog tells you what exists and what is priori
 
 ### Kanban
 
-Kanban keeps a backlog and works stories continuously — no sprints, no cycles, no ceremony around what gets started when. The defining constraint is a **WIP limit**: SweetClaude hard-enforces a maximum of three stories in active status at any time. You cannot start new work until something finishes. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+Kanban keeps a backlog and works stories continuously — no sprints, no cycles, no ceremony around what gets started when. The defining constraint is a **WIP limit**: SweetClaude hard-enforces a maximum of three stories in active status at any time. The `wip-limit.sh` hook denies the tool call that would activate a fourth issue, so you cannot start new work until something finishes.
 
-The WIP limit is not advisory. It is the entire mechanism. By capping work-in-progress, it forces completion over accumulation — the most common failure mode in solo development is a graveyard of half-done work. The limit keeps the flow moving. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+The WIP limit is not advisory. It is the entire mechanism. By capping work-in-progress, it forces completion over accumulation — the most common failure mode in solo development is a graveyard of half-done work. The limit keeps the flow moving.
 
 Kanban works well with or without a roadmap. You can run a pure backlog (triage and pull from the top) or organize the backlog behind milestones and epics and still work Kanban-style through execution. The mode governs how you execute, not necessarily how you plan.
 
@@ -155,7 +150,7 @@ The dev lead or tech lead then looks at each epic's stories and:
 
 The result is a roadmap: a structured view of what ships with what, organized around meaningful product outcomes (milestones), with feature-related work bundled together (epics), and specific delivery windows defined (sprints). SweetClaude enforces a hard gate: implementation is blocked unless there is an active sprint. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
-Epics are first-class in Agile mode — they appear in status views, Kanban boards, and big-picture renders. In all other modes, epics are available but not surfaced by default.
+Epics work the same way in every mode: status views and big-picture renders include them regardless of the active mode.
 
 This mode works well when:
 - You are past early stage and need to communicate a delivery plan to stakeholders
@@ -173,20 +168,18 @@ If you are not sure which mode fits your situation, this table shows exactly wha
 |---|---|---|---|---|
 | **Stories** | Yes | Yes | Yes (from pitches) | Yes |
 | **Backlog** | Optional | Yes | No — pitches instead | Yes |
-| **Milestones** | Optional | Optional | No — cycles instead | Yes (required) |
-| **Epics** | Optional, not surfaced | Optional, not surfaced | No | Yes, first-class |
+| **Milestones** | Optional | Optional | No — cycles instead | Yes (recommended) |
+| **Epics** | Optional | Optional | No | Yes |
 | **Sprints** | No | No | No — 6-week cycles | Yes (required to implement) |
 | **Structured roadmap** | No | Optional | No | Yes |
-| **WIP limit** | None | 3 active (hard block) | Appetite per pitch | Sprint capacity (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
-| **Kanban board columns** | No | Yes (statuses as columns) | No | Yes |
+| **WIP limit** | None | 3 active (hard block) | Appetite per pitch | None |
 | **TDD enforcement** | Level 1 | Level 1 | Level 2 | Level 2 |
-| **Hard gate to implement** | None | WIP limit | Betting table approval | Active sprint required (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| **Hard gate to implement** | None | WIP limit | Betting table approval | Active sprint required (Not currently enforced for the betting table and the active sprint: this is not checked by code yet; Claude applies it as an instruction.) |
 | **Best for** | Solo, exploration, prototypes | Solo or small team, continuous delivery | Product teams, fixed appetite, scope control | Teams, structured iteration, stakeholder delivery |
 
 **How to read the table:**
 - "Optional" means the artifact exists and you can use it, but SweetClaude does not require it or surface it prominently.
-- "Not surfaced" means epics are available in the data model but do not appear in status views or big-picture renders.
-- "Hard block" means SweetClaude will not let you proceed until the condition is met. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+- In the WIP limit row, "hard block" means the `wip-limit.sh` hook denies the tool call that would activate a fourth issue. The betting table and active sprint gates are instructions Claude applies, not hook checks. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 You can switch modes at any time — work already done stays as-is. When switching to a more structured mode, SweetClaude will flag what artifacts are missing and offer to catch up.
 
@@ -213,21 +206,31 @@ Tags are also useful for sprint planning: if two stories both touch `auth`, ther
 | new | Captured, not yet reviewed or scheduled |
 | ready | Reviewed, well-specified, ready to be worked |
 | active | Being worked right now |
+| in-review | Work finished, waiting on review |
 | blocked | Cannot proceed — waiting on something external |
+| on-hold | Paused on purpose; work is expected to resume |
 | deferred | Consciously postponed — will come back to it |
 | done | Complete and accepted |
+| declined | Reviewed and rejected — will not be built |
 | abandoned | Will not do — closed without completion |
+| superseded | Replaced by another story |
 
-When using Kanban, these statuses map directly to board columns.
+The terminal statuses are done, declined, abandoned and superseded. A story in a terminal status is closed.
 
-**Priority values** — how urgently a story should be worked relative to others:
+To see stories by status, use the `project-issues` lists.
+
+**Priority values** — how urgently a story should be worked relative to others. The roadmap cache sorts them in this order:
 
 | Priority | Meaning |
 |---|---|
-| next | Work this before anything else |
+| P0 | Drop everything — highest urgency |
+| now | Work this before anything else |
+| P1 | High priority |
 | sooner | Work this soon, ahead of the general queue |
+| P2 | Medium priority |
 | soon | Work this in the near term |
+| P3 | Low priority |
 | later | Work this eventually, but not urgently |
 | someday | Good idea, no current urgency — backlog hold |
 
-Priority is how you force-rank the backlog. In a roadmap, priority within an epic or sprint determines sequencing when there is more work than capacity.
+`project-issues` creates new stories with a P0 to P3 priority. Priority is how you force-rank the backlog. In a roadmap, priority within a sprint determines sequencing when there is more work than capacity.

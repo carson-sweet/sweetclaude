@@ -1,6 +1,6 @@
 # SweetClaude Cheatsheet: Adopting an Existing Project
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-10-21
 
 You have a codebase. Maybe it is well-organized with tests and docs. Maybe it is a mess. Maybe it is somewhere in between. SweetClaude meets you where you are and adds structured process without disrupting what you have built.
@@ -120,7 +120,7 @@ If you have strategy documents, brainstorming exports, meeting notes, or researc
 /sweetclaude:utils document-corpus
 ```
 
-The skill presents a menu: consolidate raw files → triage (classify each file) → reconcile (draft canonical documents) → promote (finalize with provenance, archive, RAG index). Select **Status** at any point to see where the pipeline stands. The pipeline enforces ordering — skipping steps produces degraded or misleading results, and the skill explains why if you try. Every canonical document traces back to its source files.
+The skill presents a menu: consolidate raw files → triage (classify each file) → reconcile (draft canonical documents) → promote (finalize with provenance, archive, RAG index). Select **Status** at any point to see where the pipeline stands. Ordering is instruction-guided: each step reads the pipeline state and checks that its prerequisites are done, because skipping steps produces degraded or misleading results, and the skill explains why if you try. Every canonical document traces back to its source files.
 
 This is especially useful for projects that started with lots of brainstorming in Claude.ai but never organized the output.
 
