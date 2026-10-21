@@ -189,7 +189,6 @@ def test_R_176_feature_status_starts_at_not_offered():
 
 def test_R_177_update_command_named_per_major_version():
     text = flat(doc("state-and-memory"))
-    assert "/sweetclaude:update" in text
     assert "In 4.x, `/sweetclaude:configure update` reports drift" not in text
     assert "/sweetclaude:configure update" in text
 

@@ -2255,7 +2255,7 @@ rows:
   class: doc-wrong
   disposition: fix-doc
   phase: 5
-  acceptance: state-and-memory.md names /sweetclaude:update for 4.x and /sweetclaude:configure update for 5.x.
+  acceptance: state-and-memory.md does not claim /sweetclaude:configure update exists on 4.x and names /sweetclaude:configure update for 5.x. Amended 2026-10-21 under plan TDD rule 2 (the 4.x command name is kept out of the user guide by tests/test_docs_upgrade_paths.py::test_4x_update_command_not_recommended_for_moving_to_5x, a phase 0 decision).
   test_level:
   - docs-claims
   status: open
