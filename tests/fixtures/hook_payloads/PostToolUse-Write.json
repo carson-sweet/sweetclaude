@@ -1,0 +1,26 @@
+{
+  "cwd": "__CWD__",
+  "duration_ms": 3,
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "permission_mode": "acceptEdits",
+  "prompt_id": "00000000-0000-0000-0000-000000000001",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "tool_input": {
+    "content": "hello\n",
+    "file_path": "__CWD__/new.txt"
+  },
+  "tool_name": "Write",
+  "tool_response": {
+    "content": "hello\n",
+    "filePath": "__CWD__/new.txt",
+    "originalFile": null,
+    "structuredPatch": [],
+    "type": "create",
+    "userModified": false
+  },
+  "tool_use_id": "toolu_00000000000000000000000000",
+  "transcript_path": "__CWD__/.transcript.jsonl"
+}

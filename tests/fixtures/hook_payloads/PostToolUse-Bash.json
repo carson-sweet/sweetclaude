@@ -1,0 +1,25 @@
+{
+  "cwd": "__CWD__",
+  "duration_ms": 365,
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "permission_mode": "acceptEdits",
+  "prompt_id": "00000000-0000-0000-0000-000000000001",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "tool_input": {
+    "command": "echo probe",
+    "description": "Echo probe string"
+  },
+  "tool_name": "Bash",
+  "tool_response": {
+    "interrupted": false,
+    "isImage": false,
+    "noOutputExpected": false,
+    "stderr": "",
+    "stdout": "probe"
+  },
+  "tool_use_id": "toolu_00000000000000000000000000",
+  "transcript_path": "__CWD__/.transcript.jsonl"
+}

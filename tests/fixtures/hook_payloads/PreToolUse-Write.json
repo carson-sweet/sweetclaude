@@ -1,0 +1,17 @@
+{
+  "cwd": "__CWD__",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "permission_mode": "acceptEdits",
+  "prompt_id": "00000000-0000-0000-0000-000000000001",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "tool_input": {
+    "content": "hello\n",
+    "file_path": "__CWD__/new.txt"
+  },
+  "tool_name": "Write",
+  "tool_use_id": "toolu_00000000000000000000000000",
+  "transcript_path": "__CWD__/.transcript.jsonl"
+}

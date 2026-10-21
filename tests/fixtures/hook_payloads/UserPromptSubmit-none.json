@@ -1,0 +1,9 @@
+{
+  "cwd": "__CWD__",
+  "hook_event_name": "UserPromptSubmit",
+  "permission_mode": "acceptEdits",
+  "prompt": "Use the Write tool to create a file new.txt containing hello.",
+  "prompt_id": "00000000-0000-0000-0000-000000000001",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "transcript_path": "__CWD__/.transcript.jsonl"
+}
