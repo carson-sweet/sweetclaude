@@ -19,6 +19,7 @@
 #   hook_io.py configured-test-command CONFIG_YAML   (prints testing.test_command)
 #   hook_io.py is-source-file FILE      (payload on stdin; exit 0 for a project source file that tests cover)
 #   hook_io.py preflight-exempt         (PreToolUse payload on stdin; exit 0 for the remedy of the preflight denial)
+#   hook_io.py tdd-commit-gate          (PreToolUse payload on stdin; emits deny when R-251's commit gate applies)
 
 from __future__ import annotations
 
@@ -629,6 +630,173 @@ def wip_limit_denial(data: dict) -> str | None:
             "Complete or move an item before starting new work.")
 
 
+TDD_CYCLE_PHASES = frozenset({"writing_tests", "implementing", "refactoring"})
+STORY_BRANCH = re.compile(r"^(?:issue-\d+|story)/", re.IGNORECASE)
+RED_COMMIT_SUBJECT = re.compile(r"^\s*test: RED\b")
+COMMIT_VALUE_LONGS = {"--message", "--file", "--template", "--fixup", "--squash", "--author",
+                      "--date", "--cleanup", "--untracked-files", "--gpg-sign", "--trailer"}
+COMMIT_VALUE_SHORTS = set("mFtcCuS")
+ADD_VALUE_LONGS = {"--pathspec-from-file"}
+ADD_INTERACTIVE_LONGS = {"--patch", "--interactive", "--edit"}
+ADD_INTERACTIVE_SHORTS = set("pie")
+
+
+def git_lines(project: str, *args: str) -> list[str] | None:
+    try:
+        result = subprocess.run(["git", "-C", project, *args], capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def git_option_args(args: list[str]) -> tuple[str, list[str]]:
+    index = 0
+    while index < len(args) and args[index] != "--" and args[index].startswith("-"):
+        index += 2 if args[index] in GIT_OPTIONS_WITH_VALUE else 1
+    if index >= len(args):
+        return "", []
+    return args[index], args[index + 1:]
+
+
+def parse_command_options(args: list[str], value_longs: set[str], value_shorts: set[str]) -> tuple[list[str], list[str]]:
+    options: list[str] = []
+    operands: list[str] = []
+    index = 0
+    literal = False
+    while index < len(args):
+        token = args[index]
+        index += 1
+        if literal:
+            operands.append(token)
+        elif token == "--":
+            literal = True
+        elif token.startswith("--"):
+            name = token.split("=", 1)[0]
+            options.append(name)
+            if name in value_longs and "=" not in token:
+                index += 1
+        elif token.startswith("-") and len(token) > 1:
+            options.append(token)
+            if "=" not in token and value_shorts & set(token[1:]):
+                index += 1
+        else:
+            operands.append(token)
+    return options, operands
+
+
+def short_flags(options: list[str], letter: str) -> bool:
+    return any(not token.startswith("--") and len(token) > 1 and letter in token[1:] and "=" not in token
+               for token in options)
+
+
+def resolve_spec_path(project: str, base: str, path: str) -> list[str]:
+    if any(character in path for character in "*?[") or "$" in path or path.startswith("~"):
+        return []
+    absolute = os.path.normpath(path if os.path.isabs(path) else os.path.join(base, path))
+    relative = relative_path(absolute, project)
+    if relative == absolute:
+        return []
+    if os.path.isdir(absolute):
+        spec = "" if relative in ("", ".") else relative
+        if spec:
+            entries = git_lines(project, "ls-files", "--cached", "--others", "--exclude-standard", "--", spec)
+        else:
+            entries = git_lines(project, "ls-files", "--cached", "--others", "--exclude-standard")
+        return entries or []
+    if os.path.isfile(absolute):
+        return [relative]
+    return []
+
+
+def commit_candidate_paths(data: dict, project: str, command: str) -> list[str]:
+    base = str(data.get("cwd") or project)
+    rels: list[str] = []
+    staged = git_lines(project, "diff", "--cached", "--name-only", "--diff-filter=AM")
+    if staged:
+        rels.extend(staged)
+    for segment in command_segments(tokenize_shell(command)):
+        words, _ = redirect_targets(segment)
+        while words and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[0]):
+            words = words[1:]
+        if not words or os.path.basename(words[0]) != "git":
+            continue
+        subcommand, rest = git_option_args(words[1:])
+        if subcommand == "add":
+            options, paths = parse_command_options(rest, ADD_VALUE_LONGS, set())
+            if (any(name in ADD_INTERACTIVE_LONGS for name in options)
+                    or any(not name.startswith("--") and ADD_INTERACTIVE_SHORTS & set(name[1:])
+                           for name in options if len(name) > 1)):
+                continue
+            if "--all" in options or short_flags(options, "A"):
+                entries = git_lines(project, "ls-files", "--cached", "--others", "--exclude-standard")
+                if entries:
+                    rels.extend(entries)
+            elif "--update" in options or short_flags(options, "u"):
+                entries = git_lines(project, "diff", "--name-only", "--diff-filter=AM")
+                if entries:
+                    rels.extend(entries)
+            for path in paths:
+                rels.extend(resolve_spec_path(project, base, path))
+        elif subcommand == "commit":
+            options, paths = parse_command_options(rest, COMMIT_VALUE_LONGS, COMMIT_VALUE_SHORTS)
+            if "--all" in options or short_flags(options, "a"):
+                entries = git_lines(project, "diff", "HEAD", "--name-only", "--diff-filter=AM")
+                if entries:
+                    rels.extend(entries)
+            for path in paths:
+                rels.extend(resolve_spec_path(project, base, path))
+    return list(dict.fromkeys(rels))
+
+
+def tdd_commit_gate_denial(data: dict) -> str | None:
+    if str(data.get("tool_name") or "") != "Bash":
+        return None
+    tool_input = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
+    command = str(tool_input.get("command") or "")
+    if not is_git_commit(command):
+        return None
+    project = project_dir(data)
+    state = os.path.join(project, ".sweetclaude", "state")
+    sc_yaml = os.path.join(state, "sweetclaude.yaml")
+    phase_yaml = os.path.join(state, "phase.yaml")
+    legacy = project.rstrip("/") + "-sweetclaude/state"
+    if not os.path.isfile(sc_yaml):
+        alternative = os.path.join(legacy, "sweetclaude.yaml")
+        if os.path.isfile(alternative):
+            sc_yaml = alternative
+    if not os.path.isfile(phase_yaml):
+        alternative = os.path.join(legacy, "phase.yaml")
+        if os.path.isfile(alternative):
+            phase_yaml = alternative
+    if not os.path.isfile(sc_yaml) and not os.path.isfile(phase_yaml):
+        return None
+    try:
+        phase, cycle, _released = tdd_state(sc_yaml, phase_yaml)
+    except ImportError:
+        return ("The TDD commit gate cannot read the SweetClaude state because PyYAML is not "
+                "installed for python3. Install it with: python3 -m pip install pyyaml")
+    if phase.lower() != "implement" or cycle not in TDD_CYCLE_PHASES:
+        return None
+    branch = git_lines(project, "rev-parse", "--abbrev-ref", "HEAD")
+    if not branch or not STORY_BRANCH.match(branch[0]):
+        return None
+    subjects = git_lines(project, "log", "--format=%s")
+    if subjects is not None and any(RED_COMMIT_SUBJECT.match(subject) for subject in subjects):
+        return None
+    sources = sorted({rel for rel in commit_candidate_paths(data, project, command) if is_source_file(rel)})
+    if not sources:
+        return None
+    return ("TDD commit gate: committing implementation before the RED tests. This story branch has no "
+            "commit with subject 'test: RED - ...' and the commit would add the source file "
+            f"'{sources[0]}'. Write the failing tests and commit them first as "
+            "'test: RED - <story> failing tests' (bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh does "
+            "this), then implement. If this story is a Level 0 hotfix, clear the cycle marker with "
+            "'python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py clear --project-dir <dir>' and commit "
+            "test and fix together.")
+
+
 def deny_output(reason: str) -> dict:
     return {"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
@@ -714,7 +882,12 @@ def main(argv: list[str]) -> int:
         return 0 if is_source_file(relative_path(argv[1], project_dir(read_input()))) else 1
     if command == "preflight-exempt":
         return 0 if preflight_exempt(read_input()) else 1
-    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|test-targets|tdd-state|detect-test-command|configured-test-command|is-source-file|preflight-exempt\n")
+    if command == "tdd-commit-gate":
+        reason = tdd_commit_gate_denial(read_input())
+        if reason:
+            emit(deny_output(reason))
+        return 0
+    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|test-targets|tdd-state|detect-test-command|configured-test-command|is-source-file|preflight-exempt|tdd-commit-gate\n")
     return 2
 
 

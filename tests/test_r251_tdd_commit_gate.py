@@ -102,6 +102,7 @@ class TestDenyWithoutRed:
         assert_denied(result)
 
     def test_denies_when_only_an_earlier_segment_stages_the_source(self, story_project: Path) -> None:
+        (story_project / "src" / "calc.py").write_text("x = 1\n", encoding="utf-8")
         result = _call(story_project, "git add src/calc.py && git commit -m 'feat: GREEN - adder'")
         assert_denied(result)
 
@@ -118,6 +119,11 @@ class TestDenyWithoutRed:
         reason = deny_reason(_call(story_project, "git commit -m 'feat: GREEN - adder'"))
         assert "test: RED" in reason
         assert "src/calc.py" in reason
+
+    def test_denies_when_the_cycle_is_back_at_writing_tests(self, story_project: Path) -> None:
+        _write_active(story_project, "IMPLEMENT", "writing_tests")
+        _stage(story_project, "src/calc.py")
+        assert_denied(_call(story_project, "git commit -m 'feat: GREEN - adder'"))
 
     def test_denies_on_a_lowercase_issue_prefixed_branch(self, tmp_path: Path) -> None:
         story_project = tmp_path / "lower"
@@ -150,11 +156,6 @@ class TestAllowControls:
     def test_allows_when_a_red_commit_exists_on_the_branch(self, story_project: Path) -> None:
         _stage(story_project, "tests/test_calc.py", "def test_add():\n    assert False\n")
         _git(story_project, "commit", "-qm", RED_MESSAGE)
-        _stage(story_project, "src/calc.py")
-        assert_allowed(_call(story_project, "git commit -m 'feat: GREEN - adder'"))
-
-    def test_allows_when_the_cycle_has_returned_to_writing_tests(self, story_project: Path) -> None:
-        _write_active(story_project, "IMPLEMENT", "writing_tests")
         _stage(story_project, "src/calc.py")
         assert_allowed(_call(story_project, "git commit -m 'feat: GREEN - adder'"))
 
@@ -194,7 +195,7 @@ class TestAllowControls:
 
     def test_allows_outside_a_sweetclaude_project(self, tmp_path: Path) -> None:
         p = tmp_path / "plain"
-        (p / "src").mkdir()
+        (p / "src").mkdir(parents=True)
         (p / "src" / ".gitkeep").write_text("", encoding="utf-8")
         subprocess.run(["git", "init", "-q", "-b", "main", str(p)], capture_output=True, timeout=30)
         _git(p, "add", "-A")

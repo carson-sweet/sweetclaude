@@ -1,6 +1,6 @@
 # TDD Levels
 
-**Version:** 1.2
+**Version:** 1.3
 **Date:** 2026-10-21
 
 SweetClaude does not believe in advisory TDD. Advisory TDD fails. The implementer touches the test to make it pass, or writes the test after the code so the test rationalizes the implementation rather than specifying behavior.
@@ -13,11 +13,12 @@ This page explains the four enforcement levels, what each one feels like to use,
 
 Most TDD documentation says "write the test first." SweetClaude says it too, and at the higher levels it adds hooks that block the shortcuts.
 
-The mechanism is three Claude Code hooks:
+The mechanism is four Claude Code hooks:
 
 - **test-guardian** (PreToolUse) blocks edits to test files during the IMPLEMENT phase, once `code-tdd` has set `tdd_phase` to implementing with `scripts/tdd_phase.py`. Not warns. Blocks.
 - **tdd-prewrite-guardian** (PreToolUse) blocks source file writes during the IMPLEMENT phase while no test files exist, when the Protocol Guardian is on (`/sweetclaude:configure guardian-on`).
 - **auto-test-runner** (PostToolUse) runs tests automatically after every source edit while `tdd_phase` is implementing. Not reminds. Runs.
+- **tdd-commit-gate** (PreToolUse) denies a `git commit` that adds implementation source files on a story branch while a TDD cycle is active and the branch has no earlier `test: RED` commit.
 
 The failing tests are committed with `git-checkpoint.sh`, which `code-tdd` runs at the end of the RED step, before implementation begins.
 
@@ -157,7 +158,7 @@ Things SweetClaude will catch you doing if you try them:
 
 **Editing a failing test to make it pass.** The test-guardian hook blocks the edit. If you genuinely need to fix a defective test, release that one file with `tdd_phase.py release` and explicit approval — and that override is logged.
 
-**Writing tests after implementation.** The framework checkpoints failing tests before implementation begins. If you try to commit implementation without prior failing tests, the workflow refuses to advance. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+**Writing tests after implementation.** The framework checkpoints failing tests before implementation begins. If you try to commit implementation without prior failing tests, the workflow refuses to advance: while a TDD cycle is active on a story branch, the `tdd-commit-gate` hook denies the `git commit` until the branch carries a `test: RED` commit. Level 0 hotfixes never set the cycle marker, so committing the test and the fix together stays allowed.
 
 **Mocking the database to "make tests faster".** No mocks by default. If you mock, the reason is explicit and reviewed.
 
