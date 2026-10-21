@@ -10,11 +10,12 @@ A hook can stop a tool call only when it is a PreToolUse hook. PostToolUse and S
 
 The hooks that can block a tool call are `test-guardian.sh` (denies test file writes once `tdd_phase` is implementing), `tdd-prewrite-guardian.sh` (denies source writes until test files exist, when the guardian is on), `wip-limit.sh` (blocks only a call that activates an issue in Kanban mode when the WIP limit is already reached), and `preflight-guard.sh` (blocks until first valid invocation of the command that configures the project).
 
-Every PreToolUse hook whose matcher covers Write or Edit can be the source of a blockage: `preflight-guard.sh`, `test-guardian.sh`, `tdd-prewrite-guardian.sh`, `wip-limit.sh`, `large-story-gate.sh` and `small-story-gate.sh`. Bash calls are also checked, so a recovery command is not exempt from hooks. Six PreToolUse hooks match Bash in `hooks/hooks.json`:
+Every PreToolUse hook whose matcher covers Write or Edit can be the source of a blockage: `preflight-guard.sh`, `test-guardian.sh`, `tdd-prewrite-guardian.sh`, `wip-limit.sh`, `large-story-gate.sh` and `small-story-gate.sh`. Bash calls are also checked, so a recovery command is not exempt from hooks. Seven PreToolUse hooks match Bash in `hooks/hooks.json`:
 
 - `preflight-guard.sh` blocks every tool call while the `/tmp/.sweetclaude-needs-preflight-<hash>` flag exists. The flag is cleared when `.sweetclaude/state/sweetclaude.yaml`, `.sweetclaude/state/phase.yaml` or `.sweetclaude-skip` exists. The command that configures the project stays reachable.
 - `test-guardian.sh` blocks writes to test files during implementation, including Bash writes. Release a single test file with `python3 scripts/tdd_phase.py release --file <test file> --approval "<user's words>"`.
 - `artifact-guardian.sh` warns without blocking, and only on `git commit`.
+- `tdd-commit-gate.sh` denies a `git commit` that adds implementation source files on a story branch while a TDD cycle is active and no earlier commit on the branch has subject `test: RED`. Any other commit is allowed.
 - `wip-limit.sh` blocks only the call that activates an issue in Kanban mode when the WIP limit is reached. Any other call is allowed.
 - `large-story-gate.sh` and `small-story-gate.sh` deny tool calls outside the permitted phase of an active large-story or small-story workflow. With no active workflow they allow everything.
 
