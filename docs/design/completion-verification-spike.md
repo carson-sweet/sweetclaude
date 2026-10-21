@@ -1,6 +1,6 @@
 # Spike: completion verification and user-selected oversight
 
-**Version:** 0.2
+**Version:** 0.3
 
 **Date:** 2026-10-21
 
@@ -37,6 +37,20 @@ Retry caps in the market: Cursor `loop_limit` (default 5), CrewAI `guardrail_max
 5. **Human review.** When the reviewer is satisfied as far as it can judge, a human reviews the completion record and the receipts.
 6. **End-to-end evaluation at key boundaries.** When a complete phase or a complete deliverable is proposed to the reviewer, run an end-to-end evaluation of the criteria (for example against the running application or the full test suite), not only per-criterion receipts.
 
+## What SweetClaude's completion criteria judge
+
+The coding harness handles whether the code was written. SweetClaude's completion criteria judge the process and the result against what was agreed. Examples:
+
+- Are all TDD red tests satisfied, as proven by test runs?
+- Did the tests keep their integrity through the implementation effort (no edits, skips or weakening after the RED commit, except recorded and approved overrides)?
+- Are all user stories functionally satisfied?
+- Does the final result match the original design and PRD?
+
+Consequences for the design:
+
+- The first two are largely deterministic. Test results, the RED commit, the diff of test files since that commit, test-guardian denials, and logged override releases are machine evidence. These need receipts, not judges.
+- The last two are judgements of the result against documents (user stories, design, PRD). They are text-and-behavior comparisons more than code reasoning, and they can often be broken into per-item yes/no questions (one per user story, one per requirement or design decision). That structure suits a fixed-answer decision model such as Jev, with escalation on low confidence. The correlated-error finding still applies to the escalation target.
+
 ## Design concerns
 
 ### 1. Same-model blind spots
@@ -59,13 +73,13 @@ A reviewer on the same model as the worker can share its mistakes. No public dat
 **Evidence against, relevant to completion judging.**
 
 - Correlated errors: when Jev is wrong with high confidence, about 96% of LLM verdicts repeat the same wrong answer, so an LLM fallback does not reliably catch Jev's confident errors ([arXiv 2609.29769, "Cheaper, Faster, and Wrong in the Same Places"](https://arxiv.org/pdf/2609.29769)). This removes part of the value of the cascade as a guard against same-model blind spots.
-- Jev trails a frontier LLM on tasks where the verdict must be derived (math, code, logic) ([arXiv 2609.26550](https://arxiv.org/pdf/2609.26550)). Completion judging for code work is largely this kind of task.
+- Jev trails a frontier LLM on tasks where the verdict must be derived (math, code, logic) ([arXiv 2609.26550](https://arxiv.org/pdf/2609.26550)). This matters less here than it first appears: SweetClaude's completion criteria are mostly not judgements about code (see "What SweetClaude's completion criteria judge").
 - Calibration outside the reported test sets is disputed; one discussion suggests overconfidence on simple cases ([Hacker News](https://news.ycombinator.com/item?id=49933476), anecdotal).
 
 **Implications for this spike.**
 
 - Jev fits fixed-answer decisions with cheap, calibrated routing: "is criterion X met: yes, no, cannot judge", or "which oversight action: accept, send back, escalate to human".
-- It should not be the only judge for criteria that need derivation over code or logic. For those, deterministic receipts (tests, checks) stay primary.
+- It should not be the only judge for criteria that need derivation over code or logic. For those, deterministic receipts (tests, checks) stay primary. Few SweetClaude completion criteria are of this kind.
 - The cascade does not give independence: Jev and an LLM judge fail in the same places. If independence is the goal, the escalation target must differ in kind (deterministic check or human), not only in model.
 - Calibration must be measured on SweetClaude's own completion decisions before thresholds are set. The telemetry in concern 4 provides that data.
 - Jev adds an external provider dependency and sends criteria and evidence text to that provider. This needs an explicit user opt-in, like a second LLM provider.
