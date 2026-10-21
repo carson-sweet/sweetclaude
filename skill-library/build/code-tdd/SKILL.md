@@ -90,6 +90,11 @@ After the user selects a level, record the selection:
 1. **RED:** Write a failing test for the behavior. Use the project's detected test runner.
 2. **Verify RED:** Run the test. It must fail. If it passes, the test is wrong — rewrite it.
 
+   Commit the failing test, naming the test files so they are included:
+   ```bash
+   bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh "test: RED - [story-id] failing tests" <test files>
+   ```
+
    Once RED is confirmed, freeze the tests:
    ```bash
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py set --phase implementing --project-dir .
@@ -112,7 +117,11 @@ After the user selects a level, record the selection:
 
 2. **Verify RED:** Run tests. All must fail (the modules do not exist).
 
-3. **Commit tests:** Auto-commit with `test: RED - [story-id] failing tests`. This is the git checkpoint. Test files are now immutable — record that, or the immutability is a claim rather than a fact:
+3. **Commit tests:** Auto-commit with `test: RED - [story-id] failing tests`, naming the test files so they are included:
+   ```bash
+   bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh "test: RED - [story-id] failing tests" <test files>
+   ```
+   This is the git checkpoint. Test files are now immutable — record that, or the immutability is a claim rather than a fact:
    ```bash
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py set --phase implementing --project-dir .
    ```
@@ -178,7 +187,10 @@ After the user selects a level, record the selection:
 
 7. **User approval.** Present the test files. Wait for explicit approval.
 
-8. **Commit tests.** Git checkpoint.
+8. **Commit tests.** Git checkpoint, naming the test files so they are included:
+   ```bash
+   bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh "test: RED - [story-id] failing tests" <test files>
+   ```
 
 9. **Spawn implementer subagent.** Same rules as Level 2. Tests are read-only. The implementer runs in the main project dir — it never sees the Gherkin spec or test-writer reasoning.
 
