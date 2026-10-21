@@ -1,17 +1,22 @@
 """Enforcement markers in the user docs track what the code enforces.
 
-Claims about rules still not enforced (betting-table and phase gates) must say
-"Not currently enforced" in the same paragraph, table row, or list item
-wherever the claim still appears. Claims about rules enforced since 5.1 (test
-immutability, the TDD pre-write guard, the auto-test-runner, the WIP limit,
-the phase-dwelling guard, the preflight guard, the Agile no-active-sprint
-block, the TDD commit gate) must not carry the marker. Phrases match with emoji removed, so a rewrite that drops a warning
-glyph still matches. The claim list comes from the 2026-10-20 docs audit
-(group-B and group-D)."""
+Claims about rules still not enforced must say "Not currently enforced" in
+the same paragraph, table row, or list item wherever the claim still appears.
+Claims about rules enforced since 5.1 must not carry the marker. Enforced
+since 5.1: test immutability, the TDD pre-write guard, the auto-test-runner,
+the WIP limit, the phase-dwelling guard, the preflight guard, the Agile
+no-active-sprint block, the TDD commit gate, the phase exit criteria with
+soft-gate escape and hard-gate risk-acceptance overrides (logged to the
+decision log), the GA+ hard-gate matrix, the solutioning-gate pass record,
+the betting table, and the ship/no-ship gate. No audited claim remains
+unenforced as far as this track knows: the 2026-10-20 docs audit (group-B
+and group-D) claim list is fully enforced. Phrases match with emoji removed,
+so a rewrite that drops a warning glyph still matches."""
 import re
 from pathlib import Path
 
 import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = "Not currently enforced"
@@ -21,25 +26,13 @@ GUIDE = "docs/user-guide/"
 UNENFORCED_CLAIMS = [
     ("README.md", "A betting table decides what gets the next cycle"),
     ("README.md", "hard gates at key decisions"),
-    (GUIDE + "how-it-works.md", "A phase is done when its exit criteria are met"),
-    (GUIDE + "how-it-works.md", "**Hard gates** (⚠️) cannot be soft-bypassed"),
     (GUIDE + "how-it-works.md", "betting table approval required before implementation"),
     (GUIDE + "how-it-works.md", "Active sprint required to implement (hard block)"),
     (GUIDE + "how-it-works.md", "It still respects hard gates"),
-    (GUIDE + "phases-and-workflows.md", "The framework will not advance you past a phase whose criteria are unmet"),
-    (GUIDE + "phases-and-workflows.md", "The override is logged. SweetClaude continues."),
-    (GUIDE + "phases-and-workflows.md", "**Hard gates** (⚠️) cannot be soft-bypassed"),
-    (GUIDE + "phases-and-workflows.md", "Hard gate — human decision required. |"),
-    (GUIDE + "phases-and-workflows.md", "VERIFY is a hard gate (security review mandatory)"),
-    (GUIDE + "phases-and-workflows.md", "CUTOVER is a hard gate"),
-    (GUIDE + "phases-and-workflows.md", "VERIFY is a hard gate — integrity checks"),
-    (GUIDE + "phases-and-workflows.md", "Hard gate at DESIGN for GA+ projects"),
-    (GUIDE + "phases-and-workflows.md", "triggers automatically when a hard-gate work type reaches DESIGN"),
     (GUIDE + "planning-concepts.md", "implementation is blocked until the betting table approves the pitch"),
     (GUIDE + "planning-concepts.md", "implementation is blocked unless there is an active sprint"),
     (GUIDE + "planning-concepts.md", "| **Hard gate to implement**"),
     (GUIDE + "planning-concepts.md", "\"Hard block\" means SweetClaude will not let you proceed"),
-    (GUIDE + "glossary.md", "SweetClaude will not advance to the next phase until the exit criteria"),
     (GUIDE + "glossary.md", "Implementation is hard-blocked until the betting table is approved"),
     (GUIDE + "glossary.md", "Implementation is hard-blocked without an active sprint"),
     (GUIDE + "glossary.md", "A betting table approves pitches before implementation begins (hard gate)"),
@@ -67,6 +60,18 @@ ENFORCED_CLAIMS = [
     (GUIDE + "planning-concepts.md", "SweetClaude hard-enforces a maximum of three stories"),
     (GUIDE + "planning-concepts.md", "The WIP limit is not advisory"),
     (GUIDE + "planning-concepts.md", "| **WIP limit** | None | 3 active (hard block)"),
+    (GUIDE + "how-it-works.md", "A phase is done when its exit criteria are met"),
+    (GUIDE + "how-it-works.md", "**Hard gates** (⚠️) cannot be soft-bypassed"),
+    (GUIDE + "phases-and-workflows.md", "The framework will not advance you past a phase whose criteria are unmet"),
+    (GUIDE + "phases-and-workflows.md", "The override is logged. SweetClaude continues."),
+    (GUIDE + "phases-and-workflows.md", "**Hard gates** (⚠️) cannot be soft-bypassed"),
+    (GUIDE + "phases-and-workflows.md", "Hard gate — human decision required. |"),
+    (GUIDE + "phases-and-workflows.md", "VERIFY is a hard gate (security review mandatory)"),
+    (GUIDE + "phases-and-workflows.md", "CUTOVER is a hard gate"),
+    (GUIDE + "phases-and-workflows.md", "VERIFY is a hard gate — integrity checks"),
+    (GUIDE + "phases-and-workflows.md", "Hard gate at DESIGN for GA+ projects"),
+    (GUIDE + "phases-and-workflows.md", "triggers automatically when a hard-gate work type reaches DESIGN"),
+    (GUIDE + "glossary.md", "SweetClaude will not advance to the next phase until the exit criteria"),
     (GUIDE + "glossary.md", "physically blocks edits to test files during the IMPLEMENT phase"),
     (GUIDE + "glossary.md", "runs the test suite automatically after every source file edit"),
     (GUIDE + "glossary.md", "A continuous-flow mode with a hard WIP limit of 3"),
@@ -89,7 +94,6 @@ ENFORCED_CLAIMS = [
     (GUIDE + "walkthroughs.md", "Test-guardian and auto-test-runner hooks are still active"),
     (GUIDE + "walkthroughs.md", "The test-guardian hook prevents any change to test files"),
 ]
-
 LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
 
 
