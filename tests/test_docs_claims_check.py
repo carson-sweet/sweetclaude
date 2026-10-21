@@ -305,3 +305,64 @@ class TestIgnoreMarker:
     def test_marker_suppresses_script(self, root):
         res, f = check(root, "`python3 scripts/gone.py` <!-- docs-claims: ignore script:scripts/gone.py -->\n")
         assert res.returncode == 0 and f == []
+
+
+def git(root, *args):
+    subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+
+
+@pytest.fixture
+def git_root(tmp_path):
+    (tmp_path / "docs" / "user-guide").mkdir(parents=True)
+    (tmp_path / "docs" / "user-guide" / "tracked.md").write_text("# tracked\n")
+    (tmp_path / "docs" / "internal").mkdir()
+    (tmp_path / "docs" / "internal" / "secret.md").write_text("# secret\n")
+    (tmp_path / "docs" / "untracked.md").write_text("# untracked\n")
+    (tmp_path / ".gitignore").write_text("docs/internal/\n")
+    (tmp_path / "README.md").write_text("# readme\n")
+    git(tmp_path, "init", "-q")
+    git(tmp_path, "config", "user.email", "t@example.com")
+    git(tmp_path, "config", "user.name", "t")
+    git(tmp_path, "add", ".gitignore", "README.md", "docs/user-guide/tracked.md")
+    git(tmp_path, "commit", "-q", "-m", "init")
+    return tmp_path
+
+
+class TestPathsResolveAgainstTrackedFiles:
+    def test_tracked_file_resolves(self, git_root):
+        res, f = check(git_root, "See `docs/user-guide/tracked.md`.\n")
+        assert res.returncode == 0 and f == []
+
+    def test_directory_containing_tracked_file_resolves(self, git_root):
+        res, f = check(git_root, "See `docs/user-guide/`.\n")
+        assert res.returncode == 0 and f == []
+
+    def test_untracked_file_is_reported(self, git_root):
+        res, f = check(git_root, "See `docs/untracked.md`.\n")
+        assert res.returncode == 1
+        assert kinds(f) == ["path"]
+        assert f[0]["claim"] == "docs/untracked.md"
+
+    def test_gitignored_directory_with_files_is_reported(self, git_root):
+        res, f = check(git_root, "See `docs/internal/`.\n")
+        assert res.returncode == 1
+        assert kinds(f) == ["path"]
+
+    def test_gitignored_file_is_reported(self, git_root):
+        res, f = check(git_root, "See `docs/internal/secret.md`.\n")
+        assert res.returncode == 1
+        assert kinds(f) == ["path"]
+
+    def test_untracked_script_is_reported(self, git_root):
+        (git_root / "scripts").mkdir()
+        (git_root / "scripts" / "local.py").write_text(TOY_SCRIPT)
+        res, f = check(git_root, "`python3 scripts/local.py`\n")
+        assert res.returncode == 1
+        assert kinds(f) == ["script"]
+
+    def test_non_git_root_keeps_filesystem_behavior(self, tmp_path):
+        (tmp_path / "docs" / "internal").mkdir(parents=True)
+        (tmp_path / "docs" / "internal" / "secret.md").write_text("# s\n")
+        (tmp_path / "docs" / "loose.md").write_text("# l\n")
+        res, f = check(tmp_path, "See `docs/internal/` and `docs/loose.md`.\n")
+        assert res.returncode == 0 and f == []
