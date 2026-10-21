@@ -1884,7 +1884,10 @@ rows:
   acceptance: Both cheatsheets tell the user to run /sweetclaude:configure init (or the equivalent set-up request) to onboard, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-138
   source: B
   docs:
@@ -1936,7 +1939,10 @@ rows:
   acceptance: The cheatsheets list only the files setup creates in each branch, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-141
   source: B
   docs:
@@ -1952,7 +1958,10 @@ rows:
   acceptance: cheatsheet-new-project.md says to start discovery with /sweetclaude:plan product-discovery after setup and feature selection, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-142
   source: B
   docs:
@@ -1968,7 +1977,10 @@ rows:
   acceptance: cheatsheet-new-project.md uses the L1/L2/L3 names from product-discovery and no section count, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-143
   source: B
   docs:
@@ -1982,7 +1994,10 @@ rows:
   acceptance: cheatsheet-new-project.md names .sweetclaude/state/discovery.yaml as the discovery output, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-144
   source: B
   docs:
@@ -1996,7 +2011,10 @@ rows:
   acceptance: cheatsheet-new-project.md shows product-milestones link ISSUE-NNN MS-NNN, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-145
   source: B
   docs:
@@ -2012,7 +2030,10 @@ rows:
   acceptance: Neither user cheatsheet instructs running scripts/bump-version.sh, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-146
   source: B
   docs:
@@ -2026,7 +2047,10 @@ rows:
   acceptance: cheatsheet-new-project.md says /sweetclaude:go reads state and proposes the next item, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-147
   source: B
   docs:
@@ -2062,7 +2086,10 @@ rows:
   acceptance: cheatsheet-existing-project.md describes only the scan setup actually runs, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-149
   source: B
   docs:
@@ -2076,7 +2103,10 @@ rows:
   acceptance: cheatsheet-existing-project.md lists the three Branch B questions, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-150
   source: B
   docs:
@@ -2092,7 +2122,10 @@ rows:
   acceptance: cheatsheet-existing-project.md states that the stage answer sets version_stage and contains no pipeline-positioning step, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-151
   source: B
   docs:
@@ -2106,7 +2139,10 @@ rows:
   acceptance: cheatsheet-existing-project.md lists only the directories and files setup creates, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-152
   source: B
   docs:
@@ -2122,7 +2158,10 @@ rows:
   acceptance: cheatsheet-existing-project.md says setup then offers optional features, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-153
   source: B
   docs:
@@ -2136,7 +2175,10 @@ rows:
   acceptance: cheatsheet-existing-project.md says a short status line appears at session start, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-170
   source: C
   docs:
@@ -2152,7 +2194,10 @@ rows:
   acceptance: state-and-memory.md attributes contracts/, reports/ and state/workflows/ to the story workflows and describes state/evidence/ as release-gate control receipts written by scripts/control_receipts.py.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-171
   source: C
   docs:
@@ -2168,7 +2213,10 @@ rows:
   acceptance: 'The state-and-memory.md example shows schema_version: 2 and declined: null, and the example validates against the current sweetclaude.yaml template keys.'
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-172
   source: C
   docs:
@@ -2182,7 +2230,10 @@ rows:
   acceptance: The version_stage row in state-and-memory.md lists IDEA as the first stage and states that setup writes IDEA for new projects and early prototypes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-173
   source: C
   docs:
@@ -2196,7 +2247,10 @@ rows:
   acceptance: state-and-memory.md no longer states that version_stage controls progressive disclosure.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
   decision: progressive_disclosure
 - id: R-174
   source: C
@@ -2211,7 +2265,10 @@ rows:
   acceptance: The project.type row in state-and-memory.md lists new and existing-code as the values.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-175
   source: C
   docs:
@@ -2244,7 +2301,10 @@ rows:
   acceptance: The features.* row in state-and-memory.md describes not_offered (or a missing key) moving to active or declined.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-177
   source: C
   docs:
@@ -2258,7 +2318,11 @@ rows:
   acceptance: state-and-memory.md does not claim /sweetclaude:configure update exists on 4.x and names /sweetclaude:configure update for 5.x. Amended 2026-10-21 under plan TDD rule 2 (the 4.x command name is kept out of the user guide by tests/test_docs_upgrade_paths.py::test_4x_update_command_not_recommended_for_moving_to_5x, a phase 0 decision).
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - f67d8fd6
+  - 2498594d
 - id: R-178
   source: C
   docs:
@@ -2290,7 +2354,10 @@ rows:
   acceptance: state-and-memory.md states that improvement-register learnings are applied silently at session start.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-180
   source: C
   docs:
@@ -2322,7 +2389,10 @@ rows:
   acceptance: The Traceability section of state-and-memory.md names setup, product-user-tdd-tests, code-testing, documents-update-docs and mockup-graduate as the writers and does not name product-user-stories or the implementer agent.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-182
   source: C
   docs:
@@ -2355,7 +2425,10 @@ rows:
   acceptance: state-and-memory.md gives /plugin uninstall sweetclaude@sweetclaude-stable for global removal and /sweetclaude:configure purge for project artifacts, and contains no reference to sweetclaude-uninstall.sh.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-184
   source: C
   docs:
@@ -2369,7 +2442,10 @@ rows:
   acceptance: state-and-memory.md attributes surviving commits to commits made by skills (for example the TDD RED commit) and does not mention a git-checkpoint hook.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-185
   source: C
   docs:
@@ -2383,7 +2459,10 @@ rows:
   acceptance: The directory layout in state-and-memory.md labels product/ as product artifacts (backlog, roadmap, issues) without a 4.x qualifier.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-186
   source: C
   docs:
@@ -2468,7 +2547,10 @@ rows:
   acceptance: walkthroughs.md section 2 describes the Branch B three-question interview and the Branch C assessment path, and contains no four-question interview or 'messy' question.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-191
   source: C
   docs:
@@ -2484,7 +2566,10 @@ rows:
   acceptance: walkthroughs.md section 3 lists the failure, severity and scope questions and describes rollback-revert as the fallback after an unresolved fix.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-192
   source: C
   docs:
@@ -2498,7 +2583,10 @@ rows:
   acceptance: walkthroughs.md states the post-mortem is logged as required and that the user is offered a backlog item now or later.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-193
   source: C
   docs:
@@ -2512,7 +2600,10 @@ rows:
   acceptance: walkthroughs.md states that the post-mortem item reminds the user to create a tech-debt follow-up.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-194
   source: C
   docs:
@@ -2526,7 +2617,10 @@ rows:
   acceptance: walkthroughs.md names .rag-index/ as the RAG index location and contains no corpus/rag/ path.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-195
   source: C
   docs:
@@ -2540,7 +2634,13 @@ rows:
   acceptance: code-feature Step 1 searches the configured product base (default .sweetclaude/product/) for story and issue artifacts, and walkthroughs.md section 6 lists the same search order as the skill.
   test_level:
   - unit
-  status: green
+  status: closed
+  commits:
+  - 31eae04f
+  - 6102d118
+  - 01679d89
+  - 6a66efb5
+  - 2498594d
 - id: R-196
   source: C
   docs:
@@ -2554,7 +2654,10 @@ rows:
   acceptance: walkthroughs.md section 6 Step 0 uses an ISSUE-NNN example, describes branch creation as recommended, and mentions the merge-to-main close-out option.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
 - id: R-197
   source: C
   docs:
@@ -2568,7 +2671,10 @@ rows:
   acceptance: walkthroughs.md section 4 states that each corpus step checks the previous one and explains why, and that the user can override by typing the risk-acceptance phrase.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 6a66efb5
+  - 2498594d
   notes: From the audit's could-not-verify list; verified against corpus skills.
 - id: R-198
   source: C
@@ -2912,7 +3018,13 @@ rows:
   acceptance: For an installed key sweetclaude@sweetclaude on a prerelease version, plugin-state emits '/plugin marketplace remove sweetclaude' as the third switch command, and beta-rescue.md gives the matching command for the legacy key.
   test_level:
   - unit
-  status: green
+  status: closed
+  commits:
+  - 9e3723e1
+  - 853dd5ac
+  - 01679d89
+  - 6a66efb5
+  - 2498594d
   notes: Extends the audit's unverified legacy-key item; verified against plugin-state.py.
 - id: R-217
   source: C
