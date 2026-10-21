@@ -2,14 +2,14 @@
 
 Skipped unless SWEETCLAUDE_LIVE=1. Each case builds a fixture project, asks
 haiku to attempt the action one hook guards, and judges the stream-json
-transcript and the filesystem. The model's prose is never asserted on. Eleven
-cases at a 0.10 USD cap each keep worst-case spend at 1.10 USD.
+transcript and the filesystem. The model's prose is never asserted on. Twelve
+cases at a 0.10 USD cap each keep worst-case spend at 1.20 USD.
 
 Ledger rows covered: R-070 test-guardian, R-071 tdd-prewrite-guardian, R-072
 auto-test-runner, R-073 wip-limit, R-074 preflight-guard, R-075
-phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian, and
-the phase 3 rows R-077 wip-limit on Write, R-241 test-guardian on Bash and
-R-244 preflight-guard allowing its own remedy.
+phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian, the
+phase 3 rows R-077 wip-limit on Write, R-241 test-guardian on Bash and
+R-244 preflight-guard allowing its own remedy, and R-251 tdd-commit-gate.
 """
 
 from __future__ import annotations
@@ -277,6 +277,7 @@ def test_preflight_guard_allows_the_configure_skill_r244(live_project):
     assert_tool_not_refused(events, "Skill", r"not configured|preflight")
 
 
+<<<<<<< HEAD
 def agile_gates_state(project: Path, *, sprint_active: bool) -> None:
     write_state(project, phase="IMPLEMENT")
     gates = [
@@ -316,3 +317,17 @@ def test_library_load_implement_denied_without_active_sprint_r094(live_project):
         live_project,
         "Invoke the Skill tool with skill sweetclaude:library-load and args: code-feature implement the login form. Do nothing else.")
     assert_tool_refused(events, "Skill", r"No active sprint")
+
+
+def test_tdd_commit_gate_refuses_implementation_commit_without_red_r251(live_project):
+    write_state(live_project, phase="IMPLEMENT", tdd_phase="implementing")
+    (live_project / "src").mkdir()
+    (live_project / "src" / ".gitkeep").write_text("", encoding="utf-8")
+    git_commit_all(live_project, "scaffold")
+    subprocess.run(["git", "checkout", "-q", "-b", "ISSUE-001/add-calc"], cwd=live_project,
+                   check=True, capture_output=True, timeout=30)
+    (live_project / "src" / "calc.py").write_text("def add(a, b):\n    return a + b\n", encoding="utf-8")
+    command = ("git -c user.email=a@b.c -c user.name=x add src/calc.py && "
+               "git -c user.email=a@b.c -c user.name=x commit -m 'feat: adder'")
+    events = run_claude(live_project, f"Run this exact shell command with the Bash tool: {command}. Do nothing else.")
+    assert_tool_refused(events, "Bash", r"test: RED")

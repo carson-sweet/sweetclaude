@@ -1,11 +1,11 @@
 """Enforcement markers in the user docs track what the code enforces.
 
-Claims about rules still not enforced (betting-table and phase gates, the
-commit gate) must say "Not currently enforced" in the same paragraph, table
-row, or list item wherever the claim still appears. Claims about rules enforced
-since 5.1 (test immutability, the TDD pre-write guard, the auto-test-runner,
-the WIP limit, the phase-dwelling guard, the preflight guard, the Agile
-no-active-sprint block) must not carry the marker. Phrases match with emoji removed, so a rewrite that drops a warning
+Claims about rules still not enforced (betting-table and phase gates) must say
+"Not currently enforced" in the same paragraph, table row, or list item
+wherever the claim still appears. Claims about rules enforced since 5.1 (test
+immutability, the TDD pre-write guard, the auto-test-runner, the WIP limit,
+the phase-dwelling guard, the preflight guard, the Agile no-active-sprint
+block, the TDD commit gate) must not carry the marker. Phrases match with emoji removed, so a rewrite that drops a warning
 glyph still matches. The claim list comes from the 2026-10-20 docs audit
 (group-B and group-D)."""
 import re
@@ -43,7 +43,6 @@ UNENFORCED_CLAIMS = [
     (GUIDE + "glossary.md", "Implementation is hard-blocked until the betting table is approved"),
     (GUIDE + "glossary.md", "Implementation is hard-blocked without an active sprint"),
     (GUIDE + "glossary.md", "A betting table approves pitches before implementation begins (hard gate)"),
-    (GUIDE + "tdd.md", "the workflow refuses to advance"),
     (GUIDE + "behavioral-contracts.md", "are enforced by shell hooks"),
     (GUIDE + "getting-started.md", "Hard gates (⚠️) cannot be soft-bypassed"),
     (GUIDE + "faq.md", "physically cannot — is bypass hard gates"),
@@ -75,6 +74,8 @@ ENFORCED_CLAIMS = [
     (GUIDE + "tdd.md", "SweetClaude makes it physically impossible at higher levels"),
     (GUIDE + "tdd.md", "**test-guardian** (PreToolUse) blocks edits to test files"),
     (GUIDE + "tdd.md", "**auto-test-runner** (PostToolUse) runs tests automatically after every source edit"),
+    (GUIDE + "tdd.md", "**tdd-commit-gate** (PreToolUse) denies a `git commit`"),
+    (GUIDE + "tdd.md", "the workflow refuses to advance"),
     (GUIDE + "tdd.md", "Test-guardian hook activates"),
     (GUIDE + "tdd.md", "Auto-test-runner hook fires after every source edit"),
     (GUIDE + "tdd.md", "test-guardian blocks the edit at the OS level"),

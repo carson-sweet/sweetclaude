@@ -66,6 +66,15 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/artifact-guardian.sh"
     },
     {
+      "file": "tdd-commit-gate.sh",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "required": true,
+      "scope": "plugin-native",
+      "purpose": "TDD commit gate: denies a git commit adding implementation source files on a story branch while a TDD cycle is active in implement and no earlier commit on that branch has subject 'test: RED'",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/tdd-commit-gate.sh"
+    },
+    {
       "file": "wip-limit.sh",
       "event": "PreToolUse",
       "matcher": "Write|Edit|Bash",

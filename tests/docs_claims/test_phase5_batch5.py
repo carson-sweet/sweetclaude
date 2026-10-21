@@ -455,7 +455,7 @@ def test_R_252_tdd_hook_list_matches_registered_hooks():
     start = sect.index("The mechanism is")
     block = sect[start:].split("\n\n", 1)
     names = set(re.findall(r"^- \*\*([\w-]+)\*\*", block[1] if len(block) > 1 else "", re.M))
-    assert names == {"test-guardian", "tdd-prewrite-guardian", "auto-test-runner"}
+    assert names == {"test-guardian", "tdd-prewrite-guardian", "tdd-commit-gate", "auto-test-runner"}
     assert not re.search(r"git-checkpoint[^.\n]*\bhook\b", sect)
 
 

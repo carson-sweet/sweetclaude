@@ -3929,7 +3929,11 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - e879d599
+  - afa4c61d
+  - a64aa8ad
   notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
 - id: R-252
   source: D
