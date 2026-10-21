@@ -8,7 +8,10 @@ import copy
 import datetime
 import hashlib
 import json
+import os
 import re
+import signal
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -780,6 +783,93 @@ def _normalize_hash(value: str) -> str:
     if not re.match(r"^[0-9a-f]{64}$", digest):
         raise SuccessCriteriaValidationError(f"Invalid sha256 hash: {value}")
     return "sha256:" + digest
+
+
+PASS_STATUS_VALUES = {"pass", "passed", "ok", "success"}
+MEASUREMENT_OUTPUT_TAIL_CHARS = 20000
+DEFAULT_MEASUREMENT_TIMEOUT_SECONDS = 300
+
+
+def failed_criterion_ids(entries: list[dict[str, Any]]) -> list[str]:
+    return [
+        str(entry["id"])
+        for entry in entries
+        if str(entry.get("status", "")).lower() not in PASS_STATUS_VALUES
+    ]
+
+
+def contract_criteria_by_id(define_result: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    contract_path = define_result.get("contract_path")
+    if not contract_path:
+        return {}
+    try:
+        contract = yaml.safe_load(Path(contract_path).read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+    if not isinstance(contract, dict):
+        return {}
+    criteria = contract.get("success_criteria")
+    if not isinstance(criteria, list):
+        return {}
+    return {
+        item["id"]: item
+        for item in criteria
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+
+
+def run_measurement_command(project: Path, criterion: dict[str, Any]) -> dict[str, Any]:
+    command = str(criterion["measurement_command"])
+    timeout = criterion.get("measurement_timeout_seconds") or DEFAULT_MEASUREMENT_TIMEOUT_SECONDS
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        cwd=str(project),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        errors="replace",
+        start_new_session=True,
+    )
+    timed_out = False
+    try:
+        output, _ = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        try:
+            output, _ = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            output = ""
+    exit_code = process.returncode
+    ok = not timed_out and exit_code == 0
+    evidence: dict[str, Any] = {
+        "ok": ok,
+        "measured_command": command,
+        "measured_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "exit_code": exit_code,
+        "timed_out": timed_out,
+        "output_tail": (output or "")[-MEASUREMENT_OUTPUT_TAIL_CHARS:],
+    }
+    if timed_out:
+        evidence["failure_reason"] = f"Measurement command exceeded timeout of {timeout} seconds and was killed."
+    return evidence
+
+
+def ledger_failed_criterion_ids(project: Path, ledger_path: Any) -> list[str]:
+    if not ledger_path:
+        return []
+    try:
+        data = json.loads((project / ledger_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    entries = data.get("criteria") if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        return []
+    return failed_criterion_ids([entry for entry in entries if isinstance(entry, dict) and "id" in entry])
 
 
 def _blank(value: Any) -> bool:

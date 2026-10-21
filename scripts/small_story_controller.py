@@ -19,6 +19,10 @@ except ImportError:
     sys.exit("pyyaml is required: pip install pyyaml")
 
 from success_criteria_contracts import (
+    contract_criteria_by_id,
+    failed_criterion_ids,
+    ledger_failed_criterion_ids,
+    run_measurement_command,
     DEFAULT_CONTRACT_PATH,
     DEFAULT_LEDGER_PATH,
     find_backlog_file,
@@ -668,6 +672,7 @@ def enter_verify_phase(
         }
 
     supplied_results = criterion_results or {}
+    contract_criteria = contract_criteria_by_id(define_result)
     criteria_entries = []
     evidence_dir = project / ".sweetclaude" / "reports" / "small-story" / resolved_workflow_id / "evidence"
     evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -679,8 +684,6 @@ def enter_verify_phase(
                 "criterion_id": criterion_id,
                 "next_allowed_stage": "blocked",
             }
-        status = str(supplied.get("status") or "pass")
-        measured_command = str(supplied.get("measured_command") or f"controller.verify {criterion_id}")
         evidence_rel = (
             Path(".sweetclaude")
             / "reports"
@@ -690,14 +693,30 @@ def enter_verify_phase(
             / f"{criterion_id}.json"
         )
         evidence_path = project / evidence_rel
-        evidence_payload = {
-            "ok": status.lower() in {"pass", "passed", "ok", "success"},
-            "criterion_id": criterion_id,
-            "workflow_id": resolved_workflow_id,
-            "success_criteria_contract_hash": contract_hash,
-            "measured_command": measured_command,
-            "observed_output": supplied.get("observed_output", "controller verification evidence recorded"),
-        }
+        criterion = contract_criteria.get(criterion_id, {})
+        if criterion.get("measurement_type") == "command":
+            measurement = run_measurement_command(project, criterion)
+            status = "pass" if measurement["ok"] else "fail"
+            measured_command = measurement["measured_command"]
+            measured_at = measurement["measured_at"]
+            evidence_payload = {
+                **measurement,
+                "criterion_id": criterion_id,
+                "workflow_id": resolved_workflow_id,
+                "success_criteria_contract_hash": contract_hash,
+            }
+        else:
+            status = str(supplied.get("status") or "pass")
+            measured_command = str(supplied.get("measured_command") or f"controller.verify {criterion_id}")
+            measured_at = str(supplied.get("measured_at") or "controller-generated")
+            evidence_payload = {
+                "ok": status.lower() in {"pass", "passed", "ok", "success"},
+                "criterion_id": criterion_id,
+                "workflow_id": resolved_workflow_id,
+                "success_criteria_contract_hash": contract_hash,
+                "measured_command": measured_command,
+                "observed_output": supplied.get("observed_output", "controller verification evidence recorded"),
+            }
         evidence_path.write_text(json.dumps(evidence_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         criteria_entries.append(
             {
@@ -708,7 +727,7 @@ def enter_verify_phase(
                 "evidence_owner": "controller",
                 "evidence_path": str(evidence_rel),
                 "measured_command": measured_command,
-                "measured_at": str(supplied.get("measured_at") or "controller-generated"),
+                "measured_at": measured_at,
                 "observed_output_path": str(evidence_rel),
                 "evidence_fresh": True,
                 "freshness_status": "fresh",
@@ -737,8 +756,13 @@ def enter_verify_phase(
             "next_allowed_stage": "blocked",
         }
     if not all_passed:
+        failed_ids = failed_criterion_ids(criteria_entries)
         return {
-            **_failure("blocked_verify_entry_failed", "Small-story VERIFY is blocked: one or more criteria failed."),
+            **_failure(
+                "blocked_verify_entry_failed",
+                "Small-story VERIFY is blocked: criteria failed measurement: " + ", ".join(failed_ids) + ".",
+            ),
+            "failed_criteria": failed_ids,
             "ledger_path": str(ledger_rel),
             "next_allowed_stage": "blocked",
         }
@@ -2274,7 +2298,11 @@ def _completion_gate_result(
         error = str(result.get("error") or result.get("blocking_failures") or "")
         if "ledger not found" in error.lower() or "no such file" in error.lower():
             return _failure("blocked_missing_completion_ledger", BLOCKED_MISSING_LEDGER_MESSAGE)
-        return _failure("blocked_completion_validation_failed", BLOCKED_COMPLETION_VALIDATION_MESSAGE)
+        failure = _failure("blocked_completion_validation_failed", BLOCKED_COMPLETION_VALIDATION_MESSAGE)
+        failed_ids = ledger_failed_criterion_ids(project, result.get("ledger_path"))
+        if failed_ids:
+            failure["failed_criteria"] = failed_ids
+        return failure
     ledger_path = result.get("ledger_path")
     if ledger_path:
         evidence = validate_ledger_evidence_paths(project, ledger_path)
