@@ -476,3 +476,78 @@ class TestTddPrewriteGuardianOnCurrentProjectsR246:
         assert_allowed(run_hook("tdd-prewrite-guardian.sh", project, write_call(project, "tests/test_app.py", "x = 1\n")))
 
 
+def run_registered_stop_hooks(project: Path, stdin: str) -> list[subprocess.CompletedProcess]:
+    env = os.environ.copy()
+    env.update({"HOME": str(project), "CLAUDE_PROJECT_DIR": str(project), "CLAUDE_PLUGIN_ROOT": str(REPO_ROOT)})
+    results = []
+    for _, command in registrations("Stop"):
+        resolved = command.replace("${CLAUDE_PLUGIN_ROOT}", str(REPO_ROOT))
+        results.append(subprocess.run(["bash", resolved], cwd=str(project), env=env, input=stdin,
+                                      capture_output=True, text=True, timeout=60))
+    return results
+
+
+def stop_stdin(project: Path, text: str, *, last_message: bool = True) -> str:
+    data = json.loads(payload("Stop-none", project))
+    data["stop_hook_active"] = False
+    data["last_assistant_message"] = text if last_message else ""
+    return json.dumps(data)
+
+
+class TestPhaseDwellingGuardRegisteredR082:
+    ADVANCEMENT = "The design is drafted. Ready to move on?"
+
+    def test_hooks_json_registers_phase_dwelling_guard_as_a_stop_hook(self):
+        assert registered_matchers("Stop", "phase-dwelling-guard.sh"), (
+            "hooks/hooks.json has no Stop registration for hooks/phase-dwelling-guard.sh")
+
+    def test_registered_command_resolves_to_an_existing_script(self):
+        commands = [command for _, command in registrations("Stop") if command.endswith("/hooks/phase-dwelling-guard.sh")]
+        assert commands, "phase-dwelling-guard.sh is not registered as a Stop hook"
+        for command in commands:
+            assert (REPO_ROOT / command.replace("${CLAUDE_PLUGIN_ROOT}/", "")).is_file()
+
+    def test_registered_stop_hooks_block_advancement_language_when_guardian_is_on(self, project):
+        write_sweetclaude_yaml(project)
+        enable_guardian(project)
+        results = run_registered_stop_hooks(project, stop_stdin(project, self.ADVANCEMENT))
+        blocks = [stdout_json(r) for r in results if (stdout_json(r) or {}).get("decision") == "block"]
+        assert any("move on" in json.dumps(b).lower() or "dwell" in json.dumps(b).lower() for b in blocks), (
+            f"no registered Stop hook blocked advancement language: {[r.stdout for r in results]}")
+
+    def test_registered_stop_hooks_stay_quiet_for_neutral_text_when_guardian_is_on(self, project):
+        write_sweetclaude_yaml(project)
+        enable_guardian(project)
+        results = run_registered_stop_hooks(project, stop_stdin(project, "The design is drafted. Tell me what to change."))
+        assert not [r for r in results if (stdout_json(r) or {}).get("decision") == "block"]
+
+    def test_the_guardian_stop_hook_does_not_run_its_check_when_guardian_is_off(self, project):
+        write_sweetclaude_yaml(project)
+        results = run_registered_stop_hooks(project, stop_stdin(project, self.ADVANCEMENT))
+        assert not [r for r in results if (stdout_json(r) or {}).get("decision") == "block"]
+
+
+class TestPhaseDwellingGuardRegistrationPathR245:
+    def test_registration_uses_the_plugin_root_command_path(self):
+        commands = [command for _, command in registrations("Stop")]
+        assert "${CLAUDE_PLUGIN_ROOT}/hooks/phase-dwelling-guard.sh" in commands
+
+    def test_manifest_declares_the_hook_as_a_stop_hook_with_its_command_path(self):
+        entry = manifest_entry("phase-dwelling-guard.sh")
+        assert entry.get("event") == "Stop"
+        assert entry.get("command_path") == "${CLAUDE_PLUGIN_ROOT}/hooks/phase-dwelling-guard.sh"
+
+    def test_registered_hook_reads_the_response_from_the_stdin_transcript_path(self, project):
+        write_sweetclaude_yaml(project)
+        enable_guardian(project)
+        lines = [
+            {"type": "user", "message": {"role": "user", "content": "how is the design?"}},
+            {"type": "assistant", "message": {"role": "assistant",
+                                              "content": [{"type": "text", "text": "Drafted. Ready to move on?"}]}},
+        ]
+        (project / ".transcript.jsonl").write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+        results = run_registered_stop_hooks(project, stop_stdin(project, "", last_message=False))
+        assert [r for r in results if (stdout_json(r) or {}).get("decision") == "block"], (
+            f"no registered Stop hook blocked from the transcript: {[r.stdout for r in results]}")
+
+
