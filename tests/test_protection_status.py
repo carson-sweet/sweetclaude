@@ -67,13 +67,12 @@ def _status(project: Path, name: str) -> dict:
 
 # --- broken protections are reported -------------------------------------
 
-def test_wip_limit_is_reported_when_it_cannot_evaluate(tmp_path: Path) -> None:
-    """Kanban chosen, limit configured, but no phase to evaluate against."""
+def test_wip_limit_is_active_without_a_phase(tmp_path: Path) -> None:
+    """Kanban chosen and limit configured: R-078 applies the limit in any phase."""
     p = _project(tmp_path, sc={"schema_version": 2, "work": {"active": {}}},
                  gates={"mode": "kanban", "wip_limit": 2}, privacy=True)
     r = _status(p, "work-in-progress limit")
-    assert r["status"] == ps.INACTIVE
-    assert r["fix"]
+    assert r["status"] == ps.ACTIVE
 
 
 def test_phase_dwelling_guard_is_reported_when_state_is_unreadable(
