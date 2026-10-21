@@ -1,10 +1,10 @@
 # Spike: completion verification and user-selected oversight
 
-**Version:** 0.4
+**Version:** 1.0
 
 **Date:** 2026-10-21
 
-**Status:** Spike. Design direction and considerations only; nothing here is decided or scheduled.
+**Status:** Spike. Six design decisions recorded 2026-10-21 (see Decisions); sub-decisions listed under each remain open.
 
 **Related:** issue #161 (phase 3 mode and phase-gate decisions), ledger rows for phase exit criteria and soft and hard gate overrides in `docs/design/remediation-ledger.yaml`, `.sweetclaude/plans/phase3-gates-design-note-2026-10-21.md` (local).
 
@@ -130,6 +130,20 @@ Gaps to close (verified in code on 2026-10-21):
 3. Amendment approval is documented as human-run, but it is not verified that code stops the model from running `approve-amendment`. Same decision as gap 2.
 4. Judged criteria are excluded. The contract rejects human-judged criteria and routes them to backlog, so "all user stories functionally satisfied" and "result matches the design and PRD" cannot be criteria. Needs the reviewer design from this spike (per-item yes/no questions judged by an independent reviewer with recorded confidence).
 5. No independent reviewer, no running gap record, no send-back loop with retry limits, no mandatory human review at completion, no oversight levels, no decision telemetry. These are this spike's design items.
+
+## Decisions
+
+1. **How code proves a human action (2026-10-21).** The user types an approval phrase, and a UserPromptSubmit hook records it as an approval bound to the work item and the action. The controller requires that record before it freezes criteria, accepts an amendment, or marks the work complete. A PreToolUse guard protects the approval records from model writes. Capturing the answer to an AskUserQuestion prompt in a PostToolUse hook can be added later, after a live probe confirms that payload. Known limit: a determined model with shell access can still forge a record file; the design goal is no accidental self-approval and a visible trace. Open: the exact phrase format, and what happens in fully autonomous mode where no human is present (depends on the oversight scale).
+
+2. **How judged criteria are written and judged (2026-10-21).** First, traceability makes them deterministic where possible: each user story and each functional requirement links to at least one executable test (a Gherkin scenario or test ID), and the controller checks that every item has a link and every linked test passes. Second, items that tests cannot cover (design and PRD conformance, many non-functional requirements) use a new judged measurement type: one yes/no question per item, with the source document and section, answered by an independent reviewer with a verdict, a confidence score and evidence. Third, a human judges the item through the decision 1 approval record when the verdict confidence is low, and always at the high end of the oversight scale. Open: a stable link convention from feature scenarios to story and requirement IDs; the large-story skill instruction that routes judged criteria to backlog changes.
+
+3. **Who the independent reviewer is (2026-10-21).** A configurable reviewer with one interface and several backends: a prompt-tuned, isolated same-model reviewer subagent as the default (it sees only the criteria, the receipts and the artifacts; the user's acceptance of same-model risk is recorded through decision 1), a second-provider judge on the existing `scripts/behavioral_judge.py` backends, and Jev. Low-confidence verdicts always escalate to a human or a deterministic check, never to a second model alone. Build order: same-model default first, second provider next, Jev after SweetClaude calibration data exists. Open: how LLM judges produce a usable confidence score (for example agreement across repeated judgements); cost per verdict per backend.
+
+4. **Retry limits (2026-10-21).** Two caps: per criterion, default 3, taken from the existing `config/orchestrator-defaults.yaml` `iteration_limits.default_max` and overridable per criterion; and per phase, default 5 (Cursor's default, to be tuned with telemetry). At either cap the work stops and goes to the human with the completion record. When no human is present (autonomous or John Wick mode), John Wick's existing rule applies: save state, record the reason, stop, do not auto-retry. Every send-back and every cap event is logged. Open: whether a criterion amendment resets its counter.
+
+5. **Oversight scale (2026-10-21).** A new setting, "oversight level", separate from the deference level, with four levels: Hands-off (the reviewer decides every gate; no human gate blocks; deterministic receipts still required; the human gets a summary at the end of the work item), Spot-check (the reviewer decides; low-confidence verdicts and the final deliverable go to the human), Checkpoint (the human accepts the criteria at the start and reviews at every phase exit; the reviewer gates in between), and Full review (the human accepts the criteria, judges every judged item and reviews at every phase exit; escalation goes to the human or a second-provider judge). Changeable per phase and mid-phase; each gate can be switched on or off regardless of level. The deference level is unchanged. Open: behavior for contradictory combinations with the deference level; defaults for new projects, for John Wick mode, and per project mode.
+
+6. **Decision telemetry (2026-10-21).** Audit records and analysis telemetry are split. Audit records (approvals, overrides, send-backs, cap events) are always written to the workflow's own evidence, whatever the opt-in, following the TDD override precedent. Analysis telemetry goes to an append-only `.sweetclaude/metrics/verification.jsonl`, one record per decision, written only when usage tracking is on and a new `completion_verification` track is enabled. Full text (criteria wording, user edits, verdict evidence) is recorded only when a separate content flag is also enabled. Everything stays local, consistent with the existing usage-tracking design. Open: whether `verification.jsonl` is excluded from commits by default; the JSONL schema; consent for any future training export.
 
 ## Open questions
 
