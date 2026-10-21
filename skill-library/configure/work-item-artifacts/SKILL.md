@@ -21,7 +21,7 @@ If invoked with argument `onboard`:
 Run the backfill scanner in dry-run mode to discover existing artifacts:
 
 ```bash
-python3 scripts/backfill_work_item_artifacts.py --project-dir . --dry-run
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py --project-dir . --dry-run
 ```
 
 Present the results to the user. If no artifacts were found:
@@ -49,7 +49,7 @@ Use **AskUserQuestion** (multiSelect: false):
 If the user chose to run the backfill:
 
 ```bash
-python3 scripts/backfill_work_item_artifacts.py --project-dir .
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py --project-dir .
 ```
 
 Present the results:
@@ -73,7 +73,7 @@ Run the backfill scanner. Follow the same Steps 2-4 from the onboard flow above.
 If invoked with a specific item ID (e.g., `ISSUE-170`):
 
 ```bash
-python3 scripts/backfill_work_item_artifacts.py --project-dir . --item {ITEM-ID} --dry-run
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py --project-dir . --item {ITEM-ID} --dry-run
 ```
 
 Show results. If artifacts found, ask to proceed, then run without `--dry-run`.
