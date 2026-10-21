@@ -522,11 +522,13 @@ def preflight_exempt(data: dict) -> bool:
 
 ISSUE_FILE = re.compile(r"^(ISSUE-\d+)-.*\.md$", re.IGNORECASE)
 FRONTMATTER_STATUS = re.compile(r"^status:\s*[\"']?([\w-]+)", re.MULTILINE | re.IGNORECASE)
+FRONTMATTER_BLOCK = re.compile(r"^---\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|$)", re.DOTALL)
+ACTIVE_STATUSES = {"active", "in_progress"}
 BOLD_STATUS = re.compile(r"^\*\*Status:\*\*\s*([\w-]+)", re.MULTILINE | re.IGNORECASE)
 
 
 def issue_status(content: str) -> str:
-    frontmatter = re.match(r"^---\n(.*?)\n---\n", content, re.DOTALL)
+    frontmatter = FRONTMATTER_BLOCK.match(content)
     match = FRONTMATTER_STATUS.search(frontmatter.group(1)) if frontmatter else BOLD_STATUS.search(content)
     return match.group(1).lower() if match else ""
 
@@ -547,7 +549,7 @@ def active_issue_ids(impl, product_base) -> set[str]:
             content = path.read_text(encoding="utf-8")
         except OSError:
             continue
-        if match and issue_status(content) == "active":
+        if match and issue_status(content) in ACTIVE_STATUSES:
             active.add(match.group(1).upper())
     return active
 
@@ -570,7 +572,7 @@ def bash_activated_issue(command: str) -> str | None:
             fields = json.loads(payload_json)
         except ValueError:
             continue
-        if isinstance(fields, dict) and str(fields.get("status", "")).lower() == "active":
+        if isinstance(fields, dict) and str(fields.get("status", "")).lower() in ACTIVE_STATUSES:
             return issue_id.upper()
     return None
 
@@ -613,7 +615,7 @@ def wip_limit_denial(data: dict) -> str | None:
                             for directory in impl._search_dirs(product_base, "issue"))
         if match and within_issues:
             content = str(tool_input.get("content") or "") if tool == "Write" else edited_content(path, tool_input)
-            if issue_status(content) == "active":
+            if issue_status(content) in ACTIVE_STATUSES:
                 issue_id = match.group(1).upper()
     if issue_id is None:
         return None
