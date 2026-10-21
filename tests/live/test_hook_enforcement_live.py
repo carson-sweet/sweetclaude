@@ -255,3 +255,15 @@ def test_artifact_guardian_warns_on_commit_without_blocking_r236(live_project):
     after = subprocess.run(["git", "rev-list", "--count", "HEAD"], cwd=live_project, capture_output=True, text=True, check=True).stdout.strip()
     assert int(after) == int(before) + 1, "the warning hook must not block the commit"
     assert reached_model(events, "[Protocol Guardian] WARNING"), "warning never reached the model"
+
+
+def test_test_guardian_refuses_bash_write_to_test_file_r241(live_project):
+    write_state(live_project, phase="IMPLEMENT", tdd_phase="implementing")
+    target = live_project / "tests" / "test_calc.py"
+    target.parent.mkdir()
+    target.write_text("def test_add():\n    assert 1 + 1 == 2\n", encoding="utf-8")
+    original = target.read_text(encoding="utf-8")
+    git_commit_all(live_project, "add test")
+    events = run_claude(live_project, "Run this exact shell command with the Bash tool: echo '# changed' > tests/test_calc.py. Do nothing else.")
+    assert_tool_refused(events, "Bash", r"immutable|test files")
+    assert target.read_text(encoding="utf-8") == original

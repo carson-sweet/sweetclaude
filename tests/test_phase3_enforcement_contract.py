@@ -551,3 +551,96 @@ class TestPhaseDwellingGuardRegistrationPathR245:
             f"no registered Stop hook blocked from the transcript: {[r.stdout for r in results]}")
 
 
+BASH_WRITES_TO_TEST_FILES = [
+    "echo 'def test_x(): pass' > tests/test_x.py",
+    "echo 'def test_x(): pass' >> tests/test_x.py",
+    "echo 'def test_x(): pass' > ./tests/test_x.py",
+    "cat > tests/test_x.py <<'EOF'\ndef test_x(): pass\nEOF",
+    "printf 'x' | tee tests/test_x.py",
+    "printf 'x' | tee -a tests/test_x.py",
+    "sed -i 's/a/b/' tests/test_x.py",
+    "sed -i '' 's/a/b/' tests/test_x.py",
+    "sed -i.bak 's/a/b/' tests/test_x.py",
+    "cp /tmp/replacement.py tests/test_x.py",
+    "mv /tmp/replacement.py tests/test_x.py",
+    "echo x > src/calc.py && echo y > tests/test_x.py",
+    "echo x > web/calc.test.ts",
+    "echo x > spec/calc_spec.rb",
+    "echo x > features/calc.feature",
+]
+
+BASH_THAT_LEAVE_TEST_FILES_ALONE = [
+    "cat tests/test_x.py",
+    "pytest tests/test_x.py",
+    "python3 -m pytest tests -q 2>&1 | tail -20",
+    "pytest tests/ > out.txt 2>&1",
+    "grep -n add tests/test_x.py",
+    "sed -n '1,20p' tests/test_x.py",
+    "ls tests > listing.txt",
+    "echo x > src/calc.py",
+    "sed -i 's/a/b/' src/calc.py",
+    "cp tests/test_x.py /tmp/backup.py",
+    "git diff tests/test_x.py > changes.patch",
+    "git status",
+    "sed -i 's/a/b/' src/calc.py && pytest tests/test_x.py",
+    "echo x > out.txt; cat tests/test_x.py",
+    "cat tests/test_x.py | tee out.log",
+]
+
+
+def guarded_project(project: Path, *, tdd_phase: str = "implementing") -> None:
+    write_sweetclaude_yaml(project, phase="IMPLEMENT", tdd_phase=tdd_phase)
+    (project / "tests" / "test_x.py").write_text("def test_x():\n    assert True\n", encoding="utf-8")
+
+
+class TestTestGuardianCoversBashAndNotebooksR241:
+    @pytest.mark.parametrize("command", BASH_WRITES_TO_TEST_FILES)
+    def test_denies_bash_command_that_writes_into_a_test_file(self, project, command):
+        guarded_project(project)
+        result = run_hook("test-guardian.sh", project, bash_call(project, command))
+        assert_denied(result)
+        assert re.search(r"immutable|test files", deny_reason(result), re.IGNORECASE)
+
+    def test_denies_bash_write_to_an_absolute_test_path(self, project):
+        guarded_project(project)
+        assert_denied(run_hook("test-guardian.sh", project, bash_call(project, f"echo x > {project}/tests/test_x.py")))
+
+    @pytest.mark.parametrize("path", ["tests/test_analysis.ipynb", "notebooks/analysis_test.ipynb", "spec/model.ipynb"])
+    def test_denies_notebook_edit_of_a_test_pattern_notebook(self, project, path):
+        guarded_project(project)
+        result = run_hook("test-guardian.sh", project, notebook_call(project, path))
+        assert_denied(result)
+        assert re.search(r"immutable|test files", deny_reason(result), re.IGNORECASE)
+
+    def test_allows_notebook_edit_of_a_non_test_notebook(self, project):
+        guarded_project(project)
+        assert_allowed(run_hook("test-guardian.sh", project, notebook_call(project, "notebooks/explore.ipynb")))
+
+    @pytest.mark.parametrize("command", BASH_THAT_LEAVE_TEST_FILES_ALONE)
+    def test_allows_bash_command_that_only_reads_or_runs_tests(self, project, command):
+        guarded_project(project)
+        assert_allowed(run_hook("test-guardian.sh", project, bash_call(project, command)))
+
+    @pytest.mark.parametrize("command", ["echo x > tests/test_x.py", "sed -i 's/a/b/' tests/test_x.py"])
+    def test_allows_bash_test_write_when_not_implementing(self, project, command):
+        guarded_project(project, tdd_phase="red")
+        assert_allowed(run_hook("test-guardian.sh", project, bash_call(project, command)))
+
+    def test_allows_notebook_edit_when_not_implementing(self, project):
+        guarded_project(project, tdd_phase="red")
+        assert_allowed(run_hook("test-guardian.sh", project, notebook_call(project, "tests/test_analysis.ipynb")))
+
+    def test_hooks_json_registers_test_guardian_for_bash_and_notebook_edit(self):
+        matchers = registered_matchers("PreToolUse", "test-guardian.sh")
+        assert matchers, "test-guardian.sh is not registered as a PreToolUse hook"
+        for tool in ("Write", "Edit", "Bash", "NotebookEdit"):
+            assert any(matcher_covers(matcher, tool) for matcher in matchers), (
+                f"no test-guardian.sh PreToolUse registration covers {tool}: {matchers}")
+
+    def test_manifest_matcher_covers_bash_and_notebook_edit(self):
+        entry = manifest_entry("test-guardian.sh")
+        for tool in ("Write", "Edit", "Bash", "NotebookEdit"):
+            assert matcher_covers(entry.get("matcher", ""), tool), (
+                f"hooks-manifest.json test-guardian.sh matcher {entry.get('matcher')!r} omits {tool}")
+
+
