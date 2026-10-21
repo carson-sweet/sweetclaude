@@ -3,7 +3,7 @@
 # Tests the BL-068 UserPromptSubmit hook: hooks/migration-decision-reminder.sh.
 #
 # Verifies:
-#   - Silent (no JSON beyond {"ok": true}) when marker file is absent.
+#   - Silent (no output, no {"ok": ...} object) when marker file is absent.
 #   - Increments turn_count and emits a reminder under 10 turns.
 #   - Hard-blocks (continue:false) at turn 10+.
 
@@ -11,6 +11,19 @@ set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOOK="$REPO_ROOT/hooks/migration-decision-reminder.sh"
+HOOK_STDIN="$REPO_ROOT/tests/hook_stdin.py"
+
+run_reminder() {
+  local stdin
+  stdin=$(python3 -c "
+import json, sys
+sys.path.insert(0, '$REPO_ROOT/tests')
+from hook_stdin import prompt_payload
+print(prompt_payload('$(cd "$TEST_TMPDIR" && pwd -P)'))
+")
+  (cd "$TEST_TMPDIR" && env -u CLAUDE_TOOL_NAME -u CLAUDE_FILE_PATH -u CLAUDE_TRANSCRIPT_PATH \
+    bash "$HOOK" <<< "$stdin" 2>/dev/null)
+}
 
 FAILED=0
 fail() { echo "  FAIL: $1"; FAILED=$((FAILED + 1)); }
@@ -25,14 +38,17 @@ trap "rm -rf $TEST_TMPDIR" EXIT
 )
 
 # ---------------------------------------------------------------------------
-# Test 1: no marker → silent ({"ok": true})
+# Test 1: no marker → silent (no output, never {"ok": ...})
 # ---------------------------------------------------------------------------
 
 echo "[1] no marker → silent"
-OUT=$(cd "$TEST_TMPDIR" && bash "$HOOK" 2>/dev/null)
-echo "$OUT" | grep -q '"ok": true' \
-  && pass "hook emits {\"ok\": true} when no marker present" \
-  || fail "expected ok:true, got: $OUT"
+OUT=$(run_reminder)
+echo "$OUT" | grep -q '"ok"' \
+  && fail "hook must not emit an ok object, got: $OUT" \
+  || pass "hook emits no ok object when no marker present"
+[ -z "$(printf '%s' "$OUT" | tr -d '[:space:]')" ] \
+  && pass "hook is silent when no marker present" \
+  || fail "expected no output, got: $OUT"
 
 # ---------------------------------------------------------------------------
 # Test 2: marker present, first turn → reminder, turn_count incremented
@@ -51,7 +67,7 @@ snapshot:
 turn_count: 0
 YAML
 
-OUT=$(cd "$TEST_TMPDIR" && bash "$HOOK" 2>/dev/null)
+OUT=$(run_reminder)
 
 echo "$OUT" | grep -q '"continue":false' \
   && fail "hook should NOT hard-block on turn 1: $OUT" \
@@ -83,7 +99,7 @@ with open('$TEST_TMPDIR/.sweetclaude/state/pending-migration-decision.yaml', 'w'
     yaml.safe_dump(d, f)
 "
 
-OUT=$(cd "$TEST_TMPDIR" && bash "$HOOK" 2>/dev/null)
+OUT=$(run_reminder)
 echo "$OUT" | grep -q '"continue":false' \
   && fail "hook hard-blocks at turn 9: $OUT" \
   || pass "no hard-block at turn 9"
@@ -94,7 +110,7 @@ echo "$OUT" | grep -q 'turn 9/10' && pass "shows 'turn 9/10'" || fail "msg: $OUT
 # ---------------------------------------------------------------------------
 
 echo "[4] turn 10 — hard-block"
-OUT=$(cd "$TEST_TMPDIR" && bash "$HOOK" 2>/dev/null)
+OUT=$(run_reminder)
 echo "$OUT" | grep -q '"continue":false' \
   && pass "hook hard-blocks at turn 10" \
   || fail "expected continue:false at turn 10, got: $OUT"

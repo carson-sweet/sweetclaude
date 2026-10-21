@@ -16,7 +16,6 @@ in the system notices.
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -24,33 +23,34 @@ from pathlib import Path
 import pytest
 import yaml
 
+sys.path.insert(0, str(Path(__file__).parent))
+from hook_stdin import (  # noqa: E402
+    assert_allowed, assert_blocked, deny_reason, hook_env, payload, stop_payload, verdict,
+)
+
 REPO_ROOT = Path(__file__).parents[1]
 HOOKS = REPO_ROOT / "hooks"
 
 
 def run_hook(name: str, project: Path, *, env: dict | None = None,
              stdin: str = "") -> subprocess.CompletedProcess:
-    hook_env = {
-        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-        "HOME": str(project),
-        "PROJECT_DIR": str(project),
-    }
-    hook_env.update(env or {})
     return subprocess.run(["bash", str(HOOKS / name)], cwd=str(project),
-                          env=hook_env, input=stdin,
+                          env=hook_env(project, env), input=stdin,
                           capture_output=True, text=True, timeout=60)
 
 
 def decision(result: subprocess.CompletedProcess) -> bool | None:
-    """True = allow, False = block, None = no JSON decision emitted."""
-    for line in result.stdout.splitlines():
-        line = line.strip()
-        if line.startswith("{"):
-            try:
-                return bool(json.loads(line).get("ok"))
-            except json.JSONDecodeError:
-                continue
+    """True = allow, False = deny or block, None = not a valid hook answer."""
+    outcome = verdict(result)
+    if outcome == "allow":
+        return True
+    if outcome in ("deny", "block"):
+        return False
     return None
+
+
+def bash_call(project: Path, command: str = "echo start-new-work") -> str:
+    return payload("PreToolUse-Bash", project, command=command)
 
 
 def _git_init(path: Path) -> None:
@@ -111,17 +111,17 @@ def _kanban_at_wip(project: Path, *, limit: int = 2, in_progress: int = 3) -> No
 
 def test_wip_limit_blocks_when_the_limit_is_reached(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
-    assert decision(run_hook("wip-limit.sh", v3_project)) is False
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is False
 
 
 def test_wip_limit_allows_under_the_limit(v3_project: Path) -> None:
     _kanban_at_wip(v3_project, limit=5, in_progress=1)
-    assert decision(run_hook("wip-limit.sh", v3_project)) is True
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is True
 
 
 def test_wip_limit_block_message_names_the_reason(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
-    out = run_hook("wip-limit.sh", v3_project).stdout
+    out = deny_reason(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project)))
     assert "WIP limit reached" in out
     assert "3/2" in out, "the block must say how far over the limit the project is"
 
@@ -130,13 +130,13 @@ def test_wip_limit_allows_outside_kanban_mode(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
     (v3_project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
         yaml.safe_dump({"mode": "flow", "wip_limit": 2}), encoding="utf-8")
-    assert decision(run_hook("wip-limit.sh", v3_project)) is True
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is True
 
 
 def test_wip_limit_allows_when_gates_are_not_compiled(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
     (v3_project / ".sweetclaude" / "state" / "effective-gates.yaml").unlink()
-    assert decision(run_hook("wip-limit.sh", v3_project)) is True
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is True
 
 
 def test_wip_limit_applies_on_a_v4_project(v4_project: Path) -> None:
@@ -150,7 +150,7 @@ def test_wip_limit_applies_on_a_v4_project(v4_project: Path) -> None:
     """
     _kanban_at_wip(v4_project)
     assert not (v4_project / ".sweetclaude" / "state" / "phase.yaml").exists()
-    assert decision(run_hook("wip-limit.sh", v4_project)) is False
+    assert decision(run_hook("wip-limit.sh", v4_project, stdin=bash_call(v4_project))) is False
 
 
 def test_wip_limit_still_reads_the_mirror_for_projects_mid_migration(
@@ -169,7 +169,7 @@ def test_wip_limit_still_reads_the_mirror_for_projects_mid_migration(
     _git_init(p)
     _kanban_at_wip(p)
 
-    assert decision(run_hook("wip-limit.sh", p)) is False
+    assert decision(run_hook("wip-limit.sh", p, stdin=bash_call(p))) is False
 
 
 # --- phase-dwelling-guard ------------------------------------------------
@@ -191,17 +191,18 @@ def test_phase_dwelling_guard_allows_without_the_guardian(v3_project: Path) -> N
     """It is guardian-only enforcement by design."""
     t = _transcript(v3_project, ADVANCEMENT)
     r = run_hook("phase-dwelling-guard.sh", v3_project,
-                 env={"CLAUDE_TRANSCRIPT_PATH": str(t)})
-    assert r.returncode == 0
+                 stdin=stop_payload(v3_project, ADVANCEMENT, transcript=t))
+    assert_allowed(r)
 
 
 def test_phase_dwelling_guard_allows_a_response_with_no_pushing(v3_project: Path) -> None:
     _enable_guardian(v3_project)
-    t = _transcript(v3_project, "Here is the architecture document. "
-                                "Push back if the boundaries are wrong.")
+    text = ("Here is the architecture document. "
+            "Push back if the boundaries are wrong.")
+    t = _transcript(v3_project, text)
     r = run_hook("phase-dwelling-guard.sh", v3_project,
-                 env={"CLAUDE_TRANSCRIPT_PATH": str(t)})
-    assert r.returncode == 0
+                 stdin=stop_payload(v3_project, text, transcript=t))
+    assert_allowed(r)
 
 
 def test_phase_dwelling_guard_blocks_advancement_pushing(v3_project: Path) -> None:
@@ -209,17 +210,18 @@ def test_phase_dwelling_guard_blocks_advancement_pushing(v3_project: Path) -> No
     _enable_guardian(v3_project)
     t = _transcript(v3_project, ADVANCEMENT)
     r = run_hook("phase-dwelling-guard.sh", v3_project,
-                 env={"CLAUDE_TRANSCRIPT_PATH": str(t)})
-    assert r.returncode != 0 or decision(r) is False, (
-        "advancement-pushing language was not blocked")
+                 stdin=stop_payload(v3_project, ADVANCEMENT, transcript=t))
+    assert_blocked(r)
 
 
 def test_phase_dwelling_guard_allows_when_no_transcript_is_available(
     v3_project: Path
 ) -> None:
     _enable_guardian(v3_project)
-    r = run_hook("phase-dwelling-guard.sh", v3_project)
-    assert r.returncode == 0
+    r = run_hook("phase-dwelling-guard.sh", v3_project,
+                 stdin=stop_payload(v3_project, "",
+                                    transcript=v3_project / "missing.jsonl"))
+    assert_allowed(r)
 
 
 def test_phase_dwelling_guard_runs_on_a_v4_project(v4_project: Path) -> None:
@@ -233,9 +235,8 @@ def test_phase_dwelling_guard_runs_on_a_v4_project(v4_project: Path) -> None:
     _enable_guardian(v4_project)
     t = _transcript(v4_project, ADVANCEMENT)
     r = run_hook("phase-dwelling-guard.sh", v4_project,
-                 env={"CLAUDE_TRANSCRIPT_PATH": str(t)})
-    assert r.returncode != 0 or decision(r) is False, (
-        "guard did not act on advancement language on a v4 project")
+                 stdin=stop_payload(v4_project, ADVANCEMENT, transcript=t))
+    assert_blocked(r)
 
 
 def test_phase_dwelling_guard_still_allows_clean_responses_on_v4(
@@ -243,28 +244,30 @@ def test_phase_dwelling_guard_still_allows_clean_responses_on_v4(
 ) -> None:
     """Enabling the guard must not make it block everything."""
     _enable_guardian(v4_project)
-    t = _transcript(v4_project, "Here is the document. Push back if it is wrong.")
+    text = "Here is the document. Push back if it is wrong."
+    t = _transcript(v4_project, text)
     r = run_hook("phase-dwelling-guard.sh", v4_project,
-                 env={"CLAUDE_TRANSCRIPT_PATH": str(t)})
-    assert r.returncode == 0
+                 stdin=stop_payload(v4_project, text, transcript=t))
+    assert_allowed(r)
 
 
 # --- tdd-prewrite-guardian -----------------------------------------------
 
-def _write_env(project: Path, file_path: str, tool: str = "Write") -> dict:
-    return {"CLAUDE_FILE_PATH": str(project / file_path), "CLAUDE_TOOL_NAME": tool}
+def _write_stdin(project: Path, file_path: str, tool: str = "Write") -> str:
+    kind = "PreToolUse-Edit" if tool == "Edit" else "PreToolUse-Write"
+    return payload(kind, project, tool=tool, file_path=str(project / file_path))
 
 
 def test_tdd_prewrite_allows_without_the_guardian(v3_project: Path) -> None:
     r = run_hook("tdd-prewrite-guardian.sh", v3_project,
-                 env=_write_env(v3_project, "src/thing.py"))
+                 stdin=_write_stdin(v3_project, "src/thing.py"))
     assert decision(r) is True
 
 
 def test_tdd_prewrite_ignores_tools_other_than_write_and_edit(v3_project: Path) -> None:
     _enable_guardian(v3_project)
     r = run_hook("tdd-prewrite-guardian.sh", v3_project,
-                 env=_write_env(v3_project, "src/thing.py", tool="Read"))
+                 stdin=_write_stdin(v3_project, "src/thing.py", tool="Read"))
     assert decision(r) is True
 
 
@@ -274,7 +277,7 @@ def test_tdd_prewrite_emits_a_decision_for_a_source_write(v3_project: Path) -> N
     _enable_guardian(v3_project)
     (v3_project / "src").mkdir(exist_ok=True)
     r = run_hook("tdd-prewrite-guardian.sh", v3_project,
-                 env=_write_env(v3_project, "src/thing.py"))
+                 stdin=_write_stdin(v3_project, "src/thing.py"))
     assert decision(r) is not None, f"no JSON decision emitted: {r.stdout!r}"
 
 
@@ -294,8 +297,8 @@ def test_every_hook_is_syntactically_valid(name: str) -> None:
 def test_no_hook_crashes_outside_a_project(name: str, tmp_path: Path) -> None:
     """A hook runs on every matching tool call, including in directories that
     are not SweetClaude projects. Crashing there breaks unrelated work."""
-    r = run_hook(name, tmp_path, env={"CLAUDE_TOOL_NAME": "Read",
-                                      "CLAUDE_FILE_PATH": str(tmp_path / "x.txt")})
+    r = run_hook(name, tmp_path, stdin=payload(
+        "PreToolUse-Write", tmp_path, tool="Read", file_path=str(tmp_path / "x.txt")))
     assert r.returncode in (0, 1), (
         f"{name} exited {r.returncode} outside a project: {r.stderr[:200]}")
     assert "Traceback" not in r.stderr
@@ -305,8 +308,8 @@ def test_no_hook_crashes_outside_a_project(name: str, tmp_path: Path) -> None:
 def test_no_hook_emits_a_traceback_on_a_bare_project(name: str, tmp_path: Path) -> None:
     (tmp_path / ".sweetclaude" / "state").mkdir(parents=True)
     _git_init(tmp_path)
-    r = run_hook(name, tmp_path, env={"CLAUDE_TOOL_NAME": "Read",
-                                      "CLAUDE_FILE_PATH": str(tmp_path / "x.txt")})
+    r = run_hook(name, tmp_path, stdin=payload(
+        "PreToolUse-Write", tmp_path, tool="Read", file_path=str(tmp_path / "x.txt")))
     assert "Traceback" not in r.stderr, r.stderr[:300]
 
 

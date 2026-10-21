@@ -39,6 +39,9 @@ HOOKS = REPO_ROOT / "hooks"
 
 sys.path.insert(0, str(Path(__file__).parent))
 from test_hook_behavior import run_hook, _git_init  # noqa: E402
+from hook_stdin import (  # noqa: E402
+    assert_allowed, feedback_text, payload, prompt_payload, verdict,
+)
 
 needs_jq = pytest.mark.skipif(shutil.which("jq") is None,
                               reason="hook shells out to jq")
@@ -183,19 +186,25 @@ def _marker(project: Path, turn_count: int) -> Path:
 def test_reminder_is_silent_with_no_pending_decision(tmp_path: Path) -> None:
     project = _configured(tmp_path / "p")
 
-    payload = json.loads(run_hook(REMINDER, project).stdout)
+    r = run_hook(REMINDER, project, stdin=prompt_payload(project))
 
-    assert payload == {"ok": True}
+    assert_allowed(r)
+    assert feedback_text(r) == ""
+    assert "systemMessage" not in r.stdout
 
 
 def test_reminder_surfaces_a_pending_decision(tmp_path: Path) -> None:
     project = _configured(tmp_path / "p")
     _marker(project, 0)
 
-    payload = json.loads(run_hook(REMINDER, project).stdout)
+    r = run_hook(REMINDER, project, stdin=prompt_payload(project))
+    data = json.loads(r.stdout)
 
-    assert "Pending migration decision" in payload["systemMessage"]
-    assert payload.get("continue") is not False, "a reminder must not block"
+    assert "Pending migration decision" in data["systemMessage"]
+    assert data.get("continue") is not False, "a reminder must not block"
+    assert "Pending migration decision" in feedback_text(r) or "pending Accept/Rollback" in feedback_text(r)
+    assert data["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
+    assert "ok" not in data
 
 
 def test_the_reminder_carries_the_snapshot_so_rollback_is_possible(
@@ -206,7 +215,7 @@ def test_the_reminder_carries_the_snapshot_so_rollback_is_possible(
     project = _configured(tmp_path / "p")
     _marker(project, 0)
 
-    msg = json.loads(run_hook(REMINDER, project).stdout)["systemMessage"]
+    msg = json.loads(run_hook(REMINDER, project, stdin=prompt_payload(project)).stdout)["systemMessage"]
 
     assert "/snap.tar" in msg
     assert "pre-migrate" in msg
@@ -216,7 +225,7 @@ def test_the_turn_count_advances_so_the_deadline_is_real(tmp_path: Path) -> None
     project = _configured(tmp_path / "p")
     marker = _marker(project, 3)
 
-    run_hook(REMINDER, project)
+    run_hook(REMINDER, project, stdin=prompt_payload(project))
 
     assert yaml.safe_load(marker.read_text())["turn_count"] == 4
 
@@ -226,10 +235,13 @@ def test_the_decision_is_forced_at_the_limit(tmp_path: Path) -> None:
     project = _configured(tmp_path / "p")
     _marker(project, 9)
 
-    payload = json.loads(run_hook(REMINDER, project).stdout)
+    r = run_hook(REMINDER, project, stdin=prompt_payload(project))
+    data = json.loads(r.stdout)
 
-    assert payload["continue"] is False
-    assert "limit reached" in payload["systemMessage"]
+    assert data["continue"] is False
+    assert "limit reached" in data["systemMessage"]
+    assert data["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
+    assert feedback_text(r)
 
 
 def test_it_fails_open_on_an_unreadable_marker(tmp_path: Path) -> None:
@@ -239,9 +251,10 @@ def test_it_fails_open_on_an_unreadable_marker(tmp_path: Path) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text("{ not: valid: yaml", encoding="utf-8")
 
-    payload = json.loads(run_hook(REMINDER, project).stdout)
+    r = run_hook(REMINDER, project, stdin=prompt_payload(project))
 
-    assert payload == {"ok": True}
+    assert_allowed(r)
+    assert "continue" not in r.stdout
 
 
 # =========================================================================
@@ -251,8 +264,11 @@ def test_it_fails_open_on_an_unreadable_marker(tmp_path: Path) -> None:
 GUARDIAN = "artifact-guardian.sh"
 
 
-def _commit_call(command: str = "git commit -m x") -> str:
-    return json.dumps({"command": command})
+def _commit_call(project: Path, command: str = "git commit -m x",
+                 tool: str = "Bash") -> str:
+    if tool == "Bash":
+        return payload("PreToolUse-Bash", project, command=command)
+    return payload("PreToolUse-Write", project, tool=tool, command=command)
 
 
 @needs_jq
@@ -264,11 +280,10 @@ def test_artifact_guardian_warns_when_committing_without_artifacts(
     (project / ".sweetclaude" / "state" / "session-guardian.json").write_text(
         json.dumps({"artifacts_created": []}), encoding="utf-8")
 
-    r = run_hook(GUARDIAN, project, stdin=_commit_call(),
-                 env={"CLAUDE_TOOL_NAME": "Bash"})
+    r = run_hook(GUARDIAN, project, stdin=_commit_call(project))
 
-    assert "[Protocol Guardian]" in r.stderr
-    assert "DESIGN" in r.stderr, "the warning must name the phase it applies to"
+    assert "[Protocol Guardian]" in feedback_text(r)
+    assert "DESIGN" in feedback_text(r), "the warning must name the phase it applies to"
 
 
 @needs_jq
@@ -279,10 +294,9 @@ def test_artifact_guardian_says_so_when_it_cannot_verify(tmp_path: Path) -> None
     project = _configured(tmp_path / "p", id="ISSUE-1", phase="DESIGN")
     (project / ".sweetclaude" / "state" / "guardian-enabled").touch()
 
-    r = run_hook(GUARDIAN, project, stdin=_commit_call(),
-                 env={"CLAUDE_TOOL_NAME": "Bash"})
+    r = run_hook(GUARDIAN, project, stdin=_commit_call(project))
 
-    assert "Cannot verify" in r.stderr
+    assert "Cannot verify" in feedback_text(r)
 
 
 @needs_jq
@@ -296,9 +310,9 @@ def test_artifact_guardian_is_quiet_when_the_artifacts_are_there(
         json.dumps({"artifacts_created": ["docs/architecture.md"]}),
         encoding="utf-8")
 
-    r = run_hook(GUARDIAN, project, stdin=_commit_call(),
-                 env={"CLAUDE_TOOL_NAME": "Bash"})
+    r = run_hook(GUARDIAN, project, stdin=_commit_call(project))
 
+    assert feedback_text(r) == ""
     assert r.stderr.strip() == ""
 
 
@@ -309,11 +323,11 @@ def test_artifact_guardian_never_blocks_the_commit(tmp_path: Path) -> None:
     project = _configured(tmp_path / "p", id="ISSUE-1", phase="DESIGN")
     (project / ".sweetclaude" / "state" / "guardian-enabled").touch()
 
-    r = run_hook(GUARDIAN, project, stdin=_commit_call(),
-                 env={"CLAUDE_TOOL_NAME": "Bash"})
+    r = run_hook(GUARDIAN, project, stdin=_commit_call(project))
 
     assert r.returncode == 0
-    assert r.stdout.strip() == "", "a warning hook must emit no decision"
+    assert "[Protocol Guardian]" in feedback_text(r), "the warning must reach the model"
+    assert verdict(r) == "allow", "a warning hook must not deny or block"
 
 
 @needs_jq
@@ -323,9 +337,9 @@ def test_artifact_guardian_is_silent_when_the_guardian_is_off(
     """Off must mean silent. Warning anyway would train people to ignore it."""
     project = _configured(tmp_path / "p", id="ISSUE-1", phase="DESIGN")
 
-    r = run_hook(GUARDIAN, project, stdin=_commit_call(),
-                 env={"CLAUDE_TOOL_NAME": "Bash"})
+    r = run_hook(GUARDIAN, project, stdin=_commit_call(project))
 
+    assert feedback_text(r) == ""
     assert r.stderr.strip() == ""
 
 
@@ -336,9 +350,9 @@ def test_artifact_guardian_ignores_commands_that_are_not_commits(
     project = _configured(tmp_path / "p", id="ISSUE-1", phase="DESIGN")
     (project / ".sweetclaude" / "state" / "guardian-enabled").touch()
 
-    r = run_hook(GUARDIAN, project, stdin=_commit_call("git status"),
-                 env={"CLAUDE_TOOL_NAME": "Bash"})
+    r = run_hook(GUARDIAN, project, stdin=_commit_call(project, "git status"))
 
+    assert feedback_text(r) == ""
     assert r.stderr.strip() == ""
 
 
@@ -347,9 +361,9 @@ def test_artifact_guardian_ignores_tools_that_are_not_bash(tmp_path: Path) -> No
     project = _configured(tmp_path / "p", id="ISSUE-1", phase="DESIGN")
     (project / ".sweetclaude" / "state" / "guardian-enabled").touch()
 
-    r = run_hook(GUARDIAN, project, stdin=_commit_call(),
-                 env={"CLAUDE_TOOL_NAME": "Write"})
+    r = run_hook(GUARDIAN, project, stdin=_commit_call(project, tool="Write"))
 
+    assert feedback_text(r) == ""
     assert r.stderr.strip() == ""
 
 
@@ -506,8 +520,9 @@ def _regenerated(project: Path, file_path: Path, tool: str = "Write",
     out = project / ".sweetclaude" / "state" / "session-state.yaml"
     if out.exists():
         out.unlink()
-    run_hook(REGEN, project, env={"CLAUDE_TOOL_NAME": tool,
-                                  "CLAUDE_FILE_PATH": str(file_path)})
+    kind = "PostToolUse-Edit" if tool == "Edit" else "PostToolUse-Write"
+    run_hook(REGEN, project, stdin=payload(
+        kind, project, tool=tool, file_path=str(file_path)))
     deadline = time.time() + timeout
     while time.time() < deadline:
         if out.exists():
@@ -562,6 +577,10 @@ def test_regenerator_rebuilds_when_canonical_state_changes(tmp_path: Path) -> No
 REINDEX = "auto-reindex.sh"
 
 
+def _edited(project: Path, target: Path) -> str:
+    return payload("PostToolUse-Write", project, file_path=str(target))
+
+
 def _rag_config(project: Path, *dirs: str) -> None:
     p = project / ".sweetclaude" / "state" / "rag-config.yaml"
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -577,9 +596,9 @@ def test_reindex_fires_for_an_indexed_file(tmp_path: Path) -> None:
     target = docs / "note.md"
     target.write_text("x\n", encoding="utf-8")
 
-    r = run_hook(REINDEX, project, env={"CLAUDE_FILE_PATH": str(target)})
+    r = run_hook(REINDEX, project, stdin=_edited(project, target))
 
-    assert "RAG: Reindexing" in r.stderr
+    assert "RAG: Reindexing" in r.stderr + feedback_text(r)
 
 
 def test_reindex_stands_down_without_a_rag_config(tmp_path: Path) -> None:
@@ -590,10 +609,10 @@ def test_reindex_stands_down_without_a_rag_config(tmp_path: Path) -> None:
     target.parent.mkdir()
     target.write_text("x\n", encoding="utf-8")
 
-    r = run_hook(REINDEX, project, env={"CLAUDE_FILE_PATH": str(target)})
+    r = run_hook(REINDEX, project, stdin=_edited(project, target))
 
     assert r.returncode == 0
-    assert "RAG" not in r.stderr
+    assert "RAG" not in r.stderr + feedback_text(r)
 
 
 def test_reindex_stands_down_for_an_unindexable_type(tmp_path: Path) -> None:
@@ -604,9 +623,9 @@ def test_reindex_stands_down_for_an_unindexable_type(tmp_path: Path) -> None:
     target = src / "main.py"
     target.write_text("x\n", encoding="utf-8")
 
-    r = run_hook(REINDEX, project, env={"CLAUDE_FILE_PATH": str(target)})
+    r = run_hook(REINDEX, project, stdin=_edited(project, target))
 
-    assert "RAG" not in r.stderr
+    assert "RAG" not in r.stderr + feedback_text(r)
 
 
 def test_reindex_stands_down_outside_the_indexed_paths(tmp_path: Path) -> None:
@@ -617,9 +636,9 @@ def test_reindex_stands_down_outside_the_indexed_paths(tmp_path: Path) -> None:
     target.parent.mkdir()
     target.write_text("x\n", encoding="utf-8")
 
-    r = run_hook(REINDEX, project, env={"CLAUDE_FILE_PATH": str(target)})
+    r = run_hook(REINDEX, project, stdin=_edited(project, target))
 
-    assert "RAG" not in r.stderr
+    assert "RAG" not in r.stderr + feedback_text(r)
 
 
 # =========================================================================
