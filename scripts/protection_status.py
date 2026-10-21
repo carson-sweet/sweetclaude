@@ -30,7 +30,14 @@ import json
 import sys
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
+YAML_MISSING_NOTICE = ("Protections cannot be evaluated: PyYAML is not installed for python3, so project state "
+                       "is unreadable and the protections that depend on it may not run. "
+                       "fix: python3 -m pip install pyyaml")
 
 ACTIVE = "active"
 INACTIVE = "inactive"
@@ -141,6 +148,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--all", action="store_true",
                    help="include protections that are active or not applicable")
     args = p.parse_args(argv)
+
+    if yaml is None:
+        print(YAML_MISSING_NOTICE)
+        return 2
 
     results = check_protections(args.project_dir.resolve())
 
