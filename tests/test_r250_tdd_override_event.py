@@ -162,3 +162,45 @@ class TestR250ReleaseWritesOverrideEvent:
 
         assert [str(e["file"]).endswith(name) for e, name in zip(overrides, (TEST_FILE, other))] == [True, True]
         assert [e["approval"] for e in overrides] == [APPROVAL, "second approval"]
+
+
+SPECIAL_APPROVALS = [
+    pytest.param('user said: yes, "edit it" # ok', id="colon-quotes-hash"),
+    pytest.param("- approved by user", id="leading-dash"),
+    pytest.param("line one\nline two", id="embedded-newline"),
+    pytest.param('- a: "b" # c\nnext: line', id="all-combined"),
+]
+
+
+def _load_log(project: Path) -> list:
+    log = project / ".sweetclaude" / "metrics" / "events.log"
+    return list(yaml.safe_load_all(log.read_text(encoding="utf-8")))
+
+
+class TestR250ApprovalTextIsPreservedExactly:
+    @pytest.mark.parametrize("approval", SPECIAL_APPROVALS)
+    def test_event_log_parses_and_approval_equals_input_exactly(self, project, approval):
+        _freeze(project)
+
+        result = _tdd(project, "release", "--file", TEST_FILE, "--approval", approval)
+
+        assert result.returncode == 0, result.stderr
+        docs = [d for d in _load_log(project) if isinstance(d, dict)]
+        overrides = [d for d in docs if d.get("event") == "tdd_override"]
+        assert len(overrides) == 1
+        assert overrides[0]["approval"] == approval
+        assert str(overrides[0]["file"]).endswith(TEST_FILE)
+
+    @pytest.mark.parametrize("approval", SPECIAL_APPROVALS)
+    def test_earlier_events_remain_parseable_and_unchanged(self, project, approval):
+        _freeze(project)
+        assert _tdd(project, "release", "--file", TEST_FILE, "--approval", APPROVAL).returncode == 0
+        _freeze(project)
+        other = "tests/test_other.py"
+        (project / other).write_text("def test_y(): assert True\n", encoding="utf-8")
+
+        result = _tdd(project, "release", "--file", other, "--approval", approval)
+
+        assert result.returncode == 0, result.stderr
+        overrides = [d for d in _load_log(project) if isinstance(d, dict) and d.get("event") == "tdd_override"]
+        assert [e["approval"] for e in overrides] == [APPROVAL, approval]
