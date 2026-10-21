@@ -64,7 +64,10 @@ rows:
   acceptance: README.md TL;DR and Quick Start code blocks each contain a restart Claude Code step between `/plugin install sweetclaude@sweetclaude-stable` and `/sweetclaude:help`.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-011
   source: A
   docs:
@@ -82,7 +85,10 @@ rows:
   acceptance: Every README.md link labelled as a skills reference targets docs/user-guide/skills-reference.md.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-012
   source: A
   docs:
@@ -96,7 +102,10 @@ rows:
   acceptance: The README.md "Full architecture and design decisions" link targets docs/user-guide/how-it-works.md.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-013
   source: A
   docs:
@@ -124,7 +133,10 @@ rows:
   acceptance: README.md behavioral-contracts bullet states 16 instruction-guided contracts, that a transcript judge scores 6 of them, that 4 are not judgeable from transcripts, and that hook-enforced properties are tracked separately from the 16.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-015
   source: A
   docs:
@@ -169,7 +181,10 @@ rows:
   acceptance: None of the four listed locations contains "never double-installed"; each states the order keeps SweetClaude installed throughout, both channels are installed briefly, and all three steps finish before restarting.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-017
   source: A
   docs:
@@ -183,7 +198,10 @@ rows:
   acceptance: README.md beta-switch paragraph says to restart Claude Code before running `/sweetclaude:configure update`.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-018
   source: A
   docs:
@@ -296,7 +314,10 @@ rows:
   acceptance: index.md Install row reads "Stable install, update, optional integrations, and suspension" or equivalent with no beta install claim.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-024
   source: A
   docs:
@@ -412,7 +433,10 @@ rows:
   acceptance: quickstart.md opening line says SweetClaude 5.x.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-029
   source: A
   docs:
@@ -474,7 +498,10 @@ rows:
   acceptance: getting-started.md and quickstart.md contain no claim that setup offers or runs git init.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
   decision: setup_promises
 - id: R-032
   source: A
@@ -491,7 +518,10 @@ rows:
   acceptance: getting-started.md contains no `strategy/` folder in prose or in the first-session tree.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
   decision: setup_promises
 - id: R-033
   source: A
@@ -508,7 +538,10 @@ rows:
   acceptance: getting-started.md contains no claim that setup or each session asks for a deference level; it states the default is Collaborative and how to change it.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
   decision: setup_promises
 - id: R-034
   source: A
@@ -545,7 +578,10 @@ rows:
   acceptance: getting-started.md Pattern B and quickstart.md existing-codebase steps list exactly the questions setup Branch B asks (name, stage, tracker) and the Branch C assessment, with no frustration or messy-area interview.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-036
   source: A
   docs:
@@ -559,7 +595,10 @@ rows:
   acceptance: getting-started.md install section states that nine commands are available and workflows are run as `/sweetclaude:<category> <workflow>`.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-037
   source: A
   docs:
@@ -573,7 +612,10 @@ rows:
   acceptance: getting-started.md Pattern C says go proposes the next step and waits for the user's go-ahead.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-038
   source: A
   docs:
@@ -589,7 +631,10 @@ rows:
   acceptance: getting-started.md tree and faq.md crash-survival list either omit state/project.yaml or label it optional and not created by setup.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
   notes: auto-test-runner.sh depending on a file nothing writes is covered by the inert-hook rows.
 - id: R-039
   source: A
@@ -604,7 +649,10 @@ rows:
   acceptance: Every path in the getting-started.md first-session tree is created by setup or product discovery, and the tree includes .sweetclaude/product/, .sweetclaude/plans and .sweetclaude/state/discovery.yaml.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-040
   source: A
   docs:
@@ -618,7 +666,10 @@ rows:
   acceptance: faq.md says milestones track a strategic target in Now/Next/Later buckets and that an external deadline goes in the milestone notes, with no target-date claim.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-041
   source: A
   docs:
@@ -632,7 +683,10 @@ rows:
   acceptance: faq.md TDD-hooks row says hooks come from the plugin's hooks/hooks.json and names the actual supported way to turn TDD enforcement off, with no ~/.claude/settings.json instruction.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-042
   source: A
   docs:
@@ -646,7 +700,10 @@ rows:
   acceptance: faq.md "Specific skills" row points to `/sweetclaude:configure _features` or is removed, and the page contains no ~/.claude/skills/sweetclaude/ path.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-043
   source: A
   docs:
@@ -660,7 +717,10 @@ rows:
   acceptance: faq.md contribute section points to the repo's skills/ and skill-library/<category>/<workflow>/ and lists frontmatter keys spdx-license, user-invocable and description.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-044
   source: A
   docs:
@@ -674,7 +734,10 @@ rows:
   acceptance: faq.md "What's planned?" lists only items present in ROADMAP.md and does not describe the shipped focus-group skill as planned.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-070
   source: B
   docs:
@@ -1035,7 +1098,10 @@ rows:
   acceptance: how-it-works.md and glossary.md state that test-guardian applies only after code-tdd marks tdd_phase implementing during IMPLEMENT, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-084
   source: B
   docs:
@@ -1049,7 +1115,10 @@ rows:
   acceptance: The Enforcement Tiers row for test-guardian names the override path the ported hook actually provides (ask prompt or explicit user approval), and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-085
   source: B
   docs:
@@ -1063,7 +1132,10 @@ rows:
   acceptance: The Enforcement Tiers row for the auto-test-runner contains no tool-approval override claim, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-086
   source: B
   docs:
@@ -1077,7 +1149,10 @@ rows:
   acceptance: how-it-works.md:289 lists exactly the three protections guardian-on provides and makes no claim about the instruction-guided rows, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-087
   source: B
   docs:
@@ -1091,7 +1166,10 @@ rows:
   acceptance: The TDD Level 2-3 isolation row appears under Instruction-guided in how-it-works.md Enforcement Tiers, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-088
   source: B
   docs:
@@ -1105,7 +1183,10 @@ rows:
   acceptance: how-it-works.md states that at Level 2 only the implementer is a separate subagent and at Level 3 the test writer is also a subagent, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-089
   source: B
   docs:
@@ -1134,7 +1215,10 @@ rows:
   acceptance: how-it-works.md names project-sprints and project-backlog as the skills disabled in Shape Up, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-091
   source: B
   docs:
@@ -1261,7 +1345,10 @@ rows:
   acceptance: how-it-works.md names the story fields epic and theme, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-098
   source: B
   docs:
@@ -1360,7 +1447,10 @@ rows:
   acceptance: The hard-gate table in phases-and-workflows.md lists every prerequisite in config/workflow-templates.yaml hard_gate_tasks, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-103
   source: B
   docs:
@@ -1417,7 +1507,10 @@ rows:
   acceptance: how-it-works.md and phases-and-workflows.md describe routing as category selection and present work types only where a gate uses them, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
   decision: work_types
   notes: The hard-gate row R-101 needs the active item's work type for the six hard-gate types; that narrow tagging survives this retirement.
 - id: R-106
@@ -1451,7 +1544,10 @@ rows:
   acceptance: The shape tables in phases-and-workflows.md match the phase sequences in config/workflow-templates.yaml for course-correction and security-planning, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
   notes: Section may be removed entirely under the work_types decision.
 - id: R-108
   source: B
@@ -1468,7 +1564,10 @@ rows:
   acceptance: phases-and-workflows.md shows the tech-debt sequence as DEFINE, SCOPE, IMPLEMENT, VERIFY, SHIP, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
   notes: Section may be removed entirely under the work_types decision.
 - id: R-109
   source: B
@@ -1491,7 +1590,10 @@ rows:
   acceptance: The docs list the actual per-type phase sequences from config/workflow-templates.yaml for these three work types, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
   notes: Section may be removed entirely under the work_types decision.
 - id: R-110
   source: B
@@ -1514,7 +1616,10 @@ rows:
   acceptance: The example state blocks in how-it-works.md and phases-and-workflows.md use an ID format and fields that 5.0 code writes, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-111
   source: B
   docs:
@@ -1530,7 +1635,10 @@ rows:
   acceptance: phases-and-workflows.md describes work.last_item_id as the most recently closed work item, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-112
   source: B
   docs:
@@ -1552,7 +1660,10 @@ rows:
   acceptance: No user-guide page or skill prose claims stage-dependent visibility of work types, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
   decision: progressive_disclosure
 - id: R-113
   source: B
@@ -1569,7 +1680,10 @@ rows:
   acceptance: how-it-works.md and glossary.md list IDEA as the onboarding stage alongside ALPHA, BETA and GA, with no PRE-ALPHA, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-114
   source: B
   docs:
@@ -1583,7 +1697,10 @@ rows:
   acceptance: how-it-works.md has no 4.x beta heading or 4.x framing for current maintenance behavior, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-115
   source: B
   docs:
@@ -1599,7 +1716,10 @@ rows:
   acceptance: The route table in how-it-works.md lists exactly the status strings scripts/doctor.py can return, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-116
   source: B
   docs:
@@ -1615,7 +1735,10 @@ rows:
   acceptance: how-it-works.md states that /sweetclaude:configure migrate handles flat BL-NNN and typed legacy layouts and that recovery handles unsafe states, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-117
   source: B
   docs:
@@ -1629,7 +1752,10 @@ rows:
   acceptance: The glossary Compatibility Mode entry carries no 4.x beta qualifier, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-118
   source: B
   docs:
@@ -1645,7 +1771,10 @@ rows:
   acceptance: The glossary describes the stable channel as 5.x on main installed with carson-sweet/sweetclaude@main, labels stable-3.x as legacy, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-119
   source: B
   docs:
@@ -1659,7 +1788,10 @@ rows:
   acceptance: how-it-works.md names only subagent patterns that exist in agents/, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-120
   source: B
   docs:
@@ -1673,7 +1805,10 @@ rows:
   acceptance: how-it-works.md describes the mid-session deference change without claiming it is written to sweetclaude.yaml, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-121
   source: B
   docs:
@@ -1687,7 +1822,10 @@ rows:
   acceptance: The What Lives Where tree lists skill-library/ and scripts/ and describes skills/ as public commands and internal routers, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-122
   source: B
   docs:
@@ -1701,7 +1839,10 @@ rows:
   acceptance: how-it-works.md describes project.yaml with the fields SweetClaude actually reads and states when it is created, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-123
   source: B
   docs:
@@ -1717,7 +1858,10 @@ rows:
   acceptance: how-it-works.md and cheatsheet-existing-project.md describe corpus ordering as instruction-guided checks of pipeline state, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-124
   source: B
   docs:
@@ -1751,7 +1895,10 @@ rows:
   acceptance: planning-concepts.md lists all 11 canonical statuses and the four terminal ones, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-126
   source: B
   docs:
@@ -1767,7 +1914,10 @@ rows:
   acceptance: planning-concepts.md lists priority values the cache sort recognizes, with now in place of next and P0-P3 as the project-issues default, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-127
   source: B
   docs:
@@ -1785,7 +1935,10 @@ rows:
   acceptance: planning-concepts.md and glossary.md state that triage moves the file to roadmap/issues/ and that epic and milestone linking are separate steps, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-128
   source: B
   docs:
@@ -1801,7 +1954,10 @@ rows:
   acceptance: planning-concepts.md and glossary.md both say a milestone is marked achieved when its success criteria are met and the user confirms, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-129
   source: B
   docs:
@@ -1817,7 +1973,10 @@ rows:
   acceptance: planning-concepts.md shows Milestone, Sprint, Story with epics and themes as story attributes and sprints anchored to a milestone, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-130
   source: B
   docs:
@@ -1837,7 +1996,10 @@ rows:
   acceptance: planning-concepts.md and glossary.md make no mode-dependent epic surfacing claim, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
   notes: Alternative is to implement mode filtering; recorded as fix-doc because no view has ever filtered.
 - id: R-131
   source: B
@@ -1852,7 +2014,10 @@ rows:
   acceptance: The Choosing a Mode table marks Agile milestones as recommended, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-132
   source: B
   docs:
@@ -1868,7 +2033,10 @@ rows:
   acceptance: planning-concepts.md makes no Kanban board-column claim and points to project-issues lists, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-133
   source: B
   docs:
@@ -1936,7 +2104,10 @@ rows:
   acceptance: glossary.md and cheatsheet-existing-project.md say to commit .sweetclaude/ except derived caches, recovery snapshots and the guardian flag, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-137
   source: B
   docs:
@@ -3761,7 +3932,10 @@ rows:
   acceptance: docs/user-guide/tdd.md lists exactly the TDD hooks registered in hooks/hooks.json, including tdd-prewrite-guardian, and does not call git-checkpoint a hook, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-253
   source: D
   docs:
@@ -3777,7 +3951,10 @@ rows:
   acceptance: docs/user-guide/tdd.md states test-guardian is active only once code-tdd has set tdd_phase to implementing and contains no "OS level" wording, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-254
   source: D
   docs:
@@ -3791,7 +3968,10 @@ rows:
   acceptance: docs/user-guide/tdd.md Level 0 gives the order fix, regression test, confirm failure without the fix, commit together, matching code-tdd, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-255
   source: D
   docs:
@@ -3807,7 +3987,10 @@ rows:
   acceptance: docs/user-guide/tdd.md Level 2 says tests are written in the main context and reserves the test-writer subagent for Level 3, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-256
   source: D
   docs:
@@ -3823,7 +4006,10 @@ rows:
   acceptance: 'docs/user-guide/hook-development.md describes the broken-hook symptom as a hook error (exit 2 with stderr) and does not cite {"ok": false} as the symptom, checked by the docs-claims suite.'
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-257
   source: D
   docs:
@@ -3841,7 +4027,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md directs hook repair to `/sweetclaude:configure doctor` (hook_health category) and describes its restore source as the plugin hooks directory, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-258
   source: D
   docs:
@@ -3857,7 +4046,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md names every PreToolUse hook whose matcher covers Bash in hooks/hooks.json and contains no "never gated" claim for Bash, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-259
   source: D
   docs:
@@ -3871,7 +4063,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md names only PreToolUse hooks as able to block a Write or Edit, checked by the docs-claims suite against hooks/hooks.json.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-260
   source: D
   docs:
@@ -3885,7 +4080,10 @@ rows:
   acceptance: The count of Bash-matching hooks in docs/user-guide/hook-development.md equals the count derived from hooks/hooks.json, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-261
   source: D
   docs:
@@ -3899,7 +4097,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md describes the wip-limit conditions exactly as hooks/wip-limit.sh implements them and contains no recovery exemption, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - '0716d247'
+  - '3a217b09'
 - id: R-262
   source: D
   docs:
@@ -3913,7 +4114,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md lists the needs-preflight flag as the block condition and sweetclaude.yaml, phase.yaml or .sweetclaude-skip as the clear conditions, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-263
   source: D
   docs:
@@ -3929,7 +4133,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md uses cache/sweetclaude-stable/sweetclaude/<ver>/ in every path and states hooks.bak/ exists only after scripts/sync-to-installed.sh, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-264
   source: D
   docs:
@@ -3943,7 +4150,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md gives the emergency restore command with a path that resolves outside the SweetClaude repo, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-265
   source: D
   docs:
@@ -3957,7 +4167,10 @@ rows:
   acceptance: docs/user-guide/hook-development.md names the plugin as sweetclaude@sweetclaude-stable, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 'f4ed5065'
+  - 'e2ccd40e'
 - id: R-266
   source: D
   docs:
