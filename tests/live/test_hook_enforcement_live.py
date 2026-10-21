@@ -50,7 +50,7 @@ def run_claude(project: Path, prompt: str) -> list[dict]:
         "--strict-mcp-config",
         "--model", "haiku",
         "--max-budget-usd", BUDGET_USD,
-        "--output-format", "stream-json", "--verbose",
+        "--output-format", "stream-json", "--verbose", "--include-hook-events",
         "--permission-mode", "acceptEdits",
         "--allowedTools", "Bash", "Write", "Edit", "Skill",
     ]
