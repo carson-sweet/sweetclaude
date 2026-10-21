@@ -468,9 +468,12 @@ def configured_test_command(config_path: str) -> str:
         return value[1:-1] if len(value) > 1 and value[0] == value[-1] and value[0] in "'\"" else value
     except yaml.YAMLError:
         return ""
-    testing = data.get("testing") if isinstance(data, dict) else None
-    command = testing.get("test_command") if isinstance(testing, dict) else None
-    return command.strip() if isinstance(command, str) else ""
+    sections = [value for value in data.values() if isinstance(value, dict)] if isinstance(data, dict) else []
+    for section in sections:
+        command = section.get("test_command")
+        if isinstance(command, str):
+            return command.strip()
+    return ""
 
 
 NON_SOURCE_DIRECTORIES = {"docs", ".sweetclaude", "config", ".github"}
