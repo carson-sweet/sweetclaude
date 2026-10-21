@@ -1,6 +1,9 @@
 # SweetClaude Cheatsheet: Starting a New Project
 
-You have an idea. Maybe it is well-formed, maybe it is a napkin sketch. SweetClaude walks you through the entire journey — from articulating the concept through shipping tested code. This is not just a coding framework. The strategic and product work that happens before you write any code is often the most valuable part.
+**Version:** 1.0
+**Date:** 2026-10-21
+
+You have an idea. Maybe it is well-formed, maybe it is a napkin sketch. SweetClaude supports the entire journey — from articulating the concept through shipping tested code. This is not just a coding framework. The strategic and product work that happens before you write any code is often the most valuable part.
 
 ## Before You Start
 
@@ -12,39 +15,42 @@ You have an idea. Maybe it is well-formed, maybe it is a napkin sketch. SweetCla
 2. Create an empty folder for your project and open Claude Code in it
 3. Run:
    ```
-   /sweetclaude:go
+   /sweetclaude:configure init
    ```
 
-That is it. SweetClaude takes over from here and walks you through each step.
+Init installs the SweetClaude files and runs setup. After that, `/sweetclaude:go` reads your state and proposes the next item.
 
 ## What Happens Next
 
 ### Step 1: Project Setup
 
-SweetClaude creates:
-- A git repository (if you want one)
+Setup asks for the project name, a one-sentence description, where issues should live (this repository or GitHub Issues), and a working mode. It creates:
 - A `.sweetclaude/` folder that tracks your progress, decisions, and configuration
-- A `strategy/` folder for strategic documents
-- A `CLAUDE.md` file that teaches future AI sessions about your project
+- A `.sweetclaude/product/` tree with `backlog/`, `stories/`, and `milestones/` folders
+- A `.sweetclaude/state/sweetclaude.yaml` file with the project at the IDEA stage
 
-### Step 2: Concept Articulation
+### Project Instructions File
 
-SweetClaude asks you to describe your idea in your own words. Then it helps you sharpen it into a clear statement: what is this, what problem does it solve, why does it matter, and what is it NOT. It will challenge your framing — not to be difficult, but because the best concepts survive scrutiny.
+Setup also appends a short SweetClaude section to your project's `CLAUDE.md`, creating the file if it does not exist, so future AI sessions know the project is managed with SweetClaude. Existing content is never overwritten.
 
-### Step 3: Product Discovery (Deep Dive)
+### Step 2: Feature Selection
 
-SweetClaude runs `/sweetclaude:plan product-discovery` to establish what is being built, for whom, and why. You choose the depth:
-- **Quick intent** — high-level framing in one pass
-- **Standard** — pain and audience with structured prompts
-- **Full pain thesis** — 11-section structured analysis, research-backed
+Setup hands off to optional feature selection. You choose which optional features to turn on, such as milestones and the backlog, and SweetClaude onboards each one you pick. Nothing else runs automatically after this.
 
-At any depth, SweetClaude can analyze competitors via `/sweetclaude:plan product-competition` and define user personas via `/sweetclaude:plan user-personas`.
+### Step 3: Product Discovery
 
-**Output:** Discovery artifacts in `strategy/` — depth depends on level chosen
+After feature selection, start discovery yourself with `/sweetclaude:plan product-discovery`. It establishes what is being built, for whom, and why. You choose the depth:
+- **L1 — Intent and boundaries** — high-level framing in one pass
+- **L2 — Problem and success** — pain and audience with structured prompts
+- **L3 — Full pain thesis** — the deepest level, with up to 17 research-backed questions
+
+At any depth, you can analyze competitors via `/sweetclaude:plan product-competition` and define user personas via `/sweetclaude:plan user-personas`.
+
+**Output:** `.sweetclaude/state/discovery.yaml` and `.sweetclaude/state/compliance-context.yaml`
 
 ### Step 4: Handoff
 
-At this point you have a strategic foundation: concept, discovery artifacts, personas, and feature set. SweetClaude tells you what is available next and lets you decide when to continue.
+At this point you have a strategic foundation: discovery output, personas, and feature set. Run `/sweetclaude:go` to see what is available next and decide when to continue.
 
 ## What Comes After (When You Are Ready)
 
@@ -80,9 +86,9 @@ SweetClaude does not push you forward. You move to the next phase when you are r
 ### Milestones
 - `/sweetclaude:plan product-milestones add` — create a roadmap target with success criteria
 - `/sweetclaude:plan product-milestones review` — see all milestones grouped by Now / Next / Later
-- `/sweetclaude:plan product-milestones link US-XXX MS-XXX` — attach a story to a milestone
-- `/sweetclaude:plan product-milestones blockers MS-XXX` — what is stopping progress
-- `/sweetclaude:plan product-milestones complete MS-XXX` — mark achieved, capture follow-ups
+- `/sweetclaude:plan product-milestones link ISSUE-NNN MS-NNN` — attach an issue to a milestone
+- `/sweetclaude:plan product-milestones blockers MS-NNN` — what is stopping progress
+- `/sweetclaude:plan product-milestones complete MS-NNN` — mark achieved, capture follow-ups
 
 ## What SweetClaude Can Do If You Ask
 
@@ -98,11 +104,10 @@ These are not part of the automatic flow. They are available anytime.
 - **Positioning statement** (`/sweetclaude:plan product-positioning-statement`) — for/who/that/unlike framework
 - **Corpus pipeline and RAG search** (`/sweetclaude:utils document-corpus`) — organize messy files into canonical documents with full provenance (consolidate → triage → reconcile → promote), then index for semantic search. Presents a menu; pick the step you need or check status first.
 - **Update SweetClaude** — update the Claude Code plugin package, restart Claude Code, then run `/sweetclaude:configure update` to sync framework files inside the installed channel
-- **Version bumping** — run `scripts/bump-version.sh patch|minor|major` to bump version explicitly; no automatic bump on commit
 
 ## Tips
 
-- **You can stop and resume anytime.** SweetClaude saves your progress in `.sweetclaude/`. Run `/sweetclaude:go` to pick up exactly where you left off — it reads your phase state and acts.
+- **You can stop and resume anytime.** SweetClaude saves your progress in `.sweetclaude/`. Run `/sweetclaude:go` to pick up exactly where you left off — it reads state and proposes the next item, then waits for you.
 - **You can skip ahead.** The pipeline is a guide, not a cage. If you want to jump straight to architecture, do it.
 - **You can go back.** Revisiting earlier phases is normal. New information during design might change your pain thesis. That is how good work happens.
 - **You control the pace.** SweetClaude never pushes you to the next step. It waits until you say you are ready.

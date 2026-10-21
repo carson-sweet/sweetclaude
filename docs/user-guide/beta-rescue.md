@@ -1,5 +1,8 @@
 # SweetClaude 4.x Beta Rescue
 
+**Version:** 1.0
+**Date:** 2026-10-21
+
 Use this page if you installed the 4.x beta and SweetClaude is stuck, noisy, or reporting confusing update, doctor, migrate, or repair advice. The beta channel is retired, so the fix is a one-time switch to stable.
 
 The safe path is:
@@ -21,12 +24,20 @@ Inside Claude Code, check which plugin key is installed:
 /plugin list
 ```
 
-If you see `sweetclaude@sweetclaude-beta` (or the legacy beta key `sweetclaude@sweetclaude`), run these in order so you are never double-installed:
+If you see `sweetclaude@sweetclaude-beta`, run these in order so you are never double-installed:
 
 ```
 /plugin marketplace add carson-sweet/sweetclaude@main
 /plugin install sweetclaude@sweetclaude-stable
 /plugin marketplace remove sweetclaude-beta
+```
+
+If you see the legacy beta key `sweetclaude@sweetclaude` on a prerelease version, the third command removes the legacy marketplace instead:
+
+```
+/plugin marketplace add carson-sweet/sweetclaude@main
+/plugin install sweetclaude@sweetclaude-stable
+/plugin marketplace remove sweetclaude
 ```
 
 ---

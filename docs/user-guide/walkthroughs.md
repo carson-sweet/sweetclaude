@@ -1,7 +1,7 @@
 # Walkthroughs
 
-**Version:** 1.2
-**Date:** 2026-06-10
+**Version:** 1.3
+**Date:** 2026-10-21
 
 Seven concrete scenarios end-to-end. Each one shows what you run, what comes back, and what you have when you are done. The interactions are simulated but representative — actual prompts vary slightly with the model and your project state.
 
@@ -18,23 +18,23 @@ mkdir feedback-tool && cd feedback-tool && claude
 ```
 
 ```
-/sweetclaude:go
+/sweetclaude:configure init
 ```
 
-SweetClaude detects the empty folder. It asks if you want a git repo (yes), what deference level (collaborative for the first run), and then asks you to describe the idea.
+Init runs setup, which detects the empty folder and asks for the project name, a one-sentence description, where issues should live, and a working mode. Setup then offers optional features. You start discovery yourself with `/sweetclaude:plan product-discovery` and describe the idea.
 
 You type a paragraph. SweetClaude does not start drafting. Instead it pushes back:
 
 > You said "freelance designers" — but the friction in client feedback exists across roles. Agencies, in-house teams, and indie product designers all face it. What makes you confident the freelance segment specifically? Or is "freelance designers" a stand-in for a broader pattern?
 
-You think about it and refine: it is freelance designers because they have no design ops infrastructure and clients are non-designers. SweetClaude accepts the framing, records it as a decision, and offers product discovery at three depths. You pick L2 (problem and success) — this is more than a hobby project but you do not want a 90-minute interview.
+You think about it and refine: it is freelance designers because they have no design ops infrastructure and clients are non-designers. SweetClaude accepts the framing, records it as a decision, and offers product discovery at three depths: L1 (intent and boundaries), L2 (problem and success), and L3 (full pain thesis). You pick L2 (problem and success) — this is more than a hobby project but you do not want a 90-minute interview.
 
 ### Discovery and Definition
 
 SweetClaude conducts the L2 discovery interview, one section at a time. After each section it probes — never batches multiple questions into one message. By the end you have:
 
-- `strategy/discovery.md` — problem framing, target user, success criteria
-- `strategy/personas/` — at least one persona with a real scenario
+- `.sweetclaude/state/discovery.yaml` — problem framing, target user, success criteria
+- `.sweetclaude/state/personas.yaml` — at least one persona with a real scenario
 - `.sweetclaude/state/decision-log.md` — three decisions captured
 
 Then you run `/sweetclaude:plan product-brief`. SweetClaude reads the discovery output, presents an outline first, lets you approve or restructure, then writes the brief. You iterate twice. You commit.
@@ -86,34 +86,28 @@ claude
 ```
 
 ```
-/sweetclaude:go
+/sweetclaude:configure init
 ```
 
-The first thing SweetClaude does is create a `pre-sweetclaude` git branch from your current state. That branch is your insurance — if you ever want to undo every byte SweetClaude added to your repo, `git checkout pre-sweetclaude` gets you back. SweetClaude refuses to proceed without this branch.
+Init runs setup. The first thing setup does is create a `pre-sweetclaude` git branch from your current state. That branch is your insurance — if you ever want to undo every byte SweetClaude added to your repo, `git checkout pre-sweetclaude` gets you back. If the branch cannot be created, setup stops and writes nothing.
 
-Then it scans your project read-only:
+Setup then takes a quick read-only look at the project: a file listing, the top of your README, and the last ten commits.
 
-```
-✓ Detected: TypeScript + Node.js
-✓ Test runner: jest (47 tests, last run passing)
-✓ Build: npm run build
-✓ Docs: README.md, no CLAUDE.md, no architecture doc
-✓ Git: 4 open branches, 12 open issues, 2 open PRs
-```
+For a codebase that looks organized, it asks three questions, one at a time:
 
-Then the four-question interview, one at a time. The fourth question is the important one:
+1. What is the project name?
+2. What stage is it at: early prototype, active development, approaching launch, or in production?
+3. Which issue tracker should hold project issues: this repository or GitHub Issues?
 
-> Is there anything messy, undocumented, or worrying?
+It then asks which working mode fits. Your stage answer sets `version_stage` (IDEA, ALPHA, BETA, or GA) in `.sweetclaude/state/sweetclaude.yaml`.
 
-Most onboarding flows skip this. SweetClaude treats your answer here as load-bearing.
+If the codebase looks inherited or disorganized, setup takes a different path. It runs a full assessment — assess, diagnose, plan, scaffold — shows you the scaffolding plan before touching anything, and ends by suggesting what to tackle first. If the assessment flags auth code written under deadline, for example, a sensible first move is `/sweetclaude:maintain code-debt` to lock the existing behavior in tests before any refactor.
 
-If you say "the auth code was written under deadline and I am not sure it is right," SweetClaude positions you in the IMPLEMENT phase with a specific first action: `/sweetclaude:maintain code-debt` to lock the existing auth behavior in tests before any refactor.
-
-If you say "everything is fine, I just want SweetClaude to be available," SweetClaude positions you wherever you want and shows you the menu.
+Either way, setup finishes by offering optional features.
 
 ### What you have at the end
 
-Your codebase, untouched except for the addition of `.sweetclaude/` (which you commit). A `pre-sweetclaude` branch you can roll back to. A phase state that reflects where you actually are. A first action proposed if you flagged a concern, or a clean slate if you did not.
+Your codebase, untouched except for the addition of `.sweetclaude/` (which you commit). A `pre-sweetclaude` branch you can roll back to. A recorded `version_stage` that reflects where the project is. A suggested first move if the assessment path ran, or a clean slate if it did not.
 
 The tone of this onboarding is deliberate. SweetClaude treats existing codebases like an archaeologist treats a dig site — understanding before changing, respecting what is there.
 
@@ -127,14 +121,14 @@ Production is broken. You need to ship a fix now. SweetClaude has a workflow for
 /sweetclaude:go production is down, the OAuth callback is throwing 500s
 ```
 
-SweetClaude classifies this as a `hotfix` — work type, not bug fix. The difference matters: hotfix runs the **compressed** workflow shape (DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM), skips most prerequisite checks, and accepts that the POST-MORTEM is a follow-on work item, not a step you can skip.
+SweetClaude classifies this as a `hotfix` — work type, not bug fix. The difference matters: hotfix runs the **compressed** workflow shape (DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM), skips most prerequisite checks, and and treats the POST-MORTEM as a required follow-on.
 
 It asks you three triage questions:
-1. Is the impact confirmed (which users, what severity)?
-2. Is there a temporary mitigation that can reduce exposure while you patch?
-3. Is rollback faster than patching?
+1. What is the specific failure — the error message, broken behavior, or degraded state?
+2. What is the severity: P0 (service down, data loss, or security), P1 (core workflow broken, no workaround), or P2 (degraded, workaround exists)?
+3. What is the scope: all users or a subset?
 
-If rollback is faster, SweetClaude routes you to `rollback-revert` instead. If a patch is right, you stay in `hotfix`.
+After the fix ships, SweetClaude checks that the broken behavior is resolved, error rates are back to baseline, and there are no side effects. If the fix does not resolve the problem, it reassesses and suggests `rollback-revert` or a different fix approach.
 
 ### DIAGNOSE
 
@@ -148,13 +142,13 @@ SweetClaude asks for an async notification to a stakeholder (a Slack message, an
 
 ### POST-MORTEM
 
-Spawned automatically as a follow-on work item. Not optional. The post-mortem fires as a separate skill that asks for the timeline of events, the root cause analysis, contributing factors, and action items. Action items go to your backlog.
+The post-mortem is logged as required. SweetClaude offers two choices: create a POST-MORTEM backlog item now, or skip and create it later. A skip is recorded in the decision log so the obligation stays visible. The backlog item's body points to `/sweetclaude:maintain postmortem`, which asks for the timeline of events, the root cause analysis, contributing factors, and action items.
 
-If the hotfix was a workaround rather than a real fix, SweetClaude creates a follow-on tech-debt work item to do the real fix later. It will not let you forget.
+If the hotfix was a workaround rather than a real fix, the post-mortem item reminds you to create a tech-debt follow-up for the real fix.
 
 ### What you have at the end
 
-Production restored. A regression test that was missing before. A POST-MORTEM document. Action items in the backlog. A tech-debt item if you patched around the real problem.
+Production restored. A regression test that was missing before. A POST-MORTEM backlog item or a logged decision to create it later. A reminder in the post-mortem item to create a tech-debt follow-up if you patched around the real problem.
 
 ---
 
@@ -186,11 +180,11 @@ Then **4** (Reconcile). Pick a cluster of related staged files. An AI subagent r
 
 Then **5** (Promote). The mechanical step. Takes approved drafts, writes provenance sidecars tracing every canonical document back to its source files, archives the sources, moves canonical to `corpus/canonical/`, and git commits. If you have RAG set up, this step also re-indexes.
 
-You cannot skip steps. The state machine refuses and explains why if you try. Skipping consolidate creates duplicate canonical documents. Skipping triage feeds discards into reconcile. Skipping reconcile and indexing raw files into RAG produces a knowledge base that cannot tell drafts from authoritative documents.
+Each step checks that the previous one is complete and explains why it matters if it is not. Skipping consolidate creates duplicate canonical documents. Skipping triage feeds discards into reconcile. Skipping reconcile and indexing raw files into RAG produces a knowledge base that cannot tell drafts from authoritative documents. If you still want to skip ahead, you can override by typing `I accept the risk of corpus corruption`.
 
 ### What you have at the end
 
-A `corpus/canonical/` directory with the documents you actually want to keep. Provenance sidecars that explain every canonical document's source. An archive of the originals (never deleted). An optional local RAG index (`corpus/rag/`) that lets you ask "what did we decide about authentication?" and get the right passages back.
+A `corpus/canonical/` directory with the documents you actually want to keep. Provenance sidecars that explain every canonical document's source. An archive of the originals (never deleted). An optional local RAG index (`.rag-index/`) that lets you ask "what did we decide about authentication?" and get the right passages back.
 
 Full reference: [Corpus and RAG](corpus-system.md).
 
@@ -238,13 +232,13 @@ You have a planned feature. Specs exist. You want to run the rigorous version en
 /sweetclaude:build code-feature thread reply feature
 ```
 
-SweetClaude looks for existing specs in this order: Gherkin `.feature` files, current issue/story artifacts in `.sweetclaude/product/`, and PRD material in `docs/`. It finds Gherkin files for "thread reply" and skips the spec-writing step.
+SweetClaude looks for existing specs in this order: Gherkin `.feature` files in `.sweetclaude/` or `features/`, user stories and issue artifacts in the configured product base (`.sweetclaude/product/` by default), and a PRD or product brief in `docs/`. It finds Gherkin files for "thread reply" and skips the spec-writing step.
 
 Now the **TDD Level 3** pipeline:
 
 ### Step 0 — Story branch
 
-`code-feature` creates a story branch before any test or implementation work begins: `{ID}/{slug}` — e.g. `US-042/thread-reply-feature`. All commits for this feature land on that branch. Main is untouched until you open a PR.
+`code-feature` recommends creating a story branch before any test or implementation work begins: `{ID}/{slug}` — e.g. `ISSUE-046/thread-reply-feature`. The ID comes from the backlog ID in your request or the active work item. You can accept the recommended branch, stay on your current branch, or choose something else. If you take the branch, all commits for this feature land on it. At completion you choose how to close out: open a PR (recommended), commit, merge to main, and push, commit only, or leave the changes as they are.
 
 ### Step 1 — Test writer agent
 
