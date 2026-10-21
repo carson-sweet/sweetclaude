@@ -1,6 +1,6 @@
 # SweetClaude Cheatsheet: Adopting an Existing Project
 
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2026-10-21
 
 You have a codebase. Maybe it is well-organized with tests and docs. Maybe it is a mess. Maybe it is somewhere in between. SweetClaude meets you where you are and adds structured process without disrupting what you have built.
@@ -175,7 +175,7 @@ You can change this mid-session.
 ## Tips
 
 - **The safety branch is your insurance.** `pre-sweetclaude` captures your project state before SweetClaude touched anything. If things go wrong, `git checkout pre-sweetclaude` gets you back.
-- **`.sweetclaude/` is part of your project.** Commit it to git. It contains your project state, plans, and backlog — valuable project context.
+- **`.sweetclaude/` is part of your project.** Commit it to git, except the guardian flag and recovery snapshots (`.sweetclaude/state/recovery-runs/`), which are derived. It contains your project state, plans, and backlog — valuable project context.
 - **You do not have to use every skill.** If you only want TDD enforcement, just use the code skills. If you only want strategic help, just use the strategy skills. There is no required sequence.
 - **Strategic work on existing projects is valuable.** Many projects have implicit strategy that was never documented. Making it explicit helps you prioritize, communicate with stakeholders, and make better decisions.
 - **SweetClaude does not judge your code.** When adopting a project, it treats your codebase like an archaeologist treats a dig site — understanding before changing, respecting what is already there.

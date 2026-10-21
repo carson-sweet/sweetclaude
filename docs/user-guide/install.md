@@ -34,8 +34,7 @@ Restart Claude Code, then run `/sweetclaude:configure doctor` inside each projec
 
 **The beta channel is retired.** It no longer receives updates and cannot be
 installed. If `/plugin list` shows `sweetclaude@sweetclaude-beta`, make the
-one-time switch to stable — run these in order so you are never
-double-installed:
+one-time switch to stable — run these in order so SweetClaude stays installed throughout (both channels are installed briefly, and all three steps finish before you restart Claude Code):
 
 ```text
 /plugin marketplace add carson-sweet/sweetclaude@main

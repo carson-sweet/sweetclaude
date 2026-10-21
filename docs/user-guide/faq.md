@@ -1,7 +1,7 @@
 # FAQ
 
-**Version:** 1.0
-**Date:** 2026-05-01
+**Version:** 1.1
+**Date:** 2026-10-21
 
 Honest answers. When SweetClaude is the right tool. When it is not. Common confusions cleared up.
 
@@ -56,7 +56,7 @@ You can:
 - Skip phases by saying "I've addressed this informally — proceed."
 - Disable SweetClaude per project by touching `.sweetclaude/disabled`.
 
-What you cannot do — physically cannot — is bypass hard gates. Hard gates apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans. Hard gate overrides require explicit risk acceptance logged to the decision log. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+What you cannot do — physically cannot — is bypass hard gates. Hard gates apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans. Hard gate overrides require explicit risk acceptance logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 ---
 
@@ -83,7 +83,7 @@ If you ask anyway, SweetClaude says:
 
 This is a deliberate position, not a bug. Time estimates in AI-assisted development reinforce a paradigm that is broken. Phase gates measure progress in artifacts produced and quality criteria met. That is what matters.
 
-If you have an external deadline, set a milestone (`/sweetclaude:plan product-milestones add`). Milestones have target dates without forcing the framework to pretend it knows how long things take.
+If you have an external deadline, set a milestone (`/sweetclaude:plan product-milestones add`). A milestone tracks a strategic target and sits in a Now/Next/Later bucket rather than on a calendar. Put the external deadline in the milestone's notes; the framework does not pretend to know how long things take.
 
 ---
 
@@ -100,12 +100,12 @@ Yes. The lever depends on what you want to disable.
 | Want to disable | How |
 |---|---|
 | All of SweetClaude for one project | `touch .sweetclaude/disabled` |
-| TDD hooks globally | Edit `~/.claude/settings.json`, remove the hook entries (the installer wires them in; you can wire them out) |
+| TDD hooks | The hooks come from the plugin's `hooks/hooks.json`; there is nothing to remove from your global Claude Code configuration. The test-guardian hook blocks test-file edits only while a work item is implementing; release one file with `python3 scripts/tdd_phase.py release --file <test file> --approval "<your words>"`. The pre-write check applies only while the Protocol Guardian is on, so `/sweetclaude:configure guardian-off` bypasses it. |
 | Auto status at session start | Touch `.sweetclaude/disabled` then run `/sweetclaude:go` only when you want it |
-| Specific skills | Skills are individual `.md` files in `~/.claude/skills/sweetclaude/`. Delete the directory of any skill you do not want. The framework continues working. |
+| Specific skills | Turn features on or off with `/sweetclaude:configure _features`. Skills live in the plugin cache and are restored by `/plugin update`, so deleting them does not last. |
 | Protocol Guardian (when enabled) | `/sweetclaude:configure guardian-off` |
 
-The framework is composed, not monolithic. You can dismantle it piece by piece without breaking what is left.
+The framework is composed, not monolithic. You can turn it off piece by piece without breaking what is left.
 
 ---
 
@@ -123,7 +123,7 @@ The cost is that occasionally a test cannot be made to pass without modification
 
 Override it. Soft gates accept "I've addressed this informally — proceed." That logs the override and continues. The override is in the decision log so you can revisit it later.
 
-Hard gates (⚠️) require explicit risk acceptance with the override logged. The list of hard gates is short — about half a dozen — and they exist for situations where the blast radius justifies the friction. See [phases-and-workflows.md](phases-and-workflows.md) for the full list. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+Hard gates require explicit risk acceptance with the override logged. The list of hard gates is short — about half a dozen — and they exist for situations where the blast radius justifies the friction. See [phases-and-workflows.md](phases-and-workflows.md) for the full list. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 If you find yourself overriding the same gate repeatedly, that is a signal worth investigating. Either the gate is wrong for your context (file an issue) or your work is consistently skipping a step that matters.
 
@@ -138,7 +138,7 @@ Run `/sweetclaude:configure doctor` first. Doctor scans the project and routes m
 Everything in `.sweetclaude/`. Specifically:
 
 - `state/sweetclaude.yaml` — current phase, work item, deference level, feature state
-- `state/project.yaml` — project metadata
+- `state/project.yaml` — optional project metadata, not created by setup
 - `state/decision-log.md` — every decision recorded
 - `state/assumption-register.md` — assumptions worth checking
 - `state/improvement-register.md` — feedback from past sessions
@@ -175,7 +175,7 @@ You will see SweetClaude's docs take positions: phase dwelling matters, time est
 
 ## What if I want to contribute?
 
-Skills are markdown files. Read a few of the existing skill files in `~/.claude/skills/sweetclaude/` (after install) or in the cloned repo's `skills/` directory. The structure is consistent. New skills follow the same pattern: frontmatter with `name` and `description`, then a body that walks the user through the work.
+Skills are markdown files. Read a few of the existing ones in the repo: the nine public commands are in `skills/<command>/SKILL.md`, and the workflows they route to are in `skill-library/<category>/<workflow>/SKILL.md`. The structure is consistent. Each file starts with frontmatter holding `spdx-license`, `user-invocable` and `description`, then a body that walks the user through the work.
 
 If you want to propose a new work type or workflow shape, that is a config change in `config/workflow-templates.yaml` plus possibly new skills. Discuss in an issue first — these are coordinated changes.
 
@@ -183,7 +183,7 @@ If you want to propose a new work type or workflow shape, that is a config chang
 
 ## What's planned?
 
-The current backlog priorities are personas and synthetic research (a focus-group caucus skill that runs synthetic user panels against validated personas), the skill generator (describe a workflow, get a SKILL.md), and TDD tooling hardening (`allowed-tools` enforcement for test-writer and implementer subagents). Security planning, infrastructure change, and additional deployment flows are also in the backlog.
+The roadmap lists behavioral regression CI (running the behavioral contract suite on a trigger tied to model version tags and publishing model-tagged compliance reports) and standalone `init` and `adopt` skills as next. Later items are a README reorganization, a dedicated security planning skill and a dedicated infrastructure change skill. See `ROADMAP.md` in the repo.
 
 ---
 

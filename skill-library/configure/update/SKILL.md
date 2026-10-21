@@ -78,7 +78,7 @@ Installed version: {version}
 Channel: {channel} (retired — no further updates)
 
 One-time switch to the {retirement_target_channel} channel — run these in
-order so you are never double-installed:
+order so SweetClaude stays installed throughout (both channels are installed briefly, and all three steps finish before you restart Claude Code):
 
 /plugin marketplace add carson-sweet/sweetclaude@main
 /plugin install sweetclaude@sweetclaude-stable

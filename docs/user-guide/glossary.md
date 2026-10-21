@@ -1,7 +1,7 @@
 # SweetClaude Glossary
 
-**Version:** 1.0
-**Date:** 2026-05-06
+**Version:** 1.1
+**Date:** 2026-10-21
 
 Quick definitions for SweetClaude-specific terms. When you see one of these in the docs and want to know what it means, this is the lookup.
 
@@ -17,7 +17,7 @@ How much SweetClaude stops and waits for your approval. Three levels: *Collabora
 SweetClaude's commitment to not pushing you forward. It never asks "ready to move on?" or "shall we proceed?" — you decide when a phase is done. Iteration is the work; advancement happens when you say so.
 
 **Phase gate**
-A quality checkpoint between phases. SweetClaude will not advance to the next phase until the exit criteria for the current one are met. *Soft gates* can be bypassed with "I've addressed this informally — proceed." *Hard gates* (marked ⚠️) require explicit risk acceptance logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+A quality checkpoint between phases. SweetClaude will not advance to the next phase until the exit criteria for the current one are met. *Soft gates* can be bypassed with "I've addressed this informally — proceed." *Hard gates* require explicit risk acceptance logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
 
 **Subagent**
 A separate Claude instance spawned for a specific task — test writing, implementation, code review, QA, security review. Subagents have isolated context windows: the implementer never sees the spec, only the failing tests. This prevents rationalization across contexts.
@@ -74,7 +74,7 @@ A fixed-length time container for work (Agile). Groups stories by when they will
 The atomic unit of work. Describes something a user or the system needs, with enough specificity to know when it is done. Every story has a status and a priority. Stories keep their ID when promoted from the backlog to the roadmap. See [Planning Concepts](planning-concepts.md).
 
 **`.sweetclaude/` directory**
-Where SweetClaude keeps all its own artifacts — state, product docs, design docs, plans. Intentionally separate from your distributable codebase so SweetClaude's work never mingles with the code you ship. Commit this directory to git — it's project history, not scratch.
+Where SweetClaude keeps all its own artifacts — state, product docs, design docs, plans. Intentionally separate from your distributable codebase so SweetClaude's work never mingles with the code you ship. Commit this directory to git except derived state: the guardian flag and recovery snapshots (`.sweetclaude/state/recovery-runs/`, which setup gitignores) stay out of source control. The rest is project history, not scratch.
 
 ## Doctor
 
@@ -86,11 +86,11 @@ The safety flow for projects left in bad update, doctor, repair, or unsafe migra
 
 ## Compatibility Mode
 
-A 4.x beta maintenance state where recovery has accepted a legacy taxonomy layout without moving product artifacts. Doctor collapses accepted legacy taxonomy noise and does not present a migration prompt.
+A maintenance state where recovery has accepted a legacy taxonomy layout without moving product artifacts. Doctor collapses accepted legacy taxonomy noise and does not present a migration prompt.
 
-## Stable 3.x Channel
+## Stable Channel
 
-The recommended SweetClaude plugin channel for normal active project work. Installed with `carson-sweet/sweetclaude@stable-3.x` and `sweetclaude@sweetclaude-stable`.
+The recommended SweetClaude plugin channel for normal active project work. It is the 5.x line on `main`, installed with `carson-sweet/sweetclaude@main` and `sweetclaude@sweetclaude-stable`. The older 3.x line is the legacy channel, installed from `carson-sweet/sweetclaude@stable-3.x` as `sweetclaude@sweetclaude-legacy`.
 
 ## 4.x Beta Channel
 
