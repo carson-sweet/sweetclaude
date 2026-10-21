@@ -2912,7 +2912,7 @@ rows:
   test_level:
   - unit
   status: open
-  notes: Found while building the ledger (group C agent). Same class of bug as the work-item-artifacts backfill path.
+  notes: 'Found while building the ledger (group C agent). Same class of bug as the work-item-artifacts backfill path. Test change reviewed 2026-10-21: tests/test_process_controls_in_skills.py asserted the bare `python3 scripts/success_criteria_contracts.py` form this row declares a bug; that one assertion now expects the ${CLAUDE_PLUGIN_ROOT} form.'
 - id: R-230
   source: D
   docs:
