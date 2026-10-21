@@ -313,6 +313,16 @@ subprocess.run(['python3', os.path.expanduser('${CLAUDE_PLUGIN_ROOT}/scripts/cac
 subprocess.run(['bash', os.path.expanduser('${CLAUDE_PLUGIN_ROOT}/hooks/generate-session-state.sh')], capture_output=True)
 ```
 
+### Test command
+
+The auto-test-runner hook runs the project's tests after source edits while a TDD cycle is implementing. It resolves the command from `testing.test_command` in `.sweetclaude/state/project.yaml` and, when that file or key is absent, detects `python3 -m pytest -q` from pytest configuration or `npm test` from a `package.json` test script. When the project's test command is known during setup and differs from what detection would find, record it in `.sweetclaude/state/project.yaml` without overwriting other keys:
+
+```yaml
+testing:
+  test_command: <command that runs the full suite>
+  timeout_seconds: 120
+```
+
 The session-state generator resolves the project root with `git rev-parse`. In a
 directory that is not a git repository it exits without writing, and the file is
 created at the first session instead.

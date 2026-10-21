@@ -34,37 +34,13 @@ PHASE_FILE="${STATE_DIR}/phase.yaml"
 SC_YAML="${STATE_DIR}/sweetclaude.yaml"
 PROJECT_CONFIG="${STATE_DIR}/project.yaml"
 
-# No state at all, or no project config — skip
-if { [ ! -f "$PHASE_FILE" ] && [ ! -f "$SC_YAML" ]; } || [ ! -f "$PROJECT_CONFIG" ]; then
+# No state at all — skip
+if [ ! -f "$PHASE_FILE" ] && [ ! -f "$SC_YAML" ]; then
   exit 0
 fi
 
-# Resolve phase and tdd_phase from sweetclaude.yaml, which is canonical, and
-# fall back to the phase.yaml mirror for projects mid-migration. Reading only
-# the mirror meant this never ran on a v4 project (ISSUE-281), and tdd_phase
-# was written by nothing at all (ISSUE-282).
-read_tdd_state() {
-  SC_YAML="$1" PHASE_YAML="$2" python3 - <<'PYEOF' 2>/dev/null
-import os, yaml
-
-def load(path):
-    try:
-        with open(path) as f:
-            return yaml.safe_load(f) or {}
-    except Exception:
-        return {}
-
-sc = load(os.environ.get("SC_YAML", ""))
-mirror = load(os.environ.get("PHASE_YAML", ""))
-active = (sc.get("work") or {}).get("active") or {}
-phase = active.get("phase") or mirror.get("phase") or ""
-tdd = active.get("tdd_phase") or mirror.get("tdd_phase") or ""
-print(f"{phase}\n{tdd}")
-PYEOF
-}
-
 # Only run during implementation phase, tdd_phase = implementing
-TDD_STATE=$(read_tdd_state "$SC_YAML" "$PHASE_FILE")
+TDD_STATE=$(python3 "$HOOK_IO" tdd-state "$SC_YAML" "$PHASE_FILE" 2>/dev/null) || exit 0
 PHASE=$(printf '%s' "$TDD_STATE" | sed -n '1p')
 TDD_PHASE=$(printf '%s' "$TDD_STATE" | sed -n '2p')
 
@@ -92,14 +68,20 @@ if [ "$IS_TEST" = true ]; then
   exit 0
 fi
 
-# Read test command from project config
-TEST_CMD=$(grep "^  test_command:" "$PROJECT_CONFIG" 2>/dev/null | sed 's/^  test_command: //')
+# An explicit test command in project config wins; otherwise detect one from the project
+TEST_CMD=""
+if [ -f "$PROJECT_CONFIG" ]; then
+  TEST_CMD=$(grep "^  test_command:" "$PROJECT_CONFIG" 2>/dev/null | sed 's/^  test_command: //')
+fi
+if [ -z "$TEST_CMD" ]; then
+  TEST_CMD=$(python3 "$HOOK_IO" detect-test-command "$PROJECT_DIR")
+fi
 
 if [ -z "$TEST_CMD" ]; then
   exit 0
 fi
 
-TIMEOUT_SECONDS=$(grep "^  timeout_seconds:" "$PROJECT_CONFIG" 2>/dev/null | sed 's/^  timeout_seconds: *//' | tr -d ' "')
+TIMEOUT_SECONDS=$([ -f "$PROJECT_CONFIG" ] && grep "^  timeout_seconds:" "$PROJECT_CONFIG" 2>/dev/null | sed 's/^  timeout_seconds: *//' | tr -d ' "')
 case "$TIMEOUT_SECONDS" in
   ''|*[!0-9]*) TIMEOUT_SECONDS=120 ;;
 esac

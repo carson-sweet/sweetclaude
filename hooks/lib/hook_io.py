@@ -13,6 +13,8 @@
 #   hook_io.py flag-root PROJECT_DIR
 #   hook_io.py run-tests PROJECT_DIR COMMAND TIMEOUT_SECONDS
 #   hook_io.py wip-limit                (PreToolUse payload on stdin; denies a fourth activation)
+#   hook_io.py tdd-state SC_YAML PHASE_YAML   (prints phase, tdd_phase, released files; exit 3 without PyYAML)
+#   hook_io.py detect-test-command PROJECT_DIR
 
 from __future__ import annotations
 
@@ -159,6 +161,49 @@ def tokenize_shell(command: str) -> list[str]:
         return list(lexer)
     except ValueError:
         return [token.strip("'\"") for token in re.findall(r"""&>>|&>|>>|>\||>|[;&|()]+|[^\s;&|()<>]+""", command)]
+
+
+def tdd_state(sc_yaml: str, phase_yaml: str) -> tuple[str, str, list[str]]:
+    import yaml
+
+    def load(path: str) -> dict:
+        try:
+            with open(path, encoding="utf-8") as handle:
+                data = yaml.safe_load(handle) or {}
+            return data if isinstance(data, dict) else {}
+        except (OSError, yaml.YAMLError):
+            return {}
+
+    canonical = load(sc_yaml) if sc_yaml else {}
+    mirror = load(phase_yaml) if phase_yaml else {}
+    active = (canonical.get("work") or {}).get("active") or {}
+    phase = active.get("phase") or mirror.get("phase") or ""
+    tdd = active.get("tdd_phase") or mirror.get("tdd_phase") or ""
+    released = [str(item) for item in (active.get("tdd_released_files") or [])]
+    return str(phase), str(tdd), released
+
+
+def detect_test_command(project: str) -> str:
+    def read(name: str) -> str:
+        try:
+            with open(os.path.join(project, name), encoding="utf-8", errors="replace") as handle:
+                return handle.read()
+        except OSError:
+            return ""
+
+    pytest_markers = (("pytest.ini", ""), ("pyproject.toml", "pytest"), ("setup.cfg", "pytest"),
+                      ("tox.ini", "pytest"), ("conftest.py", ""))
+    for name, marker in pytest_markers:
+        if os.path.isfile(os.path.join(project, name)) and marker in read(name):
+            return "python3 -m pytest -q"
+    try:
+        scripts = (json.loads(read("package.json")) or {}).get("scripts") or {}
+    except ValueError:
+        scripts = {}
+    script = scripts.get("test") if isinstance(scripts, dict) else None
+    if isinstance(script, str) and script.strip() and "no test specified" not in script:
+        return "npm test --silent"
+    return ""
 
 
 ISSUE_FILE = re.compile(r"^(ISSUE-\d+)-.*\.md$", re.IGNORECASE)
@@ -330,7 +375,17 @@ def main(argv: list[str]) -> int:
         if reason:
             emit(deny_output(reason))
         return 0
-    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit\n")
+    if command == "tdd-state" and len(argv) == 3:
+        try:
+            phase, tdd, released = tdd_state(argv[1], argv[2])
+        except ImportError:
+            return 3
+        sys.stdout.write("\n".join([phase, tdd, *released]))
+        return 0
+    if command == "detect-test-command" and len(argv) == 2:
+        sys.stdout.write(detect_test_command(argv[1]))
+        return 0
+    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|tdd-state|detect-test-command\n")
     return 2
 
 
