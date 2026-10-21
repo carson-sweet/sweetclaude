@@ -55,7 +55,7 @@ If the request is classified as a large/high-rigor story, the matched
 large-story path runs DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, and
 SHIP/closeout with controller-enforced phase gates and hook-verified
 enforcement. It must route through
-`python3 scripts/large_story_controller.py route --route-surface /sweetclaude:go`.
+`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/large_story_controller.py route --route-surface /sweetclaude:go`.
 Completion language is controller-owned — never claim completion the
 controller has not authorized.
 
@@ -63,7 +63,7 @@ If the request is classified as a small/bounded story, the matched
 small-story path runs DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, and
 SHIP/closeout with controller-enforced phase gates and hook-verified
 enforcement. It must route through
-`python3 scripts/small_story_controller.py route --route-surface /sweetclaude:go`.
+`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py route --route-surface /sweetclaude:go`.
 Completion language is controller-owned — never claim completion the
 controller has not authorized.
 

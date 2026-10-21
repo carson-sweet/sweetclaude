@@ -125,9 +125,9 @@ CONTRACT_AMENDMENT_MESSAGE = (
     "frozen at workflow init and is human-gated (amendment_policy: "
     "human_approved_only); the model may not edit it. To amend with recorded "
     "user approval: (1) get explicit user approval for the change, (2) record "
-    "it: python3 scripts/small_story_controller.py approve-amendment "
+    "it: python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py approve-amendment "
     "--workflow-id <id> --criterion <SC-NNN> --reason <why>, then (3) apply it: "
-    "python3 scripts/small_story_controller.py amend-contract --workflow-id <id> "
+    "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py amend-contract --workflow-id <id> "
     "--criterion <SC-NNN> --approval-ref <ref> --fields <json>. This re-freezes "
     "the contract and rebinds the active workflow in place (no re-init). Without "
     "a valid single-use approval, amendment stays blocked. Otherwise route the "
@@ -1276,7 +1276,7 @@ def gate_tool_use(
                 "Small-story gate failed closed: workflow state is unreadable "
                 f"({', '.join(unreadable)}). This is a damaged state file, not "
                 "a phase violation — repair or remove it, then retry. Run "
-                "'python3 scripts/small_story_controller.py render-status' to "
+                "'python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py render-status' to "
                 "inspect."
             ),
             "workflow_id": None,
@@ -1349,7 +1349,7 @@ def gate_tool_use(
                     False,
                     f"{BLOCKED_GATE_MESSAGE} {rel} is controller-owned state. "
                     "To complete the workflow and clear the active work item, "
-                    "run `python3 scripts/small_story_controller.py ship "
+                    "run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py ship "
                     f"--workflow-id {workflow_id}` via Bash instead of editing "
                     "phase.yaml directly.",
                 )
@@ -1385,7 +1385,7 @@ def gate_tool_use(
                         False,
                         f"{BLOCKED_GATE_MESSAGE} Command references controller-owned "
                         "phase.yaml. To complete the workflow and clear the active "
-                        "work item, run `python3 scripts/small_story_controller.py "
+                        "work item, run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py "
                         f"ship --workflow-id {workflow_id}` instead.",
                     )
                 return _decision(

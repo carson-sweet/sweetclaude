@@ -82,13 +82,13 @@ as "looks good", "adequate", "comprehensive", "SOTA", "properly done", or
 Runtime validation must use:
 
 ```bash
-python3 scripts/success_criteria_contracts.py validate-contract --contract .sweetclaude/contracts/success-criteria-contract.yaml
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-contract --contract .sweetclaude/contracts/success-criteria-contract.yaml
 ```
 
 The canonical workflow-facing command is:
 
 ```bash
-python3 scripts/success_criteria_contracts.py validate-workflow --stage define-exit
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-workflow --stage define-exit
 ```
 
 Workflow orchestrator exits for large/high-rigor work must include the
@@ -114,13 +114,13 @@ binary outcome: `all_success_criteria_passed == true` or `false`.
 Runtime completion validation must use:
 
 ```bash
-python3 scripts/success_criteria_contracts.py validate-ledger --contract .sweetclaude/contracts/success-criteria-contract.yaml --ledger .sweetclaude/reports/success-criteria-ledger.json
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-ledger --contract .sweetclaude/contracts/success-criteria-contract.yaml --ledger .sweetclaude/reports/success-criteria-ledger.json
 ```
 
 The canonical workflow-facing completion command is:
 
 ```bash
-python3 scripts/success_criteria_contracts.py validate-workflow --stage completion
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-workflow --stage completion
 ```
 
 Workflow orchestrator completion exits for large/high-rigor work must include
