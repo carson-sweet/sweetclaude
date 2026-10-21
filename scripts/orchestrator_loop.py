@@ -7,6 +7,7 @@ import yaml
 from datetime import datetime, timezone
 
 import orchestrator_actions
+from parse_utils import parse_artifact_file
 from success_criteria_contracts import record_workflow_closeout
 from orchestrator import (
     assemble_context_envelope,
@@ -202,11 +203,27 @@ def _set_orchestrated(project_dir, workflow_id, state_file_path):
     _save_sc_yaml(sc, project_dir)
 
 
+HARD_GATE_TYPES = frozenset({
+    "data-migration", "infrastructure-change", "technology-migration", "security-patch",
+})
+
+
+def _tag_hard_gate_type(project_dir, workflow_id, active):
+    item_path = _find_item_file(project_dir, workflow_id)
+    if not item_path:
+        return
+    item_type = str((parse_artifact_file(item_path) or {}).get("type") or "").strip()
+    if not item_type:
+        return
+    active["type"] = item_type if item_type in HARD_GATE_TYPES else None
+
+
 def _update_sc_phase(project_dir, workflow_id, phase):
     sc = _load_sc_yaml(project_dir)
     work = sc.setdefault("work", {})
     active = work.setdefault("active", {})
     active["phase"] = phase
+    _tag_hard_gate_type(project_dir, workflow_id, active)
     _save_sc_yaml(sc, project_dir)
 
 

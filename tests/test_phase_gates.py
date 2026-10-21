@@ -201,13 +201,15 @@ def decision_log(project: Path) -> str:
 def write_pass_record(project: Path, gate_id: str, item_id: str = "ISSUE-001") -> None:
     log_path = project / ".sweetclaude" / "state" / "decision-log.md"
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    log_path.write_text(
+    existing = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
+    entry = (
         f"## {gate_id} — {item_id}\n\n"
         "**Date:** 2026-10-21\n"
         f"**Work item:** {item_id}\n"
-        "**Result:** pass\n",
-        encoding="utf-8",
+        "**Result:** pass\n"
     )
+    with open(log_path, "a", encoding="utf-8") as handle:
+        handle.write(("\n" if existing else "") + entry)
 
 
 def active_state(project: Path) -> dict:

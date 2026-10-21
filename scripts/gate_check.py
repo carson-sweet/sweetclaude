@@ -564,6 +564,26 @@ def record_phase_exit(ctx: ProjectContext, phase: str, satisfied: list[str]) -> 
             pass
 
 
+def gate_pass_record(ctx: ProjectContext, gate_id: str, item_id: str) -> bool:
+    """True when decision-log.md has an entry headed `gate_id` with
+    "Result: pass" and the work item id — the solutioning-gate pass-record
+    convention, generalized to every hard-gate prerequisite."""
+    log_path = Path(ctx.project_dir) / ".sweetclaude" / "state" / "decision-log.md"
+    try:
+        text = log_path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    wanted = str(gate_id).casefold()
+    for chunk in re.split(r"^## ", text, flags=re.M)[1:]:
+        heading = chunk.splitlines()[0].casefold().strip()
+        if heading != wanted and not re.match(re.escape(wanted) + r"[\s:—-]", heading):
+            continue
+        body = re.sub(r"[*_]", "", chunk).casefold()
+        if "result: pass" in body and item_id.casefold() in body:
+            return True
+    return False
+
+
 def phase_exit_criteria(phase: str, ctx: ProjectContext, override_text: str = "") -> list[dict]:
     """The exit criteria for the work item's current phase, parsed from
     rules/phase-gates.md minus the ones recorded as satisfied under
@@ -589,31 +609,57 @@ def phase_exit_criteria(phase: str, ctx: ProjectContext, override_text: str = ""
         return []
     records, _ = phase_exit_records(ctx)
     satisfied = {normalize_criterion(c) for c in records.get(current, [])}
+    satisfied_gates = {str(g).casefold() for entries in records.values() for g in entries}
     unmet = [c for c in section["criteria"] if normalize_criterion(c) not in satisfied]
-    if not unmet:
-        return []
+    entries: list[dict] = []
     gate_id = f"{wtype}.{current}"
     hard = bool(section["hard"]) and project_version_stage(ctx) in (hard_gate_policy().get("apply_at") or set())
-    listing = "; ".join(unmet)
-    if hard and hard_override_matches(override_text, gate_id):
-        return [{"id": gate_id, "met": True, "action": "block",
-                 "override": ("hard", gate_id, current, unmet)}]
-    if not hard and soft_escape_matches(override_text):
-        return [{"id": gate_id, "met": True, "action": "block",
-                 "override": ("soft", gate_id, current, unmet)}]
-    if hard:
-        reason = (
-            f"Gate {gate_id} unmet: exit criteria for {current} not recorded as satisfied. "
-            f"Unmet: {listing}.{HARD_GATE_SUFFIX} "
-            f'Override requires explicit risk acceptance: "I accept the risk of {gate_id}".'
-        )
-    else:
-        reason = (
-            f"Gate {gate_id} unmet: exit criteria for {current} not recorded as satisfied. "
-            f"Unmet: {listing}. Soft gate: bypass with \"{SOFT_GATE_ESCAPE}\" "
-            "(the override is logged to the decision log)."
-        )
-    return [{"id": gate_id, "met": False, "action": "block", "reason": reason}]
+    if unmet:
+        listing = "; ".join(unmet)
+        if hard and hard_override_matches(override_text, gate_id):
+            entries.append({"id": gate_id, "met": True, "action": "block",
+                            "override": ("hard", gate_id, current, unmet)})
+        elif not hard and soft_escape_matches(override_text):
+            entries.append({"id": gate_id, "met": True, "action": "block",
+                            "override": ("soft", gate_id, current, unmet)})
+        else:
+            if hard:
+                reason = (
+                    f"Gate {gate_id} unmet: exit criteria for {current} not recorded as satisfied. "
+                    f"Unmet: {listing}.{HARD_GATE_SUFFIX} "
+                    f'Override requires explicit risk acceptance: "I accept the risk of {gate_id}".'
+                )
+            else:
+                reason = (
+                    f"Gate {gate_id} unmet: exit criteria for {current} not recorded as satisfied. "
+                    f"Unmet: {listing}. Soft gate: bypass with \"{SOFT_GATE_ESCAPE}\" "
+                    "(the override is logged to the decision log)."
+                )
+            entries.append({"id": gate_id, "met": False, "action": "block", "reason": reason})
+
+    if project_version_stage(ctx) not in (hard_gate_policy().get("apply_at") or set()):
+        return entries
+
+    policy = hard_gate_policy()
+    if current in (policy.get("phases") or {}).get(wtype, []):
+        for prerequisite in (policy.get("tasks") or {}).get(wtype, []):
+            if (prerequisite.casefold() in satisfied_gates
+                    or gate_pass_record(ctx, prerequisite, item_id)):
+                continue
+            if hard_override_matches(override_text, prerequisite):
+                entries.append({"id": prerequisite, "met": True, "action": "block",
+                                "override": ("hard", prerequisite, current, [prerequisite])})
+                continue
+            entries.append({
+                "id": prerequisite, "met": False, "action": "block",
+                "reason": (
+                    f"Gate {prerequisite} unmet: required by the hard gate policy before "
+                    f"{wtype} advances past {current} (config/workflow-templates.yaml "
+                    f"hard_gate_tasks).{HARD_GATE_SUFFIX} "
+                    f'Override requires explicit risk acceptance: "I accept the risk of {prerequisite}".'
+                ),
+            })
+    return entries
 
 
 def evaluate_advance(phase: str, override_text: str, ctx: ProjectContext) -> dict:
