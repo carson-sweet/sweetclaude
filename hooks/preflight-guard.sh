@@ -12,7 +12,9 @@ hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
 
 PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
-PROJECT_HASH=$(echo -n "$PROJECT_DIR" | md5 2>/dev/null || echo -n "$PROJECT_DIR" | md5sum 2>/dev/null | cut -d' ' -f1)
+FLAG_ROOT=$(python3 "$HOOK_IO" flag-root "$PROJECT_DIR")
+PROJECT_HASH=$(printf '%s' "$FLAG_ROOT" | md5 2>/dev/null \
+  || printf '%s' "$FLAG_ROOT" | md5sum 2>/dev/null | cut -d' ' -f1)
 FLAG="/tmp/.sweetclaude-needs-preflight-${PROJECT_HASH}"
 
 # No flag — allow

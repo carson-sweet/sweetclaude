@@ -100,7 +100,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-test-runner.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-test-runner.sh",
+            "timeout": 150
           }
         ]
       },

@@ -74,15 +74,17 @@ fi
 
 # Don't run on test files (we only run tests when source changes)
 TEST_PATTERNS=("test/" "tests/" "__tests__/" "spec/" "specs/" ".test." ".spec." "_test." "_spec." "test_")
+REL_FILE=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" rel-path "$FILE")
+
 IS_TEST=false
 for pattern in "${TEST_PATTERNS[@]}"; do
-  if [[ "$FILE" == *"$pattern"* ]]; then
+  if [[ "$REL_FILE" == *"$pattern"* ]]; then
     IS_TEST=true
     break
   fi
 done
 
-if [[ "$FILE" == *.feature ]]; then
+if [[ "$REL_FILE" == *.feature ]]; then
   IS_TEST=true
 fi
 
@@ -97,12 +99,12 @@ if [ -z "$TEST_CMD" ]; then
   exit 0
 fi
 
-# Run tests and report a failing run back to the model as additionalContext
-TEST_OUTPUT=$(cd "$PROJECT_DIR" && eval "$TEST_CMD" 2>&1)
-TEST_STATUS=$?
-if [ "$TEST_STATUS" -ne 0 ]; then
-  python3 "$HOOK_IO" context PostToolUse "Tests failed (exit $TEST_STATUS) running: $TEST_CMD
-$(printf '%s\n' "$TEST_OUTPUT" | tail -20)"
-fi
+TIMEOUT_SECONDS=$(grep "^  timeout_seconds:" "$PROJECT_CONFIG" 2>/dev/null | sed 's/^  timeout_seconds: *//' | tr -d ' "')
+case "$TIMEOUT_SECONDS" in
+  ''|*[!0-9]*) TIMEOUT_SECONDS=120 ;;
+esac
+
+# Run tests under a bound and report a failing or timed-out run as additionalContext
+python3 "$HOOK_IO" run-tests "$PROJECT_DIR" "$TEST_CMD" "$TIMEOUT_SECONDS"
 
 exit 0

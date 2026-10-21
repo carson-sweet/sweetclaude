@@ -125,9 +125,7 @@ TEST_PATTERNS=(
 # "tests/" would otherwise have every source file treated as a test file and
 # refused during implementation (ISSUE-282). Whether a file is a test is a
 # property of where it sits in the project, not where the project sits on disk.
-REAL_PROJECT=$(cd "$PROJECT_DIR" 2>/dev/null && pwd -P || echo "$PROJECT_DIR")
-REAL_TARGET=$(cd "$(dirname "$FILE")" 2>/dev/null && printf '%s/%s' "$(pwd -P)" "$(basename "$FILE")" || echo "$FILE")
-REL_FILE="${REAL_TARGET#"$REAL_PROJECT"/}"
+REL_FILE=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" rel-path "$FILE")
 
 IS_TEST=false
 for pattern in "${TEST_PATTERNS[@]}"; do

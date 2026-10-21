@@ -90,8 +90,9 @@ except Exception:
 fi
 
 # Check 2: bootstrap has run this session.
-PROJECT_HASH=$(printf '%s' "$PROJECT_DIR" | md5 2>/dev/null \
-  || printf '%s' "$PROJECT_DIR" | md5sum 2>/dev/null | cut -d' ' -f1)
+FLAG_ROOT=$(python3 "$HOOK_IO" flag-root "$PROJECT_DIR")
+PROJECT_HASH=$(printf '%s' "$FLAG_ROOT" | md5 2>/dev/null \
+  || printf '%s' "$FLAG_ROOT" | md5sum 2>/dev/null | cut -d' ' -f1)
 BOOTSTRAP_FLAG="/tmp/.sweetclaude-bootstrap-ran-${PROJECT_HASH}"
 if [ ! -f "$BOOTSTRAP_FLAG" ]; then
   python3 "$HOOK_IO" deny "BLOCKED: sweetclaude:bootstrap has not run this session. Bootstrap handles drift detection and session setup. Invoke the sweetclaude:bootstrap skill first, then retry."

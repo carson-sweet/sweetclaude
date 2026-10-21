@@ -9,12 +9,19 @@
 #   hook_io.py deny REASON
 #   hook_io.py context EVENT TEXT
 #   hook_io.py block REASON
+#   hook_io.py rel-path FILE            (project dir from stdin payload)
+#   hook_io.py flag-root PROJECT_DIR
+#   hook_io.py run-tests PROJECT_DIR COMMAND TIMEOUT_SECONDS
 
 from __future__ import annotations
 
 import json
 import os
+import signal
+import subprocess
 import sys
+
+OUTPUT_TAIL_BYTES = 32 * 1024
 
 
 def read_input(stream=None) -> dict:
@@ -43,6 +50,46 @@ def get_field(data: dict, dotted: str, default: str = "") -> str:
 
 def project_dir(data: dict) -> str:
     return os.environ.get("CLAUDE_PROJECT_DIR") or str(data.get("cwd") or "") or os.getcwd()
+
+
+def relative_path(file: str, project: str) -> str:
+    real_project = os.path.realpath(project)
+    directory, base = os.path.split(file)
+    real_file = os.path.join(os.path.realpath(directory or "."), base)
+    prefix = real_project.rstrip("/") + "/"
+    return real_file[len(prefix):] if real_file.startswith(prefix) else file
+
+
+def flag_root(project: str) -> str:
+    try:
+        result = subprocess.run(["git", "-C", project, "rev-parse", "--show-toplevel"],
+                                capture_output=True, text=True, timeout=30)
+        top = result.stdout.strip()
+        if result.returncode == 0 and top:
+            return top
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return project.rstrip("/") or "/"
+
+
+def run_tests(project: str, command: str, timeout_seconds: int) -> dict | None:
+    proc = subprocess.Popen(["bash", "-c", command], cwd=project, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, start_new_session=True)
+    try:
+        out, _ = proc.communicate(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        out, _ = proc.communicate()
+        tail = out[-OUTPUT_TAIL_BYTES:].decode("utf-8", errors="replace")
+        return context_output("PostToolUse",
+                              f"Tests timed out after {timeout_seconds}s running: {command}\n{tail}")
+    if proc.returncode == 0:
+        return None
+    tail = out[-OUTPUT_TAIL_BYTES:].decode("utf-8", errors="replace")
+    return context_output("PostToolUse", f"Tests failed (exit {proc.returncode}) running: {command}\n{tail}")
 
 
 def deny_output(reason: str) -> dict:
@@ -92,7 +139,18 @@ def main(argv: list[str]) -> int:
     if command == "block" and len(argv) == 2:
         emit(block_output(argv[1]))
         return 0
-    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block\n")
+    if command == "rel-path" and len(argv) == 2:
+        sys.stdout.write(relative_path(argv[1], project_dir(read_input())))
+        return 0
+    if command == "flag-root" and len(argv) == 2:
+        sys.stdout.write(flag_root(argv[1]))
+        return 0
+    if command == "run-tests" and len(argv) == 4:
+        output = run_tests(argv[1], argv[2], int(argv[3]))
+        if output:
+            emit(output)
+        return 0
+    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests\n")
     return 2
 
 

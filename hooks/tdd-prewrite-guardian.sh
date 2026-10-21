@@ -40,6 +40,8 @@ if [[ "$PHASE" != "implement" ]]; then
   exit 0
 fi
 
+REL_FILE=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" rel-path "$FILE")
+
 # Determine if target file is a test file — if so, allow
 TEST_PATTERNS=(
   "/test/" "/tests/" "/__tests__/" "/spec/" "/specs/"
@@ -47,7 +49,7 @@ TEST_PATTERNS=(
   "test_"
 )
 for pattern in "${TEST_PATTERNS[@]}"; do
-  if [[ "$FILE" == *"$pattern"* ]]; then
+  if [[ "/$REL_FILE" == *"$pattern"* ]]; then
     exit 0
   fi
 done
@@ -78,7 +80,7 @@ done
 # Non-code path patterns — allow docs, config, state dirs
 NON_CODE_PATHS=("docs/" ".sweetclaude/" "config/" ".github/" "scripts/" "dist/" "build/" "node_modules/")
 for path in "${NON_CODE_PATHS[@]}"; do
-  if [[ "$FILE" == *"$path"* ]]; then
+  if [[ "$REL_FILE" == *"$path"* ]]; then
     exit 0
   fi
 done
