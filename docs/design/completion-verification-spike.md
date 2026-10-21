@@ -1,6 +1,6 @@
 # Spike: completion verification and user-selected oversight
 
-**Version:** 0.1
+**Version:** 0.2
 
 **Date:** 2026-10-21
 
@@ -46,7 +46,29 @@ A reviewer on the same model as the worker can share its mistakes. No public dat
 - Minimum: prompt-tuning of the reviewer (sees only the criteria, the receipts and the artifacts; not the worker's reasoning).
 - The user can explicitly accept same-model review as a known risk, and that acceptance is recorded.
 - A second LLM provider can be configured as the judge.
-- A classifier stage: a classifier (the user named "Jev or a similar classifier"; the term needs confirmation) makes a completion decision with a confidence score. Below a confidence threshold, the decision goes to an LLM judge.
+- A classifier stage: Jev or a similar decision model makes a completion decision with a confidence score. Below a confidence threshold, the decision goes to an LLM judge. See "Jev research" below for what is known and the main risk of this pattern.
+
+### Jev research (2026-10-21)
+
+**What it is.** Jev is a decision model from TypeSafe AI, released in September 2026 and marketed as a "System One" model. It does not generate text. It picks from answers the caller defines and returns probabilities. Three question types: choice (pick from supplied options, with a probability per option and a confidence value), score (a probability-weighted position on a defined scale), and a yes/no probability. Sources: [TechCrunch, 2026-09-18](https://techcrunch.com/2026/09/18/a-new-kind-of-ai-model-from-a-chatgpt-inventor-is-thrilling-developers/), [OpenRouter: What is Jev](https://openrouter.ai/blog/insights/what-is-jev/), [Apidog](https://apidog.com/blog/what-is-jev/), [innFactory](https://innfactory.ai/en/blog/jev-system-one-model-classifier-not-llm/).
+
+**Availability and cost.** Available through OpenRouter and as a promptfoo provider ([promptfoo](https://www.promptfoo.dev/docs/providers/typesafe/)); a Palo Alto XSOAR integration exists ([xsoar.pan.dev](https://xsoar.pan.dev/docs/reference/integrations/type-safe-jev)). One guide lists $0.042 per million input tokens, free output tokens, a 64,000-token request limit, text-only input, and model version jev-1.13.0 in late September 2026 ([Linas](https://linas.substack.com/p/how-to-use-jev-ai)). Vercel reported use by 35% of its paid teams within two weeks of launch ([TechCrunch, 2026-10-16](https://techcrunch.com/2026/10/16/jev-is-vercels-fastest-adopted-ai-model-ever/)). These figures are not independently verified.
+
+**Evidence for the cascade pattern.** The "accept when confident, escalate when unsure" cascade is the main proposed use ([arXiv 2609.26550](https://arxiv.org/pdf/2609.26550)). On OpenRouter's 88-case faithfulness set, Jev's Brier score was 0.043 against 0.054 for an LLM judge, and verdicts above 0.8 confidence were acceptable 98% of the time ([OpenRouter](https://openrouter.ai/blog/tutorials/jev-vs-llm-as-a-judge/); [Beam](https://beam.ai/agentic-insights/llm-as-a-judge-jev)). These are vendor-run results on a small sample. LLM judges give no comparable native confidence and tend to score near 0 or 1 even when uncertain ([Analytics Vidhya, 2026-10](https://www.analyticsvidhya.com/blog/2026/10/jev-vs-llm-as-a-judge-evals/)).
+
+**Evidence against, relevant to completion judging.**
+
+- Correlated errors: when Jev is wrong with high confidence, about 96% of LLM verdicts repeat the same wrong answer, so an LLM fallback does not reliably catch Jev's confident errors ([arXiv 2609.29769, "Cheaper, Faster, and Wrong in the Same Places"](https://arxiv.org/pdf/2609.29769)). This removes part of the value of the cascade as a guard against same-model blind spots.
+- Jev trails a frontier LLM on tasks where the verdict must be derived (math, code, logic) ([arXiv 2609.26550](https://arxiv.org/pdf/2609.26550)). Completion judging for code work is largely this kind of task.
+- Calibration outside the reported test sets is disputed; one discussion suggests overconfidence on simple cases ([Hacker News](https://news.ycombinator.com/item?id=49933476), anecdotal).
+
+**Implications for this spike.**
+
+- Jev fits fixed-answer decisions with cheap, calibrated routing: "is criterion X met: yes, no, cannot judge", or "which oversight action: accept, send back, escalate to human".
+- It should not be the only judge for criteria that need derivation over code or logic. For those, deterministic receipts (tests, checks) stay primary.
+- The cascade does not give independence: Jev and an LLM judge fail in the same places. If independence is the goal, the escalation target must differ in kind (deterministic check or human), not only in model.
+- Calibration must be measured on SweetClaude's own completion decisions before thresholds are set. The telemetry in concern 4 provides that data.
+- Jev adds an external provider dependency and sends criteria and evidence text to that provider. This needs an explicit user opt-in, like a second LLM provider.
 
 ### 2. Cost and time
 
@@ -85,7 +107,7 @@ QA and CI results can feed the sequence in two ways: as real-time input to compl
 
 ## Open questions
 
-1. What is "Jev"? The term does not appear in the repository or in the October 2026 research.
+1. Which decisions, if any, go to Jev or a similar decision model, and what escalation target follows a low-confidence verdict (LLM judge, deterministic check, or human), given the correlated-error finding?
 2. Is the oversight scale a new setting, or does it replace or merge with the deference level?
 3. Which name and which labels for the scale?
 4. Where do criteria, receipts and the completion record live (per work item, per phase)? The existing control receipts live under `.sweetclaude/state/evidence/`.
