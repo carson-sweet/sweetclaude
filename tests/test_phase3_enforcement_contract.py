@@ -644,3 +644,48 @@ class TestTestGuardianCoversBashAndNotebooksR241:
                 f"hooks-manifest.json test-guardian.sh matcher {entry.get('matcher')!r} omits {tool}")
 
 
+@pytest.fixture
+def hidden_yaml(tmp_path_factory):
+    shadow = tmp_path_factory.mktemp("shadow")
+    (shadow / "yaml.py").write_text("raise ImportError(\"No module named 'yaml'\")\n", encoding="utf-8")
+    return {"PYTHONPATH": str(shadow)}
+
+
+class TestTestGuardianNeedsYamlToStayEnforcedR242:
+    def test_hidden_yaml_really_cannot_be_imported(self, hidden_yaml):
+        env = {**os.environ, **hidden_yaml}
+        probe = subprocess.run(["python3", "-c", "import yaml"], env=env, capture_output=True, text=True, timeout=30)
+        assert probe.returncode != 0
+
+    def test_denies_test_file_write_when_yaml_is_missing(self, project, hidden_yaml):
+        guarded_project(project)
+        result = run_hook_with_env("test-guardian.sh", project, write_call(project, "tests/test_calc.py", "x\n"),
+                                   env=hidden_yaml)
+        assert_denied(result)
+
+    def test_denial_names_the_missing_yaml_dependency(self, project, hidden_yaml):
+        guarded_project(project)
+        result = run_hook_with_env("test-guardian.sh", project, write_call(project, "tests/test_calc.py", "x\n"),
+                                   env=hidden_yaml)
+        assert_denied(result)
+        assert "yaml" in deny_reason(result).lower()
+
+    def test_denies_test_file_edit_when_yaml_is_missing(self, project, hidden_yaml):
+        guarded_project(project)
+        result = run_hook_with_env("test-guardian.sh", project, edit_call(project, "tests/test_x.py", "True", "False"),
+                                   env=hidden_yaml)
+        assert_denied(result)
+        assert "yaml" in deny_reason(result).lower()
+
+    def test_allows_source_write_when_yaml_is_missing(self, project, hidden_yaml):
+        guarded_project(project)
+        result = run_hook_with_env("test-guardian.sh", project, write_call(project, "src/calc.py", "x = 1\n"),
+                                   env=hidden_yaml)
+        assert_allowed(result)
+
+    def test_allows_test_file_write_when_yaml_is_missing_and_sweetclaude_is_not_set_up(self, project, hidden_yaml):
+        result = run_hook_with_env("test-guardian.sh", project, write_call(project, "tests/test_calc.py", "x\n"),
+                                   env=hidden_yaml)
+        assert_allowed(result)
+
+
