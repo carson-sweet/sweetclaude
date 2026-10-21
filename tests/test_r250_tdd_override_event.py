@@ -204,3 +204,22 @@ class TestR250ApprovalTextIsPreservedExactly:
         assert result.returncode == 0, result.stderr
         overrides = [d for d in _load_log(project) if isinstance(d, dict) and d.get("event") == "tdd_override"]
         assert [e["approval"] for e in overrides] == [APPROVAL, approval]
+
+
+class TestR250OverrideLoggedRegardlessOfMetrics:
+    @pytest.mark.parametrize("config", [None, "enabled: false\n"], ids=["no-config", "disabled"])
+    def test_release_writes_exactly_one_override_event(self, project, config):
+        config_path = project / ".sweetclaude" / "metrics" / "config.yaml"
+        if config is None:
+            config_path.unlink()
+        else:
+            config_path.write_text(config, encoding="utf-8")
+        _freeze(project)
+
+        result = _tdd(project, "release", "--file", TEST_FILE, "--approval", APPROVAL)
+
+        assert result.returncode == 0, result.stderr
+        overrides = _overrides(project)
+        assert len(overrides) == 1
+        assert str(overrides[0]["file"]).endswith(TEST_FILE)
+        assert overrides[0]["approval"] == APPROVAL
