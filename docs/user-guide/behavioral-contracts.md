@@ -5,7 +5,7 @@
 
 SweetClaude's instruction-guided behavioral properties are probabilistic — they depend on how the underlying model interprets instructions, which can change with model upgrades. This page tracks which contracts have been validated against which model versions.
 
-Score a session transcript against a contract with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN`. Results from that run can be added here.
+Score a session transcript against a contract with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN --backend openai`. Results from that run can be added here.
 
 ---
 
@@ -446,7 +446,7 @@ to replace. It also predates the current model.
 
 ## How to Add Results for a New Model Version
 
-1. Score a session from the new model version with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN`
+1. Score a session from the new model version with `python3 scripts/behavioral_judge.py score --transcript <session.jsonl> --contract CONTRACT-NN --backend openai`
 2. Record results for each contract (PASS / FAIL / PARTIAL)
 3. Note any PARTIAL results with observed behavior
 4. Add a new section to this page following the format above
