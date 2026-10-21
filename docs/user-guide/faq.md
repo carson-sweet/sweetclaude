@@ -56,7 +56,7 @@ You can:
 - Skip phases by saying "I've addressed this informally — proceed."
 - Disable SweetClaude per project by touching `.sweetclaude/disabled`.
 
-What you cannot do — physically cannot — is bypass hard gates. Hard gates apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans. Hard gate overrides require explicit risk acceptance logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+What you cannot do — physically cannot — is bypass hard gates. Hard gates apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans. Hard gate overrides require explicit risk acceptance logged to the decision log.
 
 ---
 
@@ -123,7 +123,7 @@ The cost is that occasionally a test cannot be made to pass without modification
 
 Override it. Soft gates accept "I've addressed this informally — proceed." That logs the override and continues. The override is in the decision log so you can revisit it later.
 
-Hard gates require explicit risk acceptance with the override logged. The list of hard gates is short — about half a dozen — and they exist for situations where the blast radius justifies the friction. See [phases-and-workflows.md](phases-and-workflows.md) for the full list. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+Hard gates require explicit risk acceptance with the override logged. The list of hard gates is short — about half a dozen — and they exist for situations where the blast radius justifies the friction. See [phases-and-workflows.md](phases-and-workflows.md) for the full list.
 
 If you find yourself overriding the same gate repeatedly, that is a signal worth investigating. Either the gate is wrong for your context (file an issue) or your work is consistently skipping a step that matters.
 

@@ -169,7 +169,7 @@ These cost nothing and surface capabilities that are not obvious from the comman
 
 ## When Something Goes Wrong
 
-**Skill blocked you for missing prerequisites.** The skill is honoring a phase gate. You can usually bypass with "I've addressed this informally — proceed." That logs the override and continues. Hard gates cannot be soft-bypassed; for those, see the [phase-gates.md](phases-and-workflows.md) reference. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+**Skill blocked you for missing prerequisites.** The skill is honoring a phase gate. You can usually bypass with "I've addressed this informally — proceed." That logs the override and continues. Hard gates cannot be soft-bypassed; for those, see the [phase-gates.md](phases-and-workflows.md) reference.
 
 **Skill seems stuck in an interview loop.** Tell SweetClaude "go autonomous and finish the draft." It will conduct the rest of the interview internally and produce a draft for review.
 

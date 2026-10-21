@@ -41,7 +41,7 @@ Where the project is in its lifecycle: IDEA → ALPHA → BETA → GA → SCALED
 A Shape Up concept (does not exist in Kanban or Agile modes). A decision artifact produced during the DEFINE phase that records: the core outcome if this ships, the rabbit holes (likely scope explosions), and what is explicitly out of scope. Implementation is hard-blocked until the betting table is approved.
 
 **Agile mode**
-SweetClaude's most structured mode. Uses the full hierarchy: milestones, epics, sprints, and stories. Epics are first-class. Implementation is hard-blocked without an active sprint. Best for teams with stakeholder delivery commitments. See [Planning Concepts](planning-concepts.md). (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+SweetClaude's most structured mode. Uses the full hierarchy: milestones, epics, sprints, and stories. Epics are first-class. Implementation is hard-blocked without an active sprint. Best for teams with stakeholder delivery commitments. See [Planning Concepts](planning-concepts.md).
 
 **Backlog**
 A flat, priority-ranked list of stories that have not yet been scheduled for work. The default landing zone for all new ideas. The backlog is a completely separate structure from the roadmap — backlog stories have no epic and no milestone assignment. Triage moves a story from the backlog to `roadmap/issues/` and its ID does not change; linking it to an epic or a milestone is a separate step. See [Planning Concepts](planning-concepts.md).

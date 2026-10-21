@@ -148,7 +148,7 @@ The dev lead or tech lead then looks at each epic's stories and:
 - Decides the order in which stories should be worked within the epic
 - Organizes stories into sprints, fitting them into time windows and matching available capacity
 
-The result is a roadmap: a structured view of what ships with what, organized around meaningful product outcomes (milestones), with feature-related work bundled together (epics), and specific delivery windows defined (sprints). SweetClaude enforces a hard gate: implementation is blocked unless there is an active sprint. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+The result is a roadmap: a structured view of what ships with what, organized around meaningful product outcomes (milestones), with feature-related work bundled together (epics), and specific delivery windows defined (sprints). SweetClaude enforces a hard gate: implementation is blocked unless there is an active sprint.
 
 Epics work the same way in every mode: status views and big-picture renders include them regardless of the active mode.
 

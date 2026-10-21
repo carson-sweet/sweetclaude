@@ -124,7 +124,7 @@ SweetClaude has four project modes that calibrate structure and enforcement to w
 | **Flow Mode** | Solo exploration, early stage, no ceremony needed | Level 1 | No gates, all skills available. Quietly accumulates thin artifacts in the background. |
 | **Kanban** | Continuous delivery, work organized as a flowing board | Level 1 | WIP limit (default 3 in-progress issues, hard block), `project-sprints` and `product-sprint-plan` sprint-planning skills disabled |
 | **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | `project-sprints` and `project-backlog` skills disabled, betting table approval required before implementation, ship/no-ship gate at cycle end |
-| **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship |
 
 There is also **John Wick mode** — an experimental, fully autonomous SDLC pipeline from discovery through PR (TDD Level 3, subagent isolation, QA caucus). Invoked via `/sweetclaude:build john-wick`, not through the mode selector.
 
@@ -173,7 +173,7 @@ Three levels: collaborative, guided, autonomous.
 
 The honest framing: **deference levels are about how much you trust the framework today**, not about how complex the work is. Your first session should be collaborative because you are still building a model of what SweetClaude does. Your tenth feature in the same project might be autonomous because you have seen the rhythm and you are tired of confirming sub-steps.
 
-Autonomous does not mean unsupervised. The framework still pauses at phase gates. It still respects hard gates. It still saves state. It just stops asking "okay to proceed?" between every micro-step. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+Autonomous does not mean unsupervised. The framework still pauses at phase gates. It still respects hard gates. It still saves state. It just stops asking "okay to proceed?" between every micro-step.
 
 The level is changeable mid-session by saying "switch to guided" or "go autonomous." SweetClaude respects the change for the rest of the conversation. It is an instruction to Claude and is not persisted to the state file.
 
