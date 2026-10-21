@@ -15,10 +15,8 @@ import argparse
 import json
 import os
 import re
-import sys
 import yaml
 from datetime import datetime, timezone
-from pathlib import Path
 
 
 ARTIFACT_SUBDIRS = ['design', 'plans', 'contracts', 'reports', 'decisions', 'scratch']

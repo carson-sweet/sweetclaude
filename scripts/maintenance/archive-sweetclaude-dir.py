@@ -3,7 +3,10 @@
 # Mirrors artifact base_paths outside .sweetclaude/ into a legacy archive tree.
 # Called by bootstrap and update re-onboarding flows after .sweetclaude/ has been
 # moved aside. Usage: archive-sweetclaude-dir.py <legacy_dir>
-import os, sys, shutil, yaml
+import os
+import sys
+import shutil
+import yaml
 
 
 def main():

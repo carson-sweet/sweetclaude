@@ -52,7 +52,7 @@ from schema import (
     validate_frontmatter,
 )
 from maintenance.capability_manifest import capability_config, project_shape_config
-from status import CANONICAL_STATUSES, TERMINAL_STATUSES, derived_status
+from status import CANONICAL_STATUSES, derived_status
 
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -2545,7 +2545,6 @@ def _build_migration_recommendations(
                 ):
                     affected_count += 1
             if affected_count == 0:
-                detail = mf.detail or ""
                 try:
                     affected_count = int(
                         "".join(c for c in mf.summary.split()[0] if c.isdigit())

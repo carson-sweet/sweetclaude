@@ -458,7 +458,6 @@ def _validate_success_criteria_completion(
 
 
 def _dest_dir_for_terminal(filepath: Path) -> Path:
-    parts = filepath.parts
     parent = filepath.parent
     parent_name = parent.name
     if parent_name == "backlog":

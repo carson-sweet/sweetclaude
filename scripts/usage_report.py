@@ -163,7 +163,7 @@ def render(report: dict) -> str:
                f"not a success)")
     out.append("")
     rate = report["success_rate"]
-    out.append(f"  success rate      : "
+    out.append("  success rate      : "
                + (f"{rate:.0%} of {report['recorded_outcomes']} recorded outcomes"
                   if rate is not None else "no outcomes recorded yet"))
     out.append("")

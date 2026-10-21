@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import argparse, yaml, sys
+import argparse
+import yaml
+import sys
 from datetime import datetime, timezone
 
 def now_iso():
@@ -7,8 +9,9 @@ def now_iso():
 
 def build_template(name, project_type, version_stage, installed_version='unknown',
                    migrated_from=None, issue_tracker='local'):
-    feat = lambda: {'status': 'not_offered', 'offered_at': None,
-                    'decided_at': None, 'defer_until': None}
+    def feat():
+        return {'status': 'not_offered', 'offered_at': None,
+                'decided_at': None, 'defer_until': None}
     return {
         # Must match config/migration-registry.yaml current_version for
         # sweetclaude.yaml, or every new project is created already needing

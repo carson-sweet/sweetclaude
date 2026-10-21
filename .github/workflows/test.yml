@@ -41,6 +41,11 @@ jobs:
           python3 -m pip list | grep -iE 'pytest|coverage|playwright'
           python3 -m playwright install --with-deps chromium
 
+      - name: Lint
+        # Rule set and test-tree exemptions live in ruff.toml; the contract
+        # that CI runs this gate is tests/test_ci_workflows.py.
+        run: python3 -m ruff check .
+
       - name: Run test suite with coverage gate
         # Threshold and source scope live in .coveragerc; the gate is
         # ratcheted by tests/test_coverage_gate.py.

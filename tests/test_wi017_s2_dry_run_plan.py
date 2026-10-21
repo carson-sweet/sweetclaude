@@ -1209,7 +1209,7 @@ class TestIssueNumberingGlobalCounter:
             f"ISSUE ids must be zero-padded to at least 3 digits; got {move['new_id']!r}"
         )
         assert "ISSUE-51" not in move["new_id"] or move["new_id"] == "ISSUE-051", (
-            f"ISSUE-51 is not a valid id; must be ISSUE-051"
+            "ISSUE-51 is not a valid id; must be ISSUE-051"
         )
 
     def test_ep_id_zero_padded_to_three_digits(self, tmp_path):
@@ -2009,6 +2009,6 @@ class TestPlanOutputLocation:
         plan_path = project / ".sweetclaude" / "state" / "migration-plan.yaml"
         plan_path_json = project / ".sweetclaude" / "state" / "migration-plan.json"
         assert plan_path.exists() or plan_path_json.exists(), (
-            f"after a dry-run, .sweetclaude/state/migration-plan.yaml (or .json) "
-            f"must exist; neither was found"
+            "after a dry-run, .sweetclaude/state/migration-plan.yaml (or .json) "
+            "must exist; neither was found"
         )

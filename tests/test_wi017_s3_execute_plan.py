@@ -1338,8 +1338,8 @@ class TestDestCollisionRefusedNoOverwrite:
         )
         after_content = pre_existing.read_bytes()
         assert before_content == after_content, (
-            f"pre-existing ISSUE-001.md must be byte-for-byte unchanged after a refused "
-            f"migration; content changed unexpectedly"
+            "pre-existing ISSUE-001.md must be byte-for-byte unchanged after a refused "
+            "migration; content changed unexpectedly"
         )
 
 

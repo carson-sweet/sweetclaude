@@ -690,7 +690,7 @@ def render_score(report: dict) -> str:
         f"  failed         : {report['failed']}",
     ]
     rate = report["pass_rate"]
-    out.append(f"  pass rate      : "
+    out.append("  pass rate      : "
                + (f"{rate:.1%} of applicable turns" if rate is not None
                   else "unmeasured — the contract applied to no turn scored"))
     if report["discarded"]:
