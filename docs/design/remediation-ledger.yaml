@@ -199,7 +199,10 @@ rows:
   acceptance: Neither listed location says project data migrates on update; both direct the user to `/sweetclaude:configure doctor` when the project needs repair or migration.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-019
   source: A
   docs:
@@ -213,7 +216,10 @@ rows:
   acceptance: install.md Firecrawl section names `/sweetclaude:plan product-research` and `/sweetclaude:plan product-competition`.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-020
   source: A
   docs:
@@ -227,7 +233,10 @@ rows:
   acceptance: install.md Local RAG section either directs the user to `/sweetclaude:utils corpus-rag-setup` or shows JSON identical to the .mcp.json block in corpus-rag-setup/SKILL.md, including DB_PATH ./.rag-index/lancedb.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-021
   source: A
   docs:
@@ -241,7 +250,10 @@ rows:
   acceptance: install.md reindex instruction reads `/sweetclaude:utils corpus-rag-reindex`.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-022
   source: A
   docs:
@@ -316,7 +328,10 @@ rows:
   acceptance: The upgrading-to-5.md mapping table either omits these ten names or marks each "(internal in 4.x)".
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-025
   source: A
   docs:
@@ -330,7 +345,10 @@ rows:
   acceptance: upgrading-to-5.md contains a "Retired in 5.0" note naming behavioral-regression and sweetclaude-behavioral-regression as having no replacement.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-026
   source: A
   docs:
@@ -358,7 +376,10 @@ rows:
   acceptance: No user-facing description in upgrading-to-5.md, skill-library/configure/INDEX.md or the four redirect SKILL.md descriptions names `sweetclaude:library-load`; each says it redirects to `/sweetclaude:configure doctor`.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-027
   source: A
   docs:
@@ -374,7 +395,10 @@ rows:
   acceptance: Both listed rows read "use /sweetclaude:plan epics instead".
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-028
   source: A
   docs:
@@ -1788,7 +1812,10 @@ rows:
   acceptance: skills-reference.md has no accessibility example under /sweetclaude:design, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-134
   source: B
   docs:
@@ -1802,7 +1829,10 @@ rows:
   acceptance: skills-reference.md:83 lists only workflows present in skill-library/configure/INDEX.md, and the docs-claims check passes.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-135
   source: B
   docs:
@@ -2553,7 +2583,10 @@ rows:
   acceptance: doctor.md states that archived changes are reversible, that non-reversible actions are listed as skipped on restore, and that the safety branch is the fallback.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-199
   source: C
   docs:
@@ -2569,7 +2602,10 @@ rows:
   acceptance: The doctor.md route table lists exactly the statuses emitted by scripts/doctor.py maintenance-route (recovery-available, supported-migration-available, compatibility-mode, graduation-available, graduation-blocked, migration-blocked, manual-review, no-maintenance-action) with their handling.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-200
   source: C
   docs:
@@ -2585,7 +2621,10 @@ rows:
   acceptance: doctor.md describes doctor offering to run recovery or migration itself and does not instruct the user to run recover or migrate as a separate next command.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-201
   source: C
   docs:
@@ -2599,7 +2638,10 @@ rows:
   acceptance: doctor.md lists an accepted / report-only resolution kind alongside auto-fix, prompted, delegate and terminal fallback.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-202
   source: C
   docs:
@@ -2613,7 +2655,10 @@ rows:
   acceptance: doctor.md states that a remembered proceed choice skips the approval menu and that --interactive restores it.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-203
   source: C
   docs:
@@ -2629,7 +2674,10 @@ rows:
   acceptance: migration-and-recovery.md shows python3 "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.py" maintenance-route --project-dir . and the plugin-root migrator path, and contains no ~/.claude/scripts/sweetclaude/ path.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-204
   source: C
   docs:
@@ -2645,7 +2693,10 @@ rows:
   acceptance: migration-and-recovery.md Safe Order links to upgrading-to-5.md, gives the stable and beta-switch commands, and runs /sweetclaude:configure update only after the 5.x install and a restart.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-205
   source: C
   docs:
@@ -2659,7 +2710,10 @@ rows:
   acceptance: The migration-and-recovery.md route table lists exactly the statuses emitted by scripts/doctor.py maintenance-route with their meaning and next step.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-206
   source: C
   docs:
@@ -2675,7 +2729,10 @@ rows:
   acceptance: migration-and-recovery.md defines supported-migration-available as a flat BL-NNN layout passing preflight or a typed legacy layout handled by the taxonomy migrator.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-207
   source: C
   docs:
@@ -2709,7 +2766,10 @@ rows:
   acceptance: migration-and-recovery.md states that typed layouts route to the taxonomy migrator and that duplicate IDs appear as blockers resolved through doctor.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-209
   source: C
   docs:
@@ -2723,7 +2783,10 @@ rows:
   acceptance: migration-and-recovery.md contains no 'Until a layout-specific migrator exists' clause and names migrate_taxonomy.py as the typed-layout migrator.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-210
   source: C
   docs:
@@ -2739,7 +2802,10 @@ rows:
   acceptance: 'migration-and-recovery.md describes the three outcomes for accepted legacy state: migration prompt when old prefixes remain, graduation offer when none remain, and compatibility mode otherwise.'
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-211
   source: C
   docs:
@@ -2755,7 +2821,10 @@ rows:
   acceptance: v4-migration.md frames the page for 4.x users moving to 5.x, states the beta channel is retired, and names sweetclaude-legacy as the 3.x channel.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-212
   source: C
   docs:
@@ -2769,7 +2838,10 @@ rows:
   acceptance: v4-migration.md gives the three-command switch for beta installs and the upgrading-to-5.md commands for stable 4.x installs, and contains no bare /plugin update step.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-213
   source: C
   docs:
@@ -2785,7 +2857,10 @@ rows:
   acceptance: v4-migration.md states that the /sweetclaude:configure commands run only after 5.x is installed and Claude Code is restarted.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-214
   source: C
   docs:
@@ -2799,7 +2874,10 @@ rows:
   acceptance: The v4-migration.md route table lists exactly the statuses emitted by scripts/doctor.py maintenance-route.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-215
   source: C
   docs:
@@ -2815,7 +2893,10 @@ rows:
   acceptance: v4-migration.md states that typed legacy layouts route to the taxonomy migrator and duplicate IDs are resolved through doctor before migration.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-216
   source: C
   docs:
@@ -2848,7 +2929,10 @@ rows:
   acceptance: large-story-workflow.md states that direct contract edits are blocked and that the user amends by running the contract commands, then re-freezing and re-running init.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-218
   source: C
   docs:
@@ -2882,7 +2966,10 @@ rows:
   acceptance: large-story-workflow.md lists exactly state/workflows/, state/phase.yaml, reports/ and contracts/ as the controller-protected paths.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-220
   source: C
   docs:
@@ -2896,7 +2983,10 @@ rows:
   acceptance: large-story-workflow.md describes the one-time stop block, the recorded intentional pause on a second stop, and the re-armed reminder after progress.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-221
   source: C
   docs:
@@ -2912,7 +3002,10 @@ rows:
   acceptance: large-story-workflow.md names .sweetclaude/state/workflows/{workflow_id}.yaml as the primary state path and describes large-story.yaml and small-story.yaml as legacy pointers read only if present.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-222
   source: C
   docs:
@@ -2928,7 +3021,10 @@ rows:
   acceptance: work-item-artifacts.md shows python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backfill_work_item_artifacts.py" --project-dir . with --dry-run, --item and --json documented, and contains no bare scripts/backfill path.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-223
   source: C
   docs:
@@ -2959,7 +3055,10 @@ rows:
   acceptance: work-item-artifacts.md lists not_offered as the initial status alongside active and declined.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-225
   source: C
   docs:
@@ -2973,7 +3072,10 @@ rows:
   acceptance: work-item-artifacts.md describes the contracts/ subdirectory as success-criteria contracts.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-226
   source: C
   docs:
@@ -3604,7 +3706,10 @@ rows:
   acceptance: docs/user-guide/evidence-and-contracts.md lists the three init-contract refusal conditions (another story's active workflow, missing backlog file, existing contract without --force), checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-267
   source: D
   docs:
@@ -3618,7 +3723,10 @@ rows:
   acceptance: docs/user-guide/evidence-and-contracts.md states VERIFY is blocked when no hook-observed file changes were recorded, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-268
   source: D
   docs:
@@ -3632,7 +3740,10 @@ rows:
   acceptance: docs/user-guide/behavioral-contracts.md tells the reader to score the validated contracts and record pass/fail/n/a, and names 06, 07, 08 and 15 as not judgeable, checked by the docs-claims suite against scripts/behavioral_judge.py.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-269
   source: D
   docs:
@@ -3646,7 +3757,10 @@ rows:
   acceptance: The needs-context table in docs/user-guide/behavioral-contracts.md lists exactly the contracts config/behavioral-rubrics.yaml marks needs_context none, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-270
   source: D
   docs:
@@ -3660,7 +3774,10 @@ rows:
   acceptance: docs/user-guide/behavioral-contracts.md states three of the five Continuous Improvement triggers have contracts (11, 12, 15), matching config/behavioral-rubrics.yaml rule_sections, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-271
   source: D
   docs:
@@ -3674,7 +3791,10 @@ rows:
   acceptance: The quick-reference table in docs/user-guide/behavioral-contracts.md has one row per contract heading in config/behavioral-contracts.md, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-272
   source: D
   docs:
@@ -3688,7 +3808,10 @@ rows:
   acceptance: docs/user-guide/capability-ledger.md states CI runs the ledger on pull requests to main without behavioral rows, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-273
   source: D
   docs:
@@ -3702,7 +3825,10 @@ rows:
   acceptance: docs/user-guide/capability-ledger.md lists exactly the broken causes in scripts/capability_ledger.py _classify, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-274
   source: D
   docs:
@@ -3716,7 +3842,10 @@ rows:
   acceptance: docs/user-guide/capability-ledger.md defines compromised as unsupported states with no defined handling, rollback limitations, or coverage below the bar, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-275
   source: D
   docs:
@@ -3730,7 +3859,10 @@ rows:
   acceptance: docs/user-guide/capability-ledger.md does not say the ledger runs verifications and defines broken by declaration checks only, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-276
   source: D
   docs:
@@ -3744,7 +3876,10 @@ rows:
   acceptance: docs/user-guide/capability-ledger.md says a not-mechanically-verifiable row is scored by behavioral_judge.py only when a rubric covers it and otherwise by nothing, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-277
   source: D
   docs:
@@ -3758,7 +3893,10 @@ rows:
   acceptance: docs/user-guide/capability-ledger.md states Tier-3 rows keep a broken or compromised status when one applies and that contract ids appear only on interaction-model rows, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-278
   source: D
   docs:
@@ -3772,7 +3910,10 @@ rows:
   acceptance: docs/user-guide/capability-ledger.md lists the fields scripts/maintenance/capability_manifest.py requires and states that verification_commands and a delegate or entrypoint are needed only to avoid a broken row, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
 - id: R-279
   source: D
   docs:
@@ -3787,7 +3928,10 @@ rows:
   test_level:
   - docs-claims
   - contract
-  status: open
+  status: closed
+  commits:
+  - ff1b025a
+  - 31cfb432
   notes: Regenerate without --coverage so the committed table is deterministic; CI's coverage-based artifact (.github/workflows/test.yml:55-56) stays the per-run view.
 - id: R-280
   source: D
@@ -3804,7 +3948,10 @@ rows:
   acceptance: docs/user-guide/corpus-system.md describes the steps as gated with an explicit override phrase and contains no "cannot skip" claim, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-281
   source: D
   docs:
@@ -3818,7 +3965,10 @@ rows:
   acceptance: docs/user-guide/corpus-system.md states Set up RAG indexes all supported document types by default and canonical folders only when chosen, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-282
   source: D
   docs:
@@ -3832,7 +3982,10 @@ rows:
   acceptance: docs/user-guide/corpus-system.md lists the reindex scopes as Canonical, Raw or All, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-283
   source: D
   docs:
@@ -3846,7 +3999,10 @@ rows:
   acceptance: docs/user-guide/corpus-system.md says the menu routes one selection to one sub-skill and names the Update RAG label, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-284
   source: D
   docs:
@@ -3860,7 +4016,10 @@ rows:
   acceptance: docs/user-guide/platform-dependencies.md describes mcp-local-rag as an npm MCP server run via npx and does not call it a plugin, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-285
   source: D
   docs:
@@ -3874,7 +4033,10 @@ rows:
   acceptance: docs/user-guide/platform-dependencies.md lists python3 with PyYAML, jq and git as required and the codex CLI or openai package as optional, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
 - id: R-286
   source: D
   docs:
@@ -3890,4 +4052,7 @@ rows:
   acceptance: docs/user-guide/platform-dependencies.md names the rag-setup and rag-reindex arguments, and every document-corpus argument it cites appears in skill-library/utils/document-corpus/SKILL.md, checked by the docs-claims suite.
   test_level:
   - docs-claims
-  status: open
+  status: closed
+  commits:
+  - 43cfa690
+  - 369e7bec
