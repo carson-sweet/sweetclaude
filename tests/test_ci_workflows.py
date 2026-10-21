@@ -65,3 +65,17 @@ def test_workflow_pins_python_311():
     assert re.search(r"python-version:\s*['\"]?3\.11", text), (
         "CI must match local dev Python 3.11"
     )
+
+
+def test_workflow_runs_ruff_lint():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert re.search(r"ruff check", text), (
+        "workflow must run the ruff lint gate before the suite"
+    )
+
+
+def test_requirements_dev_pins_ruff():
+    reqs = (Path(__file__).parents[1] / "requirements-dev.txt").read_text(encoding="utf-8")
+    assert re.search(r"^ruff==\d", reqs, re.MULTILINE), (
+        "requirements-dev.txt must pin ruff so CI and local runs match"
+    )

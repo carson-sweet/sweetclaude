@@ -12,9 +12,8 @@ import re
 import sys
 import tarfile
 import tempfile
-import time
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -1178,7 +1177,7 @@ def validate(project_dir: str, allow_overwrite: bool = False) -> list:
 
     try:
         product_base = _get_product_base(pd)
-    except ValueError as e:
+    except ValueError:
         raise
 
     state_path = _migration_state_path(pd)
@@ -2622,8 +2621,6 @@ def _apply_s2_plan(
         dest_abs = pd / move["dest"]
         legacy_id = move.get("legacy_id", "")
         new_id = move.get("new_id", "")
-        tier = move.get("tier", "A")
-        kind = move.get("kind", "")
 
         # Determine if this is a .feature move
         is_feature = move["source"].endswith(".feature")

@@ -23,7 +23,6 @@ Drop onboarded_at and offboarded_at. Set schema_version: 2 at top level.
 
 from __future__ import annotations
 
-from datetime import date
 
 FROM_VERSION = 1
 TO_VERSION = 2

@@ -1,0 +1,24 @@
+target-version = "py311"
+line-length = 120
+
+extend-exclude = [
+    ".playwright-mcp",
+    ".sweetclaude",
+    "dist",
+    "scratch",
+]
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
+
+[lint.per-file-ignores]
+# E402: sys.path bootstrap blocks precede local imports by design.
+"scripts/dashboard.py" = ["E402"]
+"scripts/format_converter.py" = ["E402"]
+"scripts/maintenance/plugin-state.py" = ["E402"]
+"scripts/migrate/migrate-v3-to-v4.py" = ["E402"]
+"scripts/recovery/recover_project.py" = ["E402"]
+# E402: sys.path bootstrap; F811: test parameters shadow imported fixture
+# names; F401: fixtures are registered by importing them; F841: captures of
+# setup results are intentional; E741: short locals in narrow scopes.
+"tests/**" = ["E402", "F811", "F401", "F841", "E741"]

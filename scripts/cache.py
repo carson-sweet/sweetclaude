@@ -153,7 +153,6 @@ def scan_files(project_dir):
     for base in scan_bases:
         if not os.path.isdir(base):
             continue
-        real_base = os.path.realpath(base)
         for root, dirs, filenames in os.walk(base):
             for fname in filenames:
                 if not fname.endswith('.md'):
