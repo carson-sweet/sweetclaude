@@ -340,6 +340,30 @@ This is the gate the IMPLEMENT phase checks (`scripts/gate_check.py`).
 
 ---
 
+## Shape Up — Ship/No-Ship Decision (cycle end)
+
+When `mode` is `shape_up` and advancing past VERIFY is refused with the
+ship/no-ship gate, ask:
+
+> "Did the core outcome land within appetite? (ship / no-ship)"
+
+Locate the current cycle artifact (`status: active`, else the highest `CYC-NNN`) with `sc_artifact_list cycle`. If no cycle artifact exists, create one first:
+
+```bash
+source ${CLAUDE_PLUGIN_ROOT}/hooks/sc-artifact.sh
+sc_artifact_create cycle '{"title": "Cycle {N}", "status": "active", "duration_weeks": "{cycle_duration_weeks or 6}"}'
+```
+
+Record the decision on the cycle file through the same adapter — never by editing the file directly:
+
+```bash
+sc_artifact_write CYC-NNN '{"ship_no_ship": "ship"}'
+```
+
+`ship` lets the advance past VERIFY proceed. `no-ship` keeps refusing the advance — the cycle is over, scope goes back to the pile, and the next cycle starts with a fresh betting table.
+
+---
+
 ## Shape Up — Cycle Duration
 
 Ask at setup:

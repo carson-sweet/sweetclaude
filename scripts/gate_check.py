@@ -56,6 +56,10 @@ KNOWN_WORKFLOWS = IMPLEMENT_WORKFLOWS | SHIP_WORKFLOWS | NON_ENTRY_WORKFLOWS
 HARD_GATE_SUFFIX = " Hard gate: SweetClaude will not proceed until the condition is met."
 DEFAULT_SOFT_ESCAPE = "acknowledge it explicitly to proceed anyway"
 
+PHASE_ORDER = ("DEFINE", "DESIGN", "PLAN", "IMPLEMENT", "VERIFY", "SHIP")
+
+EXIT_PAST_PHASE_CONDITIONS = frozenset({"ship_no_ship_decision"})
+
 CRITERIA = {
     "no_active_sprint": "an active sprint in the sprint store",
     "betting_table_approved": "betting table approval on the active issue",
@@ -104,6 +108,7 @@ class ProjectContext:
         self.active_work_id = str(((self.sweetclaude.get("work") or {}).get("active") or {}).get("id") or "")
         self._active_sprints = None
         self._issue_rows = None
+        self._cycle_rows = None
 
     def active_sprints(self) -> list[dict]:
         if self._active_sprints is None:
@@ -120,6 +125,33 @@ class ProjectContext:
 
     def active_sprint_ids(self) -> set[str]:
         return {str(row.get("id")).upper() for row in self.active_sprints()}
+
+    def cycle_rows(self) -> list[dict]:
+        if self._cycle_rows is None:
+            rows = []
+            for path in self.artifact_impl._artifact_files(self.product_base, "cycle", "CYC"):
+                try:
+                    row = self.artifact_impl._parse_metadata(path.read_text(encoding="utf-8"))
+                except OSError:
+                    continue
+                if row and row.get("id"):
+                    rows.append(row)
+            self._cycle_rows = rows
+        return self._cycle_rows
+
+    def current_cycle(self) -> dict | None:
+        rows = self.cycle_rows()
+        if not rows:
+            return None
+
+        def cycle_number(row: dict) -> int:
+            try:
+                return int(str(row.get("id")).split("-")[1])
+            except (IndexError, ValueError):
+                return 0
+
+        active = [row for row in rows if str(row.get("status") or "").lower() == "active"]
+        return max(active or rows, key=cycle_number)
 
     def issue_rows(self) -> list[dict]:
         if self._issue_rows is None:
@@ -191,6 +223,13 @@ def wip_limit_reached(ctx: ProjectContext) -> bool:
     return ctx.active_issue_count() >= ctx.wip_limit()
 
 
+def ship_no_ship_decision(ctx: ProjectContext) -> bool:
+    cycle = ctx.current_cycle()
+    if cycle is None:
+        return True
+    return str(cycle.get("ship_no_ship") or "").strip().lower() != "ship"
+
+
 def betting_table_approved_met(ctx: ProjectContext) -> bool:
     if not ctx.active_work_id:
         return False
@@ -211,6 +250,7 @@ CONDITION_HOLDERS = {
     "issue_not_in_sprint": issue_not_in_sprint,
     "sprint_complete": sprint_complete,
     "wip_limit_reached": wip_limit_reached,
+    "ship_no_ship_decision": ship_no_ship_decision,
 }
 
 REQUIREMENT_MET = {
@@ -251,12 +291,48 @@ def evaluate_gate(gate: dict, ctx: ProjectContext) -> bool | None:
     return None
 
 
+def phase_index(phase: str) -> int | None:
+    try:
+        return PHASE_ORDER.index(str(phase).upper())
+    except ValueError:
+        return None
+
+
+def exit_gates_for_phase(phase: str, ctx: ProjectContext) -> list[dict]:
+    """Gates registered on an earlier phase that guard leaving it.
+
+    A gate with an exit-past condition (e.g. ship_no_ship_decision on VERIFY)
+    fires only when the requested phase comes after its own, never on entry.
+    """
+    target = phase_index(phase)
+    if target is None:
+        return []
+    matching = []
+    for gate in ctx.effective.get("gates") or []:
+        if not isinstance(gate, dict):
+            continue
+        if str(gate.get("condition") or "") not in EXIT_PAST_PHASE_CONDITIONS:
+            continue
+        gate_phase = phase_index(str(gate.get("phase") or ""))
+        if gate_phase is None or gate_phase >= target:
+            continue
+        matching.append(gate)
+    return matching
+
+
 def evaluate_gates_for_phase(phase: str, ctx: ProjectContext, override_text: str) -> dict:
     reasons: list[str] = []
     unmet: list[str] = []
     allowed = True
+    exit_gates = exit_gates_for_phase(phase, ctx)
     for gate in ctx.effective.get("gates") or []:
-        if not isinstance(gate, dict) or str(gate.get("phase") or "") != phase:
+        if not isinstance(gate, dict):
+            continue
+        if gate in exit_gates:
+            pass
+        elif str(gate.get("condition") or "") in EXIT_PAST_PHASE_CONDITIONS:
+            continue
+        elif str(gate.get("phase") or "") != phase:
             continue
         action = str(gate.get("action") or "")
         try:

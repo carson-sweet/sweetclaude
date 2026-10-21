@@ -10,7 +10,8 @@ auto-test-runner, R-073 wip-limit, R-074 preflight-guard, R-075
 phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian, the
 phase 3 rows R-077 wip-limit on Write, R-241 test-guardian on Bash and
 R-244 preflight-guard allowing its own remedy, R-251 tdd-commit-gate, R-089
-the Kanban blocked-skill denial, and R-091 the Shape Up betting-table gate.
+the Kanban blocked-skill denial, R-091 the Shape Up betting-table gate, and
+R-093 the Shape Up ship/no-ship gate.
 """
 
 from __future__ import annotations
@@ -381,6 +382,27 @@ def test_library_load_implement_allowed_with_betting_table_approval_r091(live_pr
         "Invoke the Skill tool with skill sweetclaude:library-load and args: "
         "code-feature implement the login form. Do nothing else.")
     assert_tool_not_refused(events, "Skill", r"pitched and bet")
+
+
+def test_deploy_ship_denied_without_ship_no_ship_decision_r093(live_project):
+    shape_up_gates_state(live_project, approved=True)
+    gates_path = live_project / ".sweetclaude" / "state" / "effective-gates.yaml"
+    gates = yaml.safe_load(gates_path.read_text(encoding="utf-8"))
+    gates["gates"].append(
+        {"phase": "VERIFY", "condition": "ship_no_ship_decision", "action": "required",
+         "message": "Ship/no-ship decision required. Did the core outcome land within appetite?"})
+    gates_path.write_text(yaml.safe_dump(gates), encoding="utf-8")
+    cycles = live_project / ".sweetclaude" / "product" / "cycles"
+    cycles.mkdir(parents=True, exist_ok=True)
+    (cycles / "CYC-001-cycle-1.md").write_text(
+        "---\nid: CYC-001\ntitle: Cycle 1\ntype: cycle\nstatus: active\n---\n\n"
+        "# CYC-001: Cycle 1\n", encoding="utf-8")
+    git_commit_all(live_project, "shape up cycle state")
+    events = run_claude(
+        live_project,
+        "Invoke the Skill tool with skill sweetclaude:library-load and args: "
+        "deploy-ship ship the milestone. Do nothing else.")
+    assert_tool_refused(events, "Skill", r"Ship/no-ship decision required")
 
 
 def test_tdd_commit_gate_refuses_implementation_commit_without_red_r251(live_project):
