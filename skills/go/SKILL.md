@@ -13,6 +13,31 @@ Assess. Propose. Wait. Do not act until the user says proceed.
 
 ---
 
+## Step 0a: Disabled-project check
+
+Before any routing, check whether SweetClaude is disabled for this project:
+
+```bash
+test -f .sweetclaude/disabled && echo DISABLED || echo ENABLED
+```
+
+If the output is `ENABLED`, continue to Step 0. If it is `DISABLED`, do not route yet. Ask the user with AskUserQuestion whether to reactivate SweetClaude for this project:
+
+| Option label | Description |
+|---|---|
+| **Reactivate** | Remove `.sweetclaude/disabled` and continue with normal routing |
+| **Leave disabled** | Keep SweetClaude disabled and stop |
+
+Only if the user answers yes (Reactivate), remove the flag and then continue to Step 0:
+
+```bash
+rm -f .sweetclaude/disabled
+```
+
+If the user declines, leave the flag untouched, say SweetClaude stays disabled, and stop.
+
+---
+
 ## Step 0: Natural-language request path
 
 If the user passes a request after `/sweetclaude:go`, treat it as natural
