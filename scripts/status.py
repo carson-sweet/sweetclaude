@@ -610,6 +610,17 @@ def set_terminal(
     _append_audit(pd, actor, entity, file_rel, old_status, status)
     _trigger_cache_rebuild(pd)
 
+    if status == "done" and fm.get("type") not in ("epic", "milestone", "sprint"):
+        try:
+            from flow_capture import capture_flow_closeout
+
+            capture_flow_closeout(pd, str(entity), title=fm.get("title") or None, outcome="done")
+        except Exception as exc:
+            print(
+                f"WARNING: flow thin-artifact capture failed for {entity}: {exc}",
+                file=sys.stderr,
+            )
+
     if not _from_sync:
         _sync_parents(str(dest_path), pd, actor)
 

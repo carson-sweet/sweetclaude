@@ -406,28 +406,28 @@ def test_next_dec_number_increments_from_last_entry() -> None:
     import flow_capture
 
     text = "## DEC-007: one\n\nx\n\n## DEC-003: two\n\ny\n"
-    assert flow_capture._next_dec_number(text) == 8
+    assert flow_capture.next_dec_number(text) == 8
 
 
 def test_next_dec_number_starts_at_one() -> None:
     import flow_capture
 
-    assert flow_capture._next_dec_number("no decisions yet\n") == 1
+    assert flow_capture.next_dec_number("no decisions yet\n") == 1
 
 
 def test_project_mode_reads_canonical_sweetclaude_yaml(tmp_path: Path) -> None:
     import flow_capture
 
     project = _make_project(tmp_path, mode="flow")
-    assert flow_capture._project_mode(project) == "flow"
+    assert flow_capture.project_mode(project) == "flow"
 
     sc = project / ".sweetclaude" / "state" / "sweetclaude.yaml"
     data = yaml.safe_load(sc.read_text(encoding="utf-8"))
     del data["project"]["mode"]
     data["mode"] = "flow"
     sc.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
-    assert flow_capture._project_mode(project) == "flow"
+    assert flow_capture.project_mode(project) == "flow"
 
     data["mode"] = "kanban"
     sc.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
-    assert flow_capture._project_mode(project) == "kanban"
+    assert flow_capture.project_mode(project) == "kanban"
