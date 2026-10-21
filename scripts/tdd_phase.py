@@ -161,12 +161,23 @@ def release_file(project_dir: Path, file: str | None, approval: str | None) -> d
     active[RELEASED_KEY] = released
     _atomic_write(sc_path, sc)
 
-    record = Path(__file__).resolve().parent / "record-event.sh"
-    subprocess.run(
-        ["bash", str(record), "tdd_override", f"file={rel}", f"approval={approval}"],
-        env={**os.environ, "PROJECT_DIR": str(project_dir)}, check=False)
+    _record_override(project_dir, rel, approval)
 
     return {"ok": True, "released": rel, "approval": approval}
+
+
+def _record_override(project_dir: Path, rel: str, approval: str) -> None:
+    import datetime
+    metrics = Path(project_dir) / ".sweetclaude" / "metrics"
+    config = metrics / "config.yaml"
+    if not config.is_file() or "enabled: true" not in config.read_text():
+        return
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    doc = yaml.safe_dump(
+        {"timestamp": stamp, "event": "tdd_override", "file": rel, "approval": approval},
+        sort_keys=False, default_flow_style=False, allow_unicode=True, width=float("inf"))
+    with open(metrics / "events.log", "a") as fh:
+        fh.write("---\n" + doc)
 
 
 def main(argv: list[str] | None = None) -> int:
