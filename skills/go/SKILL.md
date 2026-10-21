@@ -277,39 +277,12 @@ If "Archive it": run the archive logic from `deploy-ship` Step 7 (read pointer, 
 Before invoking an IMPLEMENT-phase skill, check mode gates:
 
 ```bash
-python3 -c "
-import yaml, os, glob, sys
-PROJECT_DIR = os.environ.get('PROJECT_DIR', os.getcwd())
-gates_path = os.path.join(PROJECT_DIR, '.sweetclaude/state/effective-gates.yaml')
-if not os.path.exists(gates_path):
-    print('GATES_OK'); sys.exit()
-d = yaml.safe_load(open(gates_path)) or {}
-mode = d.get('mode', '')
-gates = [g for g in d.get('gates', []) if g.get('phase') == 'IMPLEMENT' and g.get('action') == 'block']
-for gate in gates:
-    cond = gate.get('condition', '')
-    req = gate.get('requires', '')
-    msg = gate.get('message', 'Gate condition not met.')
-    if req == 'betting_table_approved' and mode == 'shape_up':
-        sc = yaml.safe_load(open(os.path.join(PROJECT_DIR, '.sweetclaude/state/sweetclaude.yaml'))) or {}
-        active_id = ((sc.get('work') or {}).get('active') or {}).get('id') or ''
-        issue_path = os.path.join(PROJECT_DIR, '.sweetclaude/artifacts/issues', f'{active_id}.yaml')
-        approved = bool(active_id and os.path.exists(issue_path) and (yaml.safe_load(open(issue_path)) or {}).get('betting_table_approved'))
-        if not approved:
-            print('BLOCKED:' + msg); sys.exit()
-    if cond == 'no_active_sprint' and mode == 'agile':
-        sprints_dir = os.path.join(PROJECT_DIR, '.sweetclaude/artifacts/sprints')
-        has_active = os.path.exists(sprints_dir) and any(
-            (yaml.safe_load(open(f)) or {}).get('status') == 'active'
-            for f in glob.glob(os.path.join(sprints_dir, '*.yaml'))
-        )
-        if not has_active:
-            print('BLOCKED:' + msg); sys.exit()
-print('GATES_OK')
-"
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gate_check.py advance --to IMPLEMENT --project-dir .
 ```
 
-If output starts with `BLOCKED:`, do not invoke any skill. Output the text after `BLOCKED:` and stop.
+The command exits 0 and prints `{"allow": true, ...}` when the gates pass. If it
+exits 2, it prints `{"allow": false, "reasons": [...], "unmet": [...]}` — do not
+invoke any skill. Output every entry in `reasons` and stop.
 
 **Pre-routing: PR recording at VERIFY phase entry**
 
