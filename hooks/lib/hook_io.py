@@ -13,6 +13,7 @@
 #   hook_io.py flag-root PROJECT_DIR
 #   hook_io.py run-tests PROJECT_DIR COMMAND TIMEOUT_SECONDS
 #   hook_io.py wip-limit                (PreToolUse payload on stdin; denies a fourth activation)
+#   hook_io.py test-targets             (PreToolUse payload on stdin; prints test files being written)
 #   hook_io.py tdd-state SC_YAML PHASE_YAML   (prints phase, tdd_phase, released files; exit 3 without PyYAML)
 #   hook_io.py detect-test-command PROJECT_DIR
 
@@ -161,6 +162,154 @@ def tokenize_shell(command: str) -> list[str]:
         return list(lexer)
     except ValueError:
         return [token.strip("'\"") for token in re.findall(r"""&>>|&>|>>|>\||>|[;&|()]+|[^\s;&|()<>]+""", command)]
+
+
+TEST_PATH_PATTERNS = ("test/", "tests/", "__tests__/", "spec/", "specs/", ".test.", ".spec.", "_test.", "_spec.", "test_")
+
+
+def is_test_path(relative: str) -> bool:
+    return relative.endswith(".feature") or any(pattern in relative for pattern in TEST_PATH_PATTERNS)
+
+
+REDIRECT_OPERATORS = {">", ">>", "&>", "&>>", ">|"}
+SEGMENT_SEPARATORS = {"&&", "||", ";", "|", "&", "(", ")", "|&", ";;"}
+SHELL_INTERPRETERS = {"bash", "sh", "zsh", "dash"}
+MAX_SHELL_NESTING = 2
+
+
+def command_segments(tokens: list[str]) -> list[list[str]]:
+    segments: list[list[str]] = [[]]
+    for token in tokens:
+        if token in SEGMENT_SEPARATORS:
+            segments.append([])
+        else:
+            segments[-1].append(token)
+    return [segment for segment in segments if segment]
+
+
+def redirect_targets(segment: list[str]) -> tuple[list[str], list[str]]:
+    words: list[str] = []
+    targets: list[str] = []
+    skip_next = False
+    for index, token in enumerate(segment):
+        if skip_next:
+            skip_next = False
+            continue
+        if token in REDIRECT_OPERATORS:
+            if index + 1 < len(segment):
+                targets.append(segment[index + 1])
+            skip_next = True
+        elif token in {"<", "<<", "<<<", ">&", "<&"}:
+            skip_next = True
+        else:
+            words.append(token)
+    return words, targets
+
+
+def sed_in_place_targets(args: list[str]) -> list[str]:
+    in_place = False
+    has_script_option = False
+    positional: list[str] = []
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        index += 1
+        if arg.startswith("--"):
+            if arg.startswith("--in-place"):
+                in_place = True
+            elif arg in {"--expression", "--file"}:
+                has_script_option = True
+                index += 1
+            elif arg.startswith(("--expression=", "--file=")):
+                has_script_option = True
+        elif arg in {"-e", "-f"}:
+            has_script_option = True
+            index += 1
+        elif arg.startswith("-") and len(arg) > 1:
+            in_place = in_place or "i" in arg[1:]
+        elif arg:
+            positional.append(arg)
+    if not in_place:
+        return []
+    return positional if has_script_option else positional[1:]
+
+
+def copy_destinations(args: list[str], base: str) -> list[str]:
+    operands: list[str] = []
+    target_directory = ""
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        index += 1
+        if arg in {"-t", "--target-directory"} and index < len(args):
+            target_directory = args[index]
+            index += 1
+        elif arg.startswith("--target-directory="):
+            target_directory = arg.split("=", 1)[1]
+        elif arg.startswith("-") and len(arg) > 1:
+            continue
+        else:
+            operands.append(arg)
+    if target_directory:
+        return [os.path.join(target_directory, os.path.basename(source)) for source in operands]
+    if len(operands) < 2:
+        return []
+    destination = operands[-1]
+    absolute = destination if os.path.isabs(destination) else os.path.join(base, destination)
+    if destination.endswith("/") or os.path.isdir(absolute):
+        return [os.path.join(destination, os.path.basename(source)) for source in operands[:-1]]
+    return [destination]
+
+
+def written_paths(command: str, base: str, nesting: int = 0) -> list[str]:
+    paths: list[str] = []
+    for segment in command_segments(tokenize_shell(command)):
+        words, targets = redirect_targets(segment)
+        paths.extend(targets)
+        while words and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[0]):
+            words = words[1:]
+        if not words:
+            continue
+        name = os.path.basename(words[0])
+        args = words[1:]
+        if name == "tee":
+            paths.extend(arg for arg in args if not arg.startswith("-"))
+        elif name == "sed":
+            paths.extend(sed_in_place_targets(args))
+        elif name in {"cp", "mv", "install"}:
+            paths.extend(copy_destinations(args, base))
+        elif name in SHELL_INTERPRETERS and nesting < MAX_SHELL_NESTING and "-c" in args:
+            position = args.index("-c")
+            if position + 1 < len(args):
+                paths.extend(written_paths(args[position + 1], base, nesting + 1))
+    return [path for path in paths if path and path != "/dev/null" and not path.startswith("&")]
+
+
+def test_targets(data: dict) -> list[str]:
+    project = project_dir(data)
+    tool = str(data.get("tool_name") or "")
+    tool_input = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
+    if tool in {"Write", "Edit", "NotebookEdit"}:
+        target = str(tool_input.get("file_path") or tool_input.get("notebook_path") or "")
+        if not target:
+            return []
+        relative = relative_path(target, project)
+        return [relative] if is_test_path(relative) else []
+    if tool != "Bash":
+        return []
+    base = str(data.get("cwd") or project)
+    found: list[str] = []
+    for path in written_paths(str(tool_input.get("command") or ""), base):
+        if "$" in path or path.startswith("~"):
+            relative = path
+        else:
+            absolute = path if os.path.isabs(path) else os.path.join(base, path)
+            relative = relative_path(os.path.normpath(absolute), project)
+            if os.path.isabs(relative):
+                continue
+        if is_test_path(relative) and relative not in found:
+            found.append(relative)
+    return found
 
 
 def tdd_state(sc_yaml: str, phase_yaml: str) -> tuple[str, str, list[str]]:
@@ -375,6 +524,9 @@ def main(argv: list[str]) -> int:
         if reason:
             emit(deny_output(reason))
         return 0
+    if command == "test-targets":
+        sys.stdout.write("\n".join(test_targets(read_input())))
+        return 0
     if command == "tdd-state" and len(argv) == 3:
         try:
             phase, tdd, released = tdd_state(argv[1], argv[2])
@@ -385,7 +537,7 @@ def main(argv: list[str]) -> int:
     if command == "detect-test-command" and len(argv) == 2:
         sys.stdout.write(detect_test_command(argv[1]))
         return 0
-    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|tdd-state|detect-test-command\n")
+    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|test-targets|tdd-state|detect-test-command\n")
     return 2
 
 

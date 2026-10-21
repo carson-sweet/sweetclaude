@@ -41,10 +41,10 @@
     {
       "file": "test-guardian.sh",
       "event": "PreToolUse",
-      "matcher": "Write|Edit",
+      "matcher": "Write|Edit|NotebookEdit|Bash",
       "required": true,
       "scope": "plugin-native",
-      "purpose": "Prevents edits to test files during TDD implementation phase",
+      "purpose": "Prevents edits to test files, by Write, Edit, NotebookEdit or Bash, during TDD implementation phase",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/test-guardian.sh"
     },
     {

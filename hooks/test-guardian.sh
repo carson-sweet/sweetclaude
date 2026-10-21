@@ -1,17 +1,20 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # SweetClaude Test Guardian Hook
-# PreToolUse — blocks Write/Edit to test files during implementation phase.
+# PreToolUse — blocks Write, Edit, NotebookEdit and Bash writes to test files during implementation phase.
 
 HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
 INPUT=$(cat)
 hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
 
 FILE=$(hook_field tool_input.file_path)
+if [ -z "$FILE" ]; then
+  FILE=$(hook_field tool_input.notebook_path)
+fi
 TOOL=$(hook_field tool_name)
 
-# Only check Write and Edit operations
-if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" ]]; then
+# Only check operations that can write a file
+if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" && "$TOOL" != "NotebookEdit" && "$TOOL" != "Bash" ]]; then
   exit 0
 fi
 
@@ -36,30 +39,6 @@ fi
 if [ -z "$SC_YAML" ] && [ -z "$PHASE_FILE" ]; then
   exit 0
 fi
-# Resolve phase and tdd_phase from sweetclaude.yaml, which is canonical, and
-# fall back to the phase.yaml mirror for projects mid-migration. Reading only
-# the mirror meant this never ran on a v4 project (ISSUE-281), and tdd_phase
-# was written by nothing at all (ISSUE-282).
-read_tdd_state() {
-  SC_YAML="$1" PHASE_YAML="$2" python3 - <<'PYEOF' 2>/dev/null
-import os, yaml
-
-def load(path):
-    try:
-        with open(path) as f:
-            return yaml.safe_load(f) or {}
-    except Exception:
-        return {}
-
-sc = load(os.environ.get("SC_YAML", ""))
-mirror = load(os.environ.get("PHASE_YAML", ""))
-active = (sc.get("work") or {}).get("active") or {}
-phase = active.get("phase") or mirror.get("phase") or ""
-tdd = active.get("tdd_phase") or mirror.get("tdd_phase") or ""
-print(f"{phase}\n{tdd}")
-PYEOF
-}
-
 
 # Check john-wick mode locked files
 JW_STATE="$PROJECT_DIR/.sweetclaude/state/john-wick.yaml"
@@ -90,74 +69,49 @@ PYEOF
       IS_JW_LOCKED=true
     fi
   fi
-  if [ "$IS_JW_LOCKED" = "true" ]; then
+  if [ -n "$FILE" ] && [ "$IS_JW_LOCKED" = "true" ]; then
     python3 "$HOOK_IO" deny "This file is locked by John Wick mode (locked at pipeline step IP5). Test files are immutable for the remainder of the pipeline. To unlock: inspect .sweetclaude/state/john-wick.yaml locked_test_files and get explicit user approval."
     exit 0
   fi
 fi
 
-# Check if we're in implementation phase
-TDD_STATE=$(read_tdd_state "$SC_YAML" "$PHASE_FILE")
-PHASE=$(printf '%s' "$TDD_STATE" | sed -n '1p')
-TDD_PHASE=$(printf '%s' "$TDD_STATE" | sed -n '2p')
+# Project-relative test files this call would write. Whether a file is a test is
+# a property of where it sits in the project, not where the project sits on disk
+# (ISSUE-282).
+TEST_TARGETS=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" test-targets)
+if [ -z "$TEST_TARGETS" ]; then
+  exit 0
+fi
+
+# Resolve phase and tdd_phase from sweetclaude.yaml, which is canonical, and
+# fall back to the phase.yaml mirror for projects mid-migration.
+TDD_STATE_RC=0
+TDD_STATE=$(python3 "$HOOK_IO" tdd-state "$SC_YAML" "$PHASE_FILE" 2>/dev/null) || TDD_STATE_RC=$?
+if [ "$TDD_STATE_RC" -ne 0 ]; then
+  exit 0
+fi
+PHASE=$(printf '%s\n' "$TDD_STATE" | sed -n '1p')
+TDD_PHASE=$(printf '%s\n' "$TDD_STATE" | sed -n '2p')
+RELEASED_FILES=$(printf '%s\n' "$TDD_STATE" | sed -n '3,$p')
 
 # Only block during implementation phase when tdd_phase is "implementing"
 if [[ "$PHASE" != "implement" && "$PHASE" != "IMPLEMENT" ]] || [[ "$TDD_PHASE" != "implementing" ]]; then
   exit 0
 fi
 
-# Check if the file is in a test directory
-TEST_PATTERNS=(
-  "test/"
-  "tests/"
-  "__tests__/"
-  "spec/"
-  "specs/"
-  ".test."
-  ".spec."
-  "_test."
-  "_spec."
-  "test_"
-)
-
-# Match against the path *within the project*, not the absolute path. A
-# project checked out under a directory whose name contains "test_" or
-# "tests/" would otherwise have every source file treated as a test file and
-# refused during implementation (ISSUE-282). Whether a file is a test is a
-# property of where it sits in the project, not where the project sits on disk.
-REL_FILE=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" rel-path "$FILE")
-
-IS_TEST=false
-for pattern in "${TEST_PATTERNS[@]}"; do
-  if [[ "$REL_FILE" == *"$pattern"* ]]; then
-    IS_TEST=true
-    break
+BLOCKED_TARGETS=""
+while IFS= read -r target; do
+  [ -z "$target" ] && continue
+  if [ -n "$RELEASED_FILES" ] && printf '%s\n' "$RELEASED_FILES" | grep -qFx -- "$target"; then
+    continue
   fi
-done
+  BLOCKED_TARGETS="${BLOCKED_TARGETS}${target}"$'\n'
+done <<< "$TEST_TARGETS"
 
-# Also check .feature files (Gherkin specs are immutable during implementation)
-if [[ "$REL_FILE" == *.feature ]]; then
-  IS_TEST=true
-fi
-
-if [ "$IS_TEST" = true ] && [ -n "$SC_YAML" ]; then
-  IS_RELEASED=$(SC_YAML="$SC_YAML" REL_FILE="$REL_FILE" python3 - <<'PYEOF' 2>/dev/null
-import os, yaml
-try:
-    with open(os.environ["SC_YAML"]) as f:
-        sc = yaml.safe_load(f) or {}
-except Exception:
-    sc = {}
-active = (sc.get("work") or {}).get("active") or {}
-print("true" if os.environ["REL_FILE"] in (active.get("tdd_released_files") or []) else "false")
-PYEOF
-)
-  [ "$IS_RELEASED" = "true" ] && exit 0
-fi
-
-if [ "$IS_TEST" = true ]; then
+if [ -n "$BLOCKED_TARGETS" ]; then
+  FIRST_TARGET="${BLOCKED_TARGETS%%$'\n'*}"
   RECORD_SCRIPT="$(dirname "$0")/../scripts/record-event.sh"
-  [ -x "$RECORD_SCRIPT" ] && bash "$RECORD_SCRIPT" tdd_guardian_block "file=$FILE" "tool=$TOOL"
+  [ -x "$RECORD_SCRIPT" ] && bash "$RECORD_SCRIPT" tdd_guardian_block "file=$FIRST_TARGET" "tool=$TOOL"
   python3 "$HOOK_IO" deny "Test files are immutable during implementation. Fix your code, not the tests. If the test is genuinely wrong, ask the user for explicit approval to modify it."
   exit 0
 fi
