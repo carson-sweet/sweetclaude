@@ -16,6 +16,7 @@
 #   hook_io.py test-targets             (PreToolUse payload on stdin; prints test files being written)
 #   hook_io.py tdd-state SC_YAML PHASE_YAML   (prints phase, tdd_phase, released files; exit 3 without PyYAML)
 #   hook_io.py detect-test-command PROJECT_DIR
+#   hook_io.py preflight-exempt         (PreToolUse payload on stdin; exit 0 for the remedy of the preflight denial)
 
 from __future__ import annotations
 
@@ -355,6 +356,25 @@ def detect_test_command(project: str) -> str:
     return ""
 
 
+def preflight_exempt(data: dict) -> bool:
+    tool = str(data.get("tool_name") or "")
+    tool_input = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
+    if tool == "Skill":
+        return str(tool_input.get("skill") or "") == "sweetclaude:configure"
+    if tool != "Bash":
+        return False
+    try:
+        tokens = shlex.split(str(tool_input.get("command") or ""))
+    except ValueError:
+        return False
+    if len(tokens) != 2 or tokens[0] != "touch":
+        return False
+    project = project_dir(data)
+    base = str(data.get("cwd") or project)
+    target = tokens[1] if os.path.isabs(tokens[1]) else os.path.join(base, tokens[1])
+    return os.path.realpath(target) == os.path.realpath(os.path.join(project, ".sweetclaude-skip"))
+
+
 ISSUE_FILE = re.compile(r"^(ISSUE-\d+)-.*\.md$", re.IGNORECASE)
 FRONTMATTER_STATUS = re.compile(r"^status:\s*[\"']?([\w-]+)", re.MULTILINE | re.IGNORECASE)
 BOLD_STATUS = re.compile(r"^\*\*Status:\*\*\s*([\w-]+)", re.MULTILINE | re.IGNORECASE)
@@ -537,7 +557,9 @@ def main(argv: list[str]) -> int:
     if command == "detect-test-command" and len(argv) == 2:
         sys.stdout.write(detect_test_command(argv[1]))
         return 0
-    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|test-targets|tdd-state|detect-test-command\n")
+    if command == "preflight-exempt":
+        return 0 if preflight_exempt(read_input()) else 1
+    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|test-targets|tdd-state|detect-test-command|preflight-exempt\n")
     return 2
 
 

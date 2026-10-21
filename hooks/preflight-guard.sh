@@ -35,6 +35,11 @@ if [ -f "$LEGACY_REPO/state/sweetclaude.yaml" ] || [ -f "$LEGACY_REPO/state/phas
   exit 0
 fi
 
+# The remedy named by the denial below must stay reachable
+if printf '%s' "$INPUT" | python3 "$HOOK_IO" preflight-exempt; then
+  exit 0
+fi
+
 # Flag exists, project still not configured — BLOCK
 python3 "$HOOK_IO" deny "BLOCKED: SweetClaude is not configured for this project. Run /sweetclaude:configure init to set up, or create .sweetclaude-skip to opt out."
 exit 0
