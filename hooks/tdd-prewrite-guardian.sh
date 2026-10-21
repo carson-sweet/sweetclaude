@@ -28,14 +28,22 @@ if [ ! -f "$GUARDIAN_FLAG" ]; then
   exit 0
 fi
 
-# No phase file — allow
+# Resolve the phase from sweetclaude.yaml (canonical), falling back to the
+# phase.yaml mirror. No phase recorded — allow.
+SC_YAML="$STATE_DIR/sweetclaude.yaml"
 PHASE_FILE="$STATE_DIR/phase.yaml"
-if [ ! -f "$PHASE_FILE" ]; then
+[ -f "$SC_YAML" ] || SC_YAML=""
+[ -f "$PHASE_FILE" ] || PHASE_FILE=""
+if [ -z "$SC_YAML" ] && [ -z "$PHASE_FILE" ]; then
   exit 0
 fi
 
-# Only enforce during implement phase
-PHASE=$(grep "^phase:" "$PHASE_FILE" 2>/dev/null | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
+PHASE=""
+if TDD_STATE=$(python3 "$HOOK_IO" tdd-state "$SC_YAML" "$PHASE_FILE" 2>/dev/null); then
+  PHASE=$(printf '%s\n' "$TDD_STATE" | sed -n '1p' | tr '[:upper:]' '[:lower:]')
+elif [ -n "$PHASE_FILE" ]; then
+  PHASE=$(grep "^phase:" "$PHASE_FILE" 2>/dev/null | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
+fi
 if [[ "$PHASE" != "implement" ]]; then
   exit 0
 fi
@@ -97,7 +105,7 @@ fi
 # Check for test evidence: git status shows new/modified test files this session
 if git -C "$PROJECT_DIR" status --short 2>/dev/null | \
    awk '{print $NF}' | \
-   grep -qE "(test|spec)\.(js|ts|py|rb|go|java|rs|cpp|c|cs|swift|kt|php|sh)$"; then
+   grep -qE "((test|spec)\.|(^|/)(test|spec)_[^/]*\.)(js|ts|py|rb|go|java|rs|cpp|c|cs|swift|kt|php|sh)$"; then
   exit 0
 fi
 
