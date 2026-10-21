@@ -120,8 +120,10 @@ entered them into the ledger.
    only continues once init succeeds against a real story.
 
 After `init`, the contract is frozen and human-gated: any attempt to edit it
-raises an approval prompt that only the user can answer, in every permission
-mode. If the user approves an amendment, re-run
+is denied, in every permission mode. Only the user can amend it, by running
+`python3 scripts/large_story_controller.py approve-amendment --workflow-id <id> --criterion <SC-NNN> --reason "<why>"`
+and then `python3 scripts/large_story_controller.py amend-contract --workflow-id <id> --criterion <SC-NNN> --approval-ref <ref> --fields '<json>'`.
+Once the user has amended it, re-run
 freeze-contract and init to rebind the workflow to the new hash — all phase
 artifacts must then be regenerated through the controller.
 
