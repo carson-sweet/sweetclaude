@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -10,9 +11,11 @@ _SCRIPTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sc
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
+import release_evidence_local
 from control_receipts import hash_file, write_control_lint_receipt
 from release_gate import (
     check_release_readiness,
+    validate_required_release_proofs,
     _validate_issue_closeout,
     _extract_issue_ids_from_commits,
     _issue_is_terminal,
@@ -33,6 +36,115 @@ REQUIRED_CHECKS = [
     "public-distribution",
 ]
 EFFORT_ROOT = Path(".sweetclaude") / "efforts" / "ms-007-failure-mode-controls"
+LOCAL_PROOF_CLI_VERSION = "1.0.99-fixture"
+LOCAL_PROOF_LIVE_SUITE_TEXT = (
+    "def test_gate_blocks_source_write():\n    pass\n\n\ndef test_gate_reports_test_failure():\n    pass\n"
+)
+LOCAL_PROOF_ROUTING_CASES_TEXT = (
+    "schema_version: 1\n"
+    "cases:\n"
+    "  - id: plan-fixture\n"
+    "    story: Plan fixture\n"
+    '    prompt: "fixture"\n'
+    "    category: plan\n"
+    "    workflows: [product-brief]\n"
+    "  - id: design-fixture\n"
+    "    story: Design fixture\n"
+    '    prompt: "fixture"\n'
+    "    category: design\n"
+    "    workflows: [design-architecture]\n"
+)
+
+
+def _local_proof_junit():
+    cases = "".join(
+        f'  <testcase classname="tests.live.test_fixture_live" name="{name}"/>\n'
+        for name in ("test_gate_blocks_source_write", "test_gate_reports_test_failure")
+    )
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<testsuites><testsuite name="tests.live" tests="2" '
+        'failures="0" errors="0" skipped="0">\n'
+        f"{cases}</testsuite></testsuites>\n"
+    )
+
+
+def _local_proof_routing_summary():
+    return json.dumps(
+        {
+            "executed_at": "20261021T000000Z",
+            "model": "sonnet",
+            "tier": "full",
+            "summary": {
+                "planned": 2,
+                "runs": 2,
+                "passed": 2,
+                "graded": 2,
+                "statuses": {"pass": 2},
+                "cost_usd": 4.5,
+                "unpriced_runs": 0,
+            },
+            "results": [],
+            "diagnostics": [],
+        }
+    )
+
+
+def _write_local_proofs(project_dir, tag, *, branch="main", commit="f" * 40, live_cost=1.1, routing_cost=4.5):
+    version = tag.removeprefix("v")
+    (project_dir / "tests" / "live").mkdir(parents=True, exist_ok=True)
+    (project_dir / "tests" / "live" / "test_fixture_live.py").write_text(
+        LOCAL_PROOF_LIVE_SUITE_TEXT,
+        encoding="utf-8",
+    )
+    (project_dir / "tests" / "behavioral").mkdir(parents=True, exist_ok=True)
+    (project_dir / "tests" / "behavioral" / "routing_cases.yaml").write_text(
+        LOCAL_PROOF_ROUTING_CASES_TEXT,
+        encoding="utf-8",
+    )
+    inputs = project_dir / "local-proof-inputs"
+    inputs.mkdir(parents=True, exist_ok=True)
+    junit = inputs / "live-junit.xml"
+    junit.write_text(_local_proof_junit(), encoding="utf-8")
+    routing = inputs / "routing.json"
+    routing.write_text(_local_proof_routing_summary(), encoding="utf-8")
+    findings = inputs / "docs-findings.json"
+    findings.write_text("[]\n", encoding="utf-8")
+    release_evidence_local.write_live_enforcement_receipt(
+        project_dir,
+        tag=tag,
+        junit_path=junit,
+        cost_usd=live_cost,
+        claude_cli_version=LOCAL_PROOF_CLI_VERSION,
+        branch=branch,
+        commit=commit,
+    )
+    release_evidence_local.write_routing_receipt(
+        project_dir,
+        tag=tag,
+        summary_path=routing,
+        claude_cli_version=LOCAL_PROOF_CLI_VERSION,
+        branch=branch,
+        commit=commit,
+    )
+    release_evidence_local.write_upgrade_path_receipt(
+        project_dir,
+        tag=tag,
+        commands=["/plugin marketplace add ./sweetclaude-marketplace", "/plugin install sweetclaude@sweetclaude-stable"],
+        library_dirs=["skill-library"],
+        claude_cli_version=LOCAL_PROOF_CLI_VERSION,
+        branch=branch,
+        commit=commit,
+    )
+    release_evidence_local.write_docs_claims_receipt(
+        project_dir,
+        tag=tag,
+        findings_path=findings,
+        claude_cli_version=LOCAL_PROOF_CLI_VERSION,
+        branch=branch,
+        commit=commit,
+    )
+    shutil.rmtree(inputs)
 
 
 def _write_release_project(project_dir: Path, version: str) -> None:
@@ -547,6 +659,7 @@ def _init_release_git_state(
 def test_stable_release_readiness_accepts_valid_receipt_and_metadata(tmp_path):
     _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
+    _write_local_proofs(tmp_path, "v5.0.0")
     _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
@@ -564,11 +677,16 @@ def test_stable_release_readiness_accepts_valid_receipt_and_metadata(tmp_path):
     assert result["version"] == "5.0.0"
     assert result["git"]["checked"] is True
     assert result["checks"] == sorted(REQUIRED_CHECKS)
+    assert result["release_proofs"]["checked"] is True
+    assert result["release_proofs"]["receipts"]["routing"] == str(
+        tmp_path / "docs" / "release-evidence" / "5.0.0" / "routing.json"
+    )
 
 
 def test_release_readiness_accepts_matching_git_branch_upstream_and_tag(tmp_path):
     _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
+    _write_local_proofs(tmp_path, "v5.0.0")
     _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     commit = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
     receipt = _write_release_receipt(tmp_path, "v5.0.0")
@@ -849,6 +967,7 @@ def test_release_readiness_rejects_untracked_package_input(tmp_path):
 def test_release_readiness_accepts_valid_control_lint_receipt(tmp_path):
     _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
+    _write_local_proofs(tmp_path, "v5.0.0")
     _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
@@ -866,9 +985,46 @@ def test_release_readiness_accepts_valid_control_lint_receipt(tmp_path):
     assert result["control_lint_receipt"] == str(control_lint_receipt)
 
 
+def test_stable_release_readiness_fails_closed_without_local_proofs(tmp_path):
+    """Phase 6: a stable release requires committed receipts for the four local
+    proof kinds under docs/release-evidence/<version>/; none may be fabricated
+    by generate-evidence."""
+    _write_release_project(tmp_path, "5.0.0")
+    _write_ms007_control_artifacts(tmp_path)
+    _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
+    receipt = _write_release_receipt(tmp_path, "v5.0.0")
+    control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
+
+    with pytest.raises(ValueError, match="docs-claims.*missing from docs/release-evidence/5.0.0"):
+        check_release_readiness(
+            tmp_path,
+            tag="v5.0.0",
+            channel="stable",
+            branch="main",
+            receipt_path=receipt,
+            control_lint_receipt_path=control_lint_receipt,
+        )
+
+
+def test_validate_required_release_proofs_accepts_explicit_evidence_dir(tmp_path):
+    _write_release_project(tmp_path, "5.0.0")
+    _write_local_proofs(tmp_path, "v5.0.0")
+
+    result = validate_required_release_proofs(
+        tmp_path,
+        channel="stable",
+        tag="v5.0.0",
+        release_evidence_dir=tmp_path / "docs" / "release-evidence" / "5.0.0",
+    )
+
+    assert result["checked"] is True
+    assert result["claude_cli_version"] == LOCAL_PROOF_CLI_VERSION
+
+
 def test_release_gate_cli_returns_json_success(tmp_path):
     _write_release_project(tmp_path, "5.0.0")
     _write_ms007_control_artifacts(tmp_path)
+    _write_local_proofs(tmp_path, "v5.0.0")
     _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     receipt = _write_release_receipt(tmp_path, "v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
@@ -979,6 +1135,7 @@ def test_release_gate_generate_evidence_cli_writes_usable_stable_packet(tmp_path
         (ROOT / "config" / "capability-manifest.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
+    _write_local_proofs(tmp_path, "v5.0.0")
     _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
     control_lint_receipt = _write_control_lint_receipt(tmp_path, "v5.0.0")
 
@@ -1126,6 +1283,7 @@ def test_generate_evidence_emits_control_lint_receipt_for_stable(tmp_path):
         (ROOT / "config" / "capability-manifest.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
+    _write_local_proofs(tmp_path, "v5.0.0")
     _init_release_git_state(tmp_path, branch="main", tag="v5.0.0")
 
     completed = subprocess.run(

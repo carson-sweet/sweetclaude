@@ -34,6 +34,12 @@ release:
   - release-identity
   - docs-capability
   - public-distribution
+  required_local_proofs:
+    stable:
+    - live-enforcement
+    - routing
+    - upgrade-path
+    - docs-claims
 capabilities:
   recover.stabilize_without_migration:
     title: Stabilize recoverable legacy layout without taxonomy migration

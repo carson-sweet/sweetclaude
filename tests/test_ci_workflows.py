@@ -79,3 +79,29 @@ def test_requirements_dev_pins_ruff():
     assert re.search(r"^ruff==\d", reqs, re.MULTILINE), (
         "requirements-dev.txt must pin ruff so CI and local runs match"
     )
+
+
+RELEASE_WORKFLOW = Path(__file__).parents[1] / ".github" / "workflows" / "release.yml"
+
+
+def test_workflow_runs_docs_claims_repo_check_on_prs():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "scripts/docs_claims_check.py" in text, (
+        "user-facing docs must carry only resolvable claims — run the "
+        "docs-claims checker on every PR"
+    )
+
+
+def test_release_workflow_reruns_docs_claims_check_at_tag_time():
+    text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    assert "scripts/docs_claims_check.py" in text, (
+        "the tagged commit's docs must be re-checked at release time"
+    )
+
+
+def test_release_gate_check_reads_committed_release_evidence():
+    text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    assert "docs/release-evidence" in text, (
+        "the release gate must re-validate the committed phase-6 proof "
+        "receipts for the tagged version"
+    )
