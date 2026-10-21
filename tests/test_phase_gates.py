@@ -431,3 +431,58 @@ class TestR101WorkTypeTagging:
             encoding="utf-8")
         self.sync(project)
         assert active_state(project).get("type") == "security-patch"
+
+
+class TestR103SolutioningGateRecord:
+    def test_design_entry_surfaces_the_solutioning_requirement(self, tmp_path):
+        project = phase_project(tmp_path, wtype="infrastructure-change", phase="DEFINE",
+                                stage="GA", satisfied=all_criteria_satisfied("infrastructure-change", "DEFINE"))
+        result = run_gate_check("advance", "--to", "DESIGN", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is True
+        assert "solutioning-gate" in payload["unmet"]
+        assert any("Solutioning gate required before DESIGN exits" in reason
+                   for reason in payload["reasons"])
+
+    def test_design_exit_requires_the_pass_record(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="DESIGN",
+                                stage="GA", satisfied=all_criteria_satisfied("data-migration", "DESIGN"))
+        result = run_gate_check("advance", "--to", "PLAN", "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is False
+        assert "solutioning-gate" in payload["unmet"]
+        assert any("design-solutioning-gate" in reason and "'Result: pass'" in reason
+                   for reason in payload["reasons"])
+
+    def test_pass_record_allows_design_exit(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="DESIGN",
+                                stage="GA", satisfied=all_criteria_satisfied("data-migration", "DESIGN"))
+        write_pass_record(project, "solutioning-gate")
+        result = run_gate_check("advance", "--to", "PLAN", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+    def test_risk_acceptance_override_passes_design_exit_and_logs(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="DESIGN",
+                                stage="GA", satisfied=all_criteria_satisfied("data-migration", "DESIGN"))
+        result = run_gate_check("advance", "--to", "PLAN",
+                                 "--override-text", "I accept the risk of solutioning-gate",
+                                 "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+        assert "Hard gate override — solutioning-gate on ISSUE-001" in decision_log(project)
+
+    def test_below_ga_design_exit_does_not_require_the_record(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="DESIGN",
+                                stage="BETA", satisfied=all_criteria_satisfied("data-migration", "DESIGN"))
+        result = run_gate_check("advance", "--to", "PLAN", "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+    def test_solutioning_gate_skill_records_the_pass(self):
+        skill = (REPO_ROOT / "skill-library" / "design" / "design-solutioning-gate" / "SKILL.md").read_text(encoding="utf-8")
+        assert "solutioning-gate" in skill
+        assert "Result: pass" in skill
+        assert "decision-log.md" in skill
