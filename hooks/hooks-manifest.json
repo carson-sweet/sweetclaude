@@ -68,10 +68,10 @@
     {
       "file": "wip-limit.sh",
       "event": "PreToolUse",
-      "matcher": "Bash",
+      "matcher": "Write|Edit|Bash",
       "required": true,
       "scope": "plugin-native",
-      "purpose": "Blocks IMPLEMENT entry in Kanban mode when WIP limit is reached",
+      "purpose": "Denies activating an issue in Kanban mode when the WIP limit is reached, in any phase",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/wip-limit.sh"
     },
     {

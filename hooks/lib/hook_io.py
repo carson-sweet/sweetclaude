@@ -12,11 +12,15 @@
 #   hook_io.py rel-path FILE            (project dir from stdin payload)
 #   hook_io.py flag-root PROJECT_DIR
 #   hook_io.py run-tests PROJECT_DIR COMMAND TIMEOUT_SECONDS
+#   hook_io.py wip-limit                (PreToolUse payload on stdin; denies a fourth activation)
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
+import pathlib
+import re
 import shlex
 import signal
 import subprocess
@@ -131,6 +135,136 @@ def run_tests(project: str, command: str, timeout_seconds: int) -> dict | None:
     return context_output("PostToolUse", f"Tests failed (exit {proc.returncode}) running: {command}\n{tail}")
 
 
+HEREDOC_OPERATOR = re.compile(r"(?<!<)<<(?!<)-?\s*(?:'([^']*)'|\"([^\"]*)\"|\\?([A-Za-z0-9_]+))")
+
+
+def strip_heredoc_bodies(command: str) -> str:
+    kept = []
+    pending: list[str] = []
+    for line in command.split("\n"):
+        if pending:
+            if line.strip() == pending[0]:
+                pending.pop(0)
+            continue
+        kept.append(line)
+        for match in HEREDOC_OPERATOR.finditer(line):
+            pending.append(match.group(1) or match.group(2) or match.group(3))
+    return " ; ".join(kept)
+
+
+def tokenize_shell(command: str) -> list[str]:
+    lexer = shlex.shlex(strip_heredoc_bodies(command), posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    try:
+        return list(lexer)
+    except ValueError:
+        return [token.strip("'\"") for token in re.findall(r"""&>>|&>|>>|>\||>|[;&|()]+|[^\s;&|()<>]+""", command)]
+
+
+ISSUE_FILE = re.compile(r"^(ISSUE-\d+)-.*\.md$", re.IGNORECASE)
+FRONTMATTER_STATUS = re.compile(r"^status:\s*[\"']?([\w-]+)", re.MULTILINE | re.IGNORECASE)
+BOLD_STATUS = re.compile(r"^\*\*Status:\*\*\s*([\w-]+)", re.MULTILINE | re.IGNORECASE)
+
+
+def issue_status(content: str) -> str:
+    frontmatter = re.match(r"^---\n(.*?)\n---\n", content, re.DOTALL)
+    match = FRONTMATTER_STATUS.search(frontmatter.group(1)) if frontmatter else BOLD_STATUS.search(content)
+    return match.group(1).lower() if match else ""
+
+
+def load_artifact_impl():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "sc-artifact-impl.py")
+    spec = importlib.util.spec_from_file_location("sc_artifact_impl", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def active_issue_ids(impl, product_base) -> set[str]:
+    active: set[str] = set()
+    for path in impl._artifact_files(product_base, "issue", "ISSUE"):
+        match = ISSUE_FILE.match(path.name)
+        try:
+            content = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if match and issue_status(content) == "active":
+            active.add(match.group(1).upper())
+    return active
+
+
+def bash_activated_issue(command: str) -> str | None:
+    tokens = tokenize_shell(command)
+    for index, token in enumerate(tokens):
+        name = os.path.basename(token)
+        if name == "sc_artifact_write" and index + 2 < len(tokens):
+            issue_id, payload_json = tokens[index + 1], tokens[index + 2]
+        elif name == "sc-artifact-impl.py" and index + 6 < len(tokens) and tokens[index + 1] == "write":
+            issue_id, payload_json = tokens[index + 5], tokens[index + 6]
+        elif name == "sc_artifact_create" and index + 2 < len(tokens):
+            issue_id, payload_json = "", tokens[index + 2]
+        elif name == "sc-artifact-impl.py" and index + 6 < len(tokens) and tokens[index + 1] == "create":
+            issue_id, payload_json = "", tokens[index + 6]
+        else:
+            continue
+        try:
+            fields = json.loads(payload_json)
+        except ValueError:
+            continue
+        if isinstance(fields, dict) and str(fields.get("status", "")).lower() == "active":
+            return issue_id.upper()
+    return None
+
+
+def edited_content(path: str, tool_input: dict) -> str:
+    try:
+        with open(path, encoding="utf-8") as handle:
+            current = handle.read()
+    except OSError:
+        return str(tool_input.get("new_string") or "")
+    old, new = str(tool_input.get("old_string") or ""), str(tool_input.get("new_string") or "")
+    return current.replace(old, new) if tool_input.get("replace_all") else current.replace(old, new, 1)
+
+
+def wip_limit_denial(data: dict) -> str | None:
+    project = project_dir(data)
+    gates_path = os.path.join(project, ".sweetclaude", "state", "effective-gates.yaml")
+    if not os.path.isfile(gates_path):
+        return None
+    try:
+        import yaml
+        with open(gates_path, encoding="utf-8") as handle:
+            gates = yaml.safe_load(handle) or {}
+        if gates.get("mode", "flow") != "kanban":
+            return None
+        limit = int(gates.get("wip_limit", 3))
+        impl = load_artifact_impl()
+    except Exception:
+        return None
+    tool = str(data.get("tool_name") or "")
+    tool_input = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
+    product_base = impl.resolve_product_base(pathlib.Path(project))
+    issue_id: str | None = None
+    if tool == "Bash":
+        issue_id = bash_activated_issue(str(tool_input.get("command") or ""))
+    elif tool in {"Write", "Edit"}:
+        path = str(tool_input.get("file_path") or "")
+        match = ISSUE_FILE.match(os.path.basename(path))
+        within_issues = any(os.path.realpath(path).startswith(str(directory.resolve()) + os.sep)
+                            for directory in impl._search_dirs(product_base, "issue"))
+        if match and within_issues:
+            content = str(tool_input.get("content") or "") if tool == "Write" else edited_content(path, tool_input)
+            if issue_status(content) == "active":
+                issue_id = match.group(1).upper()
+    if issue_id is None:
+        return None
+    active = active_issue_ids(impl, product_base)
+    if issue_id in active or len(active) < limit:
+        return None
+    return (f"WIP limit reached ({len(active)}/{limit} items active). "
+            "Complete or move an item before starting new work.")
+
+
 def deny_output(reason: str) -> dict:
     return {"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
@@ -191,7 +325,12 @@ def main(argv: list[str]) -> int:
         if output:
             emit(output)
         return 0
-    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests\n")
+    if command == "wip-limit":
+        reason = wip_limit_denial(read_input())
+        if reason:
+            emit(deny_output(reason))
+        return 0
+    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit\n")
     return 2
 
 

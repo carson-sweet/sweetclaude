@@ -124,6 +124,26 @@ NONE_SENTINEL = {"(none)", "(sp-nnn when scheduled)", "(date when achieved)", "(
 # Init — resolve project config, output shell eval-able string
 # ---------------------------------------------------------------------------
 
+DEFAULT_PRODUCT_BASE = ".sweetclaude/product"
+
+
+def resolve_product_base(root: Path) -> Path:
+    """Product artifact root for a project, honouring artifact-privacy.yaml."""
+    product_base = DEFAULT_PRODUCT_BASE
+    privacy_path = root / ".sweetclaude" / "artifact-privacy.yaml"
+    if privacy_path.exists():
+        try:
+            privacy = yaml.safe_load(privacy_path.read_text()) or {}
+            product_base = (
+                privacy.get("categories", {})
+                       .get("product", {})
+                       .get("base_path", product_base)
+            )
+        except Exception:
+            pass
+    return root / product_base
+
+
 def op_init(project_root: str) -> None:
     root = Path(project_root)
 
@@ -138,25 +158,12 @@ def op_init(project_root: str) -> None:
         except Exception:
             pass
 
-    # Product base
-    privacy_path = root / ".sweetclaude" / "artifact-privacy.yaml"
-    product_base = ".sweetclaude/product"
-    if privacy_path.exists():
-        try:
-            import yaml
-            privacy = yaml.safe_load(privacy_path.read_text()) or {}
-            product_base = (
-                privacy.get("categories", {})
-                       .get("product", {})
-                       .get("base_path", product_base)
-            )
-        except Exception:
-            pass
+    product_base = resolve_product_base(root)
 
     state_base = ".sweetclaude/state"
 
     print(f'SC_BACKEND="{backend}"')
-    print(f'SC_PRODUCT_BASE="{root / product_base}"')
+    print(f'SC_PRODUCT_BASE="{product_base}"')
     print(f'SC_STATE_BASE="{root / state_base}"')
 
 
