@@ -8,11 +8,16 @@
 
 HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
 INPUT=$(cat)
-hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
 
-PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
+# The flag check is shell only so the common case, no flag, spawns no python.
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-}"
+if [ -z "$PROJECT_DIR" ]; then
+  PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
+fi
 
-FLAG_ROOT=$(python3 "$HOOK_IO" flag-root "$PROJECT_DIR")
+FLAG_ROOT=$(git -C "$PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null)
+[ -n "$FLAG_ROOT" ] || FLAG_ROOT="${PROJECT_DIR%/}"
+[ -n "$FLAG_ROOT" ] || FLAG_ROOT="/"
 PROJECT_HASH=$(printf '%s' "$FLAG_ROOT" | md5 2>/dev/null \
   || printf '%s' "$FLAG_ROOT" | md5sum 2>/dev/null | cut -d' ' -f1)
 FLAG="/tmp/.sweetclaude-needs-preflight-${PROJECT_HASH}"

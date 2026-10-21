@@ -356,23 +356,41 @@ def detect_test_command(project: str) -> str:
     return ""
 
 
+PREFLIGHT_REMEDY_COMMANDS = {"mkdir", "touch"}
+SHELL_METACHARACTERS = set("$`;&|<>()\n*?[]{}~")
+
+
+def within_sweetclaude_state(path: str, project: str, base: str) -> bool:
+    absolute = path if os.path.isabs(path) else os.path.join(base, path)
+    target = os.path.realpath(absolute)
+    root = os.path.realpath(project)
+    return (target == os.path.join(root, ".sweetclaude-skip")
+            or target == os.path.join(root, ".sweetclaude")
+            or target.startswith(os.path.join(root, ".sweetclaude") + os.sep))
+
+
 def preflight_exempt(data: dict) -> bool:
     tool = str(data.get("tool_name") or "")
     tool_input = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
+    project = project_dir(data)
+    base = str(data.get("cwd") or project)
     if tool == "Skill":
-        return str(tool_input.get("skill") or "") == "sweetclaude:configure"
+        return str(tool_input.get("skill") or "").startswith("sweetclaude:")
+    if tool in {"Write", "Edit", "NotebookEdit"}:
+        target = str(tool_input.get("file_path") or tool_input.get("notebook_path") or "")
+        return bool(target) and within_sweetclaude_state(target, project, base)
     if tool != "Bash":
         return False
     try:
         tokens = shlex.split(str(tool_input.get("command") or ""))
     except ValueError:
         return False
-    if len(tokens) != 2 or tokens[0] != "touch":
+    if len(tokens) < 2 or tokens[0] not in PREFLIGHT_REMEDY_COMMANDS:
         return False
-    project = project_dir(data)
-    base = str(data.get("cwd") or project)
-    target = tokens[1] if os.path.isabs(tokens[1]) else os.path.join(base, tokens[1])
-    return os.path.realpath(target) == os.path.realpath(os.path.join(project, ".sweetclaude-skip"))
+    operands = [token for token in tokens[1:] if not token.startswith("-")]
+    if not operands or any(SHELL_METACHARACTERS & set(token) for token in tokens):
+        return False
+    return all(within_sweetclaude_state(operand, project, base) for operand in operands)
 
 
 ISSUE_FILE = re.compile(r"^(ISSUE-\d+)-.*\.md$", re.IGNORECASE)
