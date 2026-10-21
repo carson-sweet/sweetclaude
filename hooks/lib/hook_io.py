@@ -16,6 +16,8 @@
 #   hook_io.py test-targets             (PreToolUse payload on stdin; prints test files being written)
 #   hook_io.py tdd-state SC_YAML PHASE_YAML   (prints phase, tdd_phase, released files; exit 3 without PyYAML)
 #   hook_io.py detect-test-command PROJECT_DIR
+#   hook_io.py configured-test-command CONFIG_YAML   (prints testing.test_command)
+#   hook_io.py is-source-file FILE      (payload on stdin; exit 0 for a project source file that tests cover)
 #   hook_io.py preflight-exempt         (PreToolUse payload on stdin; exit 0 for the remedy of the preflight denial)
 
 from __future__ import annotations
@@ -31,6 +33,7 @@ import subprocess
 import sys
 
 OUTPUT_TAIL_BYTES = 32 * 1024
+NO_TESTS_COLLECTED_EXIT = 5
 
 
 def read_input(stream=None) -> dict:
@@ -136,6 +139,8 @@ def run_tests(project: str, command: str, timeout_seconds: int) -> dict | None:
     if proc.returncode == 0:
         return None
     tail = out[-OUTPUT_TAIL_BYTES:].decode("utf-8", errors="replace")
+    if proc.returncode == NO_TESTS_COLLECTED_EXIT:
+        return context_output("PostToolUse", f"No tests collected (exit {proc.returncode}) running: {command}\n{tail}")
     return context_output("PostToolUse", f"Tests failed (exit {proc.returncode}) running: {command}\n{tail}")
 
 
@@ -420,6 +425,13 @@ def tdd_state(sc_yaml: str, phase_yaml: str) -> tuple[str, str, list[str]]:
     return str(phase), str(tdd), released
 
 
+PYTEST_SECTIONS = {
+    "pyproject.toml": re.compile(r"^\s*\[tool\.pytest(\.|\])", re.MULTILINE),
+    "setup.cfg": re.compile(r"^\s*\[(tool:)?pytest\]", re.MULTILINE),
+    "tox.ini": re.compile(r"^\s*\[pytest\]", re.MULTILINE),
+}
+
+
 def detect_test_command(project: str) -> str:
     def read(name: str) -> str:
         try:
@@ -428,11 +440,9 @@ def detect_test_command(project: str) -> str:
         except OSError:
             return ""
 
-    pytest_markers = (("pytest.ini", ""), ("pyproject.toml", "pytest"), ("setup.cfg", "pytest"),
-                      ("tox.ini", "pytest"), ("conftest.py", ""))
-    for name, marker in pytest_markers:
-        if os.path.isfile(os.path.join(project, name)) and marker in read(name):
-            return "python3 -m pytest -q"
+    if any(os.path.isfile(os.path.join(project, name)) for name in ("pytest.ini", "conftest.py")) \
+            or any(section.search(read(name)) for name, section in PYTEST_SECTIONS.items()):
+        return "python3 -m pytest -q"
     try:
         scripts = (json.loads(read("package.json")) or {}).get("scripts") or {}
     except ValueError:
@@ -441,6 +451,36 @@ def detect_test_command(project: str) -> str:
     if isinstance(script, str) and script.strip() and "no test specified" not in script:
         return "npm test --silent"
     return ""
+
+
+def configured_test_command(config_path: str) -> str:
+    try:
+        with open(config_path, encoding="utf-8") as handle:
+            text = handle.read()
+    except OSError:
+        return ""
+    try:
+        import yaml
+        data = yaml.safe_load(text)
+    except ImportError:
+        match = re.search(r"^  test_command:[ \t]*(.*?)[ \t]*$", text, re.MULTILINE)
+        value = match.group(1) if match else ""
+        return value[1:-1] if len(value) > 1 and value[0] == value[-1] and value[0] in "'\"" else value
+    except yaml.YAMLError:
+        return ""
+    testing = data.get("testing") if isinstance(data, dict) else None
+    command = testing.get("test_command") if isinstance(testing, dict) else None
+    return command.strip() if isinstance(command, str) else ""
+
+
+NON_SOURCE_DIRECTORIES = {"docs", ".sweetclaude", "config", ".github"}
+NON_SOURCE_SUFFIXES = (".md", ".rst", ".adoc", ".txt", ".yaml", ".yml")
+
+
+def is_source_file(relative: str) -> bool:
+    if not relative or os.path.isabs(relative) or relative.split("/")[0] in NON_SOURCE_DIRECTORIES | {".."}:
+        return False
+    return not relative.endswith(NON_SOURCE_SUFFIXES) and not is_test_path(relative)
 
 
 PREFLIGHT_REMEDY_COMMANDS = {"mkdir", "touch"}
@@ -662,9 +702,14 @@ def main(argv: list[str]) -> int:
     if command == "detect-test-command" and len(argv) == 2:
         sys.stdout.write(detect_test_command(argv[1]))
         return 0
+    if command == "configured-test-command" and len(argv) == 2:
+        sys.stdout.write(configured_test_command(argv[1]))
+        return 0
+    if command == "is-source-file" and len(argv) == 2:
+        return 0 if is_source_file(relative_path(argv[1], project_dir(read_input()))) else 1
     if command == "preflight-exempt":
         return 0 if preflight_exempt(read_input()) else 1
-    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|test-targets|tdd-state|detect-test-command|preflight-exempt\n")
+    sys.stderr.write("usage: hook_io.py field|project-dir|deny|allow|context|block|rel-path|flag-root|run-tests|wip-limit|test-targets|tdd-state|detect-test-command|configured-test-command|is-source-file|preflight-exempt\n")
     return 2
 
 

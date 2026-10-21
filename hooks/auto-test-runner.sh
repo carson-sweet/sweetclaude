@@ -48,30 +48,15 @@ if [[ "$PHASE" != "implement" && "$PHASE" != "IMPLEMENT" ]] || [[ "$TDD_PHASE" !
   exit 0
 fi
 
-# Don't run on test files (we only run tests when source changes)
-TEST_PATTERNS=("test/" "tests/" "__tests__/" "spec/" "specs/" ".test." ".spec." "_test." "_spec." "test_")
-REL_FILE=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" rel-path "$FILE")
-
-IS_TEST=false
-for pattern in "${TEST_PATTERNS[@]}"; do
-  if [[ "$REL_FILE" == *"$pattern"* ]]; then
-    IS_TEST=true
-    break
-  fi
-done
-
-if [[ "$REL_FILE" == *.feature ]]; then
-  IS_TEST=true
-fi
-
-if [ "$IS_TEST" = true ]; then
+# Run only when a project source file changed: not tests, docs, config or files outside the project
+if ! printf '%s' "$INPUT" | python3 "$HOOK_IO" is-source-file "$FILE"; then
   exit 0
 fi
 
 # An explicit test command in project config wins; otherwise detect one from the project
 TEST_CMD=""
 if [ -f "$PROJECT_CONFIG" ]; then
-  TEST_CMD=$(grep "^  test_command:" "$PROJECT_CONFIG" 2>/dev/null | sed 's/^  test_command: //')
+  TEST_CMD=$(python3 "$HOOK_IO" configured-test-command "$PROJECT_CONFIG")
 fi
 if [ -z "$TEST_CMD" ]; then
   TEST_CMD=$(python3 "$HOOK_IO" detect-test-command "$PROJECT_DIR")
