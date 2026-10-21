@@ -8,7 +8,8 @@ fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
-mkdir -p "$tmpdir/.sweetclaude/state" "$tmpdir/.sweetclaude/artifacts/issues"
+ISSUES="$tmpdir/.sweetclaude/product/roadmap/issues"
+mkdir -p "$tmpdir/.sweetclaude/state" "$ISSUES"
 
 write_gates() {
     cat > "$tmpdir/.sweetclaude/state/effective-gates.yaml" << YAML
@@ -33,11 +34,12 @@ YAML
 }
 
 write_issues() {
-    rm -f "$tmpdir/.sweetclaude/artifacts/issues/"*.yaml
+    rm -f "$ISSUES/"*.md
     for i in $(seq 1 "$1"); do
-        printf "id: I-%03d\nstatus: in_progress\ntitle: Issue %d\n" "$i" "$i" \
-            > "$tmpdir/.sweetclaude/artifacts/issues/I-$(printf '%03d' $i).yaml"
+        printf -- "---\nid: ISSUE-%03d\nstatus: active\ntitle: Issue %d\n---\n\n# ISSUE-%03d: Issue %d\n" "$i" "$i" "$i" "$i" \
+            > "$ISSUES/ISSUE-$(printf '%03d' $i)-issue.md"
     done
+    printf -- "---\nid: ISSUE-099\nstatus: ready\ntitle: Next\n---\n\n# ISSUE-099: Next\n" > "$ISSUES/ISSUE-099-next.md"
 }
 
 HOOK_STDIN="$(cd "$(dirname "$0")/../.." && pwd)/tests/hook_stdin.py"
@@ -45,7 +47,7 @@ ERRFILE="$tmpdir/hook-stderr"
 
 run_hook() {
     local stdin
-    stdin=$(python3 "$HOOK_STDIN" payload PreToolUse-Bash "$(cd "$tmpdir" && pwd -P)" command="echo start-new-work")
+    stdin=$(python3 "$HOOK_STDIN" payload PreToolUse-Bash "$(cd "$tmpdir" && pwd -P)" command="source \"\${CLAUDE_PLUGIN_ROOT}/hooks/sc-artifact.sh\" && sc_artifact_write ISSUE-099 '{\"status\":\"active\"}'")
     HOOK_RC=0
     HOOK_OUT=$(cd "$tmpdir" && env -u PROJECT_DIR -u CLAUDE_TOOL_NAME -u CLAUDE_FILE_PATH -u CLAUDE_TRANSCRIPT_PATH \
         bash "$HOOK" <<< "$stdin" 2>"$ERRFILE") || HOOK_RC=$?
@@ -73,9 +75,9 @@ write_gates "kanban" 3; write_phase IMPLEMENT; write_issues 3
 run_hook; msg="$HOOK_OUT$(cat "$ERRFILE")"
 echo "$msg" | grep -q "3" && pass "block message includes count" || fail "block message missing count"
 
-# Test 5: kanban, not in IMPLEMENT — always allow
+# Test 5: kanban, not in IMPLEMENT — still blocks a fourth active item (R-078)
 write_gates "kanban" 3; write_phase DEFINE; write_issues 10
-run_hook; is_ok && pass "kanban DEFINE phase: always allow" || fail "kanban DEFINE: should allow"
+run_hook; is_blocked && pass "kanban DEFINE phase: block" || fail "kanban DEFINE: should block"
 
 # Test 6: kanban, 0/3 in_progress — allow
 write_gates "kanban" 3; write_phase IMPLEMENT; write_issues 0

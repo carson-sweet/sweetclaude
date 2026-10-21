@@ -2,12 +2,14 @@
 
 Skipped unless SWEETCLAUDE_LIVE=1. Each case builds a fixture project, asks
 haiku to attempt the action one hook guards, and judges the stream-json
-transcript and the filesystem. The model's prose is never asserted on. Eight
-cases at a 0.10 USD cap each keep worst-case spend at 0.80 USD.
+transcript and the filesystem. The model's prose is never asserted on. Eleven
+cases at a 0.10 USD cap each keep worst-case spend at 1.10 USD.
 
 Ledger rows covered: R-070 test-guardian, R-071 tdd-prewrite-guardian, R-072
 auto-test-runner, R-073 wip-limit, R-074 preflight-guard, R-075
-phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian.
+phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian, and
+the phase 3 rows R-077 wip-limit on Write, R-241 test-guardian on Bash and
+R-244 preflight-guard allowing its own remedy.
 """
 
 from __future__ import annotations
@@ -121,6 +123,34 @@ def write_state(project: Path, *, phase: str, tdd_phase: str | None = None) -> N
     path.write_text(yaml.safe_dump(data), encoding="utf-8")
 
 
+def write_issue_file(project: Path, number: int, status: str, directory: str = "roadmap/issues") -> Path:
+    folder = project / ".sweetclaude" / "product" / directory
+    folder.mkdir(parents=True, exist_ok=True)
+    issue_id = f"ISSUE-{number:03d}"
+    path = folder / f"{issue_id}-work-item-{number}.md"
+    path.write_text(f"---\nid: {issue_id}\ntitle: Work item {number}\nstatus: {status}\n---\n\n# {issue_id}: Work item {number}\n", encoding="utf-8")
+    return path
+
+
+def kanban_at_limit(project: Path, *, phase: str) -> Path:
+    write_state(project, phase=phase)
+    (project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
+        yaml.safe_dump({"mode": "kanban", "wip_limit": 3}), encoding="utf-8")
+    for number in (1, 2, 3):
+        write_issue_file(project, number, "active")
+    fourth = write_issue_file(project, 4, "ready")
+    git_commit_all(project, "wip state")
+    return fourth
+
+
+def assert_tool_not_refused(events: list[dict], tool: str, reason_pattern: str) -> None:
+    uses = tool_uses(events, tool)
+    assert uses, f"the model never attempted {tool}"
+    refused = [r for use in uses for r in tool_results(events, use["id"]) if r.get("is_error")]
+    assert not any(re.search(reason_pattern, result_text(r), re.IGNORECASE) for r in refused), (
+        f"a hook refused {tool} with /{reason_pattern}/: {[result_text(r)[:200] for r in refused]}")
+
+
 def enable_guardian(project: Path) -> None:
     (project / ".sweetclaude" / "state" / "guardian-enabled").write_text("", encoding="utf-8")
 
@@ -176,18 +206,23 @@ def test_auto_test_runner_runs_tests_and_reports_failure_r072(live_project):
     assert reached_model(events, "AUTOTEST_LIVE_SENTINEL"), "failing test output never reached the model"
 
 
-def test_wip_limit_refuses_bash_at_limit_r073(live_project):
-    write_state(live_project, phase="IMPLEMENT")
-    (live_project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
-        yaml.safe_dump({"mode": "kanban", "wip_limit": 3}), encoding="utf-8")
-    issues = live_project / ".sweetclaude" / "artifacts" / "issues"
-    issues.mkdir(parents=True)
-    for number in range(3):
-        (issues / f"ISSUE-{number}.yaml").write_text(yaml.safe_dump({"status": "in_progress"}), encoding="utf-8")
-    git_commit_all(live_project, "wip state")
-    events = run_claude(live_project, "Run this exact shell command with the Bash tool: echo started > wip.txt. Do nothing else.")
+def test_wip_limit_refuses_bash_activation_at_limit_r073(live_project):
+    fourth = kanban_at_limit(live_project, phase="IMPLEMENT")
+    before = fourth.read_text(encoding="utf-8")
+    command = f"source {REPO_ROOT}/hooks/sc-artifact.sh && sc_artifact_write ISSUE-004 '{{\"status\":\"active\"}}'"
+    events = run_claude(live_project, f"Run this exact shell command with the Bash tool: {command}. Do nothing else.")
     assert_tool_refused(events, "Bash", r"wip limit")
-    assert not (live_project / "wip.txt").exists()
+    assert fourth.read_text(encoding="utf-8") == before
+
+
+def test_wip_limit_refuses_write_of_fourth_active_issue_r077(live_project):
+    kanban_at_limit(live_project, phase="PLAN")
+    target = live_project / ".sweetclaude" / "product" / "roadmap" / "issues" / "ISSUE-005-fifth.md"
+    prompt = ("Use the Write tool to create .sweetclaude/product/roadmap/issues/ISSUE-005-fifth.md with exactly this content:\n"
+              "---\nid: ISSUE-005\ntitle: Fifth\nstatus: active\n---\n\n# ISSUE-005: Fifth\n\nDo nothing else.")
+    events = run_claude(live_project, prompt)
+    assert_tool_refused(events, "Write", r"wip limit")
+    assert not target.exists()
 
 
 def test_preflight_guard_refuses_tool_in_unconfigured_flagged_project_r074(live_project):

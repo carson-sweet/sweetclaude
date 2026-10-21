@@ -384,29 +384,54 @@ class TestMasterPreflightR076:
         assert_allowed(run_hook("master-preflight.sh", project, stdin))
 
 
+ISSUES_DIR = Path("roadmap") / "issues"
+
+
+def write_issue(project: Path, number: int, status: str, *, product_base: str = ".sweetclaude/product",
+                directory: Path = ISSUES_DIR, bold: bool = False) -> Path:
+    folder = project / product_base / directory
+    folder.mkdir(parents=True, exist_ok=True)
+    issue_id = f"ISSUE-{number:03d}"
+    path = folder / f"{issue_id}-work-item-{number}.md"
+    if bold:
+        body = f"# {issue_id}: Work item {number}\n\n**Status:** {status}\n**Priority:** medium\n"
+    else:
+        body = f"---\nid: {issue_id}\ntitle: Work item {number}\nstatus: {status}\n---\n\n# {issue_id}: Work item {number}\n"
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def write_kanban_gates(project: Path, *, mode: str = "kanban", wip_limit: int = 3) -> None:
+    (state_dir(project) / "effective-gates.yaml").write_text(
+        yaml.safe_dump({"mode": mode, "wip_limit": wip_limit}), encoding="utf-8")
+
+
+def activate_with_sc_artifact(issue_id: str) -> str:
+    return ('source "${CLAUDE_PLUGIN_ROOT}/hooks/sc-artifact.sh" && '
+            f"sc_artifact_write {issue_id} '{{\"status\":\"active\"}}'")
+
+
 class TestWipLimitR073:
     def prepare(self, project: Path, *, in_progress: int, mode: str = "kanban") -> None:
         write_sweetclaude_yaml(project, phase="IMPLEMENT")
-        (state_dir(project) / "effective-gates.yaml").write_text(
-            yaml.safe_dump({"mode": mode, "wip_limit": 3}), encoding="utf-8")
-        issues = project / ".sweetclaude" / "artifacts" / "issues"
-        issues.mkdir(parents=True)
-        for number in range(in_progress):
-            (issues / f"ISSUE-{number}.yaml").write_text(yaml.safe_dump({"status": "in_progress"}), encoding="utf-8")
+        write_kanban_gates(project, mode=mode)
+        for number in range(1, in_progress + 1):
+            write_issue(project, number, "active")
+        write_issue(project, 4, "ready")
 
     def test_denies_when_kanban_wip_limit_reached(self, project):
         self.prepare(project, in_progress=3)
-        stdin = payload("PreToolUse-Bash", project, command="echo start-new-work")
+        stdin = payload("PreToolUse-Bash", project, command=activate_with_sc_artifact("ISSUE-004"))
         assert_denied(run_hook("wip-limit.sh", project, stdin))
 
     def test_allows_below_limit(self, project):
         self.prepare(project, in_progress=2)
-        stdin = payload("PreToolUse-Bash", project, command="echo start-new-work")
+        stdin = payload("PreToolUse-Bash", project, command=activate_with_sc_artifact("ISSUE-004"))
         assert_allowed(run_hook("wip-limit.sh", project, stdin))
 
     def test_allows_when_mode_is_not_kanban(self, project):
         self.prepare(project, in_progress=3, mode="flow")
-        stdin = payload("PreToolUse-Bash", project, command="echo start-new-work")
+        stdin = payload("PreToolUse-Bash", project, command=activate_with_sc_artifact("ISSUE-004"))
         assert_allowed(run_hook("wip-limit.sh", project, stdin))
 
 

@@ -100,28 +100,35 @@ def _kanban_at_wip(project: Path, *, limit: int = 2, in_progress: int = 3) -> No
     state = project / ".sweetclaude" / "state"
     (state / "effective-gates.yaml").write_text(
         yaml.safe_dump({"mode": "kanban", "wip_limit": limit}), encoding="utf-8")
-    issues = project / ".sweetclaude" / "artifacts" / "issues"
+    issues = project / ".sweetclaude" / "product" / "roadmap" / "issues"
     issues.mkdir(parents=True, exist_ok=True)
-    for i in range(in_progress):
-        (issues / f"ISSUE-{i}.yaml").write_text(
-            yaml.safe_dump({"status": "in_progress"}), encoding="utf-8")
+    for i in range(1, in_progress + 1):
+        (issues / f"ISSUE-{i:03d}-work-item.md").write_text(
+            f"---\nid: ISSUE-{i:03d}\nstatus: active\n---\n\n# ISSUE-{i:03d}: Work item\n", encoding="utf-8")
+    (issues / "ISSUE-099-next-item.md").write_text(
+        "---\nid: ISSUE-099\nstatus: ready\n---\n\n# ISSUE-099: Next item\n", encoding="utf-8")
+
+
+def wip_call(project: Path) -> str:
+    return bash_call(project, "source \"${CLAUDE_PLUGIN_ROOT}/hooks/sc-artifact.sh\" && "
+                              "sc_artifact_write ISSUE-099 '{\"status\":\"active\"}'")
 
 
 # --- wip-limit -----------------------------------------------------------
 
 def test_wip_limit_blocks_when_the_limit_is_reached(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
-    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is False
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=wip_call(v3_project))) is False
 
 
 def test_wip_limit_allows_under_the_limit(v3_project: Path) -> None:
     _kanban_at_wip(v3_project, limit=5, in_progress=1)
-    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is True
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=wip_call(v3_project))) is True
 
 
 def test_wip_limit_block_message_names_the_reason(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
-    out = deny_reason(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project)))
+    out = deny_reason(run_hook("wip-limit.sh", v3_project, stdin=wip_call(v3_project)))
     assert "WIP limit reached" in out
     assert "3/2" in out, "the block must say how far over the limit the project is"
 
@@ -130,13 +137,13 @@ def test_wip_limit_allows_outside_kanban_mode(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
     (v3_project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
         yaml.safe_dump({"mode": "flow", "wip_limit": 2}), encoding="utf-8")
-    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is True
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=wip_call(v3_project))) is True
 
 
 def test_wip_limit_allows_when_gates_are_not_compiled(v3_project: Path) -> None:
     _kanban_at_wip(v3_project)
     (v3_project / ".sweetclaude" / "state" / "effective-gates.yaml").unlink()
-    assert decision(run_hook("wip-limit.sh", v3_project, stdin=bash_call(v3_project))) is True
+    assert decision(run_hook("wip-limit.sh", v3_project, stdin=wip_call(v3_project))) is True
 
 
 def test_wip_limit_applies_on_a_v4_project(v4_project: Path) -> None:
@@ -150,7 +157,7 @@ def test_wip_limit_applies_on_a_v4_project(v4_project: Path) -> None:
     """
     _kanban_at_wip(v4_project)
     assert not (v4_project / ".sweetclaude" / "state" / "phase.yaml").exists()
-    assert decision(run_hook("wip-limit.sh", v4_project, stdin=bash_call(v4_project))) is False
+    assert decision(run_hook("wip-limit.sh", v4_project, stdin=wip_call(v4_project))) is False
 
 
 def test_wip_limit_still_reads_the_mirror_for_projects_mid_migration(
@@ -169,7 +176,7 @@ def test_wip_limit_still_reads_the_mirror_for_projects_mid_migration(
     _git_init(p)
     _kanban_at_wip(p)
 
-    assert decision(run_hook("wip-limit.sh", p, stdin=bash_call(p))) is False
+    assert decision(run_hook("wip-limit.sh", p, stdin=wip_call(p))) is False
 
 
 # --- phase-dwelling-guard ------------------------------------------------
