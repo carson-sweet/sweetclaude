@@ -44,6 +44,13 @@ DATA_MIGRATION_ASSESS_CRITERIA = [
     "Downtime requirement assessed: live migration or maintenance window",
 ]
 
+ENHANCEMENT_DESIGN_CRITERIA = [
+    "Approach decided and documented",
+    "If UX change: updated flows reviewed",
+    "If API change: contracts reviewed, backward compatibility assessed",
+    "Edge cases identified",
+]
+
 
 def run_gate_check(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run([sys.executable, str(GATE_CHECK), *args],
@@ -183,3 +190,131 @@ class TestR098PhaseGatesParser:
         criteria = gates["security-planning"]["DEFINE"]["criteria"]
         assert "Applicable standards mapped with rationale and business trigger:" in criteria
         assert not any(criterion.startswith("GDPR") for criterion in criteria)
+
+
+def decision_log(project: Path) -> str:
+    path = project / ".sweetclaude" / "state" / "decision-log.md"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def write_pass_record(project: Path, gate_id: str, item_id: str = "ISSUE-001") -> None:
+    log_path = project / ".sweetclaude" / "state" / "decision-log.md"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text(
+        f"## {gate_id} — {item_id}\n\n"
+        "**Date:** 2026-10-21\n"
+        f"**Work item:** {item_id}\n"
+        "**Result:** pass\n",
+        encoding="utf-8",
+    )
+
+
+def active_state(project: Path) -> dict:
+    data = yaml.safe_load(
+        (project / ".sweetclaude" / "state" / "sweetclaude.yaml").read_text(encoding="utf-8"))
+    return (data.get("work") or {}).get("active") or {}
+
+
+SOFT_ESCAPE = "I've addressed this informally — proceed"
+
+
+class TestR099SoftGateEscapeIsLogged:
+    def test_soft_escape_phrase_advances_and_logs_the_override(self, tmp_path):
+        project = phase_project(tmp_path, wtype="enhancement", phase="DESIGN", stage="BETA")
+        result = run_gate_check("advance", "--to", "IMPLEMENT",
+                                "--override-text", SOFT_ESCAPE,
+                                "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+        log = decision_log(project)
+        assert "## DEC-001: Soft gate override — enhancement.DESIGN on ISSUE-001" in log
+        assert "**Gate:** enhancement.DESIGN (soft)" in log
+        assert "**Work item:** ISSUE-001" in log
+        assert SOFT_ESCAPE in log
+        assert "**Criteria waived:** " + "; ".join(ENHANCEMENT_DESIGN_CRITERIA) in log
+
+    def test_escape_phrase_matching_is_tolerant(self, tmp_path):
+        project = phase_project(tmp_path, wtype="enhancement", phase="DESIGN", stage="BETA")
+        override = "I’VE ADDRESSED THIS INFORMALLY (the sketch is on the whiteboard) — PROCEED."
+        result = run_gate_check("advance", "--to", "IMPLEMENT",
+                                "--override-text", override,
+                                "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+        assert "Soft gate override — enhancement.DESIGN on ISSUE-001" in decision_log(project)
+
+    def test_non_matching_override_text_still_refuses(self, tmp_path):
+        project = phase_project(tmp_path, wtype="enhancement", phase="DESIGN", stage="BETA")
+        result = run_gate_check("advance", "--to", "IMPLEMENT",
+                                "--override-text", "just proceed please",
+                                "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        assert gate_json(result)["allow"] is False
+        assert decision_log(project) == ""
+
+    def test_hard_marked_criteria_are_soft_below_ga(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="ASSESS", stage="BETA")
+        result = run_gate_check("advance", "--to", "DESIGN",
+                                "--override-text", SOFT_ESCAPE,
+                                "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+        assert "Soft gate override — data-migration.ASSESS on ISSUE-001" in decision_log(project)
+
+    def test_override_logging_is_idempotent(self, tmp_path):
+        project = phase_project(tmp_path, wtype="enhancement", phase="DESIGN", stage="BETA")
+        for _ in range(2):
+            run_gate_check("advance", "--to", "IMPLEMENT",
+                           "--override-text", SOFT_ESCAPE,
+                           "--project-dir", str(project))
+        assert decision_log(project).count("Soft gate override — enhancement.DESIGN on ISSUE-001") == 1
+
+    def test_override_records_the_criteria_satisfied(self, tmp_path):
+        project = phase_project(tmp_path, wtype="enhancement", phase="DESIGN", stage="BETA")
+        overridden = run_gate_check("advance", "--to", "IMPLEMENT",
+                                    "--override-text", SOFT_ESCAPE,
+                                    "--project-dir", str(project))
+        assert overridden.returncode == 0
+        recorded = active_state(project).get("phase_exit", {}).get("DESIGN", [])
+        assert sorted(recorded) == sorted(ENHANCEMENT_DESIGN_CRITERIA)
+        retried = run_gate_check("advance", "--to", "IMPLEMENT", "--project-dir", str(project))
+        assert retried.returncode == 0, retried.stdout
+        assert gate_json(retried) == {"allow": True, "reasons": [], "unmet": []}
+
+
+class TestR100HardGateRiskAcceptanceIsLogged:
+    def test_soft_phrase_alone_does_not_pass_a_hard_gate(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="ASSESS", stage="GA")
+        result = run_gate_check("advance", "--to", "DESIGN",
+                                 "--override-text", SOFT_ESCAPE,
+                                 "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is False
+        assert 'Override requires explicit risk acceptance: "I accept the risk of data-migration.ASSESS".' \
+            in payload["reasons"]
+
+    def test_risk_acceptance_phrase_passes_and_logs(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="ASSESS", stage="GA")
+        write_pass_record(project, "solutioning-gate")
+        write_pass_record(project, "change-impact-analysis")
+        result = run_gate_check("advance", "--to", "DESIGN",
+                                 "--override-text", "I accept the risk of data-migration.ASSESS",
+                                 "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+        log = decision_log(project)
+        assert "Hard gate override — data-migration.ASSESS on ISSUE-001" in log
+        assert "**Gate:** data-migration.ASSESS (hard)" in log
+        assert "**Work item:** ISSUE-001" in log
+        assert 'Explicit risk acceptance recorded: "I accept the risk of data-migration.ASSESS".' in log
+
+    def test_risk_acceptance_for_a_different_gate_is_refused(self, tmp_path):
+        project = phase_project(tmp_path, wtype="data-migration", phase="ASSESS", stage="GA")
+        write_pass_record(project, "solutioning-gate")
+        write_pass_record(project, "change-impact-analysis")
+        result = run_gate_check("advance", "--to", "DESIGN",
+                                 "--override-text", "I accept the risk of data-migration.VERIFY",
+                                 "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        assert gate_json(result)["allow"] is False
