@@ -117,8 +117,8 @@ entered them into the ledger.
 
 After `init`, the contract is frozen and human-gated: any attempt to edit it
 is denied, in every permission mode. Only the user can amend it, by running
-`python3 scripts/large_story_controller.py approve-amendment --workflow-id <id> --criterion <SC-NNN> --reason "<why>"`
-and then `python3 scripts/large_story_controller.py amend-contract --workflow-id <id> --criterion <SC-NNN> --approval-ref <ref> --fields '<json>'`.
+`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/large_story_controller.py approve-amendment --workflow-id <id> --criterion <SC-NNN> --reason "<why>"`
+and then `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/large_story_controller.py amend-contract --workflow-id <id> --criterion <SC-NNN> --approval-ref <ref> --fields '<json>'`.
 Once the user has amended it, re-run
 freeze-contract and init to rebind the workflow to the new hash — all phase
 artifacts must then be regenerated through the controller.
