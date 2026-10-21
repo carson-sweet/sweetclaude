@@ -304,7 +304,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             src = os.path.join(source_dir, src_sub)
             if os.path.isdir(src) and os.path.isdir(dest):
                 d = _run(["diff", "-rq", src, dest])
-                lines = [l for l in d.stdout.strip().splitlines() if l]
+                lines = [line for line in d.stdout.strip().splitlines() if line]
                 diff_summary[name] = len(lines)
             elif os.path.isdir(src):
                 diff_summary[name] = -1  # new directory

@@ -33,7 +33,7 @@ _scripts_dir = Path(__file__).resolve().parent
 if str(_scripts_dir) not in sys.path:
     sys.path.insert(0, str(_scripts_dir))
 
-from status import CANONICAL_STATUSES, TERMINAL_STATUSES, derived_status
+from status import TERMINAL_STATUSES, derived_status
 
 try:
     import yaml

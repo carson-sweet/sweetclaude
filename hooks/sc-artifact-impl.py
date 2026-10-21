@@ -17,7 +17,6 @@ Operations:
 """
 
 import json
-import os
 import re
 import sys
 from datetime import datetime
@@ -336,7 +335,6 @@ def op_read(product_base: Path, state_base: Path, entity_id: str) -> None:
 
 
 def _calculate_sprint_velocity(product_base: Path, sprint_id: str) -> int:
-    import glob as _glob
     total = 0
     for fname in _artifact_files(product_base, "issue", TYPE_TO_PREFIX["issue"]):
         with open(fname, encoding="utf-8") as fh:
@@ -853,7 +851,6 @@ def _build_template(entity_id: str, entity_type: str, title: str, data: dict) ->
 
 def _append_to_type_index(type_dir: Path, entity_type: str, entity_id: str,
                            title: str, data: dict) -> None:
-    index_name = type_dir.name.upper().replace("/", "-").rstrip("S") + "S-INDEX.md"
     index_path = type_dir / f"{type_dir.name.upper()}-INDEX.md"
     if not index_path.exists():
         # Try common naming patterns
@@ -912,32 +909,38 @@ def main():
 
     if op == "read":
         if not args:
-            print("ERROR: read requires <id>", file=sys.stderr); sys.exit(1)
+            print("ERROR: read requires <id>", file=sys.stderr)
+            sys.exit(1)
         op_read(product_base, state_base, args[0])
 
     elif op == "write":
         if len(args) < 2:
-            print("ERROR: write requires <id> <json>", file=sys.stderr); sys.exit(1)
+            print("ERROR: write requires <id> <json>", file=sys.stderr)
+            sys.exit(1)
         op_write(product_base, state_base, args[0], args[1], project_dir=Path(sys.argv[2]))
 
     elif op == "create":
         if len(args) < 2:
-            print("ERROR: create requires <type> <json>", file=sys.stderr); sys.exit(1)
+            print("ERROR: create requires <type> <json>", file=sys.stderr)
+            sys.exit(1)
         op_create(product_base, state_base, args[0], args[1], project_dir=Path(sys.argv[2]))
 
     elif op == "query":
         if not args:
-            print("ERROR: query requires <type> [key=value ...]", file=sys.stderr); sys.exit(1)
+            print("ERROR: query requires <type> [key=value ...]", file=sys.stderr)
+            sys.exit(1)
         op_query(product_base, state_base, args[0], *args[1:], project_dir=Path(sys.argv[2]))
 
     elif op == "delete":
         if not args:
-            print("ERROR: delete requires <id>", file=sys.stderr); sys.exit(1)
+            print("ERROR: delete requires <id>", file=sys.stderr)
+            sys.exit(1)
         op_delete(product_base, state_base, args[0])
 
     elif op == "list":
         if not args:
-            print("ERROR: list requires <type>", file=sys.stderr); sys.exit(1)
+            print("ERROR: list requires <type>", file=sys.stderr)
+            sys.exit(1)
         op_list(product_base, state_base, args[0], project_dir=Path(sys.argv[2]))
 
     elif op == "reindex":

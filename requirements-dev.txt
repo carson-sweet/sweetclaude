@@ -20,3 +20,8 @@ pytest-cov==4.1.0
 # without re-running `playwright install` breaks tests/test_dashboard_ui.py with
 # "Executable doesn't exist". Bump this and re-run scripts/setup-dev.sh together.
 playwright==1.60.0
+
+# Linter. Pinned exactly for the same reason as coverage: an unpinned ruff
+# means CI reports different violations than a developer does. Rule set and
+# test-tree exemptions live in ruff.toml; CI runs `ruff check .`.
+ruff==0.17.1

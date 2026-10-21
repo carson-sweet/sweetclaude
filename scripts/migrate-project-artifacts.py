@@ -14,7 +14,6 @@ Options:
 """
 
 import argparse
-import os
 import re
 import sys
 import textwrap
@@ -374,7 +373,7 @@ def migrate_backlog_items(
 def write_roadmap_index(roadmap_dir: Path, dry_run: bool) -> str:
     dest = roadmap_dir / "ROADMAP-INDEX.md"
     if dest.exists():
-        return f"  SKIP ROADMAP-INDEX.md: already exists\n"
+        return "  SKIP ROADMAP-INDEX.md: already exists\n"
 
     rm_files = sorted(roadmap_dir.glob("RM-*.md"))
     rows = []
@@ -405,7 +404,7 @@ def write_roadmap_index(roadmap_dir: Path, dry_run: bool) -> str:
 def write_issues_index(issues_dir: Path, issues: list[dict], dry_run: bool) -> str:
     dest = issues_dir / "ISSUES-INDEX.md"
     if dest.exists():
-        return f"  SKIP ISSUES-INDEX.md: already exists\n"
+        return "  SKIP ISSUES-INDEX.md: already exists\n"
 
     rows = []
     for issue in issues:
@@ -432,7 +431,7 @@ def write_issues_index(issues_dir: Path, issues: list[dict], dry_run: bool) -> s
 def update_milestones_index(milestones_dir: Path, dry_run: bool) -> str:
     dest = milestones_dir / "MILESTONES-INDEX.md"
     if not dest.exists():
-        return f"  SKIP MILESTONES-INDEX.md: file not found\n"
+        return "  SKIP MILESTONES-INDEX.md: file not found\n"
 
     content = read_file(dest)
     updated = content
@@ -447,7 +446,7 @@ def update_milestones_index(milestones_dir: Path, dry_run: bool) -> str:
             )
 
     if updated == content:
-        return f"  MILESTONES-INDEX.md: no changes needed\n"
+        return "  MILESTONES-INDEX.md: no changes needed\n"
 
     # Append a note
     updated = updated.rstrip() + (
@@ -456,7 +455,7 @@ def update_milestones_index(milestones_dir: Path, dry_run: bool) -> str:
     )
 
     write_file(dest, updated, dry_run)
-    return f"  MILESTONES-INDEX.md: removed MS-002, MS-003, MS-004 rows\n"
+    return "  MILESTONES-INDEX.md: removed MS-002, MS-003, MS-004 rows\n"
 
 
 # ---------------------------------------------------------------------------
@@ -489,7 +488,7 @@ def write_report(repo_root: Path, log_lines: str, issues: list[dict], dry_run: b
             f"| {issue['type']} | {issue['status']} | {issue['priority']} |\n"
         )
 
-    report += textwrap.dedent(f"""
+    report += textwrap.dedent("""
         ## Manual follow-up required
 
         1. **Roadmap rationale sections** — each RM-NNN has a stub rationale. Fill in the "why now" reasoning.

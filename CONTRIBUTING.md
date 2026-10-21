@@ -115,6 +115,21 @@ does both. Re-run it after changing the pinned `playwright` version in
 
 ---
 
+## Linting
+
+Ruff is the linter. The rule set and the test-tree exemptions live in
+`ruff.toml`; the version is pinned in `requirements-dev.txt` (installed by
+`scripts/setup-dev.sh`). Run it before submitting:
+
+```
+ruff check .
+```
+
+CI runs the same command on every pull request
+(`tests/test_ci_workflows.py` holds that contract).
+
+---
+
 ## Running the Behavioral Tests
 
 If you change a router, a category command, or a library `INDEX.md`, run the routing suite. It sends real requests through `/sweetclaude:go` and checks which workflow each one reaches:

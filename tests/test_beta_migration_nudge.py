@@ -63,7 +63,8 @@ def test_marketplace_name_ref_pair_is_manifest_consistent():
     channel pair per the capability manifest — the promotion merge left main
     carrying the beta channel's definition. Branch-agnostic: whatever ref this
     branch's file pins, its name must match that channel's expected_marketplace."""
-    import json, sys
+    import json
+    import sys
     root = Path(__file__).parents[1]
     sys.path.insert(0, str(root / "scripts"))
     from maintenance.capability_manifest import load_manifest
