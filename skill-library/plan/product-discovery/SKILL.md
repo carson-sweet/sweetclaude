@@ -212,6 +212,21 @@ derived_frameworks:
 notes: null
 ```
 
+## Assumption Capture
+
+Whenever the user's answer to any interview question is an assumption rather than a known fact (they say "I assume", "I think", "probably", "I believe", or you rate the evidence Red in the rubric), record it as an assumption. Append it to `.sweetclaude/state/assumption-register.md`, creating the file if it does not exist. Number each entry `ASM-NNN`, one higher than the highest ASM-NNN already in the register (start at `ASM-001`).
+
+```markdown
+## ASSUMPTION [ASM-NNN] — pending-validation
+
+**Finding:** {the assumption, in the user's words}
+**Source:** Product discovery {depth} — question {n}
+**Status:** pending-validation — requires real evidence to confirm or invalidate
+**Date:** {ISO date}
+```
+
+Do this as the answer is given, then continue the interview. Do not interrupt the flow to ask permission for each entry.
+
 ## Exit
 
 Write `.sweetclaude/state/discovery.yaml`:
