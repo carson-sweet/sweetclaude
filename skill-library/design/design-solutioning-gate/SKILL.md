@@ -29,4 +29,4 @@ Validate the proposed solution for: $ARGUMENTS
 3. **Challenge assumptions** about feasibility, scalability, and compliance
 4. **Check for a rejected alternative**: confirm at least one rejected alternative is recorded with its rationale for rejecting it. If none is recorded, the gate fails: stop and record fail
 5. **Check for a rollback plan**: confirm a step-by-step rollback plan is recorded, not just "revert the commit". If it is missing or not step-by-step, the gate fails: stop and record fail
-6. **Document gate results** in the decision log with pass/fail and rationale
+6. **Document gate results** in the decision log with pass/fail and rationale: append an entry to `.sweetclaude/state/decision-log.md` headed `solutioning-gate` (`## solutioning-gate — {work item id}`) carrying the date, the work item id and `Result: pass` or `Result: fail` plus the rationale. The phase-advance check looks for exactly this record before DESIGN exits for hard-gate work types at GA+ stages.

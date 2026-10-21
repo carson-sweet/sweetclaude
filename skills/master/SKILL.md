@@ -107,9 +107,9 @@ Any work can shift buckets as understanding deepens. This is normal.
 
 When the user signals readiness to advance (never prompt for it), run the transition sequence:
 
-**Exit criteria reference.** For any work type and phase, read the authoritative exit criteria from `${CLAUDE_PLUGIN_ROOT}/rules/phase-gates.md` — find the section matching `active_work_item.type`, then the subsection for the current `active_work_item.phase`. The DISCOVER and DEFINE checks below are reference checklists for net-new-feature; always verify against `phase-gates.md` for the complete and authoritative criteria.
+**Exit criteria reference.** For any work type and phase, the authoritative exit criteria live in `${CLAUDE_PLUGIN_ROOT}/rules/phase-gates.md` — find the section matching `active_work_item.type`, then the subsection for the current `active_work_item.phase`. The DISCOVER and DEFINE checks below are reference checklists for net-new-feature; always verify against `phase-gates.md` for the complete and authoritative criteria. The check is enforced by code: run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gate_check.py advance --to {NEXT PHASE} --project-dir .` — exit 2 prints `{"allow": false, "reasons": [...]}` with each unmet criterion named; output every entry in `reasons` and stop. A soft gate passes when the user says "I've addressed this informally — proceed" (pass it as `--override-text`; the override and the waived criteria are logged to the decision log automatically). A hard gate passes only with the per-gate phrase "I accept the risk of {gate-id}" as the override text. Criteria satisfied along the way are recorded under `work.active.phase_exit` in `.sweetclaude/state/sweetclaude.yaml`.
 
-**Step 1: Pre-transition validation (Discover and Define only).**
+**Step 1: Pre-transition validation (every phase).**
 
 Before generating the decision summary, run a self-check against the phase gate exit criteria. Present the results:
 
@@ -136,7 +136,7 @@ DEFINE Exit Check:
 Present with pass/fail marks. If all pass, proceed. If any fail, present the gaps:
 > "These items are still open: [list]. We can address them now, or you can override and advance anyway."
 
-If the user overrides, log it in the decision log with which criteria were waived. In Autonomous mode, auto-proceed if all pass; pause if any fail.
+If the user overrides, run the gate check with the override as `--override-text`: a soft gate takes "I've addressed this informally — proceed", a hard gate takes "I accept the risk of {gate-id}", and the override is logged to the decision log with which criteria were waived. In Autonomous mode, auto-proceed if all pass; pause if any fail.
 
 **Step 2: Improvement check-in (all phases).** Ask: "What should I do differently next phase?" Save the response to `.sweetclaude/state/improvement-register.md`. Even "nothing" is worth recording. This step is not optional.
 

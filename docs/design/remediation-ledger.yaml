@@ -1394,7 +1394,12 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 'ff1efb2f'
+  - 'bfe474b1'
+  - '92247959'
+  - '1e9370dd'
 - id: R-099
   source: B
   docs:
@@ -1413,7 +1418,12 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 'bd535dc5'
+  - '3923389b'
+  - '92247959'
+  - '1e9370dd'
 - id: R-100
   source: B
   docs:
@@ -1432,7 +1442,12 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 'bd535dc5'
+  - '3923389b'
+  - '92247959'
+  - '1e9370dd'
 - id: R-101
   source: B
   docs:
@@ -1457,7 +1472,12 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 'c463101c'
+  - '80ff3604'
+  - '92247959'
+  - '1e9370dd'
   notes: Needs the work type of the active item; see the work_types row R-105 for the narrow tagging the gates depend on.
 - id: R-102
   source: B
@@ -1492,7 +1512,12 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - '95636a29'
+  - '10e291b2'
+  - '92247959'
+  - '1e9370dd'
 - id: R-104
   source: B
   docs:

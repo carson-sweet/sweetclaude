@@ -18,6 +18,7 @@ try:
 except ImportError:
     sys.exit("pyyaml is required: pip install pyyaml")
 
+from parse_utils import parse_artifact_file
 from success_criteria_contracts import (
     DEFAULT_CONTRACT_PATH,
     DEFAULT_LEDGER_PATH,
@@ -2122,6 +2123,21 @@ def _clear_phase_yaml_active_item(project: Path, workflow_id: str) -> None:
         phase_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
 
+HARD_GATE_TYPES = frozenset({
+    "data-migration", "infrastructure-change", "technology-migration", "security-patch",
+})
+
+
+def _tag_hard_gate_type(project: Path, workflow_id: str, active: dict[str, Any]) -> None:
+    item_path = find_backlog_file(project, workflow_id, exclude_done=True)
+    if item_path is None:
+        return
+    item_type = str((parse_artifact_file(item_path) or {}).get("type") or "").strip()
+    if not item_type:
+        return
+    active["type"] = item_type if item_type in HARD_GATE_TYPES else None
+
+
 def _sync_sweetclaude_yaml_active(project: Path, workflow_id: str, phase: str) -> None:
     sc_path = project / ".sweetclaude" / "state" / "sweetclaude.yaml"
     sc_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2131,6 +2147,7 @@ def _sync_sweetclaude_yaml_active(project: Path, workflow_id: str, phase: str) -
     if not isinstance(active, dict):
         active = {}
     active.update({"id": workflow_id, "phase": phase})
+    _tag_hard_gate_type(project, workflow_id, active)
     work["active"] = active
     data["work"] = work
     sc_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
