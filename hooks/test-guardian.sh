@@ -88,6 +88,7 @@ fi
 TDD_STATE_RC=0
 TDD_STATE=$(python3 "$HOOK_IO" tdd-state "$SC_YAML" "$PHASE_FILE" 2>/dev/null) || TDD_STATE_RC=$?
 if [ "$TDD_STATE_RC" -ne 0 ]; then
+  python3 "$HOOK_IO" deny "Test files are protected during implementation, but the protection cannot read SweetClaude state because PyYAML is not installed for python3. Install it with: python3 -m pip install pyyaml"
   exit 0
 fi
 PHASE=$(printf '%s\n' "$TDD_STATE" | sed -n '1p')
