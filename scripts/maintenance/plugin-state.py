@@ -92,12 +92,12 @@ def _is_stale_beta(channel: str, version: str) -> bool:
     return bool(minimum) and _version_lt(version, minimum)
 
 
-def _switch_commands(retired_channel: str, target_channel: str) -> list[str]:
+def _switch_commands(retired_channel: str, target_channel: str, retired_marketplace: str = "") -> list[str]:
     """One-time switch off a retired channel, ordered so the user is never
     double-installed (matches beta_stable_migration_notice in update.py)."""
     target_marketplace = expected_marketplace(target_channel)
     target_ref = expected_ref(target_channel)
-    retired_marketplace = expected_marketplace(retired_channel)
+    retired_marketplace = retired_marketplace or expected_marketplace(retired_channel)
     return [
         f"/plugin marketplace add carson-sweet/sweetclaude@{target_ref}",
         f"/plugin install sweetclaude@{target_marketplace}",
@@ -212,7 +212,7 @@ def inspect_state(home: Path, project_dir: Path | None, current_root: Path | Non
     stale_beta = _is_stale_beta(channel, version)
     retired = channel_retired(channel) if channel != "unknown" else False
     target = retirement_target_channel(channel) if retired else ""
-    switch_commands = _switch_commands(channel, target) if retired else []
+    switch_commands = _switch_commands(channel, target, "sweetclaude" if selected["legacy_marketplace"] else "") if retired else []
     plugin_key = selected["plugin_key"]
     return {
         "ok": True,
