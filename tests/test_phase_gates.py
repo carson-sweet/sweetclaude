@@ -291,8 +291,8 @@ class TestR100HardGateRiskAcceptanceIsLogged:
         assert result.returncode == 2, result.stdout
         payload = gate_json(result)
         assert payload["allow"] is False
-        assert 'Override requires explicit risk acceptance: "I accept the risk of data-migration.ASSESS".' \
-            in payload["reasons"]
+        assert any('Override requires explicit risk acceptance: "I accept the risk of data-migration.ASSESS".'
+                   in reason for reason in payload["reasons"])
 
     def test_risk_acceptance_phrase_passes_and_logs(self, tmp_path):
         project = phase_project(tmp_path, wtype="data-migration", phase="ASSESS", stage="GA")

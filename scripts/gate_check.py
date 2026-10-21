@@ -22,8 +22,10 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -66,6 +68,8 @@ CRITERIA = {
     "issues_from_backlog": "issues derived from an approved pitch",
 }
 
+SOFT_GATE_ESCAPE = "I've addressed this informally — proceed"
+
 WORK_TYPE_SECTIONS = {
     "Net-new feature": "net-new-feature",
     "External integration": "external-integration",
@@ -93,6 +97,7 @@ _CRITERION_BULLET = re.compile(r"^- (\S.*)$")
 _PHASE_EXIT_KEY = re.compile(r"^[A-Z][A-Z-]+$")
 
 _PHASE_GATES_CACHE: dict | None = None
+_HARD_GATE_POLICY_CACHE: dict | None = None
 
 
 def _load_module(name: str, relative: str):
@@ -388,13 +393,189 @@ def phase_exit_records(ctx: ProjectContext) -> tuple[dict[str, list[str]], str]:
     return records, current
 
 
-def phase_exit_criteria(phase: str, ctx: ProjectContext) -> list[dict]:
+def hard_gate_policy() -> dict:
+    """Map config/workflow-templates.yaml hard_gate_policy into the check.
+
+    Returns {"apply_at": {stages}, "tasks": {task: [prerequisites]},
+    "phases": {task: [hard-gate phases]}}; unreadable config fails open to {}.
+    """
+    global _HARD_GATE_POLICY_CACHE
+    if _HARD_GATE_POLICY_CACHE is None:
+        policy: dict = {}
+        try:
+            data = yaml.safe_load(
+                (REPO_ROOT / "config" / "workflow-templates.yaml").read_text(encoding="utf-8")
+            ) or {}
+            raw = data.get("hard_gate_policy") or {}
+            tasks = {}
+            for entry in raw.get("hard_gate_tasks") or []:
+                if isinstance(entry, dict) and entry.get("task"):
+                    tasks[str(entry["task"])] = [str(p) for p in entry.get("prerequisites") or []]
+            phases = {}
+            for wtype, entry in (data.get("work_types") or {}).items():
+                if isinstance(entry, dict) and isinstance(entry.get("hard_gates"), dict):
+                    phases[str(wtype)] = [str(p) for p in entry["hard_gates"].keys()]
+            policy = {
+                "apply_at": {str(s).upper() for s in raw.get("hard_gates_apply_at") or []},
+                "tasks": tasks,
+                "phases": phases,
+            }
+        except (OSError, yaml.YAMLError, AttributeError):
+            pass
+        _HARD_GATE_POLICY_CACHE = policy
+    return _HARD_GATE_POLICY_CACHE
+
+
+def project_version_stage(ctx: ProjectContext) -> str:
+    project = ctx.sweetclaude.get("project") or {}
+    return str(project.get("version_stage") or "").strip().upper() if isinstance(project, dict) else ""
+
+
+def soft_escape_matches(text: str) -> bool:
+    """Config soft_gate_escape phrase: case-insensitive, prefix
+    "I've addressed this informally", suffix "— proceed", optional note
+    between, curly and straight apostrophes equal."""
+    normalized = str(text or "").replace("\u2019", "'").strip().casefold()
+    return bool(re.match(r"^i've addressed this informally\b.*\u2014 proceed\.?$",
+                        normalized, re.DOTALL))
+
+
+def hard_override_matches(text: str, gate_id: str) -> bool:
+    normalized = str(text or "").replace("\u2019", "'").casefold()
+    return f"i accept the risk of {str(gate_id).casefold()}" in normalized
+
+
+def _next_dec_number(text: str) -> int:
+    numbers = [int(m) for m in re.findall(r"^## DEC-(\d+):", text, re.M)]
+    return max(numbers) + 1 if numbers else 1
+
+
+def append_gate_override_entry(ctx: ProjectContext, kind: str, gate_id: str,
+                               phase: str, target: str, waived: list[str]) -> None:
+    """Append the override entry to decision-log.md in the DEC-NNN format.
+
+    Idempotent: an existing entry with the same kind, gate and work item is
+    left alone. The entry carries the Gate and Work item fields the
+    design-manage-decisions format uses, plus the waived criteria.
+    """
+    log_path = Path(ctx.project_dir) / ".sweetclaude" / "state" / "decision-log.md"
+    try:
+        existing = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
+    except OSError:
+        return
+    title = f"{'Soft' if kind == 'soft' else 'Hard'} gate override — {gate_id} on {ctx.active_work_id}"
+    if re.search(r"^## DEC-\d+: " + re.escape(title) + r"$", existing, re.M):
+        return
+    today = date.today().isoformat()
+    if kind == "soft":
+        decision = f'Soft-gate escape accepted: "{SOFT_GATE_ESCAPE}".'
+        rationale = (
+            "Soft gates are advisory; the escape phrase is the approved bypass "
+            "(config/workflow-templates.yaml hard_gate_policy.soft_gate_escape)."
+        )
+        consequences = (
+            f"The unmet {phase} exit criteria are recorded as satisfied by override; "
+            "the advance proceeds."
+        )
+    else:
+        decision = f'Explicit risk acceptance recorded: "I accept the risk of {gate_id}".'
+        rationale = (
+            "Hard gates cannot be soft-bypassed; only explicit risk acceptance passes them "
+            "(config/workflow-templates.yaml hard_gate_policy.hard_gate_override)."
+        )
+        consequences = (
+            f"The user accepted the risk of proceeding without {gate_id}; "
+            "the override is recorded here."
+        )
+    fields = [
+        f"**Date:** {today}",
+        "**Status:** Accepted",
+        f"**Context:** Phase advance from {phase} to {str(target).upper()} requested with an "
+        f"unmet {'soft' if kind == 'soft' else 'hard'} gate.",
+        f"**Gate:** {gate_id} ({kind})",
+        f"**Work item:** {ctx.active_work_id}",
+    ]
+    if waived:
+        fields.append(f"**Criteria waived:** {'; '.join(waived)}")
+    fields.extend([
+        f"**Decision:** {decision}",
+        f"**Rationale:** {rationale}",
+        f"**Consequences:** {consequences}",
+    ])
+    entry = f"## DEC-{_next_dec_number(existing):03d}: {title}\n\n" + "\n".join(fields) + "\n"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    body = existing.rstrip("\n")
+    with open(log_path, "a", encoding="utf-8") as handle:
+        if body:
+            handle.write("\n\n" + entry.lstrip())
+        else:
+            handle.write(entry)
+
+
+def record_phase_exit(ctx: ProjectContext, phase: str, satisfied: list[str]) -> None:
+    """Record satisfied criteria under work.active.phase_exit atomically.
+
+    Follows the _save_sc_yaml conventions in scripts/orchestrator_loop.py:
+    round-trip the state file, write to a temp file, os.replace into place.
+    """
+    state_path = Path(ctx.project_dir) / ".sweetclaude" / "state" / "sweetclaude.yaml"
+    try:
+        data = yaml.safe_load(state_path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return
+    if not isinstance(data, dict):
+        return
+    work = data.get("work")
+    if not isinstance(work, dict):
+        return
+    active = work.get("active")
+    if not isinstance(active, dict) or not active.get("id"):
+        return
+    raw = active.get("phase_exit")
+    records: dict[str, list[str]] = {}
+    if isinstance(raw, list):
+        records[phase] = [str(v) for v in raw if str(v).strip()]
+    elif isinstance(raw, dict):
+        for key, value in raw.items():
+            if not _PHASE_EXIT_KEY.match(str(key)):
+                continue
+            entries = value if isinstance(value, list) else ([str(value)] if value else [])
+            entries = [str(v) for v in entries if str(v).strip()]
+            if entries:
+                records[str(key).upper()] = entries
+    merged = list(records.get(phase, []))
+    known = {normalize_criterion(v) for v in merged}
+    for entry in satisfied:
+        if normalize_criterion(entry) not in known:
+            merged.append(str(entry))
+            known.add(normalize_criterion(entry))
+    records[phase] = merged
+    active["phase_exit"] = records
+    work["active"] = active
+    tmp = state_path.with_name(state_path.name + ".tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8") as handle:
+            yaml.safe_dump(data, handle, default_flow_style=False, allow_unicode=True)
+        os.replace(tmp, state_path)
+    except OSError:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+
+
+def phase_exit_criteria(phase: str, ctx: ProjectContext, override_text: str = "") -> list[dict]:
     """The exit criteria for the work item's current phase, parsed from
     rules/phase-gates.md minus the ones recorded as satisfied under
     work.active.phase_exit, as a list of gate entries. The current phase is
     read from work.active.phase and the work type from work.active.type
     (falling back to the active item's frontmatter type); unknown types and
-    missing phases fail open.
+    missing phases fail open. Criteria under a phase heading marked HARD GATE
+    are hard at the stages in hard_gate_policy.hard_gates_apply_at and soft
+    below them, per the policy in config/workflow-templates.yaml. A soft gate
+    is passed by the soft_gate_escape phrase, a hard gate only by the per-gate
+    risk-acceptance phrase; both override paths are returned for the caller
+    to log and record.
     """
     current = active_phase(ctx)
     item_id = ctx.active_work_id
@@ -412,24 +593,46 @@ def phase_exit_criteria(phase: str, ctx: ProjectContext) -> list[dict]:
     if not unmet:
         return []
     gate_id = f"{wtype}.{current}"
+    hard = bool(section["hard"]) and project_version_stage(ctx) in (hard_gate_policy().get("apply_at") or set())
     listing = "; ".join(unmet)
-    return [{
-        "id": gate_id, "met": False, "action": "block",
-        "reason": (
+    if hard and hard_override_matches(override_text, gate_id):
+        return [{"id": gate_id, "met": True, "action": "block",
+                 "override": ("hard", gate_id, current, unmet)}]
+    if not hard and soft_escape_matches(override_text):
+        return [{"id": gate_id, "met": True, "action": "block",
+                 "override": ("soft", gate_id, current, unmet)}]
+    if hard:
+        reason = (
             f"Gate {gate_id} unmet: exit criteria for {current} not recorded as satisfied. "
-            f"Unmet: {listing}."
-        ),
-    }]
+            f"Unmet: {listing}.{HARD_GATE_SUFFIX} "
+            f'Override requires explicit risk acceptance: "I accept the risk of {gate_id}".'
+        )
+    else:
+        reason = (
+            f"Gate {gate_id} unmet: exit criteria for {current} not recorded as satisfied. "
+            f"Unmet: {listing}. Soft gate: bypass with \"{SOFT_GATE_ESCAPE}\" "
+            "(the override is logged to the decision log)."
+        )
+    return [{"id": gate_id, "met": False, "action": "block", "reason": reason}]
 
 
 def evaluate_advance(phase: str, override_text: str, ctx: ProjectContext) -> dict:
     result = evaluate_gates_for_phase(phase, ctx, override_text)
-    for entry in phase_exit_criteria(phase, ctx):
+    overrides = []
+    for entry in phase_exit_criteria(phase, ctx, override_text):
+        override = entry.get("override")
+        if override:
+            overrides.append(override)
+            continue
         if entry.get("met") is False:
             result["unmet"].append(str(entry.get("id") or ""))
             result["reasons"].append(str(entry.get("reason") or ""))
             if entry.get("action") in HARD_ACTIONS:
                 result["allow"] = False
+    if result["allow"] and overrides and ctx.active_work_id:
+        for kind, gate_id, phase_key, waived in overrides:
+            append_gate_override_entry(ctx, kind, gate_id, phase_key, phase, waived)
+            record_phase_exit(ctx, phase_key, waived)
     return result
 
 
