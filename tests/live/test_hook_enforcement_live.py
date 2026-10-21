@@ -1,0 +1,222 @@
+"""Live hook enforcement checks against a real Claude Code session (phase 2).
+
+Skipped unless SWEETCLAUDE_LIVE=1. Each case builds a fixture project, asks
+haiku to attempt the action one hook guards, and judges the stream-json
+transcript and the filesystem. The model's prose is never asserted on. Eight
+cases at a 0.10 USD cap each keep worst-case spend at 0.80 USD.
+
+Ledger rows covered: R-070 test-guardian, R-071 tdd-prewrite-guardian, R-072
+auto-test-runner, R-073 wip-limit, R-074 preflight-guard, R-075
+phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+import yaml
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from routing_behavior import make_project  # noqa: E402
+
+pytestmark = [
+    pytest.mark.skipif(os.environ.get("SWEETCLAUDE_LIVE") != "1", reason="set SWEETCLAUDE_LIVE=1 to run live Claude Code checks"),
+    pytest.mark.skipif(shutil.which("claude") is None, reason="claude CLI not on PATH"),
+]
+
+BUDGET_USD = "0.10"
+TIMEOUT_SECONDS = 300
+
+
+def md5(text: str) -> str:
+    return hashlib.md5(text.encode()).hexdigest()
+
+
+def run_claude(project: Path, prompt: str) -> list[dict]:
+    command = [
+        "claude", "-p", prompt,
+        "--plugin-dir", str(REPO_ROOT),
+        "--setting-sources", "project,local",
+        "--strict-mcp-config",
+        "--model", "haiku",
+        "--max-budget-usd", BUDGET_USD,
+        "--output-format", "stream-json", "--verbose",
+        "--permission-mode", "acceptEdits",
+        "--allowedTools", "Bash", "Write", "Edit", "Skill",
+    ]
+    proc = subprocess.run(command, cwd=project, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=TIMEOUT_SECONDS)
+    events = []
+    for line in proc.stdout.splitlines():
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    assert events, f"claude produced no events (exit {proc.returncode}): {proc.stderr[:400]}"
+    return events
+
+
+def blocks(event: dict) -> list[dict]:
+    content = (event.get("message") or {}).get("content")
+    return content if isinstance(content, list) else []
+
+
+def tool_uses(events: list[dict], name: str) -> list[dict]:
+    return [b for e in events if e.get("type") == "assistant" for b in blocks(e) if b.get("type") == "tool_use" and b.get("name") == name]
+
+
+def result_text(block: dict) -> str:
+    content = block.get("content")
+    if isinstance(content, list):
+        return " ".join(str(part.get("text", "")) for part in content if isinstance(part, dict))
+    return str(content or "")
+
+
+def tool_results(events: list[dict], tool_use_id: str) -> list[dict]:
+    return [b for e in events if e.get("type") == "user" for b in blocks(e) if b.get("type") == "tool_result" and b.get("tool_use_id") == tool_use_id]
+
+
+def assert_tool_refused(events: list[dict], tool: str, reason_pattern: str) -> None:
+    uses = tool_uses(events, tool)
+    assert uses, f"the model never attempted {tool}"
+    refused = [r for use in uses for r in tool_results(events, use["id"]) if r.get("is_error")]
+    assert refused, f"no {tool} call was refused by a hook"
+    assert any(re.search(reason_pattern, result_text(r), re.IGNORECASE) for r in refused), (
+        f"refusal did not carry the hook reason /{reason_pattern}/: {[result_text(r)[:200] for r in refused]}")
+
+
+def reached_model(events: list[dict], needle: str) -> bool:
+    for event in events:
+        if event.get("type") in ("assistant", "result"):
+            continue
+        if event.get("type") == "system" and event.get("subtype") in ("init", None):
+            continue
+        if needle in json.dumps(event):
+            return True
+    return False
+
+
+def git_commit_all(project: Path, message: str) -> None:
+    git = ["git", "-c", "user.email=live@example.invalid", "-c", "user.name=Live"]
+    subprocess.run([*git, "add", "-A"], cwd=project, check=True)
+    subprocess.run([*git, "commit", "-qm", message, "--allow-empty"], cwd=project, check=True)
+
+
+def write_state(project: Path, *, phase: str, tdd_phase: str | None = None) -> None:
+    path = project / ".sweetclaude" / "state" / "sweetclaude.yaml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    active = {"id": "ISSUE-1", "phase": phase}
+    if tdd_phase:
+        active["tdd_phase"] = tdd_phase
+    data["work"] = {"active": active}
+    path.write_text(yaml.safe_dump(data), encoding="utf-8")
+
+
+def enable_guardian(project: Path) -> None:
+    (project / ".sweetclaude" / "state" / "guardian-enabled").write_text("", encoding="utf-8")
+
+
+@pytest.fixture
+def live_project(tmp_path):
+    project = make_project(tmp_path).resolve()
+    flags = [
+        Path(f"/tmp/.sweetclaude-needs-preflight-{md5(str(project))}"),
+        Path(f"/tmp/.sweetclaude-bootstrap-ran-{md5(str(project))}"),
+    ]
+    for flag in flags:
+        flag.unlink(missing_ok=True)
+    yield project
+    for flag in flags:
+        flag.unlink(missing_ok=True)
+
+
+def test_test_guardian_refuses_test_file_write_r070(live_project):
+    write_state(live_project, phase="IMPLEMENT", tdd_phase="implementing")
+    target = live_project / "tests" / "test_calc.py"
+    target.parent.mkdir()
+    target.write_text("def test_add():\n    assert 1 + 1 == 2\n", encoding="utf-8")
+    original = target.read_text(encoding="utf-8")
+    git_commit_all(live_project, "add test")
+    events = run_claude(live_project, "Use the Write tool to overwrite tests/test_calc.py with the single line: # changed. Do nothing else.")
+    assert_tool_refused(events, "Write", r"immutable|test files")
+    assert target.read_text(encoding="utf-8") == original
+
+
+def test_tdd_prewrite_guardian_refuses_source_write_without_tests_r071(live_project):
+    enable_guardian(live_project)
+    (live_project / ".sweetclaude" / "state" / "phase.yaml").write_text("phase: IMPLEMENT\n", encoding="utf-8")
+    (live_project / "src").mkdir()
+    (live_project / "src" / ".gitkeep").write_text("", encoding="utf-8")
+    git_commit_all(live_project, "scaffold")
+    events = run_claude(live_project, "Use the Write tool to create src/calc.py containing: def add(a, b): return a + b. Do nothing else.")
+    assert_tool_refused(events, "Write", r"no test files|tdd")
+    assert not (live_project / "src" / "calc.py").exists()
+
+
+def test_auto_test_runner_runs_tests_and_reports_failure_r072(live_project):
+    write_state(live_project, phase="IMPLEMENT", tdd_phase="implementing")
+    marker = live_project / "autotest.marker"
+    (live_project / ".sweetclaude" / "state" / "project.yaml").write_text(
+        f"testing:\n  test_command: echo AUTOTEST_LIVE_SENTINEL; touch {marker}; exit 1\n", encoding="utf-8")
+    (live_project / "src").mkdir()
+    (live_project / "src" / ".gitkeep").write_text("", encoding="utf-8")
+    git_commit_all(live_project, "scaffold")
+    events = run_claude(live_project, "Use the Write tool to create src/calc.py containing: def add(a, b): return a + b. Do nothing else.")
+    assert (live_project / "src" / "calc.py").exists()
+    assert marker.exists(), "configured test command never ran after the source write"
+    assert reached_model(events, "AUTOTEST_LIVE_SENTINEL"), "failing test output never reached the model"
+
+
+def test_wip_limit_refuses_bash_at_limit_r073(live_project):
+    write_state(live_project, phase="IMPLEMENT")
+    (live_project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
+        yaml.safe_dump({"mode": "kanban", "wip_limit": 3}), encoding="utf-8")
+    issues = live_project / ".sweetclaude" / "artifacts" / "issues"
+    issues.mkdir(parents=True)
+    for number in range(3):
+        (issues / f"ISSUE-{number}.yaml").write_text(yaml.safe_dump({"status": "in_progress"}), encoding="utf-8")
+    git_commit_all(live_project, "wip state")
+    events = run_claude(live_project, "Run this exact shell command with the Bash tool: echo started > wip.txt. Do nothing else.")
+    assert_tool_refused(events, "Bash", r"wip limit")
+    assert not (live_project / "wip.txt").exists()
+
+
+def test_preflight_guard_refuses_tool_in_unconfigured_flagged_project_r074(live_project):
+    shutil.rmtree(live_project / ".sweetclaude")
+    git_commit_all(live_project, "unconfigure")
+    Path(f"/tmp/.sweetclaude-needs-preflight-{md5(str(live_project))}").write_text("", encoding="utf-8")
+    events = run_claude(live_project, "Run this exact shell command with the Bash tool: echo hello > out.txt. Do nothing else.")
+    assert_tool_refused(events, "Bash", r"not configured|sweetclaude")
+    assert not (live_project / "out.txt").exists()
+
+
+def test_phase_dwelling_guard_blocks_stop_on_advancement_language_r075(live_project):
+    enable_guardian(live_project)
+    events = run_claude(live_project, "Reply with exactly this sentence and nothing else: Draft complete, ready to move on?")
+    assert reached_model(events, "PHASE DWELLING GUARD"), "Stop hook block reason never reached the model"
+
+
+def test_master_preflight_refuses_skill_without_bootstrap_r076(live_project):
+    Path(f"/tmp/.sweetclaude-bootstrap-ran-{md5(str(live_project))}").unlink(missing_ok=True)
+    events = run_claude(live_project, "Invoke the Skill tool with skill sweetclaude:status. Do nothing else.")
+    assert_tool_refused(events, "Skill", r"bootstrap")
+
+
+def test_artifact_guardian_warns_on_commit_without_blocking_r236(live_project):
+    write_state(live_project, phase="implement")
+    enable_guardian(live_project)
+    git_commit_all(live_project, "state")
+    before = subprocess.run(["git", "rev-list", "--count", "HEAD"], cwd=live_project, capture_output=True, text=True, check=True).stdout.strip()
+    events = run_claude(live_project, "Run this exact shell command with the Bash tool: git -c user.email=a@b.c -c user.name=x commit --allow-empty -m guarded. Do nothing else.")
+    after = subprocess.run(["git", "rev-list", "--count", "HEAD"], cwd=live_project, capture_output=True, text=True, check=True).stdout.strip()
+    assert int(after) == int(before) + 1, "the warning hook must not block the commit"
+    assert reached_model(events, "[Protocol Guardian] WARNING"), "warning never reached the model"
