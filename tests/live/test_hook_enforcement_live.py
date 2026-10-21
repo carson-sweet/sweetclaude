@@ -9,7 +9,8 @@ Ledger rows covered: R-070 test-guardian, R-071 tdd-prewrite-guardian, R-072
 auto-test-runner, R-073 wip-limit, R-074 preflight-guard, R-075
 phase-dwelling-guard, R-076 master-preflight, R-236 artifact-guardian, the
 phase 3 rows R-077 wip-limit on Write, R-241 test-guardian on Bash and
-R-244 preflight-guard allowing its own remedy, and R-251 tdd-commit-gate.
+R-244 preflight-guard allowing its own remedy, R-251 tdd-commit-gate, and
+R-089 the Kanban blocked-skill denial.
 """
 
 from __future__ import annotations
@@ -316,6 +317,29 @@ def test_library_load_implement_denied_without_active_sprint_r094(live_project):
         live_project,
         "Invoke the Skill tool with skill sweetclaude:library-load and args: code-feature implement the login form. Do nothing else.")
     assert_tool_refused(events, "Skill", r"No active sprint")
+
+
+def kanban_gates_state(project: Path) -> None:
+    write_state(project, phase="PLAN")
+    gates = [
+        {"phase": "IMPLEMENT", "condition": "wip_limit_reached", "action": "block",
+         "message": "WIP limit reached ({current}/{limit} items in_progress). "
+                    "Complete or move an item before starting new work."},
+    ]
+    (project / ".sweetclaude" / "state" / "effective-gates.yaml").write_text(
+        yaml.safe_dump({"mode": "kanban", "default_tdd_level": 1,
+                        "blocked_skills": ["project-sprints", "product-sprint-plan"],
+                        "gates": gates}),
+        encoding="utf-8")
+
+
+def test_library_load_sprint_plan_denied_in_kanban_r089(live_project):
+    kanban_gates_state(live_project)
+    events = run_claude(
+        live_project,
+        "Invoke the Skill tool with skill sweetclaude:library-load and args: "
+        "product-sprint-plan plan the next sprint. Do nothing else.")
+    assert_tool_refused(events, "Skill", r"disabled in kanban mode")
 
 
 def test_tdd_commit_gate_refuses_implementation_commit_without_red_r251(live_project):

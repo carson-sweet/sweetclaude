@@ -51,6 +51,7 @@ NON_ENTRY_WORKFLOWS = frozenset({
     "testing-performance", "testing-plan", "testing-security",
     "testing-session", "postmortem", "something-broke",
 })
+KNOWN_WORKFLOWS = IMPLEMENT_WORKFLOWS | SHIP_WORKFLOWS | NON_ENTRY_WORKFLOWS
 
 HARD_GATE_SUFFIX = " Hard gate: SweetClaude will not proceed until the condition is met."
 DEFAULT_SOFT_ESCAPE = "acknowledge it explicitly to proceed anyway"
@@ -317,7 +318,32 @@ def load_target_phases(skill: str, args: str) -> list[str]:
     return []
 
 
+def requested_workflows(skill: str, args: str) -> list[str]:
+    names = [bare_skill_name(skill)]
+    for token in str(args or "").split()[:2]:
+        if token in KNOWN_WORKFLOWS:
+            names.append(token)
+    return names
+
+
+def blocked_skill_result(skill: str, args: str, ctx: ProjectContext) -> dict | None:
+    blocked = {str(name) for name in (ctx.effective.get("blocked_skills") or [])}
+    if not blocked:
+        return None
+    mode = str(ctx.effective.get("mode") or "this")
+    for name in requested_workflows(skill, args):
+        if name in blocked:
+            reason = (f"Skill {name} is disabled in {mode} mode. "
+                      f"Choose a workflow {mode} mode supports instead.")
+            return {"allow": False, "reasons": [reason],
+                    "unmet": [f"blocked_skill:{name}"]}
+    return None
+
+
 def evaluate_load(skill: str, args: str, override_text: str, ctx: ProjectContext) -> dict:
+    blocked = blocked_skill_result(skill, args, ctx)
+    if blocked is not None:
+        return blocked
     reasons: list[str] = []
     unmet: list[str] = []
     allowed = True
