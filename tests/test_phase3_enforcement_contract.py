@@ -304,3 +304,106 @@ class TestWipLimitBlocksOnlyActivationR243:
         assert_denied(run_hook("wip-limit.sh", project, bash_call(project, command)))
 
 
+def pytest_path_env() -> dict:
+    return {"PATH": os.path.dirname(sys.executable) + os.pathsep + os.environ.get("PATH", "")}
+
+
+PYTEST_PYPROJECT = '[project]\nname = "fixture"\nversion = "0.0.1"\n\n[tool.pytest.ini_options]\ntestpaths = ["tests"]\n'
+FAILING_TEST = 'def test_fails():\n    assert False, "AUTODETECT_SENTINEL"\n'
+
+
+def implementing_project(project: Path) -> None:
+    write_sweetclaude_yaml(project, phase="IMPLEMENT", tdd_phase="implementing")
+
+
+def autodetect_feedback(project: Path, kind: str = "PostToolUse-Write", **env) -> str:
+    stdin = payload(kind, project, file_path=str(project / "src" / "calc.py"))
+    result = run_hook_with_env("auto-test-runner.sh", project, stdin, env={**pytest_path_env(), **env})
+    assert result.returncode == 0, result.stderr
+    return feedback_text(result)
+
+
+class TestAutoTestRunnerResolvesTestCommandR079:
+    def test_runs_the_detected_pytest_command_when_project_yaml_is_absent(self, project):
+        implementing_project(project)
+        (project / "pyproject.toml").write_text(PYTEST_PYPROJECT, encoding="utf-8")
+        (project / "tests" / "test_calc.py").write_text(FAILING_TEST, encoding="utf-8")
+        assert not (state_dir(project) / "project.yaml").exists()
+        assert "AUTODETECT_SENTINEL" in autodetect_feedback(project)
+
+    def test_runs_the_detected_command_when_project_yaml_has_no_test_command(self, project):
+        implementing_project(project)
+        (state_dir(project) / "project.yaml").write_text("project:\n  name: fixture\n", encoding="utf-8")
+        (project / "pyproject.toml").write_text(PYTEST_PYPROJECT, encoding="utf-8")
+        (project / "tests" / "test_calc.py").write_text(FAILING_TEST, encoding="utf-8")
+        assert "AUTODETECT_SENTINEL" in autodetect_feedback(project)
+
+    def test_setup_or_code_testing_records_test_command_in_project_yaml(self):
+        recorded = []
+        for skill in (SETUP_SKILL, CODE_TESTING_SKILL):
+            text = skill.read_text(encoding="utf-8")
+            names_file = ".sweetclaude/state/project.yaml" in text
+            names_key = bool(re.search(r"testing:\s*\n\s+test_command:", text)) or "testing.test_command" in text
+            if names_file and names_key:
+                recorded.append(skill.name)
+        assert recorded, (
+            "neither skill-library/configure/setup/SKILL.md nor skill-library/build/code-testing/SKILL.md "
+            "records testing.test_command in .sweetclaude/state/project.yaml")
+
+
+class TestAutoTestRunnerNeedsNoManualConfigR239:
+    def test_runs_pytest_detected_from_pytest_ini_after_a_source_edit(self, project):
+        implementing_project(project)
+        (project / "pytest.ini").write_text("[pytest]\ntestpaths = tests\n", encoding="utf-8")
+        (project / "tests" / "test_calc.py").write_text(FAILING_TEST, encoding="utf-8")
+        assert "AUTODETECT_SENTINEL" in autodetect_feedback(project, "PostToolUse-Edit")
+
+    def test_runs_pytest_detected_from_pyproject_after_a_source_edit(self, project):
+        implementing_project(project)
+        (project / "pyproject.toml").write_text(PYTEST_PYPROJECT, encoding="utf-8")
+        (project / "tests" / "test_calc.py").write_text(FAILING_TEST, encoding="utf-8")
+        assert "AUTODETECT_SENTINEL" in autodetect_feedback(project, "PostToolUse-Edit")
+
+    @pytest.mark.skipif(shutil.which("npm") is None, reason="npm not on PATH")
+    def test_runs_npm_test_detected_from_package_json_after_a_source_edit(self, project):
+        implementing_project(project)
+        (project / "package.json").write_text(json.dumps({
+            "name": "fixture", "version": "0.0.1",
+            "scripts": {"test": "echo NPM_AUTODETECT_SENTINEL; exit 1"},
+        }), encoding="utf-8")
+        assert "NPM_AUTODETECT_SENTINEL" in autodetect_feedback(project, "PostToolUse-Edit")
+
+    def test_explicit_project_yaml_command_wins_over_detection(self, project):
+        implementing_project(project)
+        marker = project / "explicit.marker"
+        (state_dir(project) / "project.yaml").write_text(
+            f"testing:\n  test_command: touch {marker}\n", encoding="utf-8")
+        (project / "pyproject.toml").write_text(PYTEST_PYPROJECT, encoding="utf-8")
+        (project / "tests" / "test_calc.py").write_text(FAILING_TEST, encoding="utf-8")
+        feedback = autodetect_feedback(project, "PostToolUse-Edit")
+        assert marker.exists()
+        assert "AUTODETECT_SENTINEL" not in feedback
+
+    def test_silent_when_nothing_is_detectable(self, project):
+        implementing_project(project)
+        stdin = payload("PostToolUse-Edit", project, file_path=str(project / "src" / "calc.py"))
+        result = run_hook_with_env("auto-test-runner.sh", project, stdin, env=pytest_path_env())
+        assert_allowed(result)
+        assert result.stdout.strip() == ""
+
+    def test_silent_for_detected_command_when_not_implementing(self, project):
+        write_sweetclaude_yaml(project, phase="IMPLEMENT", tdd_phase="red")
+        (project / "pyproject.toml").write_text(PYTEST_PYPROJECT, encoding="utf-8")
+        (project / "tests" / "test_calc.py").write_text(FAILING_TEST, encoding="utf-8")
+        assert autodetect_feedback(project) == ""
+
+    def test_silent_for_detected_command_when_a_test_file_is_edited(self, project):
+        implementing_project(project)
+        (project / "pyproject.toml").write_text(PYTEST_PYPROJECT, encoding="utf-8")
+        (project / "tests" / "test_calc.py").write_text(FAILING_TEST, encoding="utf-8")
+        stdin = payload("PostToolUse-Edit", project, file_path=str(project / "tests" / "test_calc.py"))
+        result = run_hook_with_env("auto-test-runner.sh", project, stdin, env=pytest_path_env())
+        assert_allowed(result)
+        assert feedback_text(result) == ""
+
+
