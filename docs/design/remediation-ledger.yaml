@@ -1204,7 +1204,12 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - '37c7b3ae'
+  - '7308bb0f'
+  - '7483947e'
+  - '66965ce3'
 - id: R-090
   source: B
   docs:
@@ -1244,7 +1249,12 @@ rows:
   test_level:
   - contract
   - live
-  status: open
+  status: closed
+  commits:
+  - '0e87ae0d'
+  - '6f3e18d2'
+  - '7483947e'
+  - '66965ce3'
 - id: R-092
   source: B
   docs:
@@ -1281,7 +1291,12 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
+  status: closed
+  commits:
+  - 'e483e0f4'
+  - '784019be'
+  - '7483947e'
+  - '66965ce3'
 - id: R-094
   source: B
   docs:
