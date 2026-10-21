@@ -21,7 +21,7 @@ The mechanism is three native Claude Code hooks:
 
 This sounds extreme until you watch what happens without it: a test passes, you ship, and three weeks later production breaks because the test was passing for the wrong reason. The hooks remove that failure mode. The cost is that you cannot quickly "fix" a test by editing it — and that cost is the whole point.
 
-You can override test immutability with explicit user approval. The override is logged. This is for the case where a test has a genuine defect, not a coverage gap. The two are different and the framework wants you to be deliberate about which one you are claiming.
+You can override test immutability with explicit user approval. The override is per file and logged: `python3 scripts/tdd_phase.py release --file <path> --approval "<the user's words>"` unfreezes that one file and appends a `tdd_override` event naming the file and the approval to `.sweetclaude/metrics/events.log`. This is for the case where a test has a genuine defect, not a coverage gap. The two are different and the framework wants you to be deliberate about which one you are claiming.
 
 ---
 

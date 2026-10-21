@@ -140,6 +140,21 @@ if [[ "$REL_FILE" == *.feature ]]; then
   IS_TEST=true
 fi
 
+if [ "$IS_TEST" = true ] && [ -n "$SC_YAML" ]; then
+  IS_RELEASED=$(SC_YAML="$SC_YAML" REL_FILE="$REL_FILE" python3 - <<'PYEOF' 2>/dev/null
+import os, yaml
+try:
+    with open(os.environ["SC_YAML"]) as f:
+        sc = yaml.safe_load(f) or {}
+except Exception:
+    sc = {}
+active = (sc.get("work") or {}).get("active") or {}
+print("true" if os.environ["REL_FILE"] in (active.get("tdd_released_files") or []) else "false")
+PYEOF
+)
+  [ "$IS_RELEASED" = "true" ] && exit 0
+fi
+
 if [ "$IS_TEST" = true ]; then
   RECORD_SCRIPT="$(dirname "$0")/../scripts/record-event.sh"
   [ -x "$RECORD_SCRIPT" ] && bash "$RECORD_SCRIPT" tdd_guardian_block "file=$FILE" "tool=$TOOL"
