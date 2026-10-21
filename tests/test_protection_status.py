@@ -184,8 +184,7 @@ def _cli(project: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 def test_cli_exits_nonzero_when_something_is_inactive(tmp_path: Path) -> None:
-    p = _project(tmp_path, sc={"schema_version": 2, "work": {"active": {}}},
-                 gates={"mode": "kanban", "wip_limit": 2}, privacy=True)
+    p = _project(tmp_path, guardian=True)
     assert _cli(p).returncode == 1
 
 
@@ -222,7 +221,7 @@ def test_the_notice_reaches_the_session_start_payload(tmp_path: Path) -> None:
     payload = json.loads(r.stdout.strip().splitlines()[-1])
     context = payload.get("hookSpecificOutput", {}).get("additionalContext", "")
     assert "Some protections cannot run" in context
-    assert "work-in-progress limit" in context
+    assert "artifact placement" in context
 
 
 def test_a_healthy_project_adds_no_notice_to_the_payload(tmp_path: Path) -> None:
