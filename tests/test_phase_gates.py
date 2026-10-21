@@ -16,6 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -318,3 +319,113 @@ class TestR100HardGateRiskAcceptanceIsLogged:
                                  "--project-dir", str(project))
         assert result.returncode == 2, result.stdout
         assert gate_json(result)["allow"] is False
+
+
+HARD_GATE_MATRIX = [
+    ("data-migration", "ASSESS", "DESIGN"),
+    ("data-migration", "VERIFY", "SHIP"),
+    ("infrastructure-change", "DESIGN", "IMPLEMENT"),
+    ("technology-migration", "DESIGN", "PLAN"),
+    ("technology-migration", "CUTOVER", "CLEANUP"),
+    ("security-patch", "VERIFY", "SHIP"),
+]
+
+HARD_GATE_PREREQUISITES = {
+    "data-migration": ["solutioning-gate", "change-impact-analysis"],
+    "infrastructure-change": ["solutioning-gate", "change-impact-analysis", "rollback-plan"],
+    "technology-migration": ["solutioning-gate", "change-impact-analysis", "parallel-run-plan"],
+    "security-patch": ["security-review-post-fix"],
+}
+
+
+def all_criteria_satisfied(wtype: str, phase: str) -> list[str]:
+    return list(gate_check.parse_phase_gates()[wtype][phase]["criteria"])
+
+
+class TestR101HardGateMatrix:
+    def test_hard_gate_policy_maps_the_config(self):
+        policy = gate_check.hard_gate_policy()
+        assert policy["apply_at"] == {"GA", "SCALED", "MAINTAINED"}
+        assert sorted(policy["tasks"]["data-migration"]) == sorted(
+            HARD_GATE_PREREQUISITES["data-migration"])
+        assert sorted(policy["tasks"]["security-patch"]) == ["security-review-post-fix"]
+        assert sorted(policy["phases"]["data-migration"]) == ["ASSESS", "VERIFY"]
+        assert policy["phases"]["infrastructure-change"] == ["DESIGN"]
+        assert sorted(policy["phases"]["technology-migration"]) == ["CUTOVER", "DESIGN"]
+        assert policy["phases"]["security-patch"] == ["VERIFY"]
+
+    @pytest.mark.parametrize("wtype,phase,target", HARD_GATE_MATRIX)
+    def test_ga_advance_past_hard_gate_phase_denied_without_prerequisites(self, tmp_path, wtype, phase, target):
+        project = phase_project(tmp_path, wtype=wtype, phase=phase, stage="GA",
+                                satisfied=all_criteria_satisfied(wtype, phase))
+        result = run_gate_check("advance", "--to", target, "--project-dir", str(project))
+        assert result.returncode == 2, result.stdout
+        payload = gate_json(result)
+        assert payload["allow"] is False
+        assert set(HARD_GATE_PREREQUISITES[wtype]) <= set(payload["unmet"])
+        for prerequisite in HARD_GATE_PREREQUISITES[wtype]:
+            assert any(f"Gate {prerequisite} unmet" in reason
+                       and "hard_gate_tasks" in reason
+                       for reason in payload["reasons"])
+
+    @pytest.mark.parametrize("wtype,phase,target", HARD_GATE_MATRIX)
+    def test_ga_advance_allowed_with_prerequisite_pass_records(self, tmp_path, wtype, phase, target):
+        project = phase_project(tmp_path, wtype=wtype, phase=phase, stage="GA",
+                                satisfied=all_criteria_satisfied(wtype, phase))
+        for prerequisite in HARD_GATE_PREREQUISITES[wtype]:
+            write_pass_record(project, prerequisite)
+        result = run_gate_check("advance", "--to", target, "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+    @pytest.mark.parametrize("wtype,phase,target", HARD_GATE_MATRIX)
+    def test_below_ga_the_matrix_does_not_apply(self, tmp_path, wtype, phase, target):
+        project = phase_project(tmp_path, wtype=wtype, phase=phase, stage="BETA",
+                                satisfied=all_criteria_satisfied(wtype, phase))
+        result = run_gate_check("advance", "--to", target, "--project-dir", str(project))
+        assert result.returncode == 0, result.stdout
+        assert gate_json(result)["allow"] is True
+
+
+class TestR101WorkTypeTagging:
+    @staticmethod
+    def write_item(project: Path, item_type: str | None) -> None:
+        folder = project / ".sweetclaude" / "product" / "backlog"
+        folder.mkdir(parents=True, exist_ok=True)
+        frontmatter = {"id": "ISSUE-001", "title": "Migration work", "type": item_type,
+                       "status": "active", "created": "2026-10-21"}
+        if item_type is None:
+            frontmatter.pop("type")
+        (folder / "ISSUE-001-migration-work.md").write_text(
+            "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n\n"
+            "# ISSUE-001: Migration work\n",
+            encoding="utf-8",
+        )
+
+    def sync(self, project: Path):
+        import small_story_controller
+        small_story_controller._sync_sweetclaude_yaml_active(project, "ISSUE-001", "DEFINE")
+
+    def test_controller_tags_hard_gate_types(self, tmp_path):
+        project = tmp_path / "project"
+        project.mkdir()
+        self.write_item(project, "data-migration")
+        self.sync(project)
+        assert active_state(project).get("type") == "data-migration"
+
+    def test_controller_does_not_tag_other_known_types(self, tmp_path):
+        project = tmp_path / "project"
+        project.mkdir()
+        self.write_item(project, "bug-fix")
+        self.sync(project)
+        assert not active_state(project).get("type")
+
+    def test_controller_leaves_type_untouched_when_not_knowable(self, tmp_path):
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / ".sweetclaude" / "state").mkdir(parents=True)
+        (project / ".sweetclaude" / "state" / "sweetclaude.yaml").write_text(
+            yaml.safe_dump({"work": {"active": {"id": "ISSUE-001", "type": "security-patch"}}}),
+            encoding="utf-8")
+        self.sync(project)
+        assert active_state(project).get("type") == "security-patch"
