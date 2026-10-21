@@ -82,11 +82,6 @@ def check_protections(project_dir: Path) -> list[dict]:
     elif mode != "kanban":
         add("work-in-progress limit", NOT_APPLICABLE,
             f"limit applies to kanban mode only; this project is {mode}")
-    elif not (active_work.get("phase") or mirror.get("phase")):
-        add("work-in-progress limit", INACTIVE,
-            "kanban mode is set, but no active phase is recorded so the limit "
-            "cannot be evaluated",
-            "start a work item, or check work.active.phase in sweetclaude.yaml")
     else:
         add("work-in-progress limit", ACTIVE,
             f"enforced at {gates.get('wip_limit', 3)} concurrent items")
