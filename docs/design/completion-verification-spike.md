@@ -1,6 +1,6 @@
 # Spike: completion verification and user-selected oversight
 
-**Version:** 0.3
+**Version:** 0.4
 
 **Date:** 2026-10-21
 
@@ -119,6 +119,18 @@ Existing related settings that the design must reconcile:
 
 QA and CI results can feed the sequence in two ways: as real-time input to completion decisions (a failing CI run or QA finding reopens a criterion), and as data for later training (linking criteria, verdicts and downstream test outcomes shows which verdicts were wrong).
 
+## Pilot: large stories
+
+The large-story workflow is the first use case and the test of this process. It already enforces in code: a success-criteria contract generated from a skeleton and frozen with a hash before design starts; rejection of vague and unmeasurable criteria; denial of contract edits after the freeze except through an approval receipt and re-freeze; phase-based tool gating; a stop guard while the story is not finished; and a completion gate on the ledger, its evidence files and a ship closeout.
+
+Gaps to close (verified in code on 2026-10-21):
+
+1. Self-attested verification. `scripts/large_story_controller.py` `enter_verify_phase` writes ledger evidence from criterion results supplied by the caller, and the status defaults to "pass". The contract already declares `evidence_owner: controller` and `measurement_type: command`, but no criterion field holds an executable command, so the controller cannot run the measurement. Fix direction: an executable measurement field per criterion, run by the controller, with the result written as the evidence. No design decision needed beyond the field name.
+2. Human acceptance of the criteria is not recorded. `freeze_contract` takes `frozen_by` as a parameter with "user" as the default. Needs a decision: how code proves that a human, not the model, took an action (see open question 7).
+3. Amendment approval is documented as human-run, but it is not verified that code stops the model from running `approve-amendment`. Same decision as gap 2.
+4. Judged criteria are excluded. The contract rejects human-judged criteria and routes them to backlog, so "all user stories functionally satisfied" and "result matches the design and PRD" cannot be criteria. Needs the reviewer design from this spike (per-item yes/no questions judged by an independent reviewer with recorded confidence).
+5. No independent reviewer, no running gap record, no send-back loop with retry limits, no mandatory human review at completion, no oversight levels, no decision telemetry. These are this spike's design items.
+
 ## Open questions
 
 1. Which decisions, if any, go to Jev or a similar decision model, and what escalation target follows a low-confidence verdict (LLM judge, deterministic check, or human), given the correlated-error finding?
@@ -127,4 +139,5 @@ QA and CI results can feed the sequence in two ways: as real-time input to compl
 4. Where do criteria, receipts and the completion record live (per work item, per phase)? The existing control receipts live under `.sweetclaude/state/evidence/`.
 5. Default retry cap, and its scope (per criterion or per phase)?
 6. Telemetry: where it is stored, whether it stays local, and how users opt in. The existing usage-tracking feature and `.sweetclaude/metrics/events.log` are candidates.
-7. How the spike result affects the parked 5.1.0 rows for phase exit criteria and gate overrides: ship them in 5.1.0 with a minimal version, or move them to the release that implements this design.
+7. How does code prove that a human, not the model, took an action (accepting criteria, approving an amendment, completing the final review)? In Claude Code the model runs every command, so a command alone proves nothing. Candidate signals exist in the hook protocol (for example the user's own prompt text at UserPromptSubmit, or the answer to an AskUserQuestion prompt seen at PostToolUse), but none is verified for this use yet.
+8. How the spike result affects the parked 5.1.0 rows for phase exit criteria and gate overrides: ship them in 5.1.0 with a minimal version, or move them to the release that implements this design.
