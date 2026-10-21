@@ -197,3 +197,39 @@ class TestAutoTestRunnerBound:
         text = feedback_text(result)
         assert text.rstrip().endswith("TAIL_SENTINEL"), "additionalContext must carry the tail of the output"
         assert len(text) < 64 * 1024, f"additionalContext must be bounded, got {len(text)} chars"
+
+
+class TestArtifactGuardianCommitForms:
+    WARNING = "[Protocol Guardian] WARNING"
+
+    def prepare(self, project: Path) -> None:
+        write_sweetclaude_yaml(project, phase="implement")
+        enable_guardian(project)
+
+    @pytest.mark.parametrize("command", [
+        "git -c user.email=a@b.c -c user.name=x commit --allow-empty -m guarded",
+        "git -C sub commit -m x",
+        "cd sub && git commit -m x",
+        "make && git commit -m x",
+    ])
+    def test_warns_without_blocking_for_commit_form(self, project, command):
+        self.prepare(project)
+        result = run_hook("artifact-guardian.sh", project, payload("PreToolUse-Bash", project, command=command))
+        assert_allowed(result)
+        data = stdout_json(result)
+        assert isinstance(data, dict), f"warning must be JSON on stdout: {result.stdout!r}"
+        specific = data.get("hookSpecificOutput") or {}
+        assert self.WARNING in str(specific.get("additionalContext") or "")
+        assert specific.get("permissionDecision") != "deny"
+        assert data.get("decision") != "block"
+
+    @pytest.mark.parametrize("command", [
+        "git commit-tree abc",
+        'echo "git commit"',
+        "git log --grep commit",
+    ])
+    def test_silent_for_non_commit_control(self, project, command):
+        self.prepare(project)
+        result = run_hook("artifact-guardian.sh", project, payload("PreToolUse-Bash", project, command=command))
+        assert_allowed(result)
+        assert "[Protocol Guardian]" not in result.stdout + result.stderr
