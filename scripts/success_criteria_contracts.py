@@ -578,6 +578,8 @@ def _validate_criteria(contract: dict[str, Any]) -> None:
             raise SuccessCriteriaValidationError(
                 f"Success criteria contract criterion {criterion_id} has invalid measurement_type"
             )
+        if criterion["measurement_type"] == "command":
+            _validate_measurement_command(criterion_id, criterion)
         if criterion["evidence_owner"] not in VALID_EVIDENCE_OWNERS:
             raise SuccessCriteriaValidationError(
                 f"Success criteria contract criterion {criterion_id} has invalid evidence_owner"
@@ -602,6 +604,28 @@ def _validate_criteria(contract: dict[str, Any]) -> None:
             raise SuccessCriteriaValidationError(
                 f"Success criteria contract criterion {criterion_id} uses human judgment without a binary predicate"
             )
+
+
+def _validate_measurement_command(criterion_id: str, criterion: dict[str, Any]) -> None:
+    command = criterion.get("measurement_command")
+    if not isinstance(command, str) or not command.strip():
+        raise SuccessCriteriaValidationError(
+            f"Success criteria contract criterion {criterion_id} is missing measurement_command "
+            "(a command-type criterion needs a real shell command the controller runs at VERIFY)"
+        )
+    if "placeholder" in command.lower():
+        raise SuccessCriteriaValidationError(
+            f"Success criteria contract criterion {criterion_id} measurement_command is still a "
+            "placeholder; replace it with a real command"
+        )
+    timeout = criterion.get("measurement_timeout_seconds")
+    if timeout is not None and (
+        isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0
+    ):
+        raise SuccessCriteriaValidationError(
+            f"Success criteria contract criterion {criterion_id} measurement_timeout_seconds "
+            "must be a positive number"
+        )
 
 
 def _has_multiple_outcomes(criterion: dict[str, Any]) -> bool:
@@ -989,6 +1013,7 @@ def _skeleton_criterion(
         "statement": f"PLACEHOLDER criterion {index}: replace with one observable behavior.",
         "binary_predicate": f"placeholder measurement command {index} exits with code 0",
         "measurement_type": "command",
+        "measurement_command": f"echo PLACEHOLDER measurement command {index}; exit 1",
         "measurement_procedure": f"Run the criterion {index} measurement command; record the exit code.",
         "evidence_artifact": f".sweetclaude/reports/{workflow_type}/{story_id}/evidence/{criterion_id}.json",
         "evidence_owner": "controller",

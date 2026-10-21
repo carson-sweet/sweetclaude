@@ -1643,6 +1643,8 @@ AMENDABLE_CRITERION_FIELDS = {
     "statement",
     "binary_predicate",
     "measurement_type",
+    "measurement_command",
+    "measurement_timeout_seconds",
     "measurement_procedure",
     "evidence_artifact",
     "evidence_owner",

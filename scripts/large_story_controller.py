@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import signal
 import subprocess
 import sys
 import uuid
@@ -667,6 +669,7 @@ def enter_verify_phase(
         }
 
     supplied_results = criterion_results or {}
+    contract_criteria = _contract_criteria_by_id(define_result)
     criteria_entries = []
     evidence_dir = project / ".sweetclaude" / "reports" / "large-story" / resolved_workflow_id / "evidence"
     evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -678,8 +681,6 @@ def enter_verify_phase(
                 "criterion_id": criterion_id,
                 "next_allowed_stage": "blocked",
             }
-        status = str(supplied.get("status") or "pass")
-        measured_command = str(supplied.get("measured_command") or f"controller.verify {criterion_id}")
         evidence_rel = (
             Path(".sweetclaude")
             / "reports"
@@ -689,14 +690,30 @@ def enter_verify_phase(
             / f"{criterion_id}.json"
         )
         evidence_path = project / evidence_rel
-        evidence_payload = {
-            "ok": status.lower() in {"pass", "passed", "ok", "success"},
-            "criterion_id": criterion_id,
-            "workflow_id": resolved_workflow_id,
-            "success_criteria_contract_hash": contract_hash,
-            "measured_command": measured_command,
-            "observed_output": supplied.get("observed_output", "controller verification evidence recorded"),
-        }
+        criterion = contract_criteria.get(criterion_id, {})
+        if criterion.get("measurement_type") == "command":
+            measurement = _run_measurement_command(project, criterion)
+            status = "pass" if measurement["ok"] else "fail"
+            measured_command = measurement["measured_command"]
+            measured_at = measurement["measured_at"]
+            evidence_payload = {
+                **measurement,
+                "criterion_id": criterion_id,
+                "workflow_id": resolved_workflow_id,
+                "success_criteria_contract_hash": contract_hash,
+            }
+        else:
+            status = str(supplied.get("status") or "pass")
+            measured_command = str(supplied.get("measured_command") or f"controller.verify {criterion_id}")
+            measured_at = str(supplied.get("measured_at") or "controller-generated")
+            evidence_payload = {
+                "ok": status.lower() in {"pass", "passed", "ok", "success"},
+                "criterion_id": criterion_id,
+                "workflow_id": resolved_workflow_id,
+                "success_criteria_contract_hash": contract_hash,
+                "measured_command": measured_command,
+                "observed_output": supplied.get("observed_output", "controller verification evidence recorded"),
+            }
         evidence_path.write_text(json.dumps(evidence_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         criteria_entries.append(
             {
@@ -707,7 +724,7 @@ def enter_verify_phase(
                 "evidence_owner": "controller",
                 "evidence_path": str(evidence_rel),
                 "measured_command": measured_command,
-                "measured_at": str(supplied.get("measured_at") or "controller-generated"),
+                "measured_at": measured_at,
                 "observed_output_path": str(evidence_rel),
                 "evidence_fresh": True,
                 "freshness_status": "fresh",
@@ -736,8 +753,13 @@ def enter_verify_phase(
             "next_allowed_stage": "blocked",
         }
     if not all_passed:
+        failed_ids = _failed_criterion_ids(criteria_entries)
         return {
-            **_failure("blocked_verify_entry_failed", "Large-story VERIFY is blocked: one or more criteria failed."),
+            **_failure(
+                "blocked_verify_entry_failed",
+                "Large-story VERIFY is blocked: criteria failed measurement: " + ", ".join(failed_ids) + ".",
+            ),
+            "failed_criteria": failed_ids,
             "ledger_path": str(ledger_rel),
             "next_allowed_stage": "blocked",
         }
@@ -1291,6 +1313,8 @@ AMENDABLE_CRITERION_FIELDS = {
     "statement",
     "binary_predicate",
     "measurement_type",
+    "measurement_command",
+    "measurement_timeout_seconds",
     "measurement_procedure",
     "evidence_artifact",
     "evidence_owner",
@@ -2303,7 +2327,11 @@ def _completion_gate_result(
         error = str(result.get("error") or result.get("blocking_failures") or "")
         if "ledger not found" in error.lower() or "no such file" in error.lower():
             return _failure("blocked_missing_completion_ledger", BLOCKED_MISSING_LEDGER_MESSAGE)
-        return _failure("blocked_completion_validation_failed", BLOCKED_COMPLETION_VALIDATION_MESSAGE)
+        failure = _failure("blocked_completion_validation_failed", BLOCKED_COMPLETION_VALIDATION_MESSAGE)
+        failed_ids = _ledger_failed_criterion_ids(project, result.get("ledger_path"))
+        if failed_ids:
+            failure["failed_criteria"] = failed_ids
+        return failure
     ledger_path = result.get("ledger_path")
     if ledger_path:
         evidence = validate_ledger_evidence_paths(project, ledger_path)
@@ -2321,6 +2349,19 @@ def _completion_gate_result(
         "ledger_path": str(ledger_path),
         "validator_result": result,
     }
+
+
+def _ledger_failed_criterion_ids(project: Path, ledger_path: Any) -> list[str]:
+    if not ledger_path:
+        return []
+    try:
+        data = json.loads((project / ledger_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    entries = data.get("criteria") if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        return []
+    return _failed_criterion_ids([entry for entry in entries if isinstance(entry, dict) and "id" in entry])
 
 
 def _validate_ship_closeout(project: Path, workflow_id: str, contract_hash: str) -> dict[str, Any]:
@@ -2585,6 +2626,75 @@ def _forbidden_phrases(text: str) -> list[str]:
     if re.search(r"\ball\s+\d+\s+success\s+criteria\s+pass", lowered):
         found.append("all <n> success criteria pass")
     return found
+
+
+PASS_STATUS_VALUES = {"pass", "passed", "ok", "success"}
+MEASUREMENT_OUTPUT_TAIL_CHARS = 20000
+DEFAULT_MEASUREMENT_TIMEOUT_SECONDS = 300
+
+
+def _failed_criterion_ids(entries: list[dict[str, Any]]) -> list[str]:
+    return [
+        str(entry["id"])
+        for entry in entries
+        if str(entry.get("status", "")).lower() not in PASS_STATUS_VALUES
+    ]
+
+
+def _contract_criteria_by_id(define_result: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    contract_path = define_result.get("contract_path")
+    if not contract_path:
+        return {}
+    contract = _load_yaml_dict(Path(contract_path))
+    criteria = contract.get("success_criteria")
+    if not isinstance(criteria, list):
+        return {}
+    return {
+        item["id"]: item
+        for item in criteria
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+
+
+def _run_measurement_command(project: Path, criterion: dict[str, Any]) -> dict[str, Any]:
+    command = str(criterion["measurement_command"])
+    timeout = criterion.get("measurement_timeout_seconds") or DEFAULT_MEASUREMENT_TIMEOUT_SECONDS
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        cwd=str(project),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        errors="replace",
+        start_new_session=True,
+    )
+    timed_out = False
+    try:
+        output, _ = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        try:
+            output, _ = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            output = ""
+    exit_code = process.returncode
+    ok = not timed_out and exit_code == 0
+    evidence: dict[str, Any] = {
+        "ok": ok,
+        "measured_command": command,
+        "measured_at": _iso_now(),
+        "exit_code": exit_code,
+        "timed_out": timed_out,
+        "output_tail": (output or "")[-MEASUREMENT_OUTPUT_TAIL_CHARS:],
+    }
+    if timed_out:
+        evidence["failure_reason"] = f"Measurement command exceeded timeout of {timeout} seconds and was killed."
+    return evidence
 
 
 def _criterion_ids(project: Path, workflow_id: str, define_result: dict[str, Any]) -> list[str]:

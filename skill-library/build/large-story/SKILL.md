@@ -90,6 +90,7 @@ entered them into the ledger.
    fields are pre-filled — do not change them. Criteria must be binary and
    controller- or test-measurable; human-judged and terminal-review criteria
    are rejected on this surface — route those concerns to backlog.
+   Every command-type criterion also needs a real `measurement_command`: the exact shell command, run from the project root, whose exit code 0 means the criterion holds (optionally add `measurement_timeout_seconds`, default 300). Replace the placeholder command in the skeleton; a blank or placeholder command is rejected at define-exit. Do not write a command that always succeeds.
 5. Freeze it: `python3 "$CONTRACTS" freeze-contract --project-dir .`
    (computes and writes the contract hash — never compute the hash yourself).
    Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-workflow --stage define-exit`.
@@ -153,11 +154,7 @@ hook; you do not need to and must not fabricate it.
 ### VERIFY
 
 Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/large_story_controller.py verify --workflow-id {workflow_id}`
-with `--criterion-result-json` carrying the measured result for each frozen
-criterion. The controller regenerates the implementation record from observed
-evidence, writes the canonical ledger at
-`.sweetclaude/reports/success-criteria-ledger.json`, and fails closed if any
-criterion lacks evidence or if no implementation evidence was observed.
+so the controller runs each command-type criterion's frozen `measurement_command` itself from the project root, in its own process group with a bounded timeout. Pass/fail comes from the exit code only; `--criterion-result-json` cannot set the status of a command-type criterion, and omitting it never defaults to pass. The controller writes the exit code, output tail, and timestamp to each criterion's evidence file, regenerates the implementation record from observed evidence, writes the canonical ledger at `.sweetclaude/reports/success-criteria-ledger.json`, names any failing or timed-out criterion in the result, and fails closed if any criterion fails or if no implementation evidence was observed.
 
 ### SHIP
 
