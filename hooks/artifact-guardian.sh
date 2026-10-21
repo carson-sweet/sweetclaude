@@ -17,7 +17,7 @@ fi
 COMMAND=$(hook_field tool_input.command)
 
 # Only check git commit commands
-if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit'; then
+if ! printf '%s' "$INPUT" | python3 "$HOOK_IO" is-git-commit; then
   exit 0
 fi
 

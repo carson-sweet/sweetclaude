@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import signal
 import subprocess
 import sys
@@ -70,6 +71,44 @@ def flag_root(project: str) -> str:
     except (OSError, subprocess.SubprocessError):
         pass
     return project.rstrip("/") or "/"
+
+
+GIT_OPTIONS_WITH_VALUE = {"-c", "-C", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--super-prefix", "--config-env"}
+COMMAND_SEPARATORS = {"&&", "||", ";", "|", "&", "\n"}
+
+
+def is_git_commit(command: str) -> bool:
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+    lexer.whitespace = " \t\r"
+    lexer.whitespace_split = True
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        return False
+    at_start = True
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        index += 1
+        if token in COMMAND_SEPARATORS or token == "\n":
+            at_start = True
+            continue
+        if not at_start:
+            continue
+        at_start = False
+        if token != "git":
+            continue
+        while index < len(tokens) and tokens[index] not in COMMAND_SEPARATORS:
+            option = tokens[index]
+            if option in GIT_OPTIONS_WITH_VALUE:
+                index += 2
+            elif option.startswith("-"):
+                index += 1
+            else:
+                break
+        if index < len(tokens) and tokens[index] == "commit":
+            return True
+    return False
 
 
 def run_tests(project: str, command: str, timeout_seconds: int) -> dict | None:
@@ -142,6 +181,8 @@ def main(argv: list[str]) -> int:
     if command == "rel-path" and len(argv) == 2:
         sys.stdout.write(relative_path(argv[1], project_dir(read_input())))
         return 0
+    if command == "is-git-commit":
+        return 0 if is_git_commit(get_field(read_input(), "tool_input.command")) else 1
     if command == "flag-root" and len(argv) == 2:
         sys.stdout.write(flag_root(argv[1]))
         return 0
