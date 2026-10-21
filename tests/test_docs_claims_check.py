@@ -247,3 +247,61 @@ class TestDefaultScope:
         (root / "docs" / "user-guide" / "ok.md").write_text("fine\n")
         res = run(root, "docs/user-guide/ok.md")
         assert res.returncode == 0 and json.loads(res.stdout) == []
+
+
+class TestIgnoreMarker:
+    def test_same_line_marker_suppresses_slash(self, root):
+        res, f = check(root, "Formerly /sweetclaude:doctor. <!-- docs-claims: ignore slash:/sweetclaude:doctor -->\n")
+        assert res.returncode == 0 and f == []
+
+    def test_previous_line_marker_suppresses_slash(self, root):
+        res, f = check(root, "<!-- docs-claims: ignore slash:/sweetclaude:doctor -->\nFormerly /sweetclaude:doctor.\n")
+        assert res.returncode == 0 and f == []
+
+    def test_marker_two_lines_above_does_not_suppress(self, root):
+        res, f = check(root, "<!-- docs-claims: ignore slash:/sweetclaude:doctor -->\n\nFormerly /sweetclaude:doctor.\n")
+        assert res.returncode == 1
+        assert sorted(kinds(f)) == ["marker", "slash"]
+
+    def test_marker_suppresses_path(self, root):
+        res, f = check(root, "Your project has `docs/internal/` here. <!-- docs-claims: ignore path:docs/internal/ -->\n")
+        assert res.returncode == 0 and f == []
+
+    def test_marker_suppresses_only_named_claim(self, root):
+        res, f = check(
+            root,
+            "Use /sweetclaude:doctor and /sweetclaude:nonesuch. <!-- docs-claims: ignore slash:/sweetclaude:doctor -->\n",
+        )
+        assert res.returncode == 1
+        assert kinds(f) == ["slash"]
+        assert "/sweetclaude:nonesuch" in f[0]["claim"]
+
+    def test_marker_for_other_kind_does_not_suppress(self, root):
+        res, f = check(root, "Formerly /sweetclaude:doctor. <!-- docs-claims: ignore path:/sweetclaude:doctor -->\n")
+        assert res.returncode == 1
+        assert sorted(kinds(f)) == ["marker", "slash"]
+
+    def test_stale_marker_reported(self, root):
+        res, f = check(root, "Nothing wrong here. <!-- docs-claims: ignore slash:/sweetclaude:doctor -->\n")
+        assert res.returncode == 1
+        assert kinds(f) == ["marker"]
+        assert f[0]["line"] == 1
+        assert "/sweetclaude:doctor" in f[0]["claim"]
+        assert f[0]["reason"]
+
+    def test_marker_above_naming_claim_on_other_line_is_stale(self, root):
+        res, f = check(root, "<!-- docs-claims: ignore slash:/sweetclaude:doctor -->\nPlain text.\n")
+        assert res.returncode == 1
+        assert kinds(f) == ["marker"]
+
+    def test_marker_suppresses_flag(self, root):
+        res, f = check(root, "`python3 scripts/toy.py --bogus` <!-- docs-claims: ignore flag:--bogus -->\n")
+        assert res.returncode == 0 and f == []
+
+    def test_marker_suppresses_link(self, root):
+        res, f = check(root, "[x](docs/user-guide/gone.md) <!-- docs-claims: ignore link:docs/user-guide/gone.md -->\n")
+        assert res.returncode == 0 and f == []
+
+    def test_marker_suppresses_script(self, root):
+        res, f = check(root, "`python3 scripts/gone.py` <!-- docs-claims: ignore script:scripts/gone.py -->\n")
+        assert res.returncode == 0 and f == []
