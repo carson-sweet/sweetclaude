@@ -3,9 +3,10 @@
 # SweetClaude Git Checkpoint
 # Called by skills at phase transitions and TDD milestones.
 # Commits .sweetclaude/ state changes to the project repo.
-# Usage: git-checkpoint.sh <message>
+# Usage: git-checkpoint.sh <message> [path...]
 
 MESSAGE="$1"
+shift
 
 if [ -z "$MESSAGE" ]; then
   echo "Usage: git-checkpoint.sh <message>" >&2
@@ -30,6 +31,11 @@ fi
 if [ -d "strategy" ]; then
   git add strategy/
 fi
+
+# Stage any extra paths named by the caller (e.g. failing test files)
+for path in "$@"; do
+  git add -- "$path"
+done
 
 # Commit if there are staged changes
 if ! git diff --cached --quiet 2>/dev/null; then
