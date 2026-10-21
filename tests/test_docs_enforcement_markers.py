@@ -1,11 +1,11 @@
 """Enforcement markers in the user docs track what the code enforces.
 
-Claims about rules still not enforced (sprint and mode gates, phase gates, the
+Claims about rules still not enforced (betting-table and phase gates, the
 commit gate) must say "Not currently enforced" in the same paragraph, table
 row, or list item wherever the claim still appears. Claims about rules enforced
 since 5.1 (test immutability, the TDD pre-write guard, the auto-test-runner,
-the WIP limit, the phase-dwelling guard, the preflight guard) must not carry
-the marker. Phrases match with emoji removed, so a rewrite that drops a warning
+the WIP limit, the phase-dwelling guard, the preflight guard, the Agile
+no-active-sprint block) must not carry the marker. Phrases match with emoji removed, so a rewrite that drops a warning
 glyph still matches. The claim list comes from the 2026-10-20 docs audit
 (group-B and group-D)."""
 import re
@@ -20,7 +20,6 @@ GUIDE = "docs/user-guide/"
 
 UNENFORCED_CLAIMS = [
     ("README.md", "A betting table decides what gets the next cycle"),
-    ("README.md", "SweetClaude won't let you implement work that isn't in the active sprint"),
     ("README.md", "hard gates at key decisions"),
     (GUIDE + "how-it-works.md", "A phase is done when its exit criteria are met"),
     (GUIDE + "how-it-works.md", "**Hard gates** (⚠️) cannot be soft-bypassed"),
@@ -53,6 +52,7 @@ UNENFORCED_CLAIMS = [
 
 ENFORCED_CLAIMS = [
     ("README.md", "SweetClaude enforces the WIP limit"),
+    ("README.md", "implementation is blocked when no sprint is active"),
     ("README.md", "Test files are physically blocked from modification during implementation by hooks"),
     ("README.md", "TDD hooks physically block test file modification during implementation"),
     (GUIDE + "how-it-works.md", "WIP limit (default 3 in-progress issues, hard block)"),
