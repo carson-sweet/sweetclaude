@@ -641,8 +641,11 @@ def phase_exit_criteria(phase: str, ctx: ProjectContext, override_text: str = ""
         return entries
 
     policy = hard_gate_policy()
+    tasks = policy.get("tasks") or {}
+    solutioning_met = ("solutioning-gate".casefold() in satisfied_gates
+                       or gate_pass_record(ctx, "solutioning-gate", item_id))
     if current in (policy.get("phases") or {}).get(wtype, []):
-        for prerequisite in (policy.get("tasks") or {}).get(wtype, []):
+        for prerequisite in tasks.get(wtype, []):
             if (prerequisite.casefold() in satisfied_gates
                     or gate_pass_record(ctx, prerequisite, item_id)):
                 continue
@@ -659,6 +662,35 @@ def phase_exit_criteria(phase: str, ctx: ProjectContext, override_text: str = ""
                     f'Override requires explicit risk acceptance: "I accept the risk of {prerequisite}".'
                 ),
             })
+    emitted = {str(entry.get("id")) for entry in entries}
+    if (current == "DESIGN" and wtype in tasks and not solutioning_met
+            and "solutioning-gate" not in emitted):
+        if hard_override_matches(override_text, "solutioning-gate"):
+            entries.append({"id": "solutioning-gate", "met": True, "action": "block",
+                            "override": ("hard", "solutioning-gate", current, ["solutioning-gate"])})
+        else:
+            entries.append({
+                "id": "solutioning-gate", "met": False, "action": "block",
+                "reason": (
+                    f"Gate solutioning-gate unmet: required before DESIGN exits for hard-gate "
+                    f"work type {wtype} (config/workflow-templates.yaml hard_gate_tasks). Run "
+                    f"/sweetclaude:design design-solutioning-gate for {item_id} and record the "
+                    "pass in .sweetclaude/state/decision-log.md (a 'solutioning-gate' entry with "
+                    f"'Result: pass').{HARD_GATE_SUFFIX} "
+                    'Override requires explicit risk acceptance: "I accept the risk of solutioning-gate".'
+                ),
+            })
+    target = str(phase).strip().upper()
+    if (target == "DESIGN" and current != "DESIGN" and wtype in tasks
+            and not solutioning_met and "solutioning-gate" not in emitted):
+        entries.append({
+            "id": "solutioning-gate", "met": False, "action": "prompt",
+            "reason": (
+                "Solutioning gate required before DESIGN exits: run /sweetclaude:design "
+                f"design-solutioning-gate for {item_id} and record the pass in "
+                ".sweetclaude/state/decision-log.md (a 'solutioning-gate' entry with 'Result: pass')."
+            ),
+        })
     return entries
 
 
