@@ -1890,8 +1890,11 @@ rows:
   test_level:
   - contract
   - unit
-  status: open
-  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises).'
+  status: closed
+  commits:
+  - '00816926'
+  - '55309049'
+  notes: 'Implement: user decision 2026-10-20 (decisions.uncovered_promises). Deterministic background capture at closeout: scripts/flow_capture.py wired into record_workflow_closeout (orchestrator + story controllers) and status.set_terminal (sc-artifact adapter, dashboard, CLI).'
 - id: R-125
   source: B
   docs:

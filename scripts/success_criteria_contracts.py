@@ -925,6 +925,17 @@ def record_workflow_closeout(
     sc_path.parent.mkdir(parents=True, exist_ok=True)
     sc_path.write_text(yaml.safe_dump(sc_data, sort_keys=False), encoding="utf-8")
 
+    if outcome == "done":
+        try:
+            from flow_capture import capture_flow_closeout
+
+            capture_flow_closeout(project, workflow_id, title=resolved_title, outcome=outcome)
+        except Exception as exc:
+            print(
+                f"WARNING: flow thin-artifact capture failed for {workflow_id}: {exc}",
+                file=sys.stderr,
+            )
+
     # --- item file: only mark terminal for an actual completion ---
     if item_file is None or outcome != "done":
         return
