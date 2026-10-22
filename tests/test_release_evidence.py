@@ -401,6 +401,39 @@ def _expand_routing_cases(project, count):
     (project / "tests" / "behavioral" / "routing_cases.yaml").write_text(text, encoding="utf-8")
 
 
+def test_writer_stamps_routing_receipt_from_harness_diagnostics_shape(tmp_path):
+    project = _make_project(tmp_path)
+    _expand_routing_cases(project, 10)
+    summary = _routing_summary_with_failures(planned=10, passed=9, diagnostics={})
+    summary["diagnostics"] = [
+        {
+            "case": "case-00",
+            "entry": "category",
+            "status": "pass",
+            "passed": True,
+            "detail": "loaded plan/product-discovery",
+        }
+    ]
+    summary["summary"]["diagnostics"] = {"case-00": "pass"}
+    receipt_path = rel.write_routing_receipt(
+        project,
+        tag="v5.1.1",
+        summary_path=_stage(tmp_path, "routing.json", json.dumps(summary)),
+        claude_cli_version=FIXTURE_CLI_VERSION,
+        branch=FIXTURE_BRANCH,
+        commit=FIXTURE_COMMIT,
+    )
+    receipt = _receipt(project, "routing")
+    assert receipt["passed"] == 10 - 1
+    assert receipt["diagnosed_pass"] == 1
+    validate_release_proof_receipt(
+        receipt_path,
+        project_dir=project,
+        kind="routing",
+        expected_tag="v5.1.1",
+    )
+
+
 def test_writer_stamps_routing_receipt_with_passing_diagnostics(tmp_path):
     project = _make_project(tmp_path)
     _expand_routing_cases(project, 10)
