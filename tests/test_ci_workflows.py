@@ -28,6 +28,18 @@ def test_workflow_triggers_on_prs_to_release_branches():
     assert "beta-4.x" not in branches, "beta channel is retired (ISSUE-241)"
 
 
+def test_workflow_runs_on_pushes_to_main():
+    data = _load()
+    on = data.get("on") or data.get(True)
+    push = on.get("push")
+    assert push is not None, (
+        "workflow must run on pushes to main so direct release-prep commits "
+        "get the same test coverage as pull requests"
+    )
+    branches = push.get("branches", [])
+    assert "main" in branches
+
+
 def test_workflow_runs_pytest_over_tests_dir():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert re.search(r"pytest\s+tests/", text), (
