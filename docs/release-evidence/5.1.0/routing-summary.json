@@ -1,0 +1,1821 @@
+{
+  "executed_at": "20261022T021011Z",
+  "model": "sonnet",
+  "tier": "full",
+  "summary": {
+    "planned": 33,
+    "runs": 33,
+    "passed": 33,
+    "graded": 33,
+    "statuses": {
+      "pass": 32,
+      "pass-clarified": 1
+    },
+    "cost_usd": 4.1726,
+    "unpriced_runs": 0,
+    "diagnostics": {}
+  },
+  "results": [
+    {
+      "case": "plan-customer-problem",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded plan/product-discovery",
+      "cost_usd": 0.10987640000000001,
+      "seconds": 15.7,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Clinic managers spend every Sunday night rebuilding next week's staff schedule in a spreadsheet and still end up short-staffed. I want to plan a SaaS around that."
+          ],
+          [
+            "sweetclaude:plan",
+            "Clinic managers spend every Sunday night rebuilding next week's staff schedule in a spreadsheet and still end up short-staffed. I want to plan a SaaS around that."
+          ],
+          [
+            "sweetclaude:library-load",
+            "plan Clinic managers spend every Sunday night rebuilding next week's staff schedule in a spreadsheet and still end up short-staffed. I want to plan a SaaS around that."
+          ]
+        ],
+        "index_reads": [
+          "plan"
+        ],
+        "workflow": [
+          "plan",
+          "product-discovery"
+        ],
+        "asked": false,
+        "texts": [
+          "Dominant signal is product problem, customer and scope, so this is `plan`.",
+          "Best fit is `product-discovery`: a new project with a problem statement and no personas or scenarios yet."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10987640000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "plan-compare-alternatives",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded plan/product-competition",
+      "cost_usd": 0.10874690000000001,
+      "seconds": 14.2,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Before we commit, I want to know what scheduling tools clinics already use and how we would compare against them."
+          ],
+          [
+            "sweetclaude:plan",
+            "Before we commit, I want to know what scheduling tools clinics already use and how we would compare against them."
+          ],
+          [
+            "sweetclaude:library-load",
+            "plan Before we commit, I want to know what scheduling tools clinics already use and how we would compare against them."
+          ]
+        ],
+        "index_reads": [
+          "plan"
+        ],
+        "workflow": [
+          "plan",
+          "product-competition"
+        ],
+        "asked": false,
+        "texts": [
+          "Competitive research on existing products falls under product problem, customer and research work, so I'm routing it to `plan`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10874690000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "plan-product-brief",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded plan/product-brief",
+      "cost_usd": 0.10165770000000002,
+      "seconds": 11.9,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The problem framing is approved. Write up a product brief for ShiftBoard."
+          ],
+          [
+            "sweetclaude:plan",
+            "The problem framing is approved. Write up a product brief for ShiftBoard."
+          ],
+          [
+            "sweetclaude:library-load",
+            "plan The problem framing is approved. Write up a product brief for ShiftBoard."
+          ]
+        ],
+        "index_reads": [
+          "plan"
+        ],
+        "workflow": [
+          "plan",
+          "product-brief"
+        ],
+        "asked": false,
+        "texts": [
+          "This is a product brief, so the category is `plan`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10165770000000002,
+        "finished": true
+      }
+    },
+    {
+      "case": "plan-milestone",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded plan/product-milestone-planning",
+      "cost_usd": 0.17695740000000001,
+      "seconds": 21.3,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "We agreed the first outcome is clinics publishing a week's schedule in under ten minutes. Plan the milestone that gets us there."
+          ],
+          [
+            "sweetclaude:plan",
+            "We agreed the first outcome is clinics publishing a week's schedule in under ten minutes. Plan the milestone that gets us there."
+          ],
+          [
+            "sweetclaude:library-load",
+            "plan We agreed the first outcome is clinics publishing a week's schedule in under ten minutes. Plan the milestone that gets us there."
+          ]
+        ],
+        "index_reads": [
+          "plan"
+        ],
+        "workflow": [
+          "plan",
+          "product-milestone-planning"
+        ],
+        "asked": false,
+        "texts": [
+          "Planning a milestone, with a product outcome, is `plan`.",
+          "`product-milestone-planning` is the workflow that fits. Next I'm running its mode gate."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.17695740000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "design-architecture",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded design/design-architecture",
+      "cost_usd": 0.11867579999999998,
+      "seconds": 15.0,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The ShiftBoard problem is approved. Lay out the system architecture: services, boundaries, and how data flows between them."
+          ],
+          [
+            "sweetclaude:design",
+            "The ShiftBoard problem is approved. Lay out the system architecture: services, boundaries, and how data flows between them."
+          ],
+          [
+            "sweetclaude:library-load",
+            "design The ShiftBoard problem is approved. Lay out the system architecture: services, boundaries, and how data flows between them."
+          ]
+        ],
+        "index_reads": [
+          "design"
+        ],
+        "workflow": [
+          "design",
+          "design-architecture"
+        ],
+        "asked": false,
+        "texts": [
+          "Dominant signal is architecture, so this routes to `design`.",
+          "Selected workflow: `design-architecture`. Running the gate check on its own."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.11867579999999998,
+        "finished": true
+      }
+    },
+    {
+      "case": "design-tenant-data-model",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded design/design-data-model",
+      "cost_usd": 0.1026025,
+      "seconds": 13.8,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "ShiftBoard serves many clinics. Design the data model for clinics, staff, shifts, and availability so tenants stay separated."
+          ],
+          [
+            "sweetclaude:design",
+            "ShiftBoard serves many clinics. Design the data model for clinics, staff, shifts, and availability so tenants stay separated."
+          ],
+          [
+            "sweetclaude:library-load",
+            "design ShiftBoard serves many clinics. Design the data model for clinics, staff, shifts, and availability so tenants stay separated."
+          ]
+        ],
+        "index_reads": [
+          "design"
+        ],
+        "workflow": [
+          "design",
+          "design-data-model"
+        ],
+        "asked": false,
+        "texts": [
+          "This is a data model design request, so it goes to `design`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1026025,
+        "finished": true
+      }
+    },
+    {
+      "case": "design-api",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded design/design-api-design",
+      "cost_usd": 0.18040550000000002,
+      "seconds": 22.3,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "The mobile app needs to read and claim open shifts. Design the endpoints, request and response shapes, and error responses."
+          ],
+          [
+            "sweetclaude:design",
+            "The mobile app needs to read and claim open shifts. Design the endpoints, request and response shapes, and error responses."
+          ],
+          [
+            "sweetclaude:library-load",
+            "design-api-design The mobile app needs to read and claim open shifts. Design the endpoints, request and response shapes, and error responses."
+          ]
+        ],
+        "index_reads": [],
+        "workflow": [
+          "design",
+          "design-api-design"
+        ],
+        "asked": false,
+        "texts": [
+          "Project state looks healthy (schema 2, setup complete, migration complete, hook fresh). The pre-flight script needed approval, so I skipped it. Now I'll route your request.",
+          "This is an API design task (endpoints, shapes, errors), so I'm routing it to `design`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.18040550000000002,
+        "finished": true
+      }
+    },
+    {
+      "case": "design-onboarding-flow",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded design/design-user-flows",
+      "cost_usd": 0.1212785,
+      "seconds": 21.6,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "A new clinic has to get from sign-up to its first published schedule. Map out the onboarding screens and steps."
+          ],
+          [
+            "sweetclaude:design",
+            "A new clinic has to get from sign-up to its first published schedule. Map out the onboarding screens and steps."
+          ],
+          [
+            "sweetclaude:library-load",
+            "design A new clinic has to get from sign-up to its first published schedule. Map out the onboarding screens and steps."
+          ]
+        ],
+        "index_reads": [
+          "design"
+        ],
+        "workflow": [
+          "design",
+          "design-user-flows"
+        ],
+        "asked": false,
+        "texts": [
+          "SweetClaude is enabled, so I'm passing your request to the router.",
+          "Mapping onboarding screens and steps is UX flow design, so this routes to `design`.",
+          "`design-user-flows` fits best. Next I'll run the gate check."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1212785,
+        "finished": true
+      }
+    },
+    {
+      "case": "build-tenant-safe-feature",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/small-story",
+      "cost_usd": 0.1742005,
+      "seconds": 20.4,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:build",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "small-story"
+        ],
+        "asked": false,
+        "texts": [
+          "State is healthy (schema 2, setup complete, migration complete, update declined). Routing the request now.",
+          "Feature implementation \u2192 `build`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1742005,
+        "finished": true
+      }
+    },
+    {
+      "case": "build-repair-defect",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/code-issue",
+      "cost_usd": 0.11728160000000001,
+      "seconds": 17.7,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "While building shift swaps I found that swapping across midnight drops the second day. It reproduces every time in the unit tests. Fix it."
+          ],
+          [
+            "sweetclaude:maintain",
+            "While building shift swaps I found that swapping across midnight drops the second day. It reproduces every time in the unit tests. Fix it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain While building shift swaps I found that swapping across midnight drops the second day. It reproduces every time in the unit tests. Fix it."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "build",
+          "code-issue"
+        ],
+        "asked": false,
+        "texts": [
+          "SweetClaude is enabled, so I'm passing your request to the router.",
+          "This is a bug fix with a reproducing test, so I'm routing it to `maintain`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.11728160000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "build-review-change",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/code-review",
+      "cost_usd": 0.12260420000000001,
+      "seconds": 23.4,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "There's a change set on this branch for the availability calendar. Review it before I merge."
+          ],
+          [
+            "sweetclaude:build",
+            "There's a change set on this branch for the availability calendar. Review it before I merge."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build There's a change set on this branch for the availability calendar. Review it before I merge."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "code-review"
+        ],
+        "asked": false,
+        "texts": [
+          "Review before merge \u2192 `build`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.12260420000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "build-issue-tracker",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/project-issues",
+      "cost_usd": 0.10662529999999999,
+      "seconds": 14.8,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Use GitHub for this project's issues from now on."
+          ],
+          [
+            "sweetclaude:build",
+            "Use GitHub for this project's issues from now on."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build Use GitHub for this project's issues from now on."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "project-issues"
+        ],
+        "asked": false,
+        "texts": [
+          "Choosing the issue tracker is a `build` request (`project-issues`), so I'm routing it there with your request unchanged.",
+          "Loading `project-issues` from the build library."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10662529999999999,
+        "finished": true
+      }
+    },
+    {
+      "case": "test-accessibility",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/testing-accessibility",
+      "cost_usd": 0.127096,
+      "seconds": 17.3,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The schedule editor UI is built. Check it for accessibility problems."
+          ],
+          [
+            "sweetclaude:build",
+            "The schedule editor UI is built. Check it for accessibility problems."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build The schedule editor UI is built. Check it for accessibility problems."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "testing-accessibility"
+        ],
+        "asked": false,
+        "texts": [
+          "SweetClaude is enabled. You gave a request, so I'm passing it to `find-skill` to classify it and route it.",
+          "This is accessibility testing, which the table puts under `build`. I'm routing it there with the request unchanged.",
+          "`testing-accessibility` fits this request. Next I'll run the mode gate check."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.127096,
+        "finished": true
+      }
+    },
+    {
+      "case": "test-performance",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/testing-performance",
+      "cost_usd": 0.17186040000000002,
+      "seconds": 19.4,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "Schedule generation has to finish in under two seconds for a 40-person clinic. Set up load scenarios and check whether we meet that."
+          ],
+          [
+            "sweetclaude:build",
+            "Schedule generation has to finish in under two seconds for a 40-person clinic. Set up load scenarios and check whether we meet that."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build Schedule generation has to finish in under two seconds for a 40-person clinic. Set up load scenarios and check whether we meet that."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "testing-performance"
+        ],
+        "asked": false,
+        "texts": [
+          "State is healthy, so I'm routing your request through find-skill.",
+          "Measuring against a performance target with load scenarios falls under `build`.",
+          "`testing-performance` fits, and the gates pass."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.17186040000000002,
+        "finished": true
+      }
+    },
+    {
+      "case": "test-security",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/testing-security",
+      "cost_usd": 0.11676489999999999,
+      "seconds": 17.6,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Shift data includes staff phone numbers and home addresses. Do security testing on the staff profile feature."
+          ],
+          [
+            "sweetclaude:build",
+            "Shift data includes staff phone numbers and home addresses. Do security testing on the staff profile feature."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build Shift data includes staff phone numbers and home addresses. Do security testing on the staff profile feature."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "testing-security"
+        ],
+        "asked": false,
+        "texts": [
+          "This is security testing, so it routes to `build`.",
+          "`testing-security` fits. Next I'll check the gates."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.11676489999999999,
+        "finished": true
+      }
+    },
+    {
+      "case": "deploy-prepare-release",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/deploy-ship",
+      "cost_usd": 0.1173906,
+      "seconds": 18.7,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Verification passed for the shift-swap release. Prepare it for deployment."
+          ],
+          [
+            "sweetclaude:build",
+            "Verification passed for the shift-swap release. Prepare it for deployment."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build Verification passed for the shift-swap release. Prepare it for deployment."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "deploy-ship"
+        ],
+        "asked": false,
+        "texts": [
+          "Deploy/ship signals dominate, so this goes to `build`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1173906,
+        "finished": true
+      }
+    },
+    {
+      "case": "deploy-smoke-check",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/code-verify",
+      "cost_usd": 0.12268479999999998,
+      "seconds": 21.1,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The release just went out to production. Verify it's actually working."
+          ],
+          [
+            "sweetclaude:build",
+            "The release just went out to production. Verify it's actually working."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build The release just went out to production. Verify it's actually working."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "code-verify"
+        ],
+        "asked": false,
+        "texts": [
+          "SweetClaude is enabled. You gave a request, so I'm sending it to `find-skill` to classify and route.",
+          "This is post-deploy verification of a release, so it goes to `build`.",
+          "`code-verify` fits: its trigger covers a post-release smoke check that the shipped change works. Next I'm running the mode gate check."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.12268479999999998,
+        "finished": true
+      }
+    },
+    {
+      "case": "deploy-roll-back",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/rollback-revert",
+      "cost_usd": 0.1738677,
+      "seconds": 22.7,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "The new release is throwing errors for every clinic and I've approved a rollback. Roll it back."
+          ],
+          [
+            "sweetclaude:maintain",
+            "The new release is throwing errors for every clinic and I've approved a rollback. Roll it back."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain The new release is throwing errors for every clinic and I've approved a rollback. Roll it back."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "rollback-revert"
+        ],
+        "asked": false,
+        "texts": [
+          "Rollback \u2192 `maintain`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1738677,
+        "finished": true
+      }
+    },
+    {
+      "case": "document-update-affected",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded utils/documents-update-docs",
+      "cost_usd": 0.10244330000000001,
+      "seconds": 12.0,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "We changed shift swaps so managers must approve them. Update whatever documentation that change affects."
+          ],
+          [
+            "sweetclaude:utils",
+            "We changed shift swaps so managers must approve them. Update whatever documentation that change affects."
+          ],
+          [
+            "sweetclaude:library-load",
+            "utils We changed shift swaps so managers must approve them. Update whatever documentation that change affects."
+          ]
+        ],
+        "index_reads": [
+          "utils"
+        ],
+        "workflow": [
+          "utils",
+          "documents-update-docs"
+        ],
+        "asked": false,
+        "texts": [
+          "Updating documentation is a `utils` request (`documents-update-docs`)."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10244330000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "document-api-docs",
+      "entry": "go",
+      "status": "pass-clarified",
+      "passed": true,
+      "detail": "asked a clarifying question in utils",
+      "cost_usd": 0.198788,
+      "seconds": 26.7,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "The shifts API contract is final. Write the API documentation for it."
+          ],
+          [
+            "sweetclaude:utils",
+            "The shifts API contract is final. Write the API documentation for it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "utils The shifts API contract is final. Write the API documentation for it."
+          ]
+        ],
+        "index_reads": [],
+        "workflow": null,
+        "asked": true,
+        "texts": [
+          "Writing API docs is `utils` (documents-update-docs), since the API is already designed.",
+          "I can't write the shifts API documentation yet, because the project has no shifts API contract in it.\n\nThe routing went like this. `/sweetclaude:go` sent your request to `find-skill`. That classified it as `utils`, and the library loader selected `documents-update-docs`. I haven't run that workflow or the gate check, and I haven't written any files.\n\nThe project contains only a two-line `README.md` (\"Staff shift scheduling for small veterinary clinics\") and SweetClaude state files. There is no OpenAPI spec, schema, route code, design doc, or backlog item for the shifts API. I could only produce invented endpoints, which would be worse than having no docs.\n\nWhere is the contract? It could be a file path, a spec you can paste in, or a branch or repo that has it. Once I have it, I'll write the documentation to match it, covering endpoints, request and response shapes, errors, and examples."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.198788,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-triage-incident",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/something-broke",
+      "cost_usd": 0.1180321,
+      "seconds": 17.4,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Clinics are reporting that published schedules show up blank this morning. Help."
+          ],
+          [
+            "sweetclaude:maintain",
+            "Clinics are reporting that published schedules show up blank this morning. Help."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain Clinics are reporting that published schedules show up blank this morning. Help."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "something-broke"
+        ],
+        "asked": false,
+        "texts": [
+          "SweetClaude is enabled, so I'm sending your report to the skill router.",
+          "Blank published schedules this morning is a production bug, so it goes to `maintain`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1180321,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-security-patch",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/security-patch",
+      "cost_usd": 0.1580578,
+      "seconds": 20.3,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ],
+          [
+            "sweetclaude:maintain",
+            "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "security-patch"
+        ],
+        "asked": false,
+        "texts": [
+          "Routing this to the `security-patch` workflow. I'm checking the mode gate first, then reading the workflow."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1580578,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-live-defect",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/hotfix",
+      "cost_usd": 0.10350820000000001,
+      "seconds": 13.2,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "In production, overtime totals double-count shifts that span midnight. It reproduces reliably. Fix it."
+          ],
+          [
+            "sweetclaude:maintain",
+            "In production, overtime totals double-count shifts that span midnight. It reproduces reliably. Fix it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain In production, overtime totals double-count shifts that span midnight. It reproduces reliably. Fix it."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "hotfix"
+        ],
+        "asked": false,
+        "texts": [
+          "Bug in production \u2192 `maintain`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10350820000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-postmortem",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/postmortem",
+      "cost_usd": 0.10076750000000001,
+      "seconds": 12.1,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The blank-schedule incident is resolved. Write the postmortem."
+          ],
+          [
+            "sweetclaude:maintain",
+            "The blank-schedule incident is resolved. Write the postmortem."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain The blank-schedule incident is resolved. Write the postmortem."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "postmortem"
+        ],
+        "asked": false,
+        "texts": [
+          "Postmortem is an explicit `maintain` signal, so I'm routing there with the request unchanged."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10076750000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-tech-debt",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/code-debt",
+      "cost_usd": 0.11965440000000001,
+      "seconds": 17.0,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The scheduling module has three copies of the same date-range logic and it slows every change. Clean that up."
+          ],
+          [
+            "sweetclaude:maintain",
+            "The scheduling module has three copies of the same date-range logic and it slows every change. Clean that up."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain The scheduling module has three copies of the same date-range logic and it slows every change. Clean that up."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "code-debt"
+        ],
+        "asked": false,
+        "texts": [
+          "SweetClaude is enabled. Next I'll pass your request to `find-skill` to classify it.",
+          "This is a refactor of duplicated code, so it goes to `maintain`.",
+          "`code-debt` fits. Next I'll check the mode gates."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.11965440000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "configure-health-check",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded configure/doctor",
+      "cost_usd": 0.10131600000000002,
+      "seconds": 12.3,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Check whether SweetClaude itself is set up correctly in this project and fix anything broken."
+          ],
+          [
+            "sweetclaude:configure",
+            "Check whether SweetClaude itself is set up correctly in this project and fix anything broken."
+          ],
+          [
+            "sweetclaude:library-load",
+            "configure Check whether SweetClaude itself is set up correctly in this project and fix anything broken."
+          ]
+        ],
+        "index_reads": [
+          "configure"
+        ],
+        "workflow": [
+          "configure",
+          "doctor"
+        ],
+        "asked": false,
+        "texts": [
+          "Category: `configure`.",
+          "Workflow: `doctor`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10131600000000002,
+        "finished": true
+      }
+    },
+    {
+      "case": "configure-update",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded configure/update",
+      "cost_usd": 0.10770339999999999,
+      "seconds": 14.2,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Update SweetClaude to the latest version."
+          ],
+          [
+            "sweetclaude:configure",
+            "Update SweetClaude to the latest version."
+          ],
+          [
+            "sweetclaude:library-load",
+            "configure Update SweetClaude to the latest version."
+          ]
+        ],
+        "index_reads": [
+          "configure"
+        ],
+        "workflow": [
+          "configure",
+          "update"
+        ],
+        "asked": false,
+        "texts": [
+          "Update request \u2192 `configure`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10770339999999999,
+        "finished": true
+      }
+    },
+    {
+      "case": "configure-mode",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded configure/project-mode",
+      "cost_usd": 0.1013436,
+      "seconds": 12.7,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Switch this project to Kanban mode."
+          ],
+          [
+            "sweetclaude:configure",
+            "Switch this project to Kanban mode."
+          ],
+          [
+            "sweetclaude:library-load",
+            "configure Switch this project to Kanban mode."
+          ]
+        ],
+        "index_reads": [
+          "configure"
+        ],
+        "workflow": [
+          "configure",
+          "project-mode"
+        ],
+        "asked": false,
+        "texts": [
+          "Switching modes is SweetClaude configuration, so I'm routing this to `configure`.",
+          "`project-mode` is the right workflow for this."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1013436,
+        "finished": true
+      }
+    },
+    {
+      "case": "configure-off",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded configure/off",
+      "cost_usd": 0.105783,
+      "seconds": 14.2,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Turn SweetClaude off for this project."
+          ],
+          [
+            "sweetclaude:configure",
+            "Turn SweetClaude off for this project."
+          ],
+          [
+            "sweetclaude:library-load",
+            "configure Turn SweetClaude off for this project."
+          ]
+        ],
+        "index_reads": [
+          "configure"
+        ],
+        "workflow": [
+          "configure",
+          "off"
+        ],
+        "asked": false,
+        "texts": [
+          "SweetClaude is currently enabled. Your request is a configuration change, so I'll hand it to the configure skill.",
+          "Disablement falls under `configure`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.105783,
+        "finished": true
+      }
+    },
+    {
+      "case": "utils-meeting-prep",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded utils/misc-meeting-prep",
+      "cost_usd": 0.16973019999999997,
+      "seconds": 19.6,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:find-skill",
+            "I'm meeting a clinic owner tomorrow to pitch ShiftBoard. Help me prepare."
+          ],
+          [
+            "sweetclaude:utils",
+            "I'm meeting a clinic owner tomorrow to pitch ShiftBoard. Help me prepare."
+          ],
+          [
+            "sweetclaude:library-load",
+            "utils I'm meeting a clinic owner tomorrow to pitch ShiftBoard. Help me prepare."
+          ]
+        ],
+        "index_reads": [
+          "utils"
+        ],
+        "workflow": [
+          "utils",
+          "misc-meeting-prep"
+        ],
+        "asked": false,
+        "texts": [
+          "State is healthy, with no drift marker, so I'm handing your request to the router.",
+          "Meeting preparation maps to `utils`.",
+          "Routing to `utils` \u2192 `misc-meeting-prep`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.16973019999999997,
+        "finished": true
+      }
+    },
+    {
+      "case": "utils-dashboard",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded utils/dashboard",
+      "cost_usd": 0.1090758,
+      "seconds": 14.1,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Open the local dashboard for this project."
+          ],
+          [
+            "sweetclaude:utils",
+            "Open the local dashboard for this project."
+          ],
+          [
+            "sweetclaude:library-load",
+            "utils Open the local dashboard for this project."
+          ]
+        ],
+        "index_reads": [
+          "utils"
+        ],
+        "workflow": [
+          "utils",
+          "dashboard"
+        ],
+        "asked": false,
+        "texts": [
+          "Dashboard falls under `utils`. Routing there with the request unchanged.",
+          "Workflow: `dashboard`. Running the gate check."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1090758,
+        "finished": true
+      }
+    },
+    {
+      "case": "utils-big-picture",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded utils/big-picture",
+      "cost_usd": 0.09984900000000001,
+      "seconds": 10.3,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Show me the whole project at a glance: milestones, epics, and issues."
+          ],
+          [
+            "sweetclaude:utils",
+            "Show me the whole project at a glance: milestones, epics, and issues."
+          ],
+          [
+            "sweetclaude:library-load",
+            "utils Show me the whole project at a glance: milestones, epics, and issues."
+          ]
+        ],
+        "index_reads": [
+          "utils"
+        ],
+        "workflow": [
+          "utils",
+          "big-picture"
+        ],
+        "asked": false,
+        "texts": [
+          "Whole-project overview \u2192 `utils`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.09984900000000001,
+        "finished": true
+      }
+    },
+    {
+      "case": "utils-session-export",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded utils/session-export",
+      "cost_usd": 0.10595980000000002,
+      "seconds": 11.9,
+      "trace": {
+        "plugin_paths": [
+          "/Users/carsonsweet/dev/sweetclaude"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "Export this session as a portable package."
+          ],
+          [
+            "sweetclaude:utils",
+            "Export this session as a portable package."
+          ],
+          [
+            "sweetclaude:library-load",
+            "utils Export this session as a portable package."
+          ]
+        ],
+        "index_reads": [
+          "utils"
+        ],
+        "workflow": [
+          "utils",
+          "session-export"
+        ],
+        "asked": false,
+        "texts": [
+          "Session export maps to `utils`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.10595980000000002,
+        "finished": true
+      }
+    }
+  ],
+  "diagnostics": []
+}

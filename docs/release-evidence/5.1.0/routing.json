@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "receipt_type": "routing",
+  "receipt_id": "release-5.1.0-routing",
+  "subject_id": "release:v5.1.0",
+  "generated_at": "2026-10-22T02:10:48Z",
+  "command_or_workflow_step": "release_evidence_local.py routing --tag v5.1.0",
+  "cwd": "/Users/carsonsweet/dev/sweetclaude",
+  "repo_root": "/Users/carsonsweet/dev/sweetclaude",
+  "branch": "main",
+  "commit": "4073f605103c580245c505cab82286746be3f1af",
+  "result": "pass",
+  "tag": "v5.1.0",
+  "version": "5.1.0",
+  "claude_cli_version": "2.1.306",
+  "cost_usd": 4.1726,
+  "input_artifacts": [
+    {
+      "path": "docs/release-evidence/5.1.0/routing-summary.json",
+      "sha256": "66b1cdff44098d3e11588208759c6f14c9b6e9c613144639667dcdffac8438b3"
+    }
+  ],
+  "evidence_path": "docs/release-evidence/5.1.0/routing-summary.json",
+  "evidence_sha256": "66b1cdff44098d3e11588208759c6f14c9b6e9c613144639667dcdffac8438b3",
+  "tier": "full",
+  "planned": 33,
+  "passed": 33,
+  "model": "sonnet"
+}

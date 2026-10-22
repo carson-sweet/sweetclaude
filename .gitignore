@@ -26,6 +26,9 @@ restore-config.sh
 /docs/testing/*
 !/docs/testing/behavioral-e2e/
 !/docs/testing/behavioral-e2e/**
+# Phase-6 release proof receipts and their evidence — re-validated by release.yml
+!/docs/release-evidence/
+!/docs/release-evidence/**
 # Internal-only local evaluation workspaces
 /docs/codex-evaluation/
 # docs/product/ contains real project backlog and roadmap data — never public
