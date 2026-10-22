@@ -1583,3 +1583,17 @@ def test_release_readiness_fails_on_unclosed_issues(tmp_path):
             receipt_path=receipt,
             control_lint_receipt_path=control_lint,
         )
+
+
+def test_release_evidence_dir_is_not_gitignored():
+    subprocess.run(["git", "check-ignore", "-q", "docs/release-evidence"], cwd=ROOT)
+    completed = subprocess.run(
+        ["git", "check-ignore", "-q", "docs/release-evidence/9.9.9/routing.json"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode != 0, (
+        "docs/release-evidence must not be gitignored: the release gate "
+        "re-validates committed receipts, and a gitignored tree ships empty"
+    )
