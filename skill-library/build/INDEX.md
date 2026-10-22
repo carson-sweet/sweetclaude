@@ -15,7 +15,7 @@ implement. In particular, “use GitHub for this project's issues” must load
 | `code-review` | Code, security, and compliance review. |
 | `code-tdd` | Internal TDD process skill — invoked by code-feature, code-issue, and code-debt. |
 | `code-testing` | Run any combination of test suite, mutation testing, security review, and PR pre-check. |
-| `code-verify` | Run verification before claiming work is complete. |
+| `code-verify` | Run verification before claiming work is complete, including a post-release smoke check that the shipped change works. |
 | `deploy-ship` | SHIP phase skill. |
 | `john-wick` | Fully autonomous, resumable, multi-session SDLC pipeline. |
 | `john-wick-checkin` | Internal John Wick phase check-in subagent. |
