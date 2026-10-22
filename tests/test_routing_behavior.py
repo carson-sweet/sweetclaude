@@ -161,7 +161,12 @@ def test_command_blocks_mutation_and_caps_spend():
     disallowed = argv[argv.index("--disallowedTools") + 1:]
     assert {"Write", "Edit"} <= set(disallowed)
     assert "Bash" not in allowed
-    assert all(tool in {"Skill", "Read", "Glob", "Grep"} or tool.startswith("Bash(bash ") for tool in allowed)
+    assert all(
+        tool in {"Skill", "Read", "Glob", "Grep"}
+        or tool.startswith("Bash(bash ")
+        or tool == f"Bash(python3 {ROOT}/scripts/gate_check.py:*)"
+        for tool in allowed
+    )
     assert argv[argv.index("--max-budget-usd") + 1] == "0.25"
     assert argv[argv.index("--plugin-dir") + 1] == str(ROOT)
     assert argv[argv.index("--setting-sources") + 1] == "project,local"

@@ -237,6 +237,10 @@ def preload_commands(repo: Path) -> list[str]:
     return allowed
 
 
+def gate_commands(repo: Path) -> list[str]:
+    return [f"Bash(python3 {repo}/scripts/gate_check.py:*)"]
+
+
 def command(prompt_text: str, repo: Path, model: str, budget: float, executable: str = "claude") -> list[str]:
     return [
         executable, "-p", "--verbose",
@@ -245,7 +249,7 @@ def command(prompt_text: str, repo: Path, model: str, budget: float, executable:
         "--plugin-dir", str(repo), "--add-dir", str(repo),
         "--model", model, "--max-budget-usd", f"{budget:.2f}",
         "--permission-mode", "default",
-        "--allowedTools", "Skill", "Read", "Glob", "Grep", *preload_commands(repo),
+        "--allowedTools", "Skill", "Read", "Glob", "Grep", *preload_commands(repo), *gate_commands(repo),
         "--disallowedTools", "Write", "Edit", "NotebookEdit",
     ]
 
