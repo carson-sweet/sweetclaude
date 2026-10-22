@@ -46,6 +46,19 @@ def md5(text: str) -> str:
     return hashlib.md5(text.encode()).hexdigest()
 
 
+def _record_cost(events: list[dict], project: Path) -> None:
+    cost_file = os.environ.get("SWEETCLAUDE_LIVE_COST_FILE")
+    if not cost_file:
+        return
+    cost = None
+    for event in events:
+        value = event.get("total_cost_usd")
+        if isinstance(value, (int, float)):
+            cost = float(value)
+    with open(cost_file, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"project": str(project), "cost_usd": cost}) + "\n")
+
+
 def run_claude(project: Path, prompt: str) -> list[dict]:
     command = [
         "claude", "-p", prompt,
@@ -66,6 +79,7 @@ def run_claude(project: Path, prompt: str) -> list[dict]:
         except json.JSONDecodeError:
             continue
     assert events, f"claude produced no events (exit {proc.returncode}): {proc.stderr[:400]}"
+    _record_cost(events, project)
     return events
 
 
