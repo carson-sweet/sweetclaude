@@ -180,6 +180,7 @@ def live_project(tmp_path):
     ]
     for flag in flags:
         flag.unlink(missing_ok=True)
+    flags[1].write_text("", encoding="utf-8")
     yield project
     for flag in flags:
         flag.unlink(missing_ok=True)
