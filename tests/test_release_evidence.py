@@ -352,11 +352,113 @@ def test_writer_refuses_routing_below_full_tier(tmp_path):
 
 def test_writer_refuses_routing_passed_below_planned(tmp_path):
     project = _make_project(tmp_path)
-    with pytest.raises(ValueError, match="passed == planned"):
+    with pytest.raises(ValueError, match="noise floor"):
         rel.write_routing_receipt(
             project,
             tag="v5.1.0",
             summary_path=_stage(tmp_path, "routing.json", json.dumps(_routing_summary(passed=1))),
+            claude_cli_version=FIXTURE_CLI_VERSION,
+        )
+
+
+def _routing_summary_with_failures(*, planned, passed, diagnostics):
+    rows = []
+    failed = planned - passed
+    for index in range(planned):
+        rows.append(
+            {
+                "case": f"case-{index:02d}",
+                "entry": "go",
+                "status": "pass" if index >= failed else "no-route",
+                "passed": index >= failed,
+                "cost_usd": 0.1,
+            }
+        )
+    return {
+        "executed_at": "20261021T000000Z",
+        "model": "sonnet",
+        "tier": "full",
+        "summary": {
+            "planned": planned,
+            "runs": planned,
+            "passed": passed,
+            "graded": planned,
+            "statuses": {"pass": passed},
+            "cost_usd": 1.0,
+            "unpriced_runs": 0,
+        },
+        "results": rows,
+        "diagnostics": diagnostics,
+    }
+
+
+def test_writer_stamps_routing_receipt_with_passing_diagnostics(tmp_path):
+    project = _make_project(tmp_path)
+    summary = _routing_summary_with_failures(
+        planned=10,
+        passed=9,
+        diagnostics={f"case-{index:02d}": "pass" for index in range(1)},
+    )
+    receipt_path = rel.write_routing_receipt(
+        project,
+        tag="v5.1.0",
+        summary_path=_stage(tmp_path, "routing.json", json.dumps(summary)),
+        claude_cli_version=FIXTURE_CLI_VERSION,
+        branch=FIXTURE_BRANCH,
+        commit=FIXTURE_COMMIT,
+    )
+    receipt = _receipt(project, "routing")
+    assert receipt["planned"] == 10
+    assert receipt["passed"] == 9
+    assert receipt["diagnosed_pass"] == 1
+    validate_release_proof_receipt(
+        receipt_path,
+        project_dir=project,
+        kind="routing",
+        expected_tag="v5.1.0",
+    )
+
+
+def test_writer_refuses_routing_below_noise_floor(tmp_path):
+    project = _make_project(tmp_path)
+    summary = _routing_summary_with_failures(
+        planned=10,
+        passed=8,
+        diagnostics={f"case-{index:02d}": "pass" for index in range(2)},
+    )
+    with pytest.raises(ValueError, match="noise floor"):
+        rel.write_routing_receipt(
+            project,
+            tag="v5.1.0",
+            summary_path=_stage(tmp_path, "routing.json", json.dumps(summary)),
+            claude_cli_version=FIXTURE_CLI_VERSION,
+        )
+
+
+def test_writer_refuses_routing_with_failing_diagnostic(tmp_path):
+    project = _make_project(tmp_path)
+    summary = _routing_summary_with_failures(
+        planned=10,
+        passed=9,
+        diagnostics={"case-00": "no-route"},
+    )
+    with pytest.raises(ValueError, match="no passing diagnostic"):
+        rel.write_routing_receipt(
+            project,
+            tag="v5.1.0",
+            summary_path=_stage(tmp_path, "routing.json", json.dumps(summary)),
+            claude_cli_version=FIXTURE_CLI_VERSION,
+        )
+
+
+def test_writer_refuses_routing_with_undiagnosed_failure(tmp_path):
+    project = _make_project(tmp_path)
+    summary = _routing_summary_with_failures(planned=10, passed=9, diagnostics={})
+    with pytest.raises(ValueError, match="no passing diagnostic"):
+        rel.write_routing_receipt(
+            project,
+            tag="v5.1.0",
+            summary_path=_stage(tmp_path, "routing.json", json.dumps(summary)),
             claude_cli_version=FIXTURE_CLI_VERSION,
         )
 
