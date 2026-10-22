@@ -24,6 +24,7 @@ from control_receipts import (
     RELEASE_PROOF_RECEIPT_TYPES,
     RELEASE_PROOF_SPEND_CAP_USD,
     ROUTING_PROOF_MIN_DIRECT_PASS_RATE,
+    routing_diagnostics_by_case,
     ROUTING_RECEIPT_TYPE,
     UPGRADE_BASELINE_VERSION,
     UPGRADE_PATH_RECEIPT_TYPE,
@@ -307,8 +308,7 @@ def write_routing_receipt(
     passed = summary.get("passed")
     if not isinstance(planned, int) or not isinstance(passed, int):
         raise ValueError("Routing summary planned and passed must be integers")
-    diagnostics = summary_doc.get("diagnostics")
-    diagnostics = diagnostics if isinstance(diagnostics, dict) else {}
+    diagnostics = routing_diagnostics_by_case(summary_doc)
     failed_rows = [
         row
         for row in (summary_doc.get("results") or [])

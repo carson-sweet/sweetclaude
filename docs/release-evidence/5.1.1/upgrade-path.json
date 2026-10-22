@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "receipt_type": "upgrade-path",
+  "receipt_id": "release-5.1.1-upgrade-path",
+  "subject_id": "release:v5.1.1",
+  "generated_at": "2026-10-22T03:45:31Z",
+  "command_or_workflow_step": "release_evidence_local.py upgrade-path --tag v5.1.1",
+  "cwd": "/Users/carsonsweet/dev/sweetclaude",
+  "repo_root": "/Users/carsonsweet/dev/sweetclaude",
+  "branch": "main",
+  "commit": "4c2cb6045798265502136af6dd7db5c65f6817ee",
+  "result": "pass",
+  "tag": "v5.1.1",
+  "version": "5.1.1",
+  "claude_cli_version": "2.1.306",
+  "cost_usd": 0.0,
+  "input_artifacts": [],
+  "from_version": "4.5.3",
+  "to_version": "5.1.1",
+  "upgrade_source": "local-marketplace-clone",
+  "commands": [
+    "claude plugin marketplace add /var/folders/_3/l2mcg5cd33s8bq9yfth49y8h0000gn/T/opencode/proofs511/sc-4.5.3",
+    "claude plugin install sweetclaude@sweetclaude-stable",
+    "claude plugin marketplace remove sweetclaude-stable",
+    "claude plugin marketplace add /var/folders/_3/l2mcg5cd33s8bq9yfth49y8h0000gn/T/opencode/proofs511/sc-5.1.1",
+    "claude plugin install sweetclaude@sweetclaude-stable",
+    "python3 scripts/update.py project-check --project-dir /var/folders/_3/l2mcg5cd33s8bq9yfth49y8h0000gn/T/opencode/proofs511/upgrade-project",
+    "python3 scripts/update.py metadata --plugin-key sweetclaude@sweetclaude-stable --install-path /var/folders/_3/l2mcg5cd33s8bq9yfth49y8h0000gn/T/opencode/proofs511/claude-cfg/plugins/cache/sweetclaude-stable/sweetclaude/5.1.1 --version 5.1.1 --sha 4c2cb604 --project-dir /var/folders/_3/l2mcg5cd33s8bq9yfth49y8h0000gn/T/opencode/proofs511/upgrade-project"
+  ],
+  "library_dirs": [
+    "config",
+    "hooks",
+    "skill-library",
+    "skills"
+  ]
+}

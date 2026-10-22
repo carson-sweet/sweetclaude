@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "receipt_type": "live-enforcement",
+  "receipt_id": "release-5.1.1-live-enforcement",
+  "subject_id": "release:v5.1.1",
+  "generated_at": "2026-10-22T03:45:31Z",
+  "command_or_workflow_step": "release_evidence_local.py live-enforcement --tag v5.1.1",
+  "cwd": "/Users/carsonsweet/dev/sweetclaude",
+  "repo_root": "/Users/carsonsweet/dev/sweetclaude",
+  "branch": "main",
+  "commit": "4c2cb6045798265502136af6dd7db5c65f6817ee",
+  "result": "pass",
+  "tag": "v5.1.1",
+  "version": "5.1.1",
+  "claude_cli_version": "2.1.306",
+  "cost_usd": 0.0634,
+  "input_artifacts": [
+    {
+      "path": "docs/release-evidence/5.1.1/live-enforcement-junit.xml",
+      "sha256": "dbcc67a9ce7ebaa4de72414aaca8b60caf0df105aaa2bcb8ba3cd195bc885ba9"
+    }
+  ],
+  "evidence_path": "docs/release-evidence/5.1.1/live-enforcement-junit.xml",
+  "evidence_sha256": "dbcc67a9ce7ebaa4de72414aaca8b60caf0df105aaa2bcb8ba3cd195bc885ba9",
+  "case_count": 19,
+  "suite_dir": "tests/live"
+}

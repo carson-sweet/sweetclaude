@@ -423,7 +423,7 @@ def test_writer_stamps_routing_receipt_from_harness_diagnostics_shape(tmp_path):
         branch=FIXTURE_BRANCH,
         commit=FIXTURE_COMMIT,
     )
-    receipt = _receipt(project, "routing")
+    receipt = _receipt(project, "routing", version="5.1.1")
     assert receipt["passed"] == 10 - 1
     assert receipt["diagnosed_pass"] == 1
     validate_release_proof_receipt(

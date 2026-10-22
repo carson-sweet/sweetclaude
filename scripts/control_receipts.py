@@ -196,9 +196,22 @@ def _routing_failed_rows(summary_doc: dict[str, Any]) -> list[Any]:
     return [row for row in rows if not isinstance(row, dict) or not row.get("passed")]
 
 
-def _routing_diagnostics(summary_doc: dict[str, Any]) -> dict[str, Any]:
+def routing_diagnostics_by_case(summary_doc: dict[str, Any]) -> dict[str, Any]:
     diagnostics = summary_doc.get("diagnostics")
-    return diagnostics if isinstance(diagnostics, dict) else {}
+    if isinstance(diagnostics, dict) and diagnostics:
+        return diagnostics
+    summary = summary_doc.get("summary")
+    if isinstance(summary, dict):
+        inner = summary.get("diagnostics")
+        if isinstance(inner, dict) and inner:
+            return inner
+    if isinstance(diagnostics, list):
+        derived: dict[str, Any] = {}
+        for row in diagnostics:
+            if isinstance(row, dict) and isinstance(row.get("case"), str):
+                derived.setdefault(row["case"], row.get("status"))
+        return derived
+    return {}
 
 
 def _validate_routing_acceptance(summary_doc: dict[str, Any], receipt: dict[str, Any]) -> None:
@@ -217,7 +230,7 @@ def _validate_routing_acceptance(summary_doc: dict[str, Any], receipt: dict[str,
             f"Routing proof direct passes {passed}/{planned} are below the "
             f"{int(ROUTING_PROOF_MIN_DIRECT_PASS_RATE * 100)}% noise floor"
         )
-    diagnostics = _routing_diagnostics(summary_doc)
+    diagnostics = routing_diagnostics_by_case(summary_doc)
     failed_rows = _routing_failed_rows(summary_doc)
     for row in failed_rows:
         case_id = row.get("case") if isinstance(row, dict) else None

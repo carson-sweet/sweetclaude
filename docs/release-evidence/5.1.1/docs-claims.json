@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "receipt_type": "docs-claims",
+  "receipt_id": "release-5.1.1-docs-claims",
+  "subject_id": "release:v5.1.1",
+  "generated_at": "2026-10-22T03:45:31Z",
+  "command_or_workflow_step": "release_evidence_local.py docs-claims --tag v5.1.1",
+  "cwd": "/Users/carsonsweet/dev/sweetclaude",
+  "repo_root": "/Users/carsonsweet/dev/sweetclaude",
+  "branch": "main",
+  "commit": "4c2cb6045798265502136af6dd7db5c65f6817ee",
+  "result": "pass",
+  "tag": "v5.1.1",
+  "version": "5.1.1",
+  "claude_cli_version": "2.1.306",
+  "cost_usd": 0.0,
+  "input_artifacts": [
+    {
+      "path": "docs/release-evidence/5.1.1/docs-claims-findings.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  ],
+  "evidence_path": "docs/release-evidence/5.1.1/docs-claims-findings.json",
+  "evidence_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "findings_count": 0
+}
