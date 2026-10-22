@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import math
 import shutil
 import subprocess
 import sys
@@ -22,6 +23,7 @@ from control_receipts import (
     LIVE_ENFORCEMENT_RECEIPT_TYPE,
     RELEASE_PROOF_RECEIPT_TYPES,
     RELEASE_PROOF_SPEND_CAP_USD,
+    ROUTING_PROOF_MIN_DIRECT_PASS_RATE,
     ROUTING_RECEIPT_TYPE,
     UPGRADE_BASELINE_VERSION,
     UPGRADE_PATH_RECEIPT_TYPE,
@@ -305,8 +307,31 @@ def write_routing_receipt(
     passed = summary.get("passed")
     if not isinstance(planned, int) or not isinstance(passed, int):
         raise ValueError("Routing summary planned and passed must be integers")
+    diagnostics = summary_doc.get("diagnostics")
+    diagnostics = diagnostics if isinstance(diagnostics, dict) else {}
+    failed_rows = [
+        row
+        for row in (summary_doc.get("results") or [])
+        if not isinstance(row, dict) or not row.get("passed")
+    ]
     if passed != planned:
-        raise ValueError(f"Routing proof requires passed == planned, got {passed}/{planned}")
+        floor = math.ceil(planned * ROUTING_PROOF_MIN_DIRECT_PASS_RATE)
+        if passed < floor:
+            raise ValueError(
+                f"Routing proof direct passes {passed}/{planned} are below the "
+                f"{int(ROUTING_PROOF_MIN_DIRECT_PASS_RATE * 100)}% noise floor"
+            )
+        for row in failed_rows:
+            case_id = row.get("case") if isinstance(row, dict) else None
+            if diagnostics.get(case_id) != "pass":
+                raise ValueError(
+                    f"Routing proof case {case_id!r} failed its go entry with no passing diagnostic"
+                )
+    diagnosed_pass = sum(
+        1
+        for row in failed_rows
+        if diagnostics.get(row.get("case") if isinstance(row, dict) else None) == "pass"
+    )
     expected_planned = len(routing_case_ids(project_dir))
     if planned != expected_planned:
         raise ValueError(
@@ -343,6 +368,7 @@ def write_routing_receipt(
     receipt["tier"] = summary_doc.get("tier")
     receipt["planned"] = planned
     receipt["passed"] = passed
+    receipt["diagnosed_pass"] = diagnosed_pass
     receipt["model"] = summary_doc.get("model")
     return _write_kind_receipt(
         project_dir, kind=kind, tag=tag, receipt=receipt, now=now

@@ -392,8 +392,18 @@ def _routing_summary_with_failures(*, planned, passed, diagnostics):
     }
 
 
+def _expand_routing_cases(project, count):
+    text = "schema_version: 1\ncases:\n" + "".join(
+        f"  - id: case-{index:02d}\n    story: Case {index}\n    prompt: fixture\n"
+        f"    category: plan\n    workflows: [product-brief]\n"
+        for index in range(count)
+    )
+    (project / "tests" / "behavioral" / "routing_cases.yaml").write_text(text, encoding="utf-8")
+
+
 def test_writer_stamps_routing_receipt_with_passing_diagnostics(tmp_path):
     project = _make_project(tmp_path)
+    _expand_routing_cases(project, 10)
     summary = _routing_summary_with_failures(
         planned=10,
         passed=9,
@@ -421,6 +431,7 @@ def test_writer_stamps_routing_receipt_with_passing_diagnostics(tmp_path):
 
 def test_writer_refuses_routing_below_noise_floor(tmp_path):
     project = _make_project(tmp_path)
+    _expand_routing_cases(project, 10)
     summary = _routing_summary_with_failures(
         planned=10,
         passed=8,
@@ -437,6 +448,7 @@ def test_writer_refuses_routing_below_noise_floor(tmp_path):
 
 def test_writer_refuses_routing_with_failing_diagnostic(tmp_path):
     project = _make_project(tmp_path)
+    _expand_routing_cases(project, 10)
     summary = _routing_summary_with_failures(
         planned=10,
         passed=9,
@@ -453,6 +465,7 @@ def test_writer_refuses_routing_with_failing_diagnostic(tmp_path):
 
 def test_writer_refuses_routing_with_undiagnosed_failure(tmp_path):
     project = _make_project(tmp_path)
+    _expand_routing_cases(project, 10)
     summary = _routing_summary_with_failures(planned=10, passed=9, diagnostics={})
     with pytest.raises(ValueError, match="no passing diagnostic"):
         rel.write_routing_receipt(

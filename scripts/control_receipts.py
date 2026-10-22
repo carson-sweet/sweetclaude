@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import datetime
 import json
+import math
 import re
 import sys
 import xml.etree.ElementTree as ElementTree
@@ -78,6 +79,7 @@ DOCS_CLAIMS_RECEIPT_TYPE = "docs-claims"
 RELEASE_PROOF_RECEIPT_TYPES = frozenset(LOCAL_PROOF_KINDS)
 RELEASE_PROOF_SPEND_CAP_USD = 6.0
 RELEASE_PROOF_MAX_AGE_DAYS = 7
+ROUTING_PROOF_MIN_DIRECT_PASS_RATE = 0.9
 UPGRADE_BASELINE_VERSION = "4.5.3"
 UPGRADE_SOURCE_LOCAL_MARKETPLACE = "local-marketplace-clone"
 ROUTING_CASES_PATH = Path("tests") / "behavioral" / "routing_cases.yaml"
@@ -188,6 +190,49 @@ def _require_proof_evidence_file(
     return resolved
 
 
+def _routing_failed_rows(summary_doc: dict[str, Any]) -> list[Any]:
+    results = summary_doc.get("results")
+    rows = results if isinstance(results, list) else []
+    return [row for row in rows if not isinstance(row, dict) or not row.get("passed")]
+
+
+def _routing_diagnostics(summary_doc: dict[str, Any]) -> dict[str, Any]:
+    diagnostics = summary_doc.get("diagnostics")
+    return diagnostics if isinstance(diagnostics, dict) else {}
+
+
+def _validate_routing_acceptance(summary_doc: dict[str, Any], receipt: dict[str, Any]) -> None:
+    summary = summary_doc.get("summary")
+    if not isinstance(summary, dict):
+        raise ValueError("Routing receipt summary must be an object")
+    planned = summary.get("planned")
+    passed = summary.get("passed")
+    if not isinstance(planned, int) or not isinstance(passed, int):
+        raise ValueError("Routing receipt summary planned and passed must be integers")
+    if passed == planned:
+        return
+    floor = math.ceil(planned * ROUTING_PROOF_MIN_DIRECT_PASS_RATE)
+    if passed < floor:
+        raise ValueError(
+            f"Routing proof direct passes {passed}/{planned} are below the "
+            f"{int(ROUTING_PROOF_MIN_DIRECT_PASS_RATE * 100)}% noise floor"
+        )
+    diagnostics = _routing_diagnostics(summary_doc)
+    failed_rows = _routing_failed_rows(summary_doc)
+    for row in failed_rows:
+        case_id = row.get("case") if isinstance(row, dict) else None
+        if diagnostics.get(case_id) != "pass":
+            raise ValueError(
+                f"Routing proof case {case_id!r} failed its go entry with no passing diagnostic"
+            )
+    diagnosed_pass = receipt.get("diagnosed_pass", len(failed_rows))
+    if diagnosed_pass != len(failed_rows):
+        raise ValueError(
+            "Routing receipt diagnosed_pass does not match the failed cases: "
+            f"expected {len(failed_rows)}, got {diagnosed_pass!r}"
+        )
+
+
 def validate_release_proof_receipt(
     receipt_path: str | Path,
     *,
@@ -262,15 +307,9 @@ def validate_release_proof_receipt(
             raise ValueError(
                 f"Routing proof must be a full-tier run, got {summary_doc.get('tier')!r}"
             )
+        _validate_routing_acceptance(summary_doc, receipt)
         summary = summary_doc.get("summary")
-        if not isinstance(summary, dict):
-            raise ValueError("Routing receipt summary must be an object")
         planned = summary.get("planned")
-        passed = summary.get("passed")
-        if not isinstance(planned, int) or not isinstance(passed, int):
-            raise ValueError("Routing receipt summary planned and passed must be integers")
-        if passed != planned:
-            raise ValueError(f"Routing proof requires passed == planned, got {passed}/{planned}")
         expected_planned = len(routing_case_ids(project))
         if planned != expected_planned:
             raise ValueError(
