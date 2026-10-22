@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -214,6 +215,8 @@ def make_project(root: Path) -> Path:
     subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
     subprocess.run([*git, "add", "."], cwd=project, check=True)
     subprocess.run([*git, "commit", "-qm", "fixture baseline"], cwd=project, check=True)
+    digest = hashlib.md5(str(project.resolve()).encode()).hexdigest()
+    Path(f"/tmp/.sweetclaude-bootstrap-ran-{digest}").write_text("", encoding="utf-8")
     return project
 
 
