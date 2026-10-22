@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 import sys
@@ -184,6 +185,14 @@ def test_gate_check_commands_are_allowed():
     assert pattern in allowed
     gate_like = [t for t in allowed if t.startswith("Bash(python3 ")]
     assert all(t == pattern for t in gate_like)
+
+
+def test_fixture_project_marks_bootstrap_as_ran(tmp_path):
+    project = rb.make_project(tmp_path)
+    digest = hashlib.md5(str(project.resolve()).encode()).hexdigest()
+    flag = Path(f"/tmp/.sweetclaude-bootstrap-ran-{digest}")
+    assert flag.is_file()
+    flag.unlink()
 
 
 def test_fixture_project_is_a_committed_git_repository(tmp_path):
