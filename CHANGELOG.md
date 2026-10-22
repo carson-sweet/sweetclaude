@@ -4,6 +4,34 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [5.1.0] — 2026-10-21
+
+### Added — enforcement activated across TDD, WIP, sprint and phase policies
+
+Rules that were previously applied as model instructions are now checked by code. `scripts/gate_check.py` evaluates every phase entry — skill load and phase advance — against the compiled mode gates and the phase exit criteria, enforced by the master-preflight hook and the workflow loader rather than only by `/sweetclaude:go` prose. Agile blocks implementation without an active sprint and prompts sprint close before ship. Kanban denies sprint-planning skills and enforces the WIP limit at IMPLEMENT entry. Shape Up blocks implementation until the betting table approves the pitch and requires a recorded ship/no-ship decision on the cycle before advancing past VERIFY. Phase exit criteria are parsed from `rules/phase-gates.md` and refused by name when unmet: soft gates pass with the escape phrase and hard gates with explicit risk acceptance, and both overrides are logged to the decision log. GA+ projects get the hard-gate matrix for data-migration, infrastructure-change, technology-migration and security-patch work, and the solutioning-gate pass record is required at DESIGN exit.
+
+### Added — TDD commit gate
+
+A new PreToolUse hook denies a `git commit` that adds non-test source files on a story branch when no `test: RED` commit exists on that branch, closing the last gap between promised and enforced TDD.
+
+### Added — Flow mode thin artifacts
+
+Completing a work item in Flow mode quietly writes a mini brief, an architecture sketch and a decision entry in the background, honoring the project's artifact-privacy base paths.
+
+### Added — releases require local proof receipts
+
+Releases now require committed proof receipts under `docs/release-evidence/<version>/` — live enforcement, routing (full tier), upgrade-path and docs-claims — produced by `scripts/release_evidence_local.py` from real runs and re-validated by the release workflow at tag time. The docs-claims check also runs on every pull request.
+
+### Changed — hooks run on the verified stdin protocol
+
+All hooks read the Claude Code hook payload through `hooks/lib/hook_io.py` on the protocol verified by live capture, replacing the environment-variable reads Claude Code never set.
+
+### Changed — documentation rewritten against the code
+
+Every audited claim in the README and user guide was checked against the code, and each now states what a hook enforces versus what Claude applies as instruction. The only remaining instruction-only mode claim is John Wick mode, which stays marked as experimental.
+
+---
+
 ## [5.0.2] — 2026-10-20
 
 ### Fixed — updates install the complete workflow library
