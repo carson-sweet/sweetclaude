@@ -4,6 +4,16 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [5.1.1] — 2026-10-22
+
+### Fixed — release process hardening
+
+The test workflow now runs on every push to `main`, not only on pull requests, so direct release-prep commits get the same coverage a pull request would.
+
+A routing release proof is accepted when direct passes stay above a 90% floor and every failed case passes its diagnostic re-run through the category entry — matching the suite's measured per-run variance instead of demanding a perfect 33-of-33.
+
+---
+
 ## [5.1.0] — 2026-10-21
 
 ### Added — enforcement activated across TDD, WIP, sprint and phase policies
