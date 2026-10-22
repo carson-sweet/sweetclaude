@@ -1,11 +1,15 @@
 name: Tests on PR
 
-# Run the full pytest suite on every pull request into a release branch, so
-# regressions surface at PR time instead of at release preparation
-# (ISSUE-236; ISSUE-233 Cluster A went undetected for three weeks without
-# this gate).
+# Run the full pytest suite on every pull request into a release branch and on
+# every push to main, so regressions surface at PR time instead of at release
+# preparation — and so direct release-prep commits on main get the same test
+# coverage a pull request would (ISSUE-236; ISSUE-233 Cluster A went undetected
+# for three weeks without this gate).
 on:
   pull_request:
+    branches:
+      - main
+  push:
     branches:
       - main
 
