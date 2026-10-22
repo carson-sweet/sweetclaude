@@ -172,6 +172,15 @@ def test_tier_one_preload_commands_are_allowed_exactly():
     assert f"Bash(bash {go}/../../hooks/read-state.sh session-state)" in rb.preload_commands(ROOT)
 
 
+def test_gate_check_commands_are_allowed():
+    argv = rb.command("p", ROOT, "sonnet", 0.25)
+    allowed = argv[argv.index("--allowedTools") + 1:argv.index("--disallowedTools")]
+    pattern = f"Bash(python3 {ROOT}/scripts/gate_check.py:*)"
+    assert pattern in allowed
+    gate_like = [t for t in allowed if t.startswith("Bash(python3 ")]
+    assert all(t == pattern for t in gate_like)
+
+
 def test_fixture_project_is_a_committed_git_repository(tmp_path):
     project = rb.make_project(tmp_path)
     state = yaml.safe_load((project / ".sweetclaude" / "state" / "sweetclaude.yaml").read_text())
