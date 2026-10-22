@@ -18,6 +18,7 @@ mode_defaults:
     cycle_duration_weeks: null
     blocked_skills:
       - project-sprints
+      - product-sprint-plan
     gates:
       - phase: IMPLEMENT
         condition: wip_limit_reached

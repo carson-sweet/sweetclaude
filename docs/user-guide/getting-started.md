@@ -1,7 +1,7 @@
 # Getting Started
 
-**Version:** 1.1
-**Date:** 2026-05-25
+**Version:** 1.2
+**Date:** 2026-10-21
 
 This page takes you from "I have not installed anything" to "I have a feature scaffolded, tested, and committed." Reading time is fifteen minutes. Doing it takes about an hour because the interactive parts depend on you typing things.
 
@@ -31,9 +31,7 @@ Inside Claude Code, install the stable channel:
 /plugin install sweetclaude@sweetclaude-stable
 ```
 
-Restart Claude Code after install. See [Installing SweetClaude](install.md) for
-update instructions. After install, every Claude Code session in any project folder has
-SweetClaude skills available as `/sweetclaude:<skill-name>` commands.
+Restart Claude Code after install. See [Installing SweetClaude](install.md) for update instructions. After install, every Claude Code session in any project folder has nine commands available: `go`, `plan`, `design`, `build`, `maintain`, `configure`, `utils`, `status` and `help`. Workflows are run as `/sweetclaude:<category> <workflow>`, for example `/sweetclaude:configure doctor`, or by describing what you want after `/sweetclaude:go`.
 
 ---
 
@@ -56,7 +54,7 @@ Then in Claude Code:
 /sweetclaude:go
 ```
 
-SweetClaude detects the empty folder and routes to setup. It asks if you want a git repo (say yes), creates `.sweetclaude/`, `strategy/`, and a `CLAUDE.md`. Then it asks how collaborative you want to be this session — pick **Collaborative** for your first run so you can see every step.
+SweetClaude detects the empty folder and routes to setup. It asks for the project name, a one-sentence description, where issues should live (local or GitHub) and which working mode fits, then creates `.sweetclaude/` and adds a SweetClaude section to `CLAUDE.md`. The deference level starts at **Collaborative**, so you see every step on your first run.
 
 Then it asks you to describe the idea.
 
@@ -81,19 +79,13 @@ claude
 /sweetclaude:go
 ```
 
-SweetClaude detects the existing codebase and routes to setup. It does five things in order:
+SweetClaude detects the existing codebase and routes to setup. It works in this order:
 
 1. **Safety snapshot.** Creates a `pre-sweetclaude` git branch from your current state. If you ever want to undo everything SweetClaude added to your repo, that branch is your insurance. SweetClaude will not proceed without this.
 2. **Project scan.** Reads the codebase (read-only). Detects languages, frameworks, test runners, doc files, open issues. Reports what it found.
-3. **Interview.** Asks four questions, one at a time:
-   - Is this project early, mid-build, or mature?
-   - What are you working on right now?
-   - What is the biggest problem or frustration?
-   - Is there anything messy, undocumented, or worrying?
-4. **Pipeline positioning.** Based on the scan plus your answers, proposes where your project sits — DISCOVER if it is barely an idea, IMPLEMENT if you are actively building, VERIFY if you are feature-complete. You confirm or adjust.
-5. **First action.** If you mentioned a specific frustration in step 3, SweetClaude proposes the right skill to address it. Otherwise it shows the menu and waits.
-
-The "Is there anything messy" question is intentional. It is the thing most onboarding flows miss, and it is usually the most important.
+3. **Setup questions.** Asks, one at a time, the project name, the stage (early prototype, active development, approaching launch or in production), where issues should live (local or GitHub, the issue tracker) and which working mode fits. The stage sets the project's version stage.
+4. **Assessment.** If the codebase looks disorganized (many TODO comments, inconsistent naming or no tests), SweetClaude runs an assess, diagnose, plan and scaffold flow and shows you the scaffolding plan before touching anything.
+5. **Handoff.** Setup creates `.sweetclaude/`, adds a SweetClaude section to your `CLAUDE.md` without overwriting existing content, and hands off to the feature library so you can pick the next piece of work.
 
 ### Pattern C — Resuming work
 
@@ -103,13 +95,13 @@ You set SweetClaude up yesterday. You are coming back today.
 /sweetclaude:go
 ```
 
-That is it. SweetClaude reads `sweetclaude.yaml`, sees what work item is active, checks the phase exit criteria, and either advances or tells you what is missing. It does not show a menu. It just goes.
+That is it. SweetClaude reads `sweetclaude.yaml`, sees what work item is active, checks the phase exit criteria, and proposes what to work on next, or tells you what is missing. It waits for your go-ahead before acting.
 
 ---
 
 ## Deference Levels
 
-Every session, SweetClaude asks how collaborative to be. Three levels:
+Setup stores a deference level in `sweetclaude.yaml`, and the default is **Collaborative**. SweetClaude does not ask again at the start of each session. There are three levels:
 
 **Collaborative.** Stops after every sub-step. Best for your first project, for unfamiliar phases, or when you want to learn the rhythm. Slow but instructive.
 
@@ -132,15 +124,14 @@ your-project/
 ├── .sweetclaude/
 │   ├── state/
 │   │   ├── sweetclaude.yaml        ← unified state: phase, work item, features, framework
-│   │   ├── project.yaml            ← language, framework, build commands
+│   │   ├── discovery.yaml          ← product discovery output: who this is for, why it matters
 │   │   ├── decision-log.md         ← any decisions you made with rationale
 │   │   ├── assumption-register.md  ← assumptions worth checking later
 │   │   └── improvement-register.md ← anything you told SweetClaude to do differently
+│   ├── product/                    ← milestones, backlog and stories
+│   ├── plans/                      ← plans written during planning sessions
 │   └── traceability/
-├── strategy/
-│   ├── concept.md                  ← the framing you settled on
-│   ├── discovery.md                ← who is this for, why does it matter
-│   └── personas/
+├── .claude/settings.json           ← points plansDirectory at .sweetclaude/plans
 └── CLAUDE.md                       ← teaches future sessions about this project
 ```
 
@@ -154,7 +145,9 @@ your-project/
 
 Plus the `pre-sweetclaude` git branch sitting there as your safety net.
 
-Commit `.sweetclaude/` to git. It is project context, not cache. You want decision history and assumptions to travel with the code.
+`.sweetclaude/state/project.yaml` (language, framework, build commands) is optional. Setup does not create it; the auto-test-runner reads it if you add one.
+
+Commit `.sweetclaude/` to git, except the guardian flag and recovery snapshots (setup gitignores `.sweetclaude/state/recovery-runs/`), which are derived and local. The rest is project context, not cache. You want decision history and assumptions to travel with the code.
 
 ---
 
@@ -176,7 +169,7 @@ These cost nothing and surface capabilities that are not obvious from the comman
 
 ## When Something Goes Wrong
 
-**Skill blocked you for missing prerequisites.** The skill is honoring a phase gate. You can usually bypass with "I've addressed this informally — proceed." That logs the override and continues. Hard gates (⚠️) cannot be soft-bypassed; for those, see the [phase-gates.md](phases-and-workflows.md) reference. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+**Skill blocked you for missing prerequisites.** The skill is honoring a phase gate. You can usually bypass with "I've addressed this informally — proceed." That logs the override and continues. Hard gates cannot be soft-bypassed; for those, see the [phase-gates.md](phases-and-workflows.md) reference.
 
 **Skill seems stuck in an interview loop.** Tell SweetClaude "go autonomous and finish the draft." It will conduct the rest of the interview internally and produce a draft for review.
 

@@ -40,7 +40,12 @@ Run tests for: $ARGUMENTS (package name, service name, or "all")
 
 **Process:**
 
-1. Read the project's test command from CLAUDE.md or `state/project.yaml`.
+1. Read the project's test command from CLAUDE.md or `testing.test_command` in `.sweetclaude/state/project.yaml`. If neither names one, work it out from the project (pytest configuration, a `package.json` test script, a Makefile target) and record it in `.sweetclaude/state/project.yaml` without overwriting other keys, so the auto-test-runner hook runs the same command after source edits:
+
+   ```yaml
+   testing:
+     test_command: <command that runs the full suite>
+   ```
 
 2. Run the tests. If a package or service was specified, scope the run. Otherwise run the full suite.
 

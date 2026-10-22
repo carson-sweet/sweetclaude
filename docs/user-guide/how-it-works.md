@@ -1,7 +1,7 @@
 # How It Works
 
-**Version:** 1.4
-**Date:** 2026-05-25
+**Version:** 1.5
+**Date:** 2026-10-21
 
 This page is the mental model. It will not teach you any commands. It will explain why SweetClaude is shaped the way it is, so the rest of the docs make sense.
 
@@ -21,9 +21,9 @@ Everything else in this document is a consequence of that bet.
 
 Most workflow tools track one thing: what step are you on? SweetClaude tracks two, because they move at different speeds.
 
-**`version_stage`** is where your *project* is in its release lifecycle. It moves slowly. Values: `PROTOTYPE → ALPHA → BETA → GA → SCALED → MAINTAINED`. A v2 rewrite resets it. You declare it; the system never advances it on you.
+**`version_stage`** is where your *project* is in its release lifecycle. It moves slowly. Values: `IDEA → ALPHA → BETA → GA → SCALED → MAINTAINED`. During onboarding, setup writes `IDEA` for new projects and early prototypes, and maps the stage you report for an existing project to `IDEA`, `ALPHA`, `BETA` or `GA`. A v2 rewrite resets it. You declare it; the system never advances it on you.
 
-**`active_work_item`** is the *specific work* in flight right now. It moves fast. A bug fix work item lives for an hour or two. A net-new feature work item might span weeks. Each work item has a type (one of 19), a workflow (a sequence of phases), and a current phase.
+**`active_work_item`** is the *specific work* in flight right now. It moves fast. A bug fix work item lives for an hour or two. A net-new feature work item might span weeks. Each work item has an ID, a title and a current phase.
 
 Both live in `.sweetclaude/state/sweetclaude.yaml`:
 
@@ -36,16 +36,14 @@ session:
 
 work:
   active:
-    id: WI-014
-    type: net-new-feature
-    workflow: [DISCOVER, DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, SHIP]
+    id: ISSUE-014
     phase: IMPLEMENT
     title: "OAuth login flow"
     started: 2026-04-29T14:00:00+00:00
-    entry_category: mid-project-planned
+    entry_category: small-story
 ```
 
-The two-dimension model matters because it lets the framework do **progressive disclosure**. A PROTOTYPE-stage project does not see compliance work types — those are noise at that stage. A MAINTAINED project gets feature work de-emphasized in favor of operations and security patches. The pipeline you see is appropriate to where the project actually is, not a feature dump.
+The two-dimension model keeps the slow question (how mature is the project) apart from the fast one (what is being worked on right now), so a change in one does not rewrite the other.
 
 ---
 
@@ -53,11 +51,11 @@ The two-dimension model matters because it lets the framework do **progressive d
 
 The 7-phase pipeline (DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP) looks like the standard SDLC, but it is not used the standard way.
 
-In a typical SDLC, phases are time-boxed: "we are in design this sprint." In SweetClaude, phases are **quality gates**. A phase is done when its exit criteria are met. Not when the calendar says so. Not when you feel like it. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+In a typical SDLC, phases are time-boxed: "we are in design this sprint." In SweetClaude, phases are **quality gates**. A phase is done when its exit criteria are met. Not when the calendar says so. Not when you feel like it.
 
 This is why SweetClaude refuses to give time estimates. The right question is not "how long will design take?" — it is "have we covered the architecture, the data model, the API contracts, and recorded the key decisions?" When the answer is yes, design is done.
 
-There are two kinds of gates. **Soft gates** are advisory — you can override with "I've addressed this informally — proceed." **Hard gates** (⚠️) cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans, technology migration cutover decisions. Hard gate overrides require explicit risk acceptance, logged to the decision log. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+There are two kinds of gates. **Soft gates** are advisory — you can override with "I've addressed this informally — proceed." **Hard gates** cannot be soft-bypassed. They apply to high-blast-radius work at GA+ stages: data migration integrity checks, security patch reviews, infrastructure change rollback plans, technology migration cutover decisions. Where those gates are recorded is listed in the hard gate table in the phases reference. Hard gate overrides require explicit risk acceptance, logged to the decision log.
 
 The list of soft and hard gates is in [`phases-and-workflows.md`](phases-and-workflows.md).
 
@@ -79,54 +77,41 @@ The cost of this is that some users feel adrift, especially in early phases wher
 
 ## Workflow Shapes
 
-A bug fix does not need discovery. A data migration does not need user stories. SweetClaude has six workflow shapes that cover all 19 work types:
+A bug fix does not need discovery. A data migration does not need user stories. SweetClaude defines six workflow shapes, the phase sequences used where a phase or a hard gate depends on them:
 
 | Shape | Phases | Used for |
 |---|---|---|
 | `full-pipeline` | DISCOVER → DEFINE → DESIGN → PLAN → IMPLEMENT → VERIFY → SHIP | Net-new features, external integrations |
 | `abbreviated` | DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | Enhancements, infrastructure changes |
 | `extended-abbreviated` | ASSESS → DEFINE → DESIGN → IMPLEMENT → VERIFY → SHIP | Compliance work |
-| `diagnostic` | DIAGNOSE → IMPLEMENT → VERIFY → SHIP | Bug fixes, security patches, performance |
-| `migration` | ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → CUTOVER → CLEANUP | Tech migrations, API deprecations |
+| `diagnostic` | DIAGNOSE → IMPLEMENT → VERIFY → SHIP | Bug fixes, security patches |
+| `migration` | ASSESS → DESIGN → PLAN → IMPLEMENT → VERIFY → CUTOVER → CLEANUP | Technology migrations |
 | `compressed` | DIAGNOSE → IMPLEMENT → SHIP → POST-MORTEM | Hotfixes |
 
-The work type determines the shape. You do not pick. When you describe the work to `/sweetclaude:go` ("there is a bug in the auth flow"), the framework classifies it (`bug-fix`), reads the shape from config (`diagnostic`), and starts at DIAGNOSE. The diagnostic shape exists because you cannot fix what you cannot reproduce.
+Routing is category selection, not work-type classification. When you describe the work to `/sweetclaude:go` ("there is a bug in the auth flow"), the router picks one of six categories (plan, design, build, maintain, configure, utils) and invokes that category command, which loads the workflow that matches your request. The per-type phase sequences are in [Phases and Workflows](phases-and-workflows.md).
 
 ---
 
-## 4.x Beta Operating Model
+## Maintenance: Update, Doctor, Recovery and Migration
 
-4.x separates framework update, project repair, recovery, and taxonomy
-migration. `/sweetclaude:configure update` syncs framework files inside the installed plugin
-channel and reports drift. It does not run project-state or taxonomy migrations
-inline. After plugin update and restart, project maintenance starts with
-`/sweetclaude:configure doctor`.
+SweetClaude separates framework update, project repair, recovery and taxonomy migration. `/sweetclaude:configure update` syncs framework files inside the installed plugin channel and reports drift. It does not run project-state or taxonomy migrations inline. After plugin update and restart, project maintenance starts with `/sweetclaude:configure doctor`.
 
-Doctor is the maintenance front door. It runs deterministic checks over
-state, hooks, storage, migration readiness, config, files, onboarding, and
-environment, then chooses a route:
+Doctor is the maintenance front door. It runs deterministic checks over state, hooks, storage, migration readiness, config, files, onboarding, and environment, then chooses a route:
 
 | Route status | Meaning | Next command |
 |---|---|---|
 | `recovery-available` | The project is stuck or unsafe to migrate. | `/sweetclaude:configure recover` |
-| `supported-migration-available` | A supported flat v3 `BL-NNN` backlog layout passed preflight. | `/sweetclaude:configure migrate` |
+| `supported-migration-available` | A supported legacy layout passed preflight. | `/sweetclaude:configure migrate` |
 | `compatibility-mode` | Recovery accepted a legacy taxonomy layout without moving artifacts. | Continue normal work. |
-| `no-migration-recommended` | No supported migration is needed. | Continue normal work. |
+| `graduation-available` | The project is compliant and can leave compatibility mode. | Accept the graduation action doctor offers. |
+| `graduation-blocked` | The project could leave compatibility mode, but validation blockers must be fixed first. | Fix the listed blockers, then graduate. |
+| `migration-blocked` | Doctor found old-format work items, but the migration capability did not prove the layout safe. No files were changed. | Continue without migration. |
+| `manual-review` | The maintenance guard could not classify the project. | Review the doctor message. |
+| `no-maintenance-action` | Nothing needs repair or migration. | Continue normal work. |
 
-Migration is deliberately narrow. The supported migrator handles flat v3 backlog
-files such as `.sweetclaude/product/backlog/BL-001-example.md`. Unsafe typed
-legacy directories such as `stories/`, `bugs/`, `debt/`, and `chores/` route to
-recovery instead of blind migration. Recovery can stabilize those projects in
-compatibility mode so SweetClaude stops prompting migration until a layout-specific
-migrator exists.
+`/sweetclaude:configure migrate` handles the flat legacy layout of `.sweetclaude/product/backlog/BL-NNN-example.md` files and the typed legacy layouts `stories/`, `bugs/`, `debt/` and `chores/`. Recovery handles unsafe states: it can stabilize a project in compatibility mode so SweetClaude stops prompting migration, and a later doctor run can offer graduation out of that mode.
 
-4.x also changes the product artifact model. Current issue files use unified
-`ISSUE-NNN` IDs, with `type` stored in frontmatter rather than encoded in the
-filename. Backlog, roadmap issues, epics, and milestones live under
-`.sweetclaude/product/`. Markdown remains the source of truth, but 4.x builds a
-derived SQLite cache at `.sweetclaude/cache/roadmap.db` so status, dashboard,
-backlog, and routing skills can query the project consistently. The cache is
-rebuildable and should not be treated as authoritative project history.
+Current issue files use unified `ISSUE-NNN` IDs, with `type` stored in frontmatter rather than encoded in the filename. Backlog, roadmap issues, epics, and milestones live under `.sweetclaude/product/`. Markdown remains the source of truth, but SweetClaude builds a derived SQLite cache at `.sweetclaude/cache/roadmap.db` so status, dashboard, backlog, and routing skills can query the project consistently. The cache is rebuildable and should not be treated as authoritative project history.
 
 ---
 
@@ -137,17 +122,19 @@ SweetClaude has four project modes that calibrate structure and enforcement to w
 | Mode | What it signals | TDD level | Key enforcement |
 |---|---|---|---|
 | **Flow Mode** | Solo exploration, early stage, no ceremony needed | Level 1 | No gates, all skills available. Quietly accumulates thin artifacts in the background. |
-| **Kanban** | Continuous delivery, work organized as a flowing board | Level 1 | WIP limit (default 3 in-progress issues, hard block), sprint-planning skills blocked (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
-| **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | Sprint and backlog-triage skills blocked, betting table approval required before implementation, ship/no-ship gate at cycle end (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
-| **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
+| **Kanban** | Continuous delivery, work organized as a flowing board | Level 1 | WIP limit (default 3 in-progress issues, hard block), `project-sprints` and `product-sprint-plan` sprint-planning skills disabled |
+| **Shape Up** | 6-week cycles with pitches and a betting table | Level 2 | `project-sprints` and `project-backlog` skills disabled, betting table approval required before implementation, ship/no-ship gate at cycle end |
+| **Agile** | Sprint-based, structured iteration | Level 2 | Active sprint required to implement (hard block), sprint close required before ship |
 
 There is also **John Wick mode** — an experimental, fully autonomous SDLC pipeline from discovery through PR (TDD Level 3, subagent isolation, QA caucus). Invoked via `/sweetclaude:build john-wick`, not through the mode selector.
 
 Modes are not permanent. `/sweetclaude:configure project-mode` re-assesses or accepts a direct argument. Every shift snapshots state first.
 
-Within the execution layer, the work hierarchy is **Milestone → Sprint → Story** — three levels, that is all. Epics and themes are classification attributes on stories (a `epic_id` and `theme_id` field), not nodes that stories flow through. A sprint in Agile mode anchors to a milestone via `milestone_id`; stories are pulled into it regardless of which epic or theme they belong to. This is the Linear model, not the Jira model — epics are goal lenses and progress metrics, not delivery containers.
+Within the execution layer, the work hierarchy is **Milestone → Sprint → Story** — three levels, that is all. Epics and themes are classification attributes on stories (the `epic` and `theme` frontmatter fields), not nodes that stories flow through. A sprint in Agile mode anchors to a milestone via `milestone_id`; stories are pulled into it regardless of which epic or theme they belong to. This is the Linear model, not the Jira model — epics are goal lenses and progress metrics, not delivery containers.
 
-Enforcement happens at three layers: (1) `effective-gates.yaml`, compiled at mode selection time into `.sweetclaude/state/`, contains the full rule set for the active mode; (2) `wip-limit.sh`, a PreToolUse hook, blocks tool calls in Kanban mode when the WIP limit is reached; (3) MODE_CHECK blocks inside individual skills reject invocations that are disallowed by the active mode. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+Mode rules live in two places: `effective-gates.yaml`, compiled at mode selection time into `.sweetclaude/state/`, and MODE_CHECK blocks inside individual skills that reject invocations the active mode disallows. The compiled gates are enforced by code: the master preflight hook runs `scripts/gate_check.py` on every skill load and phase advance, denying blocked skills and unmet hard-gate conditions outright.
+
+`wip-limit.sh`, a PreToolUse hook, blocks tool calls in Kanban mode when the call would activate an issue and the WIP limit is already reached. Any other call is allowed.
 
 Mode selection happens at project init via the `project-assess-shape` five-question interview, and on demand via `/sweetclaude:configure project-mode`.
 
@@ -157,13 +144,14 @@ Mode selection happens at project init via the `project-assess-shape` five-quest
 
 Most TDD documentation is advisory: "write the test first." SweetClaude does not believe in advisory TDD because advisory TDD fails. The implementer (human or AI) ends up touching the test to make it pass, or writes the test after the code so the test rationalizes the implementation rather than specifying behavior.
 
-SweetClaude substantially raises the cost of this at higher levels:
+SweetClaude raises the cost of this with hooks and with subagent separation:
 
-- **Test-guardian hook** (PreToolUse) blocks edits to test files during the IMPLEMENT phase. Not "warns" — blocks. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
-- **Auto-test-runner hook** (PostToolUse) runs tests automatically after every source edit. Not "reminds" — runs. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
-- **Subagent isolation** at TDD Level 2-3 means the test writer and implementer are different agents in different contexts. The implementer never sees the spec or the test writer's reasoning. Only the tests.
+- **Test-guardian hook** (PreToolUse) blocks edits to test files during the IMPLEMENT phase once `code-tdd` marks `tdd_phase` implementing with `scripts/tdd_phase.py`. Not "warns" — blocks.
+- **TDD prewrite guardian hook** (PreToolUse) blocks source file writes during IMPLEMENT while no test files exist, when the Protocol Guardian is on.
+- **Auto-test-runner hook** (PostToolUse) runs tests automatically after every source edit while `tdd_phase` is implementing. Not "reminds" — runs.
+- **Subagent separation.** At Level 2 the tests are written in the main context and only the implementer is a subagent. At Level 3 the test writer is also a subagent. The implementer never sees the spec or the test writer's reasoning. Only the tests. This separation is instruction-guided: the `code-tdd` skill dispatches the subagents.
 
-This sounds extreme until you watch what happens without it: a test passes, you ship, and three weeks later production breaks because the test was passing for the wrong reason. The hooks remove that failure mode.
+This sounds extreme until you watch what happens without it: a test passes, you ship, and three weeks later production breaks because the test was passing for the wrong reason. The hooks and the separation remove that failure mode.
 
 The four TDD levels (0 through 3) calibrate the discipline to the work. A hotfix does not get the full pipeline. A net-new feature with Gherkin specs does. See [tdd.md](tdd.md) for the full breakdown.
 
@@ -171,11 +159,11 @@ The four TDD levels (0 through 3) calibrate the discipline to the work. A hotfix
 
 ## Why Subagents Are Isolated
 
-When the test writer agent reads the user story, writes failing tests, and the implementer reads only those tests, the implementer cannot rationalize a poor test by reasoning about what the spec "really meant." It has to make the tests pass with code, not with arguments.
+At Level 3, when the test writer agent reads the user story, writes failing tests, and the implementer reads only those tests, the implementer cannot rationalize a poor test by reasoning about what the spec "really meant." It has to make the tests pass with code, not with arguments.
 
 This is the same principle that produced double-blind clinical trials. Information that flows backward from outcome to design corrupts the design. SweetClaude prevents the flow.
 
-The test-writer/implementer pair is one of three named subagent patterns in the framework. The others are the caucus (parallel isolated agents that synthesize findings) and the John Wick escalation pattern (a privileged agent for enforcement tasks). The active agent definitions live in the `agents/` directory; the user-facing behavior is summarized here and in the skills reference.
+The test-writer/implementer pair is one of the subagent patterns in the framework. The others are the QA caucus (parallel isolated agents that review the test plan) and the reviewer agents (code, security, architecture, performance, tests and workflow review). The agent definitions live in the `agents/` directory; the user-facing behavior is summarized here and in the skills reference.
 
 ---
 
@@ -185,9 +173,9 @@ Three levels: collaborative, guided, autonomous.
 
 The honest framing: **deference levels are about how much you trust the framework today**, not about how complex the work is. Your first session should be collaborative because you are still building a model of what SweetClaude does. Your tenth feature in the same project might be autonomous because you have seen the rhythm and you are tired of confirming sub-steps.
 
-Autonomous does not mean unsupervised. The framework still pauses at phase gates. It still respects hard gates. It still saves state. It just stops asking "okay to proceed?" between every micro-step. (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.)
+Autonomous does not mean unsupervised. The framework still pauses at phase gates. It still respects hard gates. It still saves state. It just stops asking "okay to proceed?" between every micro-step.
 
-The level is changeable mid-session by saying "switch to guided" or "go autonomous." SweetClaude immediately respects the change and updates `sweetclaude.yaml`.
+The level is changeable mid-session by saying "switch to guided" or "go autonomous." SweetClaude respects the change for the rest of the conversation. It is an instruction to Claude and is not persisted to the state file.
 
 ---
 
@@ -209,7 +197,9 @@ Doctor and recovery write their own run artifacts under `.sweetclaude/state/doct
 
 ```
 SweetClaude plugin bundle/           ← Plugin implementation
-├── skills/                          ← all skills
+├── skills/                          ← public commands and internal routers
+├── skill-library/                   ← workflows loaded by the category commands
+├── scripts/                         ← state, cache, doctor, TDD phase and other Python tools
 ├── agents/                          ← isolated subagents
 ├── hooks/                           ← project-gated enforcement hooks
 ├── rules/                           ← loaded only by an active SweetClaude workflow
@@ -223,7 +213,7 @@ your-project/.sweetclaude/          ← Per-project state
 ├── state/
 │   ├── sweetclaude.yaml            ← Unified state
 │   ├── effective-gates.yaml        ← Compiled mode enforcement rules
-│   ├── project.yaml                ← Language, framework, commands
+│   ├── project.yaml                ← Test command (`testing.test_command`), recorded by setup or code-testing
 │   ├── decision-log.md
 │   ├── assumption-register.md
 │   ├── improvement-register.md
@@ -252,9 +242,9 @@ This is the part most documentation skips. SweetClaude has explicit non-goals:
 
 **It will not push you forward.** Phase advancement is the user's call. Always.
 
-**It will not modify tests during implementation.** Hooks block this physically. (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.)
+**It will not modify tests during implementation.** Hooks block this physically once `code-tdd` marks `tdd_phase` implementing.
 
-**It will not silently skip steps in the corpus pipeline.** The state machine refuses out-of-order operations and explains why if you try.
+**It will not silently skip steps in the corpus pipeline.** Ordering is instruction-guided: each corpus skill reads the pipeline state and checks that its prerequisites are done before it runs, and explains why if you try to go out of order.
 
 **It will not assume your stack.** Codebase discovery drives all configuration. Templates, not constants. SweetClaude works on Python, Go, TypeScript, Rust, or anything else because the workflow is the product.
 
@@ -270,23 +260,25 @@ This distinction matters because deterministic properties are version-stable (a 
 
 | Property | Mechanism | What it guarantees |
 |---|---|---|
-| Test files cannot be edited during IMPLEMENT | `test-guardian.sh` (PreToolUse) | Edits to test directories are blocked at the tool call level; the user can override via tool approval (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
-| Tests run after every source edit | `auto-test-runner.sh` (PostToolUse) | Test suite runs automatically after source edits; the user can override via tool approval (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
-| WIP limit enforced in Kanban mode | `wip-limit.sh` (PreToolUse) | Blocks tool calls that would create new in-progress work when the WIP limit is reached (Not currently enforced: this is not checked by code yet; Claude applies it as an instruction.) |
-| TDD Level 2-3 context isolation | Subagent architecture | Implementer agent never receives the spec or test writer's reasoning |
-| Phase advancement phrases removed from responses | `phase-dwelling-guard.sh` (Stop hook) | When Protocol Guardian is active, responses containing "ready to move on?" are blocked before reaching the user (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
+| Test files cannot be edited during IMPLEMENT | `test-guardian.sh` (PreToolUse) | Once `code-tdd` marks `tdd_phase` implementing, edits to test directories are blocked at the tool call level. To change one file, the user releases it with `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py release --file <path> --approval "<text>"`; the release is logged to `.sweetclaude/metrics/events.log`. |
+| Source files cannot be written before tests exist | `tdd-prewrite-guardian.sh` (PreToolUse) | During IMPLEMENT with the Protocol Guardian on, source writes are blocked until test files exist. |
+| Tests run after every source edit | `auto-test-runner.sh` (PostToolUse) | Test suite runs automatically after source edits while `tdd_phase` is implementing, and the result is reported back. |
+| WIP limit enforced in Kanban mode | `wip-limit.sh` (PreToolUse) | Blocks tool calls that would create new in-progress work when the WIP limit is reached. |
+| No tool calls before the project is configured | `preflight-guard.sh` (PreToolUse) | Blocks tool calls until the project is configured or opted out. |
+| Phase advancement phrases removed from responses | `phase-dwelling-guard.sh` (Stop hook) | When Protocol Guardian is active, responses containing "ready to move on?" are blocked before reaching the user. |
 
 **Instruction-guided (probabilistic):**
 
 | Property | Mechanism | What it means |
 |---|---|---|
-| Phase dwelling — never asks "ready to move on?" | `interaction-model.md` rule | Claude is directed to dwell; Protocol Guardian enforces it when active (Not currently enforced: the hook does not receive tool input in current Claude Code; a fix is in progress for 5.1.) |
+| TDD Level 2-3 context isolation | `code-tdd` skill dispatching subagents | The implementer agent is dispatched without the spec or the test writer's reasoning; no hook checks this |
+| Phase dwelling — never asks "ready to move on?" | `interaction-model.md` rule | Claude is directed to dwell; Protocol Guardian enforces it when active |
 | Deference level respect | `interaction-model.md` rule | Claude adjusts how frequently it stops based on the configured level |
 | Improvement register capture triggers | `interaction-model.md` rule | Claude is directed to capture feedback at defined trigger points |
 | Propose-not-ask interaction mode | `interaction-model.md` rule | Claude defaults to making proposals with reasoning rather than asking open-ended questions |
 | Adaptive language matching | `interaction-model.md` rule | Claude matches the user's vocabulary and domain language |
 
-The practical implication: instruction-guided properties are the right implementation choice for behavioral nuance that cannot be mechanically verified. They work well most of the time and degrade gracefully. Deterministic properties are the right choice for correctness guarantees that the framework's value depends on. If a property is described as "load-bearing" in this document and it is instruction-guided, enabling the Protocol Guardian (`/sweetclaude:configure guardian-on`) upgrades it to deterministic enforcement for that session.
+The practical implication: instruction-guided properties are the right implementation choice for behavioral nuance that cannot be mechanically verified. They work well most of the time and degrade gracefully. Deterministic properties are the right choice for correctness guarantees that the framework's value depends on. Enabling the Protocol Guardian (`/sweetclaude:configure guardian-on`) adds three protections for the session: skill skipping, artifact skipping and TDD bypass. It makes no change to the other instruction-guided rows.
 
 ---
 

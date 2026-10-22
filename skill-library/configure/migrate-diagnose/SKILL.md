@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 name: sweetclaude:library-load migrate-diagnose
-description: "Redirects to sweetclaude:library-load doctor. File diagnostics are now part of the doctor system."
+description: "Redirects to /sweetclaude:configure doctor. File diagnostics are now part of the doctor system."
 user-invocable: true
 ---
 

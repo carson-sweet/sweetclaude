@@ -167,6 +167,13 @@ it completes, run the full scan and continue with the fresh findings.
 If `maintenance_route.status` is `supported-migration-available`, present
 **AskUserQuestion** before running the full scan:
 
+If `maintenance_route.primary_action.capability_id` is `migrate.typed_legacy_backlog`, use:
+
+> Doctor found a supported typed legacy backlog migration candidate. Migration
+> will run its own preflight and safety steps before conversion.
+
+If it is `migrate.flat_bl_to_issue`, use:
+
 > Doctor found a supported flat BL-NNN migration candidate. Migration will run
 > its own preflight and safety steps before conversion.
 

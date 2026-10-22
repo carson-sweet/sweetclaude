@@ -41,10 +41,10 @@
     {
       "file": "test-guardian.sh",
       "event": "PreToolUse",
-      "matcher": "Write|Edit",
+      "matcher": "Write|Edit|NotebookEdit|Bash",
       "required": true,
       "scope": "plugin-native",
-      "purpose": "Prevents edits to test files during TDD implementation phase",
+      "purpose": "Prevents edits to test files, by Write, Edit, NotebookEdit or Bash, during TDD implementation phase",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/test-guardian.sh"
     },
     {
@@ -66,12 +66,21 @@
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/artifact-guardian.sh"
     },
     {
-      "file": "wip-limit.sh",
+      "file": "tdd-commit-gate.sh",
       "event": "PreToolUse",
       "matcher": "Bash",
       "required": true,
       "scope": "plugin-native",
-      "purpose": "Blocks IMPLEMENT entry in Kanban mode when WIP limit is reached",
+      "purpose": "TDD commit gate: denies a git commit adding implementation source files on a story branch while a TDD cycle is active in implement and no earlier commit on that branch has subject 'test: RED'",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/tdd-commit-gate.sh"
+    },
+    {
+      "file": "wip-limit.sh",
+      "event": "PreToolUse",
+      "matcher": "Write|Edit|Bash",
+      "required": true,
+      "scope": "plugin-native",
+      "purpose": "Denies activating an issue in Kanban mode when the WIP limit is reached, in any phase",
       "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/wip-limit.sh"
     },
     {
@@ -138,11 +147,12 @@
     },
     {
       "file": "phase-dwelling-guard.sh",
-      "event": null,
-      "matcher": null,
-      "required": false,
-      "purpose": "Protocol guardian only \u2014 registered by guardian-on skill, not in baseline hooks.json. Blocks phase-advancing language.",
-      "command_path": null
+      "event": "Stop",
+      "matcher": "",
+      "required": true,
+      "scope": "plugin-native",
+      "purpose": "Protocol guardian: blocks phase-advancing language in a response; does nothing unless guardian-enabled exists",
+      "command_path": "${CLAUDE_PLUGIN_ROOT}/hooks/phase-dwelling-guard.sh"
     },
     {
       "file": "auto-reindex.sh",

@@ -5,12 +5,16 @@
 # Blocks the response and asks Claude to revise if phrases like "ready to move on?"
 # are detected. Only active when Protocol Guardian is enabled.
 
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
 
-# No git repo — allow
-if [ -z "$PROJECT_DIR" ]; then
+# A block already in force — never block twice, so the Stop hook cannot loop
+if [ "$(hook_field stop_hook_active)" = "true" ]; then
   exit 0
 fi
+
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 # SweetClaude not active for this project — allow.
 # sweetclaude.yaml is canonical; phase.yaml is a mirror onboarding never
@@ -26,12 +30,13 @@ if [ ! -f "$PROJECT_DIR/.sweetclaude/state/guardian-enabled" ]; then
   exit 0
 fi
 
-# Extract Claude's last response text from the session transcript.
-# Claude Code sets CLAUDE_TRANSCRIPT_PATH when a transcript is available.
-RESPONSE_TEXT=""
+# Claude's last response text comes from the Stop payload's last_assistant_message,
+# falling back to the session transcript at the payload's transcript_path.
+RESPONSE_TEXT=$(hook_field last_assistant_message)
+TRANSCRIPT_PATH=$(hook_field transcript_path)
 
-if [ -n "$CLAUDE_TRANSCRIPT_PATH" ] && [ -f "$CLAUDE_TRANSCRIPT_PATH" ]; then
-  RESPONSE_TEXT=$(python3 - "$CLAUDE_TRANSCRIPT_PATH" 2>/dev/null << 'PYEOF'
+if [ -z "$RESPONSE_TEXT" ] && [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+  RESPONSE_TEXT=$(python3 - "$TRANSCRIPT_PATH" 2>/dev/null << 'PYEOF'
 import sys, json
 
 path = sys.argv[1]
@@ -75,14 +80,13 @@ FOUND=$(echo "$RESPONSE_TEXT" | grep -oi \
   | head -1)
 
 if [ -n "$FOUND" ]; then
-  cat << EOF
-PHASE DWELLING GUARD: Response contains advancement-pushing language ("$FOUND").
+  REASON="PHASE DWELLING GUARD: Response contains advancement-pushing language (\"$FOUND\").
 
 SweetClaude must not prompt the user to advance phases. The user decides when a phase is done — not the framework.
 
-Please revise your response: present the work, offer to continue iterating or answer questions, and remove any language that invites or suggests moving to the next step. The user will signal advancement when they are ready.
-EOF
-  exit 2
+Please revise your response: present the work, offer to continue iterating or answer questions, and remove any language that invites or suggests moving to the next step. The user will signal advancement when they are ready."
+  python3 "$HOOK_IO" block "$REASON"
+  exit 0
 fi
 
 exit 0

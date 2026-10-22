@@ -9,10 +9,13 @@ import datetime
 import json
 import re
 import sys
+import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 from typing import Any
 
-from maintenance.capability_manifest import load_manifest
+import yaml
+
+from maintenance.capability_manifest import LOCAL_PROOF_KINDS, load_manifest
 
 
 PASS_RESULTS = {"pass", "passed", "ok", "success", "judgment_pass"}
@@ -68,6 +71,18 @@ DISCOVERY_TYPES = {
 CHANGE_CONTEXT_DECISIONS = {"proceed", "rebase", "wait", "rescope"}
 DOCS_CAPABILITY_CLAIM_STATUSES = {"proven", "future", "deferred"}
 SEMVER_TAG_RE = re.compile(r"^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(?P<prerelease>-[A-Za-z0-9.-]+)?$")
+LIVE_ENFORCEMENT_RECEIPT_TYPE = "live-enforcement"
+ROUTING_RECEIPT_TYPE = "routing"
+UPGRADE_PATH_RECEIPT_TYPE = "upgrade-path"
+DOCS_CLAIMS_RECEIPT_TYPE = "docs-claims"
+RELEASE_PROOF_RECEIPT_TYPES = frozenset(LOCAL_PROOF_KINDS)
+RELEASE_PROOF_SPEND_CAP_USD = 6.0
+RELEASE_PROOF_MAX_AGE_DAYS = 7
+UPGRADE_BASELINE_VERSION = "4.5.3"
+UPGRADE_SOURCE_LOCAL_MARKETPLACE = "local-marketplace-clone"
+ROUTING_CASES_PATH = Path("tests") / "behavioral" / "routing_cases.yaml"
+LIVE_SUITE_DIR = Path("tests") / "live"
+LIVE_SUITE_FILE_PATTERNS = ("test_*.py", "*_test.py", "test-*.py")
 
 
 def _now() -> str:
@@ -85,6 +100,230 @@ def _parse_timestamp(value: str, *, field: str) -> datetime.datetime:
     if parsed.tzinfo is None:
         raise ValueError(f"{field} must include timezone")
     return parsed.astimezone(datetime.timezone.utc)
+
+
+def parse_release_tag(tag: str, *, context: str = "Release proof") -> str:
+    match = SEMVER_TAG_RE.match(str(tag).strip())
+    if not match:
+        raise ValueError(f"{context} tag must be a semantic version tag")
+    prerelease = match.group("prerelease") or ""
+    return f"{match.group('major')}.{match.group('minor')}.{match.group('patch')}{prerelease}"
+
+
+def live_suite_case_names(project_dir: str | Path) -> set[str]:
+    suite_dir = Path(project_dir) / LIVE_SUITE_DIR
+    if not suite_dir.is_dir():
+        raise ValueError(f"Live enforcement suite directory not found: {suite_dir}")
+    names: set[str] = set()
+    for pattern in LIVE_SUITE_FILE_PATTERNS:
+        for source in suite_dir.glob(pattern):
+            if not source.is_file():
+                continue
+            names.update(re.findall(r"^def (test_\w+)\s*\(", source.read_text(encoding="utf-8"), re.MULTILINE))
+    if not names:
+        raise ValueError(f"Live enforcement suite has no cases under {suite_dir}")
+    return names
+
+
+def routing_case_ids(project_dir: str | Path) -> list[str]:
+    path = Path(project_dir) / ROUTING_CASES_PATH
+    if not path.is_file():
+        raise ValueError(f"Routing cases file not found: {path}")
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    cases = data.get("cases")
+    if not isinstance(cases, list) or not cases:
+        raise ValueError(f"Routing cases file has no cases: {path}")
+    ids = [str(case.get("id") or "").strip() if isinstance(case, dict) else "" for case in cases]
+    if not all(ids):
+        raise ValueError(f"Routing cases file has a case without an id: {path}")
+    if len(set(ids)) != len(ids):
+        raise ValueError(f"Routing cases file has duplicate ids: {path}")
+    return ids
+
+
+def parse_junit_report(path: str | Path) -> dict[str, Any]:
+    try:
+        root = ElementTree.parse(path).getroot()
+    except ElementTree.ParseError as exc:
+        raise ValueError(f"JUnit report is not valid XML: {path}: {exc}") from exc
+    suites = list(root.iter("testsuite"))
+    if not suites:
+        raise ValueError(f"JUnit report has no testsuite: {path}")
+    stats = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0}
+    for suite in suites:
+        for key in stats:
+            try:
+                stats[key] += int(suite.get(key) or 0)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"JUnit report has a non-integer {key} attribute: {path}") from exc
+    cases: set[str] = set()
+    for testcase in root.iter("testcase"):
+        name = str(testcase.get("name") or "").strip()
+        if name:
+            cases.add(name.split("[", 1)[0])
+    stats["cases"] = cases
+    return stats
+
+
+def _require_proof_evidence_file(
+    receipt: dict[str, Any],
+    project_dir: Path,
+    *,
+    context: str,
+) -> Path:
+    path_value = _require_non_empty_string(receipt, "evidence_path", context=context)
+    sha_value = _require_non_empty_string(receipt, "evidence_sha256", context=context)
+    relative = Path(path_value)
+    if relative.is_absolute():
+        raise ValueError(f"{context} evidence_path must be relative to the project root")
+    resolved = project_dir / relative
+    try:
+        actual = hash_file(resolved)
+    except OSError as exc:
+        raise ValueError(f"{context} evidence file not found: {resolved}") from exc
+    if actual != sha_value:
+        raise ValueError(
+            f"{context} evidence_sha256 mismatch: expected {sha_value}, got {actual}"
+        )
+    return resolved
+
+
+def validate_release_proof_receipt(
+    receipt_path: str | Path,
+    *,
+    project_dir: str | Path,
+    kind: str,
+    expected_tag: str,
+    now: datetime.datetime | None = None,
+    expected_claude_cli_version: str | None = None,
+) -> dict[str, Any]:
+    """Validate a committed phase-6 local release-proof receipt."""
+    if kind not in RELEASE_PROOF_RECEIPT_TYPES:
+        raise ValueError(f"Unknown local release proof kind: {kind}")
+    project = Path(project_dir).expanduser().resolve(strict=False)
+    receipt = validate_control_receipt_context(receipt_path, verify_artifact_hashes=False)
+    if receipt.get("receipt_type") != kind:
+        raise ValueError(
+            f"Release proof receipt type mismatch: expected {kind}, got {receipt.get('receipt_type')}"
+        )
+    version = parse_release_tag(expected_tag, context="Release proof")
+    if receipt.get("subject_id") != f"release:{expected_tag}":
+        raise ValueError(f"Release proof receipt subject must be release:{expected_tag}")
+    if receipt.get("tag") != expected_tag:
+        raise ValueError(f"Release proof receipt tag mismatch: expected {expected_tag!r}")
+    if receipt.get("version") != version:
+        raise ValueError(
+            f"Release proof receipt version mismatch: expected {version!r}, "
+            f"got {receipt.get('version')!r}"
+        )
+    for field in ("branch", "commit", "claude_cli_version"):
+        _require_non_empty_string(receipt, field, context="Release proof receipt")
+    cost = receipt.get("cost_usd")
+    if not isinstance(cost, (int, float)) or isinstance(cost, bool) or cost < 0:
+        raise ValueError("Release proof receipt cost_usd must be a non-negative number")
+
+    check_time = now or datetime.datetime.now(datetime.timezone.utc)
+    if check_time.tzinfo is None:
+        check_time = check_time.replace(tzinfo=datetime.timezone.utc)
+    generated = _parse_timestamp(
+        _require_non_empty_string(receipt, "generated_at", context="Release proof receipt"),
+        field="Release proof receipt generated_at",
+    )
+    if check_time - generated > datetime.timedelta(days=RELEASE_PROOF_MAX_AGE_DAYS):
+        raise ValueError(
+            f"Release proof {kind} receipt is older than {RELEASE_PROOF_MAX_AGE_DAYS} days"
+        )
+
+    if expected_claude_cli_version and receipt["claude_cli_version"] != expected_claude_cli_version:
+        raise ValueError(
+            "Release proof receipt claude CLI version mismatch: "
+            f"expected {expected_claude_cli_version!r}, got {receipt['claude_cli_version']!r}"
+        )
+
+    if kind == LIVE_ENFORCEMENT_RECEIPT_TYPE:
+        evidence = _require_proof_evidence_file(receipt, project, context="Live enforcement receipt")
+        stats = parse_junit_report(evidence)
+        if stats["failures"] or stats["errors"] or stats["skipped"]:
+            raise ValueError(
+                "Live enforcement junit reports "
+                f"{stats['failures']} failures, {stats['errors']} errors and "
+                f"{stats['skipped']} skipped; skipped cases count as failures"
+            )
+        expected_cases = live_suite_case_names(project)
+        if stats["cases"] != expected_cases:
+            raise ValueError(
+                "Live enforcement case set mismatch: "
+                f"expected {sorted(expected_cases)}, got {sorted(stats['cases'])}"
+            )
+    elif kind == ROUTING_RECEIPT_TYPE:
+        evidence = _require_proof_evidence_file(receipt, project, context="Routing receipt")
+        summary_doc = _read_json_artifact(evidence, context="Routing receipt summary")
+        if summary_doc.get("tier") != "full":
+            raise ValueError(
+                f"Routing proof must be a full-tier run, got {summary_doc.get('tier')!r}"
+            )
+        summary = summary_doc.get("summary")
+        if not isinstance(summary, dict):
+            raise ValueError("Routing receipt summary must be an object")
+        planned = summary.get("planned")
+        passed = summary.get("passed")
+        if not isinstance(planned, int) or not isinstance(passed, int):
+            raise ValueError("Routing receipt summary planned and passed must be integers")
+        if passed != planned:
+            raise ValueError(f"Routing proof requires passed == planned, got {passed}/{planned}")
+        expected_planned = len(routing_case_ids(project))
+        if planned != expected_planned:
+            raise ValueError(
+                f"Routing proof planned {planned} runs; the full tier has {expected_planned} cases"
+            )
+        summary_cost = summary.get("cost_usd")
+        if not isinstance(summary_cost, (int, float)) or isinstance(summary_cost, bool):
+            raise ValueError("Routing receipt summary cost_usd must be a number")
+        if abs(float(receipt["cost_usd"]) - float(summary_cost)) > 0.0001:
+            raise ValueError(
+                "Routing receipt cost_usd does not match the summary: "
+                f"expected {summary_cost!r}, got {receipt['cost_usd']!r}"
+            )
+    elif kind == UPGRADE_PATH_RECEIPT_TYPE:
+        if receipt.get("from_version") != UPGRADE_BASELINE_VERSION:
+            raise ValueError(
+                f"Upgrade path must start from {UPGRADE_BASELINE_VERSION}, "
+                f"got {receipt.get('from_version')!r}"
+            )
+        if receipt.get("to_version") != version:
+            raise ValueError(
+                f"Upgrade path must end at {version!r}, got {receipt.get('to_version')!r}"
+            )
+        if receipt.get("upgrade_source") != UPGRADE_SOURCE_LOCAL_MARKETPLACE:
+            raise ValueError(
+                "Upgrade path source must be the local marketplace clone, "
+                f"got {receipt.get('upgrade_source')!r}"
+            )
+        _require_list_of_strings(receipt, "commands", context="Upgrade path receipt")
+        library_dirs = _require_list_of_strings(receipt, "library_dirs", context="Upgrade path receipt")
+        for listed in library_dirs:
+            relative = Path(listed)
+            if relative.is_absolute():
+                raise ValueError(f"Upgrade path library dir must be project-relative: {listed}")
+            if not (project / relative).is_dir():
+                raise ValueError(f"Upgrade path library dir does not exist: {listed}")
+    elif kind == DOCS_CLAIMS_RECEIPT_TYPE:
+        evidence = _require_proof_evidence_file(receipt, project, context="Docs claims receipt")
+        try:
+            findings = json.loads(evidence.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"Docs claims findings must be valid JSON: {evidence}: {exc}") from exc
+        if not isinstance(findings, list):
+            raise ValueError("Docs claims findings must be a JSON list")
+        if findings:
+            raise ValueError(
+                f"Docs claims proof has {len(findings)} unresolved findings, expected zero"
+            )
+        count = receipt.get("findings_count")
+        if count != 0 or count != len(findings):
+            raise ValueError("Docs claims receipt findings_count must be zero")
+
+    return receipt
 
 
 def _slug(value: str) -> str:

@@ -3,8 +3,12 @@
 # SweetClaude State Regenerator
 # PostToolUse (Write|Edit) — regenerates session-state.yaml when a constituent state file changes.
 
-FILE="${CLAUDE_FILE_PATH:-}"
-TOOL="${CLAUDE_TOOL_NAME:-}"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
+
+FILE=$(hook_field tool_input.file_path)
+TOOL=$(hook_field tool_name)
 
 if [[ "$TOOL" != "Write" && "$TOOL" != "Edit" ]]; then
   exit 0

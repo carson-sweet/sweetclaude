@@ -25,7 +25,6 @@ SCRIPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "scripts")
 sys.path.insert(0, os.path.abspath(SCRIPTS_DIR))
 
 PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-TEST_PORT = 18411
 
 # Data precondition (ISSUE-236): this suite renders the live project's
 # .sweetclaude data, which is gitignored — CI checkouts have none, and an
@@ -56,20 +55,20 @@ def dashboard_server():
 
     DashboardHandler.project_dir = PROJECT_DIR
 
-    server = http.server.HTTPServer(("127.0.0.1", TEST_PORT), DashboardHandler)
-    server.allow_reuse_address = True
+    server = http.server.HTTPServer(("127.0.0.1", 0), DashboardHandler)
+    port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
     for _ in range(20):
         try:
             import urllib.request
-            urllib.request.urlopen(f"http://127.0.0.1:{TEST_PORT}/api/data", timeout=1)
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/api/data", timeout=1)
             break
         except Exception:
             time.sleep(0.25)
 
-    yield f"http://127.0.0.1:{TEST_PORT}"
+    yield f"http://127.0.0.1:{port}"
     server.shutdown()
 
 

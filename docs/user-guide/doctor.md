@@ -1,7 +1,7 @@
 # Doctor — The Maintenance Front Door
 
-**Version:** 1.0
-**Date:** 2026-06-10
+**Version:** 1.1
+**Date:** 2026-10-21
 
 `/sweetclaude:configure doctor` is the single place to start whenever a project feels
 wrong after an update, a migration, or a long gap: noisy prompts, confusing
@@ -47,9 +47,8 @@ categories cover:
    migration, or compatibility mode applies, then runs the full scan.
 3. **Report.** Every finding is shown with its severity and how it will be
    resolved. Nothing has changed yet.
-4. **Your choice.** You pick what to do — proceed, review, dry-run, or stop.
-5. **Execute (only after approval).** Auto-fixes run; prompted fixes ask you to
-   choose first. Each change is recorded to the run archive.
+4. **Your choice.** You pick what to do — proceed, review, dry-run, or stop. If you have chosen `proceed` as your remembered default, Doctor skips this menu and says it is using the stored preference; pass `--interactive` to bring the menu back for that run.
+5. **Execute.** Auto-fixes run once you have chosen proceed, either at the menu or through the remembered default; prompted fixes ask you to choose first. Each change is recorded to the run archive.
 6. **Persist & summarize.** Doctor writes a run summary and, when needed, offers
    to re-scan.
 
@@ -58,16 +57,17 @@ categories cover:
 Every finding maps to a resolution — there are no dead-end "here's a problem,
 good luck" reports:
 
-- **Auto-fix** — safe, unambiguous repairs (e.g. a stale derived value). Applied
-  automatically *after you approve the batch*, backed up and reversible.
+- **Auto-fix** — safe, unambiguous repairs (e.g. a stale derived value). Applied after you choose proceed at the menu, or straight away when a remembered `proceed` default skips the menu (`--interactive` restores the menu). Backed up and reversible.
 - **Prompted fix** — the fix is clear but the right value depends on your intent,
   so Doctor presents a bounded set of choices (pick a valid value, supply a
   value, resolve a config conflict, repair YAML, restore a missing hook, move a
   misfiled file, renumber a duplicate, or exit compatibility mode). You choose;
   Doctor executes through the same backed-up pipeline.
 - **Delegate** — problems owned by another flow (taxonomy migration, project
-  recovery) are handed off to `/sweetclaude:configure migrate` or `/sweetclaude:configure recover`,
-  which run their own preflight, approval, and rollback. Doctor re-scans after.
+  recovery) are presented by Doctor itself, which offers to run recovery or migration for you.
+  Those flows run their own preflight, approval, and rollback, and Doctor re-scans after.
+- **Accepted / report-only** — informational findings that need no action are reported and
+  marked accepted. Doctor lists them so the picture is complete, but changes nothing.
 - **Terminal fallback** — if a project is too far gone for in-place repair,
   Doctor surfaces the last-resort options: re-onboard from a clean state, or
   remove SweetClaude from the project. These are always explicit, never silent.
@@ -81,8 +81,10 @@ good luck" reports:
   unified diff for every file it touches.
 - **Safety branch offered.** Before making changes, Doctor offers to create a
   git restore point.
-- **Rollback is always possible.** Any run can be fully reversed from its
-  archive — see below.
+- **Archived changes are reversible.** Restore puts back every file that has an
+  archived before-image. An action with no before-image is not reversible; restore
+  lists it as skipped, and the git safety branch, when one was created for that run,
+  is the fallback. See below.
 
 ## Rolling back a run
 
@@ -90,22 +92,24 @@ If a run did something you didn't want, you can restore the project to its
 pre-run state. Run `/sweetclaude:configure doctor` and choose the rollback option (it lists
 recent runs and the files each one changed), or tell Doctor you want to undo the
 last run. Restore rewrites each changed file from its archived before-image and
-reverses any moves.
+reverses any moves. The result lists the files restored and any actions skipped because they had no archived before-image.
 
 ## Routes from a scan
 
-When the scan determines a specialist flow is needed, Doctor points you to it
-rather than acting outside its lane:
+Before the full scan, Doctor reads a compact maintenance route. When a specialist flow applies, Doctor presents it and offers to run recovery or migration itself, so you do not have to pick an internal command. You can decline and continue to the other fixes.
 
-| Route status | Next step |
+| Route status | What Doctor does |
 |---|---|
-| `recovery-available` | `/sweetclaude:configure recover` |
-| `supported-migration-available` | `/sweetclaude:configure migrate` |
-| `compatibility-mode` | Continue without the migration prompt. |
-| `no-migration-recommended` | Continue normal work. |
+| `recovery-available` | Offers to run safe recovery, the snapshot-backed flow, then re-scans. |
+| `supported-migration-available` | Offers to start the migration flow for the supported flat `BL-NNN` or typed legacy layout, then re-scans. Migration runs its own preflight. |
+| `compatibility-mode` | Prints the route message and continues. No migration is recommended while compatibility mode is active. |
+| `graduation-available` | Offers to graduate the project from compatibility mode. This is a state-only change; no work-item files are modified. |
+| `graduation-blocked` | Lists the fixable blockers and offers to fix them through Doctor's archived executor, then graduate. |
+| `migration-blocked` | Prints the route message and continues. The migration capability did not prove the layout safe, and no files were changed. |
+| `manual-review` | Prints the route message and continues to the scan, which carries the manual-review findings. |
+| `no-maintenance-action` | Nothing to route. Continue normal work. |
 
-Do not start by running `/sweetclaude:configure migrate` on an unknown old layout — start
-with Doctor.
+Do not start by running `/sweetclaude:configure migrate` on an unknown old layout. Start with Doctor.
 
 ## Related
 

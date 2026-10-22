@@ -14,7 +14,7 @@ present, evaluated, fresh, and passed. Do not advance if
 Run:
 
 ```bash
-python3 scripts/success_criteria_contracts.py validate-ledger --contract .sweetclaude/contracts/success-criteria-contract.yaml --ledger .sweetclaude/reports/success-criteria-ledger.json
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-ledger --contract .sweetclaude/contracts/success-criteria-contract.yaml --ledger .sweetclaude/reports/success-criteria-ledger.json
 ```
 
 Before any V1 Fix-and-continue cycle, apply `../process-controls.md` using

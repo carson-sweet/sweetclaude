@@ -15,6 +15,23 @@ pass() { echo "  PASS: $1"; }
 TMPROOT=$(mktemp -d)
 trap "rm -rf $TMPROOT" EXIT
 
+HOOK_STDIN="$REPO_ROOT/tests/hook_stdin.py"
+
+pl() {
+  local kind="$1" dir="$2"; shift 2
+  python3 "$HOOK_STDIN" payload "$kind" "$(cd "$dir" && pwd -P)" "$@"
+}
+
+hook_verdict() {
+  local dir="$1" hook="$2" stdin="$3"; shift 3
+  local errfile="$TMPROOT/hook-stderr.$$"
+  local out rc=0
+  out=$(cd "$dir" && printf '%s' "$stdin" \
+    | env -u CLAUDE_TOOL_NAME -u CLAUDE_FILE_PATH -u CLAUDE_TRANSCRIPT_PATH "$@" \
+      bash "$REPO_ROOT/hooks/$hook" 2>"$errfile") || rc=$?
+  printf '%s' "$out" | python3 "$HOOK_STDIN" verdict "$rc" "$errfile"
+}
+
 _make_git_repo() {
   local dir="$1"
   mkdir -p "$dir"
@@ -143,15 +160,10 @@ _make_git_repo "$FX4_PROJ"
 mkdir -p "$FX4_PROJ/.sweetclaude/state"
 printf 'schema_version: 2\n' > "$FX4_PROJ/.sweetclaude/state/sweetclaude.yaml"
 
-RESULT4=$(cd "$FX4_PROJ" && \
-  printf '%s' '{"tool_input": {"skill": "sweetclaude:status"}}' \
-  | env CLAUDE_TOOL_NAME=Skill bash "$REPO_ROOT/hooks/master-preflight.sh" 2>/dev/null) || true
+RESULT4=$(hook_verdict "$FX4_PROJ" master-preflight.sh \
+  "$(pl PreToolUse-Skill "$FX4_PROJ" skill=sweetclaude:status)")
 
-if printf '%s' "$RESULT4" | python3 -c "
-import sys, json
-d = json.loads(sys.stdin.read())
-sys.exit(0 if d.get('ok') == False else 1)
-" 2>/dev/null; then
+if [ "$RESULT4" = "deny" ]; then
   pass "blocks sweetclaude:status without bootstrap flag"
 else
   fail "should block without bootstrap flag (got: $RESULT4)"
@@ -172,17 +184,12 @@ PROJ5_HASH=$(printf '%s' "$FX5_ROOT" | md5 2>/dev/null \
   || printf '%s' "$FX5_ROOT" | md5sum 2>/dev/null | cut -d' ' -f1)
 touch "/tmp/.sweetclaude-bootstrap-ran-${PROJ5_HASH}"
 
-RESULT5=$(cd "$FX5_PROJ" && \
-  printf '%s' '{"tool_input": {"skill": "sweetclaude:status"}}' \
-  | env CLAUDE_TOOL_NAME=Skill bash "$REPO_ROOT/hooks/master-preflight.sh" 2>/dev/null) || true
+RESULT5=$(hook_verdict "$FX5_PROJ" master-preflight.sh \
+  "$(pl PreToolUse-Skill "$FX5_PROJ" skill=sweetclaude:status)")
 
 rm -f "/tmp/.sweetclaude-bootstrap-ran-${PROJ5_HASH}"
 
-if printf '%s' "$RESULT5" | python3 -c "
-import sys, json
-d = json.loads(sys.stdin.read())
-sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+if [ "$RESULT5" = "allow" ]; then
   pass "allows sweetclaude:status with bootstrap flag"
 else
   fail "should allow with bootstrap flag (got: $RESULT5)"
@@ -202,14 +209,9 @@ EXEMPT_FAIL=0
 for exempted in \
   sweetclaude:bootstrap sweetclaude:update sweetclaude:_migrate \
   sweetclaude:purge sweetclaude:setup sweetclaude:adopt; do
-  RES=$(cd "$FX6_PROJ" && \
-    printf '%s' "{\"tool_input\": {\"skill\": \"$exempted\"}}" \
-    | env CLAUDE_TOOL_NAME=Skill bash "$REPO_ROOT/hooks/master-preflight.sh" 2>/dev/null) || true
-  if printf '%s' "$RES" | python3 -c "
-import sys, json
-d = json.loads(sys.stdin.read())
-sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+  RES=$(hook_verdict "$FX6_PROJ" master-preflight.sh \
+    "$(pl PreToolUse-Skill "$FX6_PROJ" skill="$exempted")")
+  if [ "$RES" = "allow" ]; then
     :
   else
     fail "$exempted should be exempt but was blocked (got: $RES)"
@@ -223,14 +225,10 @@ done
 # ---------------------------------------------------------------------------
 echo "[7] master-preflight.sh: non-sweetclaude:* skills pass through unconditionally"
 
-RESULT7=$(printf '%s' '{"tool_input": {"skill": "other-plugin:do-something"}}' \
-  | env CLAUDE_TOOL_NAME=Skill bash "$REPO_ROOT/hooks/master-preflight.sh" 2>/dev/null) || true
+RESULT7=$(hook_verdict "$TMPROOT" master-preflight.sh \
+  "$(pl PreToolUse-Skill "$TMPROOT" skill=other-plugin:do-something)")
 
-if printf '%s' "$RESULT7" | python3 -c "
-import sys, json
-d = json.loads(sys.stdin.read())
-sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+if [ "$RESULT7" = "allow" ]; then
   pass "non-sweetclaude skill passes through"
 else
   fail "non-sweetclaude skill should pass through (got: $RESULT7)"
@@ -305,13 +303,10 @@ _make_git_repo "$FX11_PROJ"
 mkdir -p "$FX11_PROJ/.sweetclaude/state"
 printf 'phase: discover\ntdd_phase:\n' > "$FX11_PROJ/.sweetclaude/state/phase.yaml"
 
-RESULT11=$(cd "$FX11_PROJ" && \
-  env HOME="$FX11_HOME" CLAUDE_FILE_PATH="$FX11_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
-  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+RESULT11=$(hook_verdict "$FX11_PROJ" test-guardian.sh \
+  "$(pl PreToolUse-Write "$FX11_PROJ" file_path="$FX11_PROJ/tests/foo.test.js")" HOME="$FX11_HOME")
 
-if printf '%s' "$RESULT11" | python3 -c "
-import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+if [ "$RESULT11" = "allow" ]; then
   pass "phase inactive → ok for test file edit"
 else
   fail "should allow test file edit when phase is not implement (got: $RESULT11)"
@@ -329,13 +324,10 @@ _make_git_repo "$FX12_PROJ"
 mkdir -p "$FX12_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase: implementing\n' > "$FX12_PROJ/.sweetclaude/state/phase.yaml"
 
-RESULT12=$(cd "$FX12_PROJ" && \
-  env HOME="$FX12_HOME" CLAUDE_FILE_PATH="$FX12_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Edit \
-  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+RESULT12=$(hook_verdict "$FX12_PROJ" test-guardian.sh \
+  "$(pl PreToolUse-Edit "$FX12_PROJ" file_path="$FX12_PROJ/tests/foo.test.js")" HOME="$FX12_HOME")
 
-if printf '%s' "$RESULT12" | python3 -c "
-import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == False else 1)
-" 2>/dev/null; then
+if [ "$RESULT12" = "deny" ]; then
   pass "blocks test file edit during implement/implementing"
 else
   fail "should block test file edit (got: $RESULT12)"
@@ -353,13 +345,10 @@ _make_git_repo "$FX13_PROJ"
 mkdir -p "$FX13_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase: implementing\n' > "$FX13_PROJ/.sweetclaude/state/phase.yaml"
 
-RESULT13=$(cd "$FX13_PROJ" && \
-  env HOME="$FX13_HOME" CLAUDE_FILE_PATH="$FX13_PROJ/src/main.js" CLAUDE_TOOL_NAME=Write \
-  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+RESULT13=$(hook_verdict "$FX13_PROJ" test-guardian.sh \
+  "$(pl PreToolUse-Write "$FX13_PROJ" file_path="$FX13_PROJ/src/main.js")" HOME="$FX13_HOME")
 
-if printf '%s' "$RESULT13" | python3 -c "
-import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+if [ "$RESULT13" = "allow" ]; then
   pass "allows non-test file during implement/implementing"
 else
   fail "should allow non-test file (got: $RESULT13)"
@@ -377,13 +366,10 @@ _make_git_repo "$FX14_PROJ"
 mkdir -p "$FX14_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase: writing_tests\n' > "$FX14_PROJ/.sweetclaude/state/phase.yaml"
 
-RESULT14=$(cd "$FX14_PROJ" && \
-  env HOME="$FX14_HOME" CLAUDE_FILE_PATH="$FX14_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
-  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+RESULT14=$(hook_verdict "$FX14_PROJ" test-guardian.sh \
+  "$(pl PreToolUse-Write "$FX14_PROJ" file_path="$FX14_PROJ/tests/foo.test.js")" HOME="$FX14_HOME")
 
-if printf '%s' "$RESULT14" | python3 -c "
-import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+if [ "$RESULT14" = "allow" ]; then
   pass "allows test file when tdd_phase is writing_tests"
 else
   fail "should allow test file when tdd_phase is not implementing (got: $RESULT14)"
@@ -401,13 +387,10 @@ _make_git_repo "$FX15_PROJ"
 mkdir -p "$FX15_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase: implementing\n' > "$FX15_PROJ/.sweetclaude/state/phase.yaml"
 
-RESULT15=$(cd "$FX15_PROJ" && \
-  env HOME="$FX15_HOME" CLAUDE_FILE_PATH="$FX15_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Bash \
-  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+RESULT15=$(hook_verdict "$FX15_PROJ" test-guardian.sh \
+  "$(pl PreToolUse-Bash "$FX15_PROJ" command="echo hi")" HOME="$FX15_HOME")
 
-if printf '%s' "$RESULT15" | python3 -c "
-import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+if [ "$RESULT15" = "allow" ]; then
   pass "non-Write/Edit tool passes through"
 else
   fail "Bash tool should pass through even during implement (got: $RESULT15)"
@@ -425,13 +408,10 @@ _make_git_repo "$FX16_PROJ"
 mkdir -p "$FX16_PROJ/.sweetclaude/state"
 printf 'phase: IMPLEMENT\ntdd_phase: implementing\n' > "$FX16_PROJ/.sweetclaude/state/phase.yaml"
 
-RESULT16=$(cd "$FX16_PROJ" && \
-  env HOME="$FX16_HOME" CLAUDE_FILE_PATH="$FX16_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
-  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+RESULT16=$(hook_verdict "$FX16_PROJ" test-guardian.sh \
+  "$(pl PreToolUse-Write "$FX16_PROJ" file_path="$FX16_PROJ/tests/foo.test.js")" HOME="$FX16_HOME")
 
-if printf '%s' "$RESULT16" | python3 -c "
-import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == False else 1)
-" 2>/dev/null; then
+if [ "$RESULT16" = "deny" ]; then
   pass "blocks on uppercase IMPLEMENT"
 else
   fail "should block on uppercase IMPLEMENT (got: $RESULT16)"
@@ -451,9 +431,8 @@ mkdir -p "$FX17_PROJ/.sweetclaude/state"
 printf 'phase: discover\ntdd_phase: writing_tests\n' > "$FX17_PROJ/.sweetclaude/state/phase.yaml"
 printf 'test:\n  test_command: touch %s\n' "$FX17_MARKER" > "$FX17_PROJ/.sweetclaude/state/project.yaml"
 
-(cd "$FX17_PROJ" && \
-  env HOME="$FX17_HOME" CLAUDE_FILE_PATH="$FX17_PROJ/src/main.js" CLAUDE_TOOL_NAME=Write \
-  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+hook_verdict "$FX17_PROJ" auto-test-runner.sh \
+  "$(pl PostToolUse-Write "$FX17_PROJ" file_path="$FX17_PROJ/src/main.js")" HOME="$FX17_HOME" >/dev/null
 
 sleep 0.5
 if [ ! -f "$FX17_MARKER" ]; then
@@ -476,9 +455,8 @@ mkdir -p "$FX18_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase: implementing\n' > "$FX18_PROJ/.sweetclaude/state/phase.yaml"
 printf 'test:\n  test_command: touch %s\n' "$FX18_MARKER" > "$FX18_PROJ/.sweetclaude/state/project.yaml"
 
-(cd "$FX18_PROJ" && \
-  env HOME="$FX18_HOME" CLAUDE_FILE_PATH="$FX18_PROJ/src/main.js" CLAUDE_TOOL_NAME=Write \
-  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+hook_verdict "$FX18_PROJ" auto-test-runner.sh \
+  "$(pl PostToolUse-Write "$FX18_PROJ" file_path="$FX18_PROJ/src/main.js")" HOME="$FX18_HOME" >/dev/null
 
 for _i in 1 2 3 4 5; do
   [ -f "$FX18_MARKER" ] && break
@@ -505,9 +483,8 @@ mkdir -p "$FX19_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase: implementing\n' > "$FX19_PROJ/.sweetclaude/state/phase.yaml"
 printf 'test:\n  test_command: touch %s\n' "$FX19_MARKER" > "$FX19_PROJ/.sweetclaude/state/project.yaml"
 
-(cd "$FX19_PROJ" && \
-  env HOME="$FX19_HOME" CLAUDE_FILE_PATH="$FX19_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Edit \
-  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+hook_verdict "$FX19_PROJ" auto-test-runner.sh \
+  "$(pl PostToolUse-Edit "$FX19_PROJ" file_path="$FX19_PROJ/tests/foo.test.js")" HOME="$FX19_HOME" >/dev/null
 
 sleep 0.5
 if [ ! -f "$FX19_MARKER" ]; then
@@ -530,9 +507,8 @@ mkdir -p "$FX20_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase: implementing\n' > "$FX20_PROJ/.sweetclaude/state/phase.yaml"
 printf 'test:\n  test_command: touch %s\n' "$FX20_MARKER" > "$FX20_PROJ/.sweetclaude/state/project.yaml"
 
-(cd "$FX20_PROJ" && \
-  env HOME="$FX20_HOME" CLAUDE_FILE_PATH="$FX20_PROJ/src/main.js" CLAUDE_TOOL_NAME=Bash \
-  bash "$REPO_ROOT/hooks/auto-test-runner.sh" 2>/dev/null) || true
+hook_verdict "$FX20_PROJ" auto-test-runner.sh \
+  "$(pl PostToolUse-Bash "$FX20_PROJ" command="echo hi")" HOME="$FX20_HOME" >/dev/null
 
 sleep 0.5
 if [ ! -f "$FX20_MARKER" ]; then
@@ -553,13 +529,10 @@ _make_git_repo "$FX22_PROJ"
 mkdir -p "$FX22_PROJ/.sweetclaude/state"
 printf 'phase: implement\ntdd_phase:\n' > "$FX22_PROJ/.sweetclaude/state/phase.yaml"
 
-RESULT22=$(cd "$FX22_PROJ" && \
-  env HOME="$FX22_HOME" CLAUDE_FILE_PATH="$FX22_PROJ/tests/foo.test.js" CLAUDE_TOOL_NAME=Write \
-  bash "$REPO_ROOT/hooks/test-guardian.sh" 2>/dev/null) || true
+RESULT22=$(hook_verdict "$FX22_PROJ" test-guardian.sh \
+  "$(pl PreToolUse-Write "$FX22_PROJ" file_path="$FX22_PROJ/tests/foo.test.js")" HOME="$FX22_HOME")
 
-if printf '%s' "$RESULT22" | python3 -c "
-import sys, json; d = json.loads(sys.stdin.read()); sys.exit(0 if d.get('ok') == True else 1)
-" 2>/dev/null; then
+if [ "$RESULT22" = "allow" ]; then
   pass "allows edit when phase is implement but tdd_phase is blank"
 else
   fail "should allow edit when tdd_phase is blank even in implement phase (got: $RESULT22)"

@@ -3,27 +3,26 @@
 # SweetClaude Artifact Guardian Hook
 # PreToolUse Bash — warns (does not block) when committing without required phase artifacts.
 
-TOOL="$CLAUDE_TOOL_NAME"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
+
+TOOL=$(hook_field tool_name)
 
 # Only check Bash tool calls
 if [[ "$TOOL" != "Bash" ]]; then
   exit 0
 fi
 
-# Read command from stdin JSON
-INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.command // ""' 2>/dev/null)
+COMMAND=$(hook_field tool_input.command)
 
 # Only check git commit commands
-if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit'; then
+if ! printf '%s' "$INPUT" | python3 "$HOOK_IO" is-git-commit; then
   exit 0
 fi
 
 # Find project root
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-if [ -z "$PROJECT_DIR" ]; then
-  exit 0
-fi
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 STATE_DIR="$PROJECT_DIR/.sweetclaude/state"
 GUARDIAN_FLAG="$STATE_DIR/guardian-enabled"
@@ -50,8 +49,10 @@ else
 fi
 SESSION_FILE="$STATE_DIR/session-guardian.json"
 
+WARNINGS=""
 warn() {
-  echo "[Protocol Guardian] WARNING: $1" >&2
+  WARNINGS="${WARNINGS:+$WARNINGS
+}[Protocol Guardian] WARNING: $1"
 }
 
 case "$PHASE" in
@@ -92,5 +93,8 @@ case "$PHASE" in
     ;;
 esac
 
-# Always allow — this hook warns but never blocks commits
+# Always allow — this hook warns through additionalContext but never blocks commits
+if [ -n "$WARNINGS" ]; then
+  python3 "$HOOK_IO" context PreToolUse "$WARNINGS"
+fi
 exit 0

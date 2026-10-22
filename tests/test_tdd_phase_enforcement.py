@@ -20,7 +20,6 @@ external-judge harness.
 from __future__ import annotations
 
 import json
-import os
 import re
 import subprocess
 import sys
@@ -34,8 +33,10 @@ TDD_PHASE = REPO_ROOT / "scripts" / "tdd_phase.py"
 GUARDIAN = REPO_ROOT / "hooks" / "test-guardian.sh"
 SKILL = REPO_ROOT / "skill-library" / "build" / "code-tdd" / "SKILL.md"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent))
 
 import tdd_phase as tp  # noqa: E402
+from hook_stdin import deny_reason, payload, run_hook, verdict  # noqa: E402
 
 
 @pytest.fixture
@@ -74,18 +75,20 @@ def clear_phase(project: Path) -> None:
                    capture_output=True, text=True, timeout=60, check=True)
 
 
+def guardian_run(project: Path, rel: str) -> subprocess.CompletedProcess:
+    stdin = payload("PreToolUse-Edit", project, file_path=str(project / rel))
+    return run_hook("test-guardian.sh", project, stdin)
+
+
 def edit(project: Path, rel: str) -> bool:
-    """Run the guardian for an edit. True = allowed, False = blocked."""
-    r = subprocess.run(["bash", str(GUARDIAN)], cwd=str(project),
-                       env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-                            "HOME": str(project),
-                            "CLAUDE_TOOL_NAME": "Edit",
-                            "CLAUDE_FILE_PATH": str(project / rel)},
-                       capture_output=True, text=True, timeout=60)
-    for line in r.stdout.splitlines():
-        if line.strip().startswith("{"):
-            return bool(json.loads(line).get("ok"))
-    raise AssertionError(f"guardian emitted no decision: {r.stdout!r} {r.stderr!r}")
+    """Run the guardian for an edit. True = allowed, False = denied."""
+    r = guardian_run(project, rel)
+    outcome = verdict(r)
+    if outcome == "deny":
+        return False
+    if outcome == "allow":
+        return True
+    raise AssertionError(f"guardian gave no valid decision: exit={r.returncode} {r.stdout!r} {r.stderr!r}")
 
 
 # --- the whole point -----------------------------------------------------
@@ -134,12 +137,8 @@ def test_refactoring_does_not_freeze_tests(project: Path) -> None:
 
 def test_the_block_says_what_to_do_instead(project: Path) -> None:
     set_phase(project, "implementing")
-    r = subprocess.run(["bash", str(GUARDIAN)], cwd=str(project),
-                       env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-                            "HOME": str(project), "CLAUDE_TOOL_NAME": "Edit",
-                            "CLAUDE_FILE_PATH": str(project / "tests/test_thing.py")},
-                       capture_output=True, text=True, timeout=60)
-    assert "Fix your code, not the tests" in r.stdout
+    r = guardian_run(project, "tests/test_thing.py")
+    assert "Fix your code, not the tests" in deny_reason(r)
 
 
 # --- where the marker lives ----------------------------------------------

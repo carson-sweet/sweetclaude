@@ -25,7 +25,7 @@ implement. In particular, “use GitHub for this project's issues” must load
 | `product-user-tdd-tests` | Transition user stories into Gherkin .feature files. |
 | `project-backlog` | View and manage the unscheduled issue backlog. |
 | `project-backlog-triage` | Structured backlog grooming session. |
-| `project-epics` | DEPRECATED — use /sweetclaude:plan instead. Redirects automatically. |
+| `project-epics` | DEPRECATED — use /sweetclaude:plan epics instead. Redirects automatically. |
 | `project-gh-import-issues` | Import open GitHub Issues into the local issue store as v4 story files. |
 | `project-gh-sync-issues` | Bidirectional status sync between local issue files and GitHub Issues. |
 | `project-issues` | Manage project issues and select the local or GitHub issue tracker — list, view, create, update, close, or change tracker. |

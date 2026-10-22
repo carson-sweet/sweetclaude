@@ -24,6 +24,7 @@ Usage:
     python3 scripts/tdd_phase.py set --phase implementing --project-dir .
     python3 scripts/tdd_phase.py get --project-dir .
     python3 scripts/tdd_phase.py clear --project-dir .
+    python3 scripts/tdd_phase.py release --file tests/test_x.py --approval "<user's words>" --project-dir .
 """
 
 from __future__ import annotations
@@ -44,6 +45,8 @@ REFACTORING = "refactoring"
 # `implementing` is the one the guardian blocks on. The others exist so the
 # marker says what is happening rather than only whether tests are frozen.
 VALID = (WRITING_TESTS, IMPLEMENTING, REFACTORING)
+
+RELEASED_KEY = "tdd_released_files"
 
 
 def _state_paths(project_dir: Path) -> tuple[Path, Path]:
@@ -95,6 +98,7 @@ def set_phase(project_dir: Path, phase: str) -> dict:
         active = {}
         sc["work"]["active"] = active
     active["tdd_phase"] = phase
+    active.pop(RELEASED_KEY, None)
     _atomic_write(sc_path, sc)
 
     # The story controllers keep phase.yaml in step when a workflow is running.
@@ -126,6 +130,53 @@ def clear_phase(project_dir: Path) -> dict:
     return {"ok": True, "tdd_phase": None, "tests_frozen": False}
 
 
+def release_file(project_dir: Path, file: str | None, approval: str | None) -> dict:
+    if not file or not file.strip():
+        raise ValueError("release needs --file naming the test file to release")
+    if not approval or not approval.strip():
+        raise ValueError("release needs --approval carrying the user's explicit approval")
+
+    sc_path, _ = _state_paths(project_dir)
+    if not sc_path.is_file():
+        raise FileNotFoundError(
+            f"no sweetclaude.yaml at {sc_path} — the project is not configured")
+
+    path = Path(file)
+    if path.is_absolute():
+        try:
+            path = path.resolve().relative_to(project_dir)
+        except ValueError:
+            pass
+    rel = path.as_posix()
+
+    sc = _load(sc_path)
+    active = (sc.setdefault("work", {}).setdefault("active", {}) or {})
+    if not isinstance(active, dict):
+        active = {}
+        sc["work"]["active"] = active
+    released = list(active.get(RELEASED_KEY) or [])
+    if rel not in released:
+        released.append(rel)
+    active[RELEASED_KEY] = released
+    _atomic_write(sc_path, sc)
+
+    _record_override(project_dir, rel, approval)
+
+    return {"ok": True, "released": rel, "approval": approval}
+
+
+def _record_override(project_dir: Path, rel: str, approval: str) -> None:
+    import datetime
+    metrics = Path(project_dir) / ".sweetclaude" / "metrics"
+    metrics.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    doc = yaml.safe_dump(
+        {"timestamp": stamp, "event": "tdd_override", "file": rel, "approval": approval},
+        sort_keys=False, default_flow_style=False, allow_unicode=True, width=float("inf"))
+    with open(metrics / "events.log", "a") as fh:
+        fh.write("---\n" + doc)
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Read and write the TDD phase marker.")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -140,12 +191,19 @@ def main(argv: list[str] | None = None) -> int:
     c = sub.add_parser("clear")
     c.add_argument("--project-dir", type=Path, default=Path("."))
 
+    r = sub.add_parser("release")
+    r.add_argument("--file")
+    r.add_argument("--approval")
+    r.add_argument("--project-dir", type=Path, default=Path("."))
+
     args = p.parse_args(argv)
     project = args.project_dir.resolve()
 
     try:
         if args.cmd == "set":
             print(json.dumps(set_phase(project, args.phase)))
+        elif args.cmd == "release":
+            print(json.dumps(release_file(project, args.file, args.approval)))
         elif args.cmd == "clear":
             print(json.dumps(clear_phase(project)))
         else:

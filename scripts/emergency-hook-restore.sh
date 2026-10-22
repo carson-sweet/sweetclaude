@@ -6,8 +6,9 @@
 # Install-path resolution assumptions:
 #   - installed_plugins.json uses scope="user" for user-scoped installs
 #   - lastUpdated field is present and ISO-8601 sortable
-#   - Plugin cache layout: ~/.claude/plugins/cache/sweetclaude/sweetclaude/<ver>/
-#   - find fallback pattern: */sweetclaude/sweetclaude/*/hooks (dirname = install root)
+#   - Plugin cache layout: ~/.claude/plugins/cache/<marketplace>/sweetclaude/<ver>/ (e.g. sweetclaude-stable)
+#   - installed_plugins.json key is sweetclaude or sweetclaude@<marketplace>
+#   - find fallback pattern: */sweetclaude*/sweetclaude/*/hooks (dirname = install root)
 # If your install does not match these assumptions, set INSTALL_PATH explicitly.
 #
 # ZERO sweetclaude dependencies — no skills, no hooks, no YAML parsing.
@@ -76,7 +77,7 @@ try:
     d = json.load(open(path))
     entries = []
     for plugin_name, versions in d.get('plugins', {}).items():
-        if plugin_name == 'sweetclaude':
+        if plugin_name.split('@')[0] == 'sweetclaude':
             for e in versions:
                 if e.get('scope') == 'user':
                     entries.append(e)
@@ -97,7 +98,7 @@ PYEOF
 
   # Step 2: find fallback if JSON gave nothing
   if [ -z "$INSTALL_PATH" ]; then
-    INSTALL_PATH=$(find "$HOME/.claude/plugins/cache" -type d -path "*/sweetclaude/sweetclaude/*" -name hooks 2>/dev/null \
+    INSTALL_PATH=$(find "$HOME/.claude/plugins/cache" -type d -path "*/sweetclaude*/sweetclaude/*" -name hooks 2>/dev/null \
       | while IFS= read -r d; do
           printf '%s\t%s\n' "$(stat -f '%m' "$d" 2>/dev/null || stat -c '%Y' "$d" 2>/dev/null)" "$d"
         done \
@@ -111,7 +112,7 @@ fi
 # Step 3: fatal if still no path or hooks/ directory missing
 if [ -z "$INSTALL_PATH" ] || [ ! -d "$INSTALL_PATH/hooks" ]; then
   printf '%s\n' "$CONTRACT_FATAL_NO_INSTALL" >&2
-  printf '%s\n' "Try manually: ls ~/.claude/plugins/cache/sweetclaude/sweetclaude/" >&2
+  printf '%s\n' "Try manually: ls ~/.claude/plugins/cache/sweetclaude-stable/sweetclaude/" >&2
   exit 1
 fi
 
@@ -168,8 +169,30 @@ if [ -n "$DRY_RUN" ]; then
       [ -f "$_hook" ] || continue
       printf '%s %s\n' "$EHR_WOULD_RESTORE_PREFIX" "$(basename "$_hook")"
     done
+    _lib_src="$DRY_SOURCE/lib"
+    [ -d "$_lib_src" ] || _lib_src="$REPO_ROOT/hooks/lib"
+    for _lib in "$_lib_src"/*; do
+      [ -f "$_lib" ] || continue
+      printf '%s hooks/lib/%s\n' "$EHR_WOULD_RESTORE_PREFIX" "$(basename "$_lib")"
+    done
   fi
   exit 0
+fi
+
+# Refuse to restore an install from itself: when the repo hooks are the installed hooks
+# and no backup exists, a copy would only overwrite the broken hooks with themselves.
+if [ "$(cd "$REPO_ROOT" && pwd -P)" = "$(cd "$INSTALL_PATH" && pwd -P)" ]; then
+  _has_backup=""
+  if [ -n "$TARGET_HOOK" ]; then
+    [ -f "$BACKUP_DIR/$TARGET_HOOK" ] && _has_backup=1
+  elif [ -d "$BACKUP_DIR" ] && [ "$(find "$BACKUP_DIR" -maxdepth 1 -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')" -gt 0 ]; then
+    _has_backup=1
+  fi
+  if [ -z "$_has_backup" ]; then
+    printf 'FATAL: The repo hooks are the installed hooks and there is no hooks.bak to restore from.\n' >&2
+    printf 'Restore from a clone or checkout of the SweetClaude repo, or from a hooks.bak directory.\n' >&2
+    exit 1
+  fi
 fi
 
 # Non-dry-run: emit headers to stdout
@@ -246,6 +269,15 @@ else
       cp -- "$RESTORE_SOURCE/$_meta" "$HOOKS_DIR/$_meta"
       printf '%s%s%s\n' "$CONTRACT_LINE_RESTORED_PREFIX" "$_meta" "$_restore_suffix"
     fi
+  done
+
+  _lib_src="$RESTORE_SOURCE/lib"
+  [ -d "$_lib_src" ] || _lib_src="$REPO_ROOT/hooks/lib"
+  for _lib in "$_lib_src"/*; do
+    [ -f "$_lib" ] || continue
+    mkdir -p "$HOOKS_DIR/lib"
+    cp -- "$_lib" "$HOOKS_DIR/lib/$(basename "$_lib")"
+    printf '%shooks/lib/%s%s\n' "$CONTRACT_LINE_RESTORED_PREFIX" "$(basename "$_lib")" "$_restore_suffix"
   done
 
   if [ "$RESTORED_COUNT" -eq 0 ]; then

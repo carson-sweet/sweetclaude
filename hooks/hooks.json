@@ -40,7 +40,7 @@
         ]
       },
       {
-        "matcher": "Write|Edit",
+        "matcher": "Write|Edit|NotebookEdit|Bash",
         "hooks": [
           {
             "type": "command",
@@ -68,6 +68,15 @@
       },
       {
         "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/tdd-commit-gate.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|Bash",
         "hooks": [
           {
             "type": "command",
@@ -100,7 +109,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-test-runner.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-test-runner.sh",
+            "timeout": 150
           }
         ]
       },
@@ -178,6 +188,14 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/small-story-stop-guard.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/phase-dwelling-guard.sh"
           }
         ]
       }

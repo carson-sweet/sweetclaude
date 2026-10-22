@@ -43,11 +43,7 @@ CONTROLLER = {skill base directory}/../../scripts/small_story_controller.py
 CONTRACTS  = {skill base directory}/../../scripts/success_criteria_contracts.py
 ```
 
-Verify both files exist before starting. Every controller command below is
-written as `python3 scripts/small_story_controller.py ...` for brevity — always
-invoke it as `python3 "$CONTROLLER" --project-dir . ...` with the resolved
-absolute path. Never assume the target project contains a `scripts/`
-directory.
+Verify both files exist before starting. Every controller command below is written as `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py ...`, which resolves from the plugin root and never from the target project. If `CLAUDE_PLUGIN_ROOT` is not set, invoke it as `python3 "$CONTROLLER" --project-dir . ...` with the resolved absolute path. Never assume the target project contains a `scripts/` directory.
 
 ## Artifact Path Resolution
 
@@ -96,10 +92,10 @@ entered them into the ledger.
    are rejected on this surface — route those concerns to backlog.
 5. Freeze it: `python3 "$CONTRACTS" freeze-contract --project-dir .`
    (computes and writes the contract hash — never compute the hash yourself).
-   Run `python3 scripts/success_criteria_contracts.py validate-workflow --stage define-exit`.
+   Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-workflow --stage define-exit`.
 6. If validation fails, stop. Do not continue downstream.
 7. If validation passes, initialize controller-owned workflow state:
-   `python3 scripts/small_story_controller.py init --workflow-id {workflow_id}`.
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py init --workflow-id {workflow_id}`.
    Do not write the workflow state file yourself.
 
    **`init` must run on the trunk branch.** Freeze and commit the contract on
@@ -129,25 +125,25 @@ artifacts must then be regenerated through the controller.
 
 ### DESIGN → PLAN → ENFORCEMENT CHECK → IMPLEMENT
 
-- Enter DESIGN: `python3 scripts/small_story_controller.py design --workflow-id {workflow_id} --design-summary "{summary}"`
-- Enter PLAN: `python3 scripts/small_story_controller.py plan --workflow-id {workflow_id} --plan-summary "{summary}"`
+- Enter DESIGN: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py design --workflow-id {workflow_id} --design-summary "{summary}"`
+- Enter PLAN: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py plan --workflow-id {workflow_id} --plan-summary "{summary}"`
 
 **Before IMPLEMENT, verify enforcement is live.** The controller blocks
 IMPLEMENT until this passes — it confirms the gate hook is actually loaded, so
 the workflow never runs unprotected without anyone noticing:
 
-1. `python3 scripts/small_story_controller.py enforcement-probe --arm --workflow-id {workflow_id}`
+1. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py enforcement-probe --arm --workflow-id {workflow_id}`
 2. Write a one-line file at `.sweetclaude/.enforcement-control` (the gate
    allows this — it should succeed).
 3. Attempt a Write at `.sweetclaude/state/workflows/.enforcement-canary` (the
    gate MUST deny this — the write should be blocked).
-4. `python3 scripts/small_story_controller.py enforcement-probe --check --workflow-id {workflow_id}`
+4. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py enforcement-probe --check --workflow-id {workflow_id}`
 5. If `verified: false`, STOP and report the controller's reason to the user.
    Do not proceed to IMPLEMENT — enforcement is not active and the evidence
    gate cannot be trusted. (Usual cause: hooks not loaded; see the small-story
    dev-testing notes.)
 
-- Enter IMPLEMENT: `python3 scripts/small_story_controller.py implement --workflow-id {workflow_id} --implementation-summary "{summary}"`
+- Enter IMPLEMENT: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py implement --workflow-id {workflow_id} --implementation-summary "{summary}"`
 
 Project files can only be created or modified after the IMPLEMENT entry
 succeeds — the gate hook denies them in every other phase. Implementation
@@ -156,7 +152,7 @@ hook; you do not need to and must not fabricate it.
 
 ### VERIFY
 
-Run `python3 scripts/small_story_controller.py verify --workflow-id {workflow_id}`
+Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py verify --workflow-id {workflow_id}`
 with `--criterion-result-json` carrying the measured result for each frozen
 criterion. The controller regenerates the implementation record from observed
 evidence, writes the canonical ledger at
@@ -165,7 +161,7 @@ criterion lacks evidence or if no implementation evidence was observed.
 
 ### SHIP
 
-Run `python3 scripts/small_story_controller.py ship --workflow-id {workflow_id}`.
+Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py ship --workflow-id {workflow_id}`.
 Closeout is written by the controller only after completion validation passes.
 
 ## Completion Authority
@@ -177,13 +173,13 @@ and reports `all_success_criteria_passed == true`.
 Before any final small-story status or completion response, run:
 
 ```bash
-python3 scripts/small_story_controller.py finalize
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py finalize
 ```
 
 If completion is not being requested but status is being rendered, run:
 
 ```bash
-python3 scripts/small_story_controller.py render-status
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py render-status
 ```
 
 Then report the controller result. Do not continue around it. Do not say "all

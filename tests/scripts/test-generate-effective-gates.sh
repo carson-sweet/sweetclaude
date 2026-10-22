@@ -36,6 +36,9 @@ grep -q "wip_limit: 4" "$tmpdir/.sweetclaude/state/effective-gates.yaml" 2>/dev/
 grep -q "project-sprints" "$tmpdir/.sweetclaude/state/effective-gates.yaml" 2>/dev/null \
     && pass "kanban: project-sprints in blocked_skills" || fail "kanban: blocked_skills missing project-sprints"
 
+grep -q "product-sprint-plan" "$tmpdir/.sweetclaude/state/effective-gates.yaml" 2>/dev/null \
+    && pass "kanban: product-sprint-plan in blocked_skills" || fail "kanban: blocked_skills missing product-sprint-plan"
+
 # --- shape_up ---
 cat > "$tmpdir/.sweetclaude/state/sweetclaude.yaml" << 'YAML'
 schema_version: 2

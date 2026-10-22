@@ -103,7 +103,7 @@ contract path, hash, and `criterion_ids` in `john-wick.yaml`.
 Before updating `current_step: CK1`, run:
 
 ```bash
-python3 scripts/success_criteria_contracts.py validate-contract --contract .sweetclaude/contracts/success-criteria-contract.yaml
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-contract --contract .sweetclaude/contracts/success-criteria-contract.yaml
 ```
 
 If the runtime validator fails, stay in D4 and correct the contract or route to

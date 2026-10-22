@@ -1,5 +1,8 @@
 # SweetClaude Cheatsheet: Adopting an Existing Project
 
+**Version:** 1.2
+**Date:** 2026-10-21
+
 You have a codebase. Maybe it is well-organized with tests and docs. Maybe it is a mess. Maybe it is somewhere in between. SweetClaude meets you where you are and adds structured process without disrupting what you have built.
 
 SweetClaude is not just a coding tool. Even on an existing project, the strategic and product skills can add significant value — articulating your positioning, analyzing competitors, preparing for meetings, or organizing scattered documents from previous brainstorming sessions.
@@ -14,58 +17,41 @@ SweetClaude is not just a coding tool. Even on an existing project, the strategi
 2. Open Claude Code in your project folder
 3. Run:
    ```
-   /sweetclaude:go
+   /sweetclaude:configure init
    ```
+
+Init installs the SweetClaude files and runs setup. After that, `/sweetclaude:go` reads your state and proposes the next item.
 
 ## What Happens Next
 
 ### Step 1: Safety Snapshot
 
-Before SweetClaude changes anything, it creates a `pre-sweetclaude` branch from your current state. If you ever want to undo everything SweetClaude did, check out that branch. This is required — SweetClaude will not proceed without it.
-
-If your project does not have git set up, SweetClaude offers to initialize it first.
+Before SweetClaude writes any file, it creates a `pre-sweetclaude` branch from your current state. If you ever want to undo everything SweetClaude did, check out that branch. If the branch cannot be created, for example because it already exists or the repository has no commits, SweetClaude stops and writes nothing until the cause is resolved.
 
 ### Step 2: Project Scan
 
-SweetClaude scans your project and reports what it finds:
-- **Code:** languages, frameworks, file count, test coverage
-- **Tests:** do they exist, what framework, how many
-- **Docs:** README, CLAUDE.md, architecture docs, ADRs, specs
-- **Issues:** open GitHub issues and PRs
-- **Strategy:** any positioning, competitive analysis, or research docs
-
-This is read-only. Nothing changes.
+SweetClaude looks at your project with a quick read-only pass: a file listing, the first lines of your README, and the last ten lines of `git log`. If the codebase looks inherited or disorganized, setup runs a fuller assessment instead and shows you its plan before changing anything.
 
 ### Step 3: Current State Interview
 
-SweetClaude asks you four questions, one at a time:
-1. Is this project early, mid-build, or mature?
-2. What are you working on right now?
-3. What is the biggest problem or frustration?
-4. Is there anything messy, undocumented, or worrying?
+SweetClaude asks three questions about your project, one at a time:
+1. What is the project name? (pre-filled from `package.json` or the README when found)
+2. What stage is it at: early prototype, active development, approaching launch, or in production?
+3. Which issue tracker should hold project issues: this repository (`local`) or GitHub Issues (`github`)?
 
-### Step 4: Pipeline Positioning
+It then asks which working mode fits: Flow, Kanban, Shape Up, or Agile.
 
-Based on the scan and your answers, SweetClaude proposes where your project sits in the development lifecycle:
-- Just an idea → DISCOVER
-- Has specs but no code → PLAN or DESIGN
-- Actively building → IMPLEMENT
-- Code exists but untested → IMPLEMENT (lock behavior with tests)
-- Feature-complete → VERIFY
-- Shipping → use `/sweetclaude:go` for each piece of work
+Your stage answer sets `version_stage` in `.sweetclaude/state/sweetclaude.yaml`: early prototype is IDEA, active development is ALPHA, approaching launch is BETA, and in production is GA. SweetClaude does not place the project in a pipeline phase.
 
-You confirm or adjust. SweetClaude does not assume it knows better than you.
-
-### Step 5: Setup
+### Step 4: Setup
 
 SweetClaude creates:
-- `.sweetclaude/` folder with state tracking, decision log, and traceability
-- `strategy/` folder structure (empty, ready for strategic work if you want it)
-- Updates to CLAUDE.md if needed
+- A `.sweetclaude/` folder with `state/sweetclaude.yaml`, plans, and a `product/` tree (`backlog/`, `stories/`, `milestones/`)
+- A SweetClaude section appended to your `CLAUDE.md` (the file is created if missing; existing content is never overwritten)
 
-### Step 6: First Action
+### Step 5: Optional Features
 
-If you mentioned a problem or frustration in Step 3, SweetClaude suggests a specific first action using a specific command. Otherwise, it shows you the available commands and waits.
+Setup ends by showing a status line and offering optional features. You pick the ones you want and SweetClaude onboards each. It does not choose a first action for you; run `/sweetclaude:go` to see the proposed next item.
 
 ## What You Can Do From Here
 
@@ -134,7 +120,7 @@ If you have strategy documents, brainstorming exports, meeting notes, or researc
 /sweetclaude:utils document-corpus
 ```
 
-The skill presents a menu: consolidate raw files → triage (classify each file) → reconcile (draft canonical documents) → promote (finalize with provenance, archive, RAG index). Select **Status** at any point to see where the pipeline stands. The pipeline enforces ordering — skipping steps produces degraded or misleading results, and the skill explains why if you try. Every canonical document traces back to its source files.
+The skill presents a menu: consolidate raw files → triage (classify each file) → reconcile (draft canonical documents) → promote (finalize with provenance, archive, RAG index). Select **Status** at any point to see where the pipeline stands. Ordering is instruction-guided: each step reads the pipeline state and checks that its prerequisites are done, because skipping steps produces degraded or misleading results, and the skill explains why if you try. Every canonical document traces back to its source files.
 
 This is especially useful for projects that started with lots of brainstorming in Claude.ai but never organized the output.
 
@@ -189,10 +175,9 @@ You can change this mid-session.
 ## Tips
 
 - **The safety branch is your insurance.** `pre-sweetclaude` captures your project state before SweetClaude touched anything. If things go wrong, `git checkout pre-sweetclaude` gets you back.
-- **`.sweetclaude/` is part of your project.** Commit it to git. It contains your decision history, assumptions, and progress — valuable project context.
+- **`.sweetclaude/` is part of your project.** Commit it to git, except the guardian flag and recovery snapshots (`.sweetclaude/state/recovery-runs/`), which are derived. It contains your project state, plans, and backlog — valuable project context.
 - **You do not have to use every skill.** If you only want TDD enforcement, just use the code skills. If you only want strategic help, just use the strategy skills. There is no required sequence.
 - **Strategic work on existing projects is valuable.** Many projects have implicit strategy that was never documented. Making it explicit helps you prioritize, communicate with stakeholders, and make better decisions.
 - **SweetClaude does not judge your code.** When adopting a project, it treats your codebase like an archaeologist treats a dig site — understanding before changing, respecting what is already there.
-- **Status fires automatically at session start.** For active projects, SweetClaude shows status without being asked. Run `/sweetclaude:go` to immediately pick up where you left off.
+- **A short status line appears at session start.** It shows the project, the stage, and the active item, then asks whether to work on something or review the plan. Run `/sweetclaude:go` to pick up where you left off.
 - **Keep SweetClaude updated.** Update the Claude Code plugin package, restart Claude Code, then run `/sweetclaude:configure update` to sync framework files inside the installed channel.
-- **Version bumping is explicit.** Run `scripts/bump-version.sh patch|minor|major` to bump the version in `package.json` and `CHANGELOG.md`. There is no automatic version bump on commit.

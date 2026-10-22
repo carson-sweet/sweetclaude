@@ -3,7 +3,11 @@
 # SweetClaude Skill Tracker Hook
 # PostToolUse — records skill invocations to session-guardian.json and via record-event.sh
 
-TOOL="$CLAUDE_TOOL_NAME"
+HOOK_IO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/hook_io.py"
+INPUT=$(cat)
+hook_field() { printf '%s' "$INPUT" | python3 "$HOOK_IO" field "$1"; }
+
+TOOL=$(hook_field tool_name)
 
 # Only track Skill tool calls
 if [[ "$TOOL" != "Skill" ]]; then
@@ -11,19 +15,14 @@ if [[ "$TOOL" != "Skill" ]]; then
 fi
 
 # Find project root
-PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-if [ -z "$PROJECT_DIR" ]; then
-  exit 0
-fi
+PROJECT_DIR=$(printf '%s' "$INPUT" | python3 "$HOOK_IO" project-dir)
 
 STATE_DIR="$PROJECT_DIR/.sweetclaude/state"
 GUARDIAN_FLAG="$STATE_DIR/guardian-enabled"
 SESSION_FILE="$STATE_DIR/session-guardian.json"
-# Parse skill name from stdin JSON (field is tool_input.skill)
-INPUT=$(cat)
-SKILL_NAME=$(echo "$INPUT" | jq -r '.tool_input.skill' 2>/dev/null)
+SKILL_NAME=$(hook_field tool_input.skill)
 
-if [ -z "$SKILL_NAME" ] || [ "$SKILL_NAME" = "null" ]; then
+if [ -z "$SKILL_NAME" ]; then
   exit 0
 fi
 

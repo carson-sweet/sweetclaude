@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Redirects to sweetclaude:library-load doctor. Hook diagnostics are now part of the doctor system."
+description: "Redirects to /sweetclaude:configure doctor. Hook diagnostics are now part of the doctor system."
 ---
 
 

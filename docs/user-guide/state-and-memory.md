@@ -1,7 +1,7 @@
 # State and Memory
 
-**Version:** 2.2
-**Date:** 2026-06-10
+**Version:** 2.3
+**Date:** 2026-10-21
 
 SweetClaude persists project context across sessions in `.sweetclaude/`. Commit this directory to git. It is project-critical data, not cache. Decision history, assumptions, scope changes, and progress live here — and they need to travel with the repo.
 
@@ -25,11 +25,11 @@ This page is reference. For why state is structured the way it is, read [How It 
 │   ├── doctor-runs/            ← Doctor repair archives and manifests
 │   ├── recovery-runs/          ← Recovery snapshots and rollback manifests (do not commit)
 │   ├── workflows/              ← Large-/small-story workflow state ({workflow_id}.yaml)
-│   └── evidence/               ← Control receipts proving high-stakes claims
+│   └── evidence/               ← Release-gate control receipts (written by scripts/control_receipts.py)
 ├── contracts/                  ← Frozen success-criteria contracts for story workflows
 ├── reports/                    ← Success-criteria ledger + per-workflow implementation evidence
 ├── work/                       ← (opt-in) Per-work-item artifact directories: .sweetclaude/work/<ITEM-ID>/
-├── product/                    ← 4.x product artifacts: backlog, roadmap, issues
+├── product/                    ← Product artifacts: backlog, roadmap, issues
 ├── plans/                      ← Claude Code plan files (.sweetclaude/plans is set as plansDirectory)
 │   └── archive/                ← Plans archived at ship time, organized by milestone/sprint
 ├── traceability/               ← Story → requirement → test → code traceability maps
@@ -38,17 +38,9 @@ This page is reference. For why state is structured the way it is, read [How It 
 
 Skills create additional state files as they run — `state/discovery.yaml`, `state/personas.yaml`, `state/brief.yaml`, etc. Treat the schema as extensible.
 
-The `contracts/`, `reports/`, `state/workflows/`, and `state/evidence/` directories
-are written by the controller-gated story workflows — see
-[Large-Story and Small-Story Workflows](large-story-workflow.md) and
-[Evidence and Success-Criteria Contracts](evidence-and-contracts.md). The opt-in
-`work/` tree is covered in [Work-Item Artifacts](work-item-artifacts.md).
+The `contracts/`, `reports/`, and `state/workflows/` directories are written by the controller-gated story workflows — see [Large-Story and Small-Story Workflows](large-story-workflow.md) and [Evidence and Success-Criteria Contracts](evidence-and-contracts.md). The `state/evidence/` directory holds control-lint receipts for the release gate, written by `scripts/control_receipts.py`. The opt-in `work/` tree is covered in [Work-Item Artifacts](work-item-artifacts.md).
 
-Version note: legacy 3.x and 4.x share the same state principle but differ
-in operational details. In 4.x, project maintenance data may include
-`.sweetclaude/state/doctor-runs/`, `.sweetclaude/state/recovery-runs/`, and
-`.sweetclaude/product/`. Recovery run directories can contain snapshots of state
-and product artifacts and should stay out of source control.
+Version note: legacy 3.x and 4.x share the same state principle but differ in operational details. In 4.x, project maintenance data may include `.sweetclaude/state/doctor-runs/` and `.sweetclaude/state/recovery-runs/`. Recovery run directories can contain snapshots of state and product artifacts and should stay out of source control.
 
 ---
 
@@ -57,7 +49,7 @@ and product artifacts and should stay out of source control.
 The unified state file. Everything the framework needs to know about the project lives here — version stage, active work, feature activation, framework health.
 
 ```yaml
-schema_version: 1
+schema_version: 2
 project:
   name: my-project
   type: existing-code
@@ -104,23 +96,23 @@ framework:
   update:
     available: null
     last_checked: 2026-05-03T14:00:00+00:00
-    declined: false
+    declined: null
     check_error: null
 ```
 
 | Field | What it is |
 |---|---|
-| `project.version_stage` | Where the major version is in its release lifecycle. Slow-moving. PROTOTYPE → ALPHA → BETA → GA → SCALED → MAINTAINED. Controls progressive disclosure. You declare; the system never advances. |
+| `project.version_stage` | Where the major version is in its release lifecycle. Slow-moving. IDEA → ALPHA → BETA → GA → SCALED → MAINTAINED. During onboarding, setup writes `IDEA` for new projects and early prototypes, and maps the stage you report for existing projects to IDEA, ALPHA, BETA, or GA. You declare; the system never advances. |
 | `session.deference_level` | `collaborative`, `guided`, or `autonomous`. Changeable mid-session. |
-| `project.type` | `cold-start` or `existing-code`. Set at activation. |
+| `project.type` | `new` or `existing-code`. Set by setup. |
 | `project.safety_snapshot` | The git branch created during onboarding (`pre-sweetclaude`). Your insurance. |
 | `work.last_item_id` | Monotonic counter. Persists across work item completions so IDs do not repeat. |
 | `work.active` | The work in flight right now. Fast-moving. Type, workflow, phase, title, start date, entry category. |
-| `features.*` | Per-feature activation state. `not_configured` -> `active` or `declined`. Configured at setup and reviewable through the owning skill or doctor/update reporting. |
+| `features.*` | Per-feature activation state. `not_offered` (or a missing key) -> `active` or `declined`. Configured at setup and reviewable through the owning skill or doctor/update reporting. |
 | `framework.consistency` | Last drift-check result. Updated by the health hook. |
 | `framework.update` | Whether a newer version is available. Updated by the health hook. |
 
-**Migration from older state:** If your project has old SweetClaude state files, run `/sweetclaude:configure doctor` or `/sweetclaude:go` and follow the routed maintenance flow. In 4.x, `/sweetclaude:configure update` reports drift but does not run project-state or taxonomy migrations inline.
+**Migration from older state:** If your project has old SweetClaude state files, run `/sweetclaude:configure doctor` or `/sweetclaude:go` and follow the routed maintenance flow. On 5.x, `/sweetclaude:configure update` syncs framework files; 4.x installs expose a different update command.
 
 ---
 
@@ -231,7 +223,7 @@ Feedback and learnings from each session. Populated at mandatory triggers:
 - After misalignments or visible frustration
 - After smooth stretches or compliments
 
-Read at session start. If there are entries, SweetClaude acknowledges: "I have N learnings from previous sessions — still apply?"
+Read at session start. SweetClaude applies the learnings silently and does not announce them.
 
 This is the mechanism for the framework to actually improve session over session. The first session you run, the file might be empty. By the tenth session, it should contain calibrated feedback that prevents the framework from making the same mistakes twice.
 
@@ -268,7 +260,7 @@ The `traceability/` directory contains maps connecting:
 - Requirements → test specs (Gherkin features)
 - Tests → implementation files
 
-Written progressively as the pipeline advances — `product-user-stories` writes the story-to-requirement map, `product-user-tdd-tests` adds the test mapping, the implementer agent updates the implementation column.
+Written progressively as the pipeline advances. `setup` creates `requirements-map.md`, and `product-user-tdd-tests`, `code-testing`, `documents-update-docs`, and `mockup-graduate` update the maps.
 
 Used by code review and PR pre-check to verify coverage. A story with no test, or a test with no implementation, surfaces as a gap.
 
@@ -286,11 +278,11 @@ Running `/sweetclaude:go` removes the file and reactivates. The session-start he
 
 To uninstall globally:
 
-```bash
-~/.claude/sweetclaude-uninstall.sh
+```
+/plugin uninstall sweetclaude@sweetclaude-stable
 ```
 
-(The installer wrote this script during install. It restores your pre-install `~/.claude/` configuration from the backup.)
+To remove SweetClaude's artifacts from a project, run `/sweetclaude:configure purge`.
 
 ---
 
@@ -302,7 +294,7 @@ What survives:
 - Everything in `.sweetclaude/state/`
 - Everything in `.sweetclaude/traceability/`
 - Anything skills wrote to disk during the session — discovery output, briefs, PRDs, code, tests
-- Git commits that happened (the git-checkpoint hook commits at phase transitions)
+- Git commits that happened, such as commits made by skills (for example the TDD RED commit)
 
 What does not survive:
 - In-flight conversation context

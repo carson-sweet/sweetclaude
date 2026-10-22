@@ -160,3 +160,7 @@ If `$ARGUMENTS` is `onboard`:
    > "{N} of {total} stories have no milestone. This sprint may be unfocused. Consider running `/sweetclaude:plan product-milestones unassigned` to triage, or confirm the sprint is intentionally tactical."
 
 5. If no milestones exist at all, skip this step silently — no milestones is not a sprint-planning problem.
+
+## Scope Changes Since Last Sprint
+
+Before step 1 of Execute, read `.sweetclaude/state/scope-changes.md`. If the file does not exist, skip this step silently. Otherwise find the previous sprint's start date from the `start_date` frontmatter field of the most recent earlier `SP-*.md` file in `{base_path}/sprints/` (`categories.product.base_path` from `.sweetclaude/artifact-privacy.yaml`, default `.sweetclaude/product`); if there is no previous sprint, use every entry. Keep the table rows dated after the previous sprint's start, and list them in the sprint plan output under a "Scope changes since last sprint" heading with date, item, direction, and rationale, so they are weighed when selecting stories. If no entries are dated after the previous sprint's start, say so in one line.

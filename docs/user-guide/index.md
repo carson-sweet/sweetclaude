@@ -1,15 +1,11 @@
 # SweetClaude User Guide
 
-**Version:** 1.4
-**Date:** 2026-08-11
+**Version:** 1.5
+**Date:** 2026-10-21
 
-SweetClaude 5.x is the stable channel, tracked on `main`. Plugin update,
-framework sync, project recovery, and taxonomy migration are separate
-safety-gated flows.
+SweetClaude 5.x is the stable channel, tracked on `main`. Plugin update, framework sync, project recovery, and taxonomy migration are separate safety-gated flows.
 
-**The beta channel is retired.** If `/plugin list` shows
-`sweetclaude@sweetclaude-beta`, see [Installing SweetClaude](install.md) for
-the one-time switch to stable.
+**The beta channel is retired.** If `/plugin list` shows `sweetclaude@sweetclaude-beta`, see [Installing SweetClaude](install.md) for the one-time switch to stable.
 
 ## Install And Update
 
@@ -18,16 +14,14 @@ the one-time switch to stable.
 /plugin install sweetclaude@sweetclaude-stable
 ```
 
-After plugin install or update, restart Claude Code before running SweetClaude
-commands. To update:
+After plugin install or update, restart Claude Code before running SweetClaude commands. To update:
 
 ```text
 /plugin update sweetclaude@sweetclaude-stable
 /sweetclaude:configure update
 ```
 
-If `/plugin list` shows the legacy key `sweetclaude@sweetclaude`, update
-that exact key first.
+If `/plugin list` shows the legacy key `sweetclaude@sweetclaude`, update that exact key first.
 
 ## Maintenance Front Door
 
@@ -37,8 +31,7 @@ For project problems after update, start with:
 /sweetclaude:configure doctor
 ```
 
-Doctor scans read-only, then routes to one of these outcomes (see
-[Doctor](doctor.md) for the full scan, fix, and rollback model):
+Doctor scans read-only, then routes to one of these outcomes (see [Doctor](doctor.md) for the full scan, fix, and rollback model):
 
 | Route status | Next step |
 |---|---|
@@ -53,20 +46,17 @@ Do not start by running `/sweetclaude:configure migrate` on an unknown old proje
 
 If you are new, read [Getting Started](getting-started.md).
 
-If you have a former beta install that is stuck, noisy, or reporting confusing
-migration advice, read [Beta Rescue](beta-rescue.md).
+If you have a former beta install that is stuck, noisy, or reporting confusing migration advice, read [Beta Rescue](beta-rescue.md).
 
-If you need to understand project-state and taxonomy migration behavior, read
-[Migration and Recovery](migration-and-recovery.md).
+If you need to understand project-state and taxonomy migration behavior, read [Migration and Recovery](migration-and-recovery.md).
 
-If you have it installed and want to understand the design decisions, read
-[How It Works](how-it-works.md).
+If you have it installed and want to understand the design decisions, read [How It Works](how-it-works.md).
 
 ## What Is In This Guide
 
 | Page | What it is |
 |---|---|
-| [Install](install.md) | Beta install, update, optional integrations, and suspension. |
+| [Install](install.md) | Stable install, update, optional integrations, and suspension. |
 | [Quick Start](quickstart.md) | First commands after SweetClaude is installed. |
 | [Getting Started](getting-started.md) | Install through first feature. |
 | [New Project Cheatsheet](cheatsheet-new-project.md) | Fast path for starting from an empty folder. |

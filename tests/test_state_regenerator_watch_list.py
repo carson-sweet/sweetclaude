@@ -20,11 +20,15 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 import time
 from pathlib import Path
 
 import pytest
 import yaml
+
+sys.path.insert(0, str(Path(__file__).parent))
+from hook_stdin import hook_env, payload  # noqa: E402
 
 REPO_ROOT = Path(__file__).parents[1]
 HOOKS = REPO_ROOT / "hooks"
@@ -110,12 +114,10 @@ def _regenerated(project: Path, file_path: Path, *, tool: str = "Write",
     out = project / ".sweetclaude" / "state" / "session-state.yaml"
     if out.exists():
         out.unlink()
-    subprocess.run(["bash", str(REGENERATOR)], cwd=str(project),
-                   env={"PATH": "/usr/bin:/bin:/usr/local/bin",
-                        "HOME": str(project),
-                        "CLAUDE_TOOL_NAME": tool,
-                        "CLAUDE_FILE_PATH": str(file_path)},
-                   capture_output=True, timeout=60)
+    kind = "PostToolUse-Edit" if tool == "Edit" else "PostToolUse-Write"
+    stdin = payload(kind, project, tool=tool, file_path=str(file_path))
+    subprocess.run(["bash", str(REGENERATOR)], cwd=str(project), env=hook_env(project),
+                   input=stdin, capture_output=True, text=True, timeout=60)
     deadline = time.time() + timeout
     while time.time() < deadline:
         if out.exists():

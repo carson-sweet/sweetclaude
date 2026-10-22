@@ -1,7 +1,9 @@
 # Quick Start
 
-You have SweetClaude 4.x installed. Here is how to use it. If you have not installed
-yet, start with [Install](install.md).
+**Version:** 1.1
+**Date:** 2026-10-21
+
+You have SweetClaude 5.x installed. Here is how to use it. If you have not installed yet, start with [Install](install.md).
 
 ---
 
@@ -41,8 +43,8 @@ Run `/sweetclaude:go` in an empty folder. SweetClaude will:
 
 > **First time?** Run `/sweetclaude:help` before `/sweetclaude:go` — it'll explain what to expect and help you choose the right operating mode.
 
-1. Set up the project (git, directory structure, CLAUDE.md)
-2. Run a short mode-assessment interview (5 questions) to configure enforcement — Flow, Kanban, Shape Up, or Agile
+1. Ask four setup questions (project name, a one-sentence description, where issues live, and a working mode — Flow, Kanban, Shape Up, or Agile)
+2. Set up the project (directory structure, CLAUDE.md)
 3. Ask what you want to build
 4. Run product discovery — problem framing, personas, optional competitive landscape
 5. Hand off to the product definition pipeline (brief, PRD, architecture, implementation)
@@ -53,10 +55,9 @@ Run `/sweetclaude:go` in your project folder. SweetClaude will:
 1. Detect the existing project
 2. Create a safety snapshot branch before touching anything
 3. Scan your code, tests, docs, and issues
-4. Run a short mode-assessment interview to configure enforcement for your workflow
-5. Interview you about current state and biggest concerns
-6. Determine where the project sits in its lifecycle
-7. Offer to address your immediate concerns first
+4. Ask the setup questions: project name, stage (early prototype, active development, approaching launch or in production), where issues live, and a working mode
+5. If the codebase looks disorganized, run an assessment and show you a scaffolding plan before changing anything
+6. Create `.sweetclaude/` and hand off to the feature library
 
 ### "I need to build a specific feature"
 

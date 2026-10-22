@@ -78,14 +78,15 @@ Installed version: {version}
 Channel: {channel} (retired — no further updates)
 
 One-time switch to the {retirement_target_channel} channel — run these in
-order so you are never double-installed:
+order so SweetClaude stays installed throughout (both channels are installed briefly, and all three steps finish before you restart Claude Code):
 
 /plugin marketplace add carson-sweet/sweetclaude@main
 /plugin install sweetclaude@sweetclaude-stable
 /plugin marketplace remove sweetclaude-beta
 
-Then restart Claude Code and run /sweetclaude:configure update; your project data
-migrates normally. No project files were changed.
+Then restart Claude Code and run /sweetclaude:configure update to sync framework
+files. Update does not migrate project data; run /sweetclaude:configure doctor
+when the project needs repair or migration. No project files were changed.
 ```
 
 Stop. Do not invoke any other skill.

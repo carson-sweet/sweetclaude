@@ -61,6 +61,10 @@ jobs:
 
           python3 -m pip install --quiet pyyaml
 
+          # Docs-claims gate (phase 6): the tagged commit's user-facing docs
+          # must only carry resolvable command/script/path claims.
+          python3 scripts/docs_claims_check.py
+
           # Build the release artifact the gate inventories. dist/ is gitignored
           # so it is absent in a fresh checkout — create it before packing.
           mkdir -p dist
@@ -91,9 +95,13 @@ jobs:
           cat "$RUNNER_TEMP/release-evidence.json"
           receipt="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["release_receipt"])' "$RUNNER_TEMP/release-evidence.json")"
 
+          # Phase 6: the committed release proof receipts (live-enforcement, routing,
+          # upgrade-path, docs-claims) under docs/release-evidence/<version>/
+          # are re-validated for the tagged version by release_gate.py check.
           python3 scripts/release_gate.py check \
             --project-dir . --tag "$TAG" --channel "$channel" --branch "$branch" \
-            --receipt "$receipt"
+            --receipt "$receipt" \
+            --release-evidence-dir "docs/release-evidence/${TAG#v}"
 
       - name: Create release from tag
         env:

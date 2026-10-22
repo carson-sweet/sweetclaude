@@ -1,0 +1,41 @@
+{
+  "cwd": "__CWD__",
+  "duration_ms": 6,
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PostToolUse",
+  "permission_mode": "acceptEdits",
+  "prompt_id": "00000000-0000-0000-0000-000000000001",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "tool_input": {
+    "file_path": "__CWD__/notes.txt",
+    "new_string": "beta",
+    "old_string": "alpha",
+    "replace_all": false
+  },
+  "tool_name": "Edit",
+  "tool_response": {
+    "contentNotInModelContext": true,
+    "filePath": "__CWD__/notes.txt",
+    "newString": "beta",
+    "oldString": "alpha",
+    "originalFile": "alpha\n",
+    "replaceAll": false,
+    "structuredPatch": [
+      {
+        "lines": [
+          "-alpha",
+          "+beta"
+        ],
+        "newLines": 1,
+        "newStart": 1,
+        "oldLines": 1,
+        "oldStart": 1
+      }
+    ],
+    "userModified": false
+  },
+  "tool_use_id": "toolu_00000000000000000000000000",
+  "transcript_path": "__CWD__/.transcript.jsonl"
+}

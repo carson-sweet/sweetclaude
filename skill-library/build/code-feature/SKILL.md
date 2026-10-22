@@ -62,7 +62,7 @@ If "Create branch": run `git checkout -b {branch-name}`.
 
 Check for existing artifacts in this order:
 1. Gherkin `.feature` files in `.sweetclaude/` or `features/` matching the feature name
-2. User stories in `.sweetclaude/stories/`
+2. User stories and issue artifacts (ISSUE-NNN) in the configured product base (`product_base`, default `.sweetclaude/product/`)
 3. PRD or product brief in `docs/`
 
 If Gherkin specs already exist → skip to Step 3.

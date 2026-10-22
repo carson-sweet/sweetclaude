@@ -1,7 +1,7 @@
 # Corpus Management and Semantic Search
 
-**Version:** 2.0
-**Date:** 2026-04-27
+**Version:** 2.1
+**Date:** 2026-10-21
 
 ---
 
@@ -15,7 +15,7 @@ Run from any SweetClaude-configured project:
 /sweetclaude:utils document-corpus
 ```
 
-A menu appears showing all available modes and the current pipeline status next to each. Pick one or more.
+A menu appears showing all available modes and the current pipeline status next to each. Pick one option. Each selection routes to exactly one sub-skill, and the menu offers **Set up RAG** until an index exists, then **Update RAG**.
 
 ## The Problem It Solves
 
@@ -23,7 +23,7 @@ You have 500 files across three folders. Some are duplicates. Some are drafts su
 
 ## The Pipeline
 
-Four steps, strictly ordered, enforced by a state machine.
+Four steps in a fixed order. Each step checks the pipeline state before it runs and explains what is missing if an earlier step is incomplete. You can proceed anyway by typing the override phrase `I accept the risk of corpus corruption`, and the override is logged in the decision log.
 
 ### 1. Consolidate
 
@@ -41,9 +41,9 @@ The creative step. Pick a cluster of related staged files. An AI subagent reads 
 
 The mechanical step. Takes approved documents from `corpus/working/` and finalizes them: writes provenance sidecars tracing every canonical document back to its source files, archives the source files, moves the canonical document to `corpus/canonical/`, and git commits everything.
 
-## Why You Cannot Skip Steps
+## Why the Steps Are Gated
 
-The skill explains this at each gate if you try to skip, but here is the short version:
+The skill explains this at each gate if you try to skip ahead, and asks for the override phrase before it lets you continue. Here is the short version:
 
 **Skipping consolidate:** You start triaging the same file multiple times under different names. Deduplication happens at consolidate — without it, you create duplicate canonical documents.
 
@@ -59,13 +59,15 @@ After promoting canonical documents, select **Set up RAG** from the menu. This:
 - Installs [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag) if not already present
 - Creates `.mcp.json` wiring the RAG server to your project
 - Downloads the embedding model once (~90MB), then works offline
-- Indexes your canonical documents into a per-project vector database
+- Indexes every supported document type in the project into a per-project vector database
 
-No external services, no API keys, no data leaving your machine. Supports PDF, Word (.docx), markdown, and text files.
+By default it indexes every `.pdf`, `.docx`, `.txt` and `.md` file in the project, minus default excludes such as `.git`, `node_modules`, virtual environments, build output, `scratch`, `archive`, `drafts`, backups and `corpus/raw/`. Choose the canonical-only option during setup to restrict indexing to `docs/`, `strategy/` and `corpus/canonical/`.
+
+No external services, no API keys, no data leaving your machine.
 
 ### Reindex
 
-Use **Reindex RAG** when embeddings are corrupted or the model changes. Lets you scope the rebuild (one collection, several, or everything) and rebuilds from scratch.
+Use **Reindex RAG** when embeddings are corrupted or the model changes. Asks you to choose a scope and rebuilds from scratch. The scopes are **Canonical** (rebuild the canonical collection from `corpus/canonical/`), **Raw** (rebuild the raw collection from `corpus/raw/inbox/`) or **All** (rebuild both). If the pipeline is not idle, reindex warns and requires the override phrase.
 
 ## Pipeline Status
 
@@ -97,5 +99,5 @@ Corpus operations use a standardized symbol vocabulary:
 |---|---|
 | `✓` | Completed / processed / in sync |
 | `✗` | Failed / blocked |
-| `⚠` | Warning / needs attention |
+| Warning triangle | Warning / needs attention |
 | `→` | Next action / recommendation |

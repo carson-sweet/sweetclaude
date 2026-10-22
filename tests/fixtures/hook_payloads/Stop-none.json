@@ -1,0 +1,15 @@
+{
+  "background_tasks": [],
+  "cwd": "__CWD__",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "Stop",
+  "last_assistant_message": "Done.",
+  "permission_mode": "acceptEdits",
+  "prompt_id": "00000000-0000-0000-0000-000000000001",
+  "session_crons": [],
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "stop_hook_active": false,
+  "transcript_path": "__CWD__/.transcript.jsonl"
+}

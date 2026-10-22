@@ -728,7 +728,10 @@ def main(argv: list[str] | None = None) -> int:
     sc = sub.add_parser("score", help="score a contract against a real transcript")
     sc.add_argument("--transcript", type=Path, required=True)
     sc.add_argument("--contract", required=True)
-    sc.add_argument("--backend", default="stub")
+    sc.add_argument("--backend", default=None,
+                    help="openai or codex; stub requires --allow-stub")
+    sc.add_argument("--allow-stub", action="store_true",
+                    help="permit the keyword-heuristic stub backend")
     sc.add_argument("--model", default=None)
     sc.add_argument("--every-turn", action="store_true",
                     help="score every assistant turn instead of one per user "
@@ -742,6 +745,14 @@ def main(argv: list[str] | None = None) -> int:
     rubrics = load_rubrics()
 
     if args.cmd == "score":
+        if args.backend is None:
+            print("score needs a real backend: pass --backend openai or "
+                  "--backend codex.", file=sys.stderr)
+            return 2
+        if args.backend == "stub" and not args.allow_stub:
+            print("--backend stub is a keyword heuristic, not a real judge; "
+                  "pass --allow-stub to use it anyway.", file=sys.stderr)
+            return 2
         if args.contract not in rubrics:
             print(f"no rubric for {args.contract}", file=sys.stderr)
             return 2

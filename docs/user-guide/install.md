@@ -1,5 +1,8 @@
 # Installing SweetClaude
 
+**Version:** 1.1
+**Date:** 2026-10-21
+
 SweetClaude 5.x is the stable channel, tracked on `main`.
 
 ## Marketplace Install
@@ -31,8 +34,7 @@ Restart Claude Code, then run `/sweetclaude:configure doctor` inside each projec
 
 **The beta channel is retired.** It no longer receives updates and cannot be
 installed. If `/plugin list` shows `sweetclaude@sweetclaude-beta`, make the
-one-time switch to stable — run these in order so you are never
-double-installed:
+one-time switch to stable — run these in order so SweetClaude stays installed throughout (both channels are installed briefly, and all three steps finish before you restart Claude Code):
 
 ```text
 /plugin marketplace add carson-sweet/sweetclaude@main
@@ -40,8 +42,7 @@ double-installed:
 /plugin marketplace remove sweetclaude-beta
 ```
 
-Then restart Claude Code and run `/sweetclaude:configure update`; your project data
-migrates normally. If a former beta project is stuck from a prior update,
+Then restart Claude Code and run `/sweetclaude:configure update` to sync framework files. Update does not migrate project data; run `/sweetclaude:configure doctor` when the project needs repair or migration. If a former beta project is stuck from a prior update,
 doctor, migrate, or repair flow, follow
 [SweetClaude 4.x Beta Rescue](beta-rescue.md).
 
@@ -81,7 +82,7 @@ repair or migration prompts, run:
 
 [Firecrawl](https://firecrawl.dev) adds JavaScript-rendered page extraction,
 structured schema output, and autonomous multi-page research to
-`sweetclaude:product-research` and `sweetclaude:product-competition`. Both skills
+`/sweetclaude:plan product-research` and `/sweetclaude:plan product-competition`. Both workflows
 degrade gracefully if Firecrawl is absent.
 
 1. Create an account at [firecrawl.dev](https://firecrawl.dev).
@@ -104,18 +105,19 @@ degrade gracefully if Firecrawl is absent.
 SweetClaude's corpus management pipeline can build a local semantic search index
 over canonical documents using [mcp-local-rag](https://www.npmjs.com/package/mcp-local-rag).
 
-```bash
-npm install -g mcp-local-rag
-```
-
-Add it to Claude Code's MCP settings:
+Run `/sweetclaude:utils corpus-rag-setup` in the project. It writes a per-project `.mcp.json` that runs `mcp-local-rag` through `npx`, so no global install is needed:
 
 ```json
 {
   "mcpServers": {
     "local-rag": {
-      "command": "mcp-local-rag",
-      "args": []
+      "command": "npx",
+      "args": ["-y", "mcp-local-rag"],
+      "env": {
+        "BASE_DIR": ".",
+        "DB_PATH": "./.rag-index/lancedb",
+        "CACHE_DIR": "./.rag-index/models"
+      }
     }
   }
 }
@@ -123,7 +125,7 @@ Add it to Claude Code's MCP settings:
 
 Restart Claude Code. Without RAG installed, the corpus pipeline still works
 through Promote; you can add semantic search later and run
-`/sweetclaude:utils document-corpus reindex`.
+`/sweetclaude:utils corpus-rag-reindex`.
 
 ## Uninstalling Or Suspending
 

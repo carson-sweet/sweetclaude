@@ -13,6 +13,31 @@ Assess. Propose. Wait. Do not act until the user says proceed.
 
 ---
 
+## Step 0a: Disabled-project check
+
+Before any routing, check whether SweetClaude is disabled for this project:
+
+```bash
+test -f .sweetclaude/disabled && echo DISABLED || echo ENABLED
+```
+
+If the output is `ENABLED`, continue to Step 0. If it is `DISABLED`, do not route yet. Ask the user with AskUserQuestion whether to reactivate SweetClaude for this project:
+
+| Option label | Description |
+|---|---|
+| **Reactivate** | Remove `.sweetclaude/disabled` and continue with normal routing |
+| **Leave disabled** | Keep SweetClaude disabled and stop |
+
+Only if the user answers yes (Reactivate), remove the flag and then continue to Step 0:
+
+```bash
+rm -f .sweetclaude/disabled
+```
+
+If the user declines, leave the flag untouched, say SweetClaude stays disabled, and stop.
+
+---
+
 ## Step 0: Natural-language request path
 
 If the user passes a request after `/sweetclaude:go`, treat it as natural
@@ -30,7 +55,7 @@ If the request is classified as a large/high-rigor story, the matched
 large-story path runs DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, and
 SHIP/closeout with controller-enforced phase gates and hook-verified
 enforcement. It must route through
-`python3 scripts/large_story_controller.py route --route-surface /sweetclaude:go`.
+`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/large_story_controller.py route --route-surface /sweetclaude:go`.
 Completion language is controller-owned — never claim completion the
 controller has not authorized.
 
@@ -38,7 +63,7 @@ If the request is classified as a small/bounded story, the matched
 small-story path runs DEFINE, DESIGN, PLAN, IMPLEMENT, VERIFY, and
 SHIP/closeout with controller-enforced phase gates and hook-verified
 enforcement. It must route through
-`python3 scripts/small_story_controller.py route --route-surface /sweetclaude:go`.
+`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/small_story_controller.py route --route-surface /sweetclaude:go`.
 Completion language is controller-owned — never claim completion the
 controller has not authorized.
 
@@ -252,39 +277,12 @@ If "Archive it": run the archive logic from `deploy-ship` Step 7 (read pointer, 
 Before invoking an IMPLEMENT-phase skill, check mode gates:
 
 ```bash
-python3 -c "
-import yaml, os, glob, sys
-PROJECT_DIR = os.environ.get('PROJECT_DIR', os.getcwd())
-gates_path = os.path.join(PROJECT_DIR, '.sweetclaude/state/effective-gates.yaml')
-if not os.path.exists(gates_path):
-    print('GATES_OK'); sys.exit()
-d = yaml.safe_load(open(gates_path)) or {}
-mode = d.get('mode', '')
-gates = [g for g in d.get('gates', []) if g.get('phase') == 'IMPLEMENT' and g.get('action') == 'block']
-for gate in gates:
-    cond = gate.get('condition', '')
-    req = gate.get('requires', '')
-    msg = gate.get('message', 'Gate condition not met.')
-    if req == 'betting_table_approved' and mode == 'shape_up':
-        sc = yaml.safe_load(open(os.path.join(PROJECT_DIR, '.sweetclaude/state/sweetclaude.yaml'))) or {}
-        active_id = ((sc.get('work') or {}).get('active') or {}).get('id') or ''
-        issue_path = os.path.join(PROJECT_DIR, '.sweetclaude/artifacts/issues', f'{active_id}.yaml')
-        approved = bool(active_id and os.path.exists(issue_path) and (yaml.safe_load(open(issue_path)) or {}).get('betting_table_approved'))
-        if not approved:
-            print('BLOCKED:' + msg); sys.exit()
-    if cond == 'no_active_sprint' and mode == 'agile':
-        sprints_dir = os.path.join(PROJECT_DIR, '.sweetclaude/artifacts/sprints')
-        has_active = os.path.exists(sprints_dir) and any(
-            (yaml.safe_load(open(f)) or {}).get('status') == 'active'
-            for f in glob.glob(os.path.join(sprints_dir, '*.yaml'))
-        )
-        if not has_active:
-            print('BLOCKED:' + msg); sys.exit()
-print('GATES_OK')
-"
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gate_check.py advance --to IMPLEMENT --project-dir .
 ```
 
-If output starts with `BLOCKED:`, do not invoke any skill. Output the text after `BLOCKED:` and stop.
+The command exits 0 and prints `{"allow": true, ...}` when the gates pass. If it
+exits 2, it prints `{"allow": false, "reasons": [...], "unmet": [...]}` — do not
+invoke any skill. Output every entry in `reasons` and stop.
 
 **Pre-routing: PR recording at VERIFY phase entry**
 
@@ -322,7 +320,15 @@ If skipped: continue. Note: "No PR tracked — closeout will skip PR closure."
 
 For all phases other than SHIP: invoke the appropriate skill from the routing table below. One sentence explaining what you're doing.
 
-For SHIP phase (routing to `sweetclaude:library-load deploy-ship`): invoke `sweetclaude:library-load deploy-ship`, then after it completes and the deploy or merge is confirmed, run the **Closeout sequence** below instead of prompting next steps.
+For SHIP phase (routing to `sweetclaude:library-load deploy-ship`): before invoking, evaluate the SHIP mode gates:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gate_check.py advance --to SHIP --project-dir .
+```
+
+Exit 0 prints `{"allow": true, "reasons": [...], "unmet": [...]}`. Read `reasons`: each one carries a soft-gate requirement, such as the Agile sprint-close prompt (all sprint issues done, sprint not closed) — surface every requirement to the user before invoking. If the command exits 2, do not invoke the skill: output every entry in `reasons` and stop.
+
+Then invoke `sweetclaude:library-load deploy-ship`, and after it completes and the deploy or merge is confirmed, run the **Closeout sequence** below instead of prompting next steps.
 
 ---
 

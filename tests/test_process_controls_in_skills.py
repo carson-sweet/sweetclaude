@@ -135,7 +135,7 @@ def test_large_story_entrypoint_requires_contract_before_downstream_work():
 
     for phrase in (
         "Create or locate a frozen `success_criteria_contract`",
-        "Run `python3 scripts/success_criteria_contracts.py validate-workflow --stage define-exit`",
+        "Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/success_criteria_contracts.py validate-workflow --stage define-exit`",
         "If validation fails, stop. Do not continue downstream",
         "scripts/large_story_controller.py design --workflow-id {workflow_id}",
         "No review, caucus, verification, release, or completion step may add completion criteria",

@@ -31,6 +31,18 @@ Tell the user:
 >
 > SweetClaude has also been used successfully for academic research, product marketing strategy, and other knowledge-intensive work, but software development is where it lives.
 
+Then print the nine SweetClaude commands:
+
+> - `/sweetclaude:go` — Assess what to work on next and propose it.
+> - `/sweetclaude:plan` — Plan what to build and why.
+> - `/sweetclaude:design` — Design how selected work should be shaped.
+> - `/sweetclaude:build` — Build, verify, review, and ship planned work.
+> - `/sweetclaude:maintain` — Maintain and repair the product codebase.
+> - `/sweetclaude:configure` — Configure, update, diagnose, and recover SweetClaude.
+> - `/sweetclaude:utils` — Use bounded cross-cutting utilities.
+> - `/sweetclaude:status` — Orient to the current project.
+> - `/sweetclaude:help` — SweetClaude help and skill discovery.
+
 Then use AskUserQuestion with these four options:
 
 1. **Project Phases** — how SweetClaude structures product development, from conceptual idea to go-live

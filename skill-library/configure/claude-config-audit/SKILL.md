@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: false
-description: "Redirects to sweetclaude:library-load doctor. Config compatibility checks are now part of the doctor system."
+description: "Redirects to /sweetclaude:configure doctor. Config compatibility checks are now part of the doctor system."
 ---
 
 

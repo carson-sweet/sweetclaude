@@ -37,6 +37,9 @@ Ask one at a time:
 1. "What's the project name?"
 2. "What are you building? (one sentence)"
 3. "Where should project issues live: this repository (`local`) or GitHub Issues (`github`)?" (default: `local`)
+4. "Which working mode fits this project: Flow, Kanban, Shape Up, or Agile?" (default: Flow)
+
+Map the mode to its `project.mode` value: Flow → `flow`, Kanban → `kanban`, Shape Up → `shape_up`, Agile → `agile`.
 
 Then run:
 ```bash
@@ -98,6 +101,27 @@ for path in ['.claude/settings.json', '.claude/settings.local.json']:
 PY
 ```
 
+Write the mode choice to `project.mode` in `.sweetclaude/state/sweetclaude.yaml` before handoff:
+```bash
+python3 - .sweetclaude/state/sweetclaude.yaml "MODE_VALUE" << 'PY'
+import sys, yaml, tempfile, os
+path, mode = sys.argv[1], sys.argv[2]
+with open(path) as f: d = yaml.safe_load(f)
+d['project']['mode'] = mode
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+os.replace(tmp_name, path)
+PY
+```
+
+Write the SweetClaude section into the project `CLAUDE.md`. Create the file if it does not exist; if it exists, append the section and never overwrite existing content. Skip the append if the file already has a SweetClaude heading.
+```markdown
+### SweetClaude
+
+This project is managed with SweetClaude. State lives in `.sweetclaude/state/sweetclaude.yaml`; read it at session start. Use the `sweetclaude:` skills for phase work, and keep work inside the active phase and mode (`project.mode`).
+```
+
 > "All set. Here's where things stand: [project name] · IDEA stage."
 
 Run the v4 storage setup (see **v4 Storage Setup** section below), then invoke `sweetclaude:library-load _features`.
@@ -105,6 +129,15 @@ Run the v4 storage setup (see **v4 Storage Setup** section below), then invoke `
 ## Branch B: Existing Codebase
 
 > "Hi — I'm SweetClaude. I'll help bring some structure to this project. Let me take a quick look..."
+
+Before writing any file, if this is inside a git repository, snapshot HEAD:
+```bash
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git branch pre-sweetclaude || echo "SNAPSHOT_FAILED"
+fi
+```
+If the output contains `SNAPSHOT_FAILED`, stop. Tell the user the `pre-sweetclaude` branch could not be created (for example, it already exists or the repository has no commits) and do not write any file. Resume only after the branch exists or the user resolves the cause.
+
 
 ```bash
 ls -la
@@ -116,6 +149,9 @@ Ask one at a time:
 1. "What's the project name?" (pre-fill from package.json/README if found)
 2. "What stage is this at? (Early prototype / Active development / Approaching launch / In production)"
 3. "Where should project issues live: this repository (`local`) or GitHub Issues (`github`)?" (default: `local`)
+4. "Which working mode fits this project: Flow, Kanban, Shape Up, or Agile?" (default: Flow)
+
+Map the mode to its `project.mode` value: Flow → `flow`, Kanban → `kanban`, Shape Up → `shape_up`, Agile → `agile`.
 
 Map stage to version_stage:
 - Early prototype → IDEA
@@ -125,6 +161,27 @@ Map stage to version_stage:
 
 Run the same directory setup and write as Branch A, with `type: existing-code`, the mapped version_stage, and `--issue-tracker "USER_PROVIDED_ISSUE_TRACKER"`.
 
+Write the mode choice to `project.mode` in `.sweetclaude/state/sweetclaude.yaml` before handoff:
+```bash
+python3 - .sweetclaude/state/sweetclaude.yaml "MODE_VALUE" << 'PY'
+import sys, yaml, tempfile, os
+path, mode = sys.argv[1], sys.argv[2]
+with open(path) as f: d = yaml.safe_load(f)
+d['project']['mode'] = mode
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+os.replace(tmp_name, path)
+PY
+```
+
+Write the SweetClaude section into the project `CLAUDE.md`. Create the file if it does not exist; if it exists, append the section and never overwrite existing content. Skip the append if the file already has a SweetClaude heading.
+```markdown
+### SweetClaude
+
+This project is managed with SweetClaude. State lives in `.sweetclaude/state/sweetclaude.yaml`; read it at session start. Use the `sweetclaude:` skills for phase work, and keep work inside the active phase and mode (`project.mode`).
+```
+
 > "All set. [Project name] is configured. Here's where things stand: [status summary]."
 
 Run the v4 storage setup (see **v4 Storage Setup** section below), then invoke `sweetclaude:library-load _features`.
@@ -133,12 +190,39 @@ Run the v4 storage setup (see **v4 Storage Setup** section below), then invoke `
 
 > "This looks like an inherited or organically grown codebase. I'll run a full assessment before setting things up — this takes a few minutes but makes everything that follows much smoother."
 
+Before the assessment writes anything, if this is inside a git repository, snapshot HEAD:
+```bash
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git branch pre-sweetclaude || echo "SNAPSHOT_FAILED"
+fi
+```
+If the output contains `SNAPSHOT_FAILED`, stop. Tell the user the `pre-sweetclaude` branch could not be created (for example, it already exists or the repository has no commits) and do not write any file. Resume only after the branch exists or the user resolves the cause.
+
+
 Run the full ASSESS → DIAGNOSE → PLAN → SCAFFOLD flow for existing codebases. Key phases:
 
 **ASSESS:** Understand what exists — architecture, dependencies, test coverage, naming conventions, tech debt surface area.
 **DIAGNOSE:** Identify the highest-impact problems. Prioritize by: broken builds > no tests > no structure > style issues.
 **PLAN:** Propose a scaffolding plan. Show the user what will be created/changed before touching anything.
 **SCAFFOLD:** With user approval, create `.sweetclaude/` structure, generate CLAUDE.md reflecting actual codebase patterns, write `sweetclaude.yaml`. The plans directory and `plansDirectory` setting are created by the shared **v4 Storage Setup** block below, which every branch runs — they used to be written only here, so projects onboarded through Branch A or B never got them (ISSUE-284).
+
+Ask the mode question: "Which working mode fits this project: Flow, Kanban, Shape Up, or Agile?" (default: Flow)
+
+Map the mode to its `project.mode` value: Flow → `flow`, Kanban → `kanban`, Shape Up → `shape_up`, Agile → `agile`.
+
+Write the mode choice to `project.mode` in `.sweetclaude/state/sweetclaude.yaml` before handoff:
+```bash
+python3 - .sweetclaude/state/sweetclaude.yaml "MODE_VALUE" << 'PY'
+import sys, yaml, tempfile, os
+path, mode = sys.argv[1], sys.argv[2]
+with open(path) as f: d = yaml.safe_load(f)
+d['project']['mode'] = mode
+with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
+    yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    tmp_name = tmp.name
+os.replace(tmp_name, path)
+PY
+```
 
 Handoff: "SweetClaude is set up. Given what I found, here's what I'd suggest tackling first: [top recommendation from DIAGNOSE]."
 
@@ -227,6 +311,16 @@ subprocess.run(['python3', os.path.expanduser('${CLAUDE_PLUGIN_ROOT}/scripts/cac
 # ever left one doctor warning in the window before the next session — but it
 # was a regression from init's old Step 8 and nothing caught it (ISSUE-284).
 subprocess.run(['bash', os.path.expanduser('${CLAUDE_PLUGIN_ROOT}/hooks/generate-session-state.sh')], capture_output=True)
+```
+
+### Test command
+
+The auto-test-runner hook runs the project's tests after source edits while a TDD cycle is implementing. It resolves the command from `testing.test_command` in `.sweetclaude/state/project.yaml` and, when that file or key is absent, detects `python3 -m pytest -q` from pytest configuration or `npm test` from a `package.json` test script. When the project's test command is known during setup and differs from what detection would find, record it in `.sweetclaude/state/project.yaml` without overwriting other keys:
+
+```yaml
+testing:
+  test_command: <command that runs the full suite>
+  timeout_seconds: 120
 ```
 
 The session-state generator resolves the project root with `git rev-parse`. In a
