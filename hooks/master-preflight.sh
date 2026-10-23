@@ -54,10 +54,12 @@ esac
 [ "${SKILL_NAME#sweetclaude:}" = "adopt" ] && exit 0
 
 # Library-loaded lifecycle workflows are exempt the same way.
+# _health is exempt because bootstrap Step 4 invokes it before Step 8 writes the
+# session flag; denying it deadlocks first-time onboarding. It is read-and-stamp.
 if [ "$SKILL_NAME" = "sweetclaude:library-load" ]; then
   SKILL_ARGS=$(hook_field tool_input.args)
   case "${SKILL_ARGS%% *}" in
-    fix-sweetclaude|_migrate|purge|setup|init|update)
+    fix-sweetclaude|_migrate|purge|setup|init|update|_health)
       exit 0 ;;
   esac
 fi

@@ -75,7 +75,7 @@ If `FIRST_TIME` is `TRUE`:
 Otherwise:
 > "This project has {ENABLED} of {TOTAL} features enabled. Select all the features you want on — including any already enabled:"
 
-Use **AskUserQuestion** (multiSelect: true) with all 8 features as options:
+Use **AskUserQuestion** (multiSelect: true) with all 7 features as options. AskUserQuestion accepts at most 4 options per question, so split the list across two questions (4 then 3):
 - **label**: the feature label — append " ✓" if the feature's current status is `active`
 - **description**: the feature description from the table above
 
@@ -123,7 +123,7 @@ For each feature that is newly enabled (was not previously `active`), invoke its
 | Feature key | Action |
 |---|---|
 | `product_milestones` | invoke `sweetclaude:library-load product-milestones` with argument `onboard` |
-| `product_backlog` | invoke `sweetclaude:library-load project-backlog` with argument `onboard` |
+| `product_backlog` | invoke `sweetclaude:library-load product-parking-lot` with argument `onboard` |
 | `product_personas` | invoke `sweetclaude:library-load user-personas` with argument `onboard` |
 | `product_stories` | invoke `sweetclaude:library-load product-user-stories` with argument `onboard` |
 | `document_corpus` | invoke `sweetclaude:library-load document-corpus` with argument `onboard` |
