@@ -167,8 +167,11 @@ def test_command_blocks_mutation_and_caps_spend():
         tool in {"Skill", "Read", "Glob", "Grep"}
         or tool.startswith("Bash(bash ")
         or tool == f"Bash(python3 {ROOT}/scripts/gate_check.py:*)"
+        or tool == f"Bash(python3 {ROOT}/scripts/:*)"
+        or tool in rb.inspection_commands()
         for tool in allowed
     )
+    assert not any(tool.startswith(("Bash(python3 -", "Bash(python3:", "Bash(sh ", "Bash(rm", "Bash(git commit", "Bash(git push", "Bash(git checkout", "Bash(git reset")) for tool in allowed)
     assert argv[argv.index("--max-budget-usd") + 1] == "0.25"
     assert argv[argv.index("--plugin-dir") + 1] == str(ROOT)
     assert argv[argv.index("--setting-sources") + 1] == "project,local"
@@ -184,8 +187,15 @@ def test_gate_check_commands_are_allowed():
     allowed = argv[argv.index("--allowedTools") + 1:argv.index("--disallowedTools")]
     pattern = f"Bash(python3 {ROOT}/scripts/gate_check.py:*)"
     assert pattern in allowed
-    gate_like = [t for t in allowed if t.startswith("Bash(python3 ")]
-    assert all(t == pattern for t in gate_like)
+    python_like = [t for t in allowed if t.startswith("Bash(python3 ")]
+    assert set(python_like) == {pattern, f"Bash(python3 {ROOT}/scripts/:*)"}
+
+
+def test_review_and_bootstrap_commands_are_allowed():
+    argv = rb.command("p", ROOT, "sonnet", 0.25)
+    allowed = argv[argv.index("--allowedTools") + 1:argv.index("--disallowedTools")]
+    for tool in ("Bash(git diff:*)", "Bash(git log:*)", "Bash(git branch:*)", f"Bash(bash {ROOT}/scripts/:*)", f"Bash(python3 {ROOT}/scripts/:*)"):
+        assert tool in allowed
 
 
 def test_fixture_project_marks_bootstrap_as_ran(tmp_path):

@@ -279,6 +279,20 @@ def gate_commands(repo: Path) -> list[str]:
     return [f"Bash(python3 {repo}/scripts/gate_check.py:*)"]
 
 
+READ_ONLY_COMMANDS = (
+    "git status", "git diff", "git log", "git show", "git branch", "git rev-parse", "git ls-files",
+    "ls", "cat", "head", "tail", "wc", "find", "test",
+)
+
+
+def inspection_commands() -> list[str]:
+    return [f"Bash({name}:*)" for name in READ_ONLY_COMMANDS]
+
+
+def plugin_script_commands(repo: Path) -> list[str]:
+    return [f"Bash(bash {repo}/scripts/:*)", f"Bash(bash {repo}/hooks/:*)", f"Bash(python3 {repo}/scripts/:*)"]
+
+
 def command(prompt_text: str, repo: Path, model: str, budget: float, executable: str = "claude") -> list[str]:
     return [
         executable, "-p", "--verbose",
@@ -287,7 +301,7 @@ def command(prompt_text: str, repo: Path, model: str, budget: float, executable:
         "--plugin-dir", str(repo), "--add-dir", str(repo),
         "--model", model, "--max-budget-usd", f"{budget:.2f}",
         "--permission-mode", "default",
-        "--allowedTools", "Skill", "Read", "Glob", "Grep", *preload_commands(repo), *gate_commands(repo),
+        "--allowedTools", "Skill", "Read", "Glob", "Grep", *preload_commands(repo), *gate_commands(repo), *inspection_commands(), *plugin_script_commands(repo),
         "--disallowedTools", "Write", "Edit", "NotebookEdit",
     ]
 
