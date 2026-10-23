@@ -157,45 +157,16 @@ def test_prompts_name_the_entry_point_and_carry_no_workflow_hint():
         assert not any(workflow in case["prompt"] for workflow in case["workflows"] if "-" in workflow)
 
 
-def test_command_blocks_mutation_and_caps_spend():
-    argv = rb.command("p", ROOT, "sonnet", 0.25)
+def test_command_allows_bash_blocks_mutation_and_caps_spend():
+    argv = rb.command("p", ROOT, "sonnet", 1.0)
     allowed = argv[argv.index("--allowedTools") + 1:argv.index("--disallowedTools")]
     disallowed = argv[argv.index("--disallowedTools") + 1:]
-    assert {"Write", "Edit"} <= set(disallowed)
-    assert "Bash" not in allowed
-    assert all(
-        tool in {"Skill", "Read", "Glob", "Grep"}
-        or tool.startswith("Bash(bash ")
-        or tool == f"Bash(python3 {ROOT}/scripts/gate_check.py:*)"
-        or tool == f"Bash(python3 {ROOT}/scripts/:*)"
-        or tool in rb.inspection_commands()
-        for tool in allowed
-    )
-    assert not any(tool.startswith(("Bash(python3 -", "Bash(python3:", "Bash(sh ", "Bash(rm", "Bash(git commit", "Bash(git push", "Bash(git checkout", "Bash(git reset")) for tool in allowed)
-    assert argv[argv.index("--max-budget-usd") + 1] == "0.25"
+    assert allowed == ["Skill", "Read", "Glob", "Grep", "Bash"]
+    assert disallowed == ["Write", "Edit", "NotebookEdit"]
+    assert argv[argv.index("--permission-mode") + 1] == "default"
+    assert argv[argv.index("--max-budget-usd") + 1] == "1.00"
     assert argv[argv.index("--plugin-dir") + 1] == str(ROOT)
     assert argv[argv.index("--setting-sources") + 1] == "project,local"
-
-
-def test_tier_one_preload_commands_are_allowed_exactly():
-    go = ROOT / "skills" / "go"
-    assert f"Bash(bash {go}/../../hooks/read-state.sh session-state)" in rb.preload_commands(ROOT)
-
-
-def test_gate_check_commands_are_allowed():
-    argv = rb.command("p", ROOT, "sonnet", 0.25)
-    allowed = argv[argv.index("--allowedTools") + 1:argv.index("--disallowedTools")]
-    pattern = f"Bash(python3 {ROOT}/scripts/gate_check.py:*)"
-    assert pattern in allowed
-    python_like = [t for t in allowed if t.startswith("Bash(python3 ")]
-    assert set(python_like) == {pattern, f"Bash(python3 {ROOT}/scripts/:*)"}
-
-
-def test_review_and_bootstrap_commands_are_allowed():
-    argv = rb.command("p", ROOT, "sonnet", 0.25)
-    allowed = argv[argv.index("--allowedTools") + 1:argv.index("--disallowedTools")]
-    for tool in ("Bash(git diff:*)", "Bash(git log:*)", "Bash(git branch:*)", f"Bash(bash {ROOT}/scripts/:*)", f"Bash(python3 {ROOT}/scripts/:*)"):
-        assert tool in allowed
 
 
 def test_fixture_project_marks_bootstrap_as_ran(tmp_path):
@@ -311,7 +282,7 @@ def test_driver_reports_a_missing_executable(tmp_path, monkeypatch):
 def test_dry_run_reports_worst_case_spend(capsys):
     assert rb.main(["--tier", "full", "--dry-run"]) == 0
     out = capsys.readouterr().out
-    assert f"{len(CASES)} runs; worst case ${len(CASES) * 0.25:.2f}, capped at $5.00" in out
+    assert f"{3 * len(CASES)} runs; worst case ${3 * len(CASES) * 1.0:.2f}, capped at $25.00" in out
 
 
 def test_go_failures_are_rerun_through_the_category_command(tmp_path, monkeypatch, capsys):
@@ -323,7 +294,7 @@ def test_go_failures_are_rerun_through_the_category_command(tmp_path, monkeypatc
         return rb.record(case, entry, status, "x", 0.1, [], 0.0)
 
     monkeypatch.setattr(rb, "run_case", fake)
-    assert rb.main(["--tier", "smoke", "--out", str(tmp_path)]) == 1
+    assert rb.main(["--tier", "smoke", "--repeat", "1", "--out", str(tmp_path)]) == 1
     assert calls[:2] == [("plan-customer-problem", "go"), ("plan-customer-problem", "category")]
     saved = json.loads(next(tmp_path.glob("routing-smoke-*.json")).read_text())
     assert saved["summary"]["diagnostics"] == {"plan-customer-problem": "pass"}
@@ -334,9 +305,71 @@ def test_go_failures_are_rerun_through_the_category_command(tmp_path, monkeypatc
 def test_main_stops_at_the_run_budget(tmp_path, monkeypatch, capsys):
     calls = []
     monkeypatch.setattr(rb, "run_case", lambda case, entry, args: calls.append(case["id"]) or rb.record(case, entry, "pass", "ok", 0.20, [], 0.0))
-    code = rb.main(["--tier", "full", "--run-budget", "1.0", "--out", str(tmp_path)])
+    code = rb.main(["--tier", "full", "--repeat", "1", "--case-budget", "0.25", "--run-budget", "1.0", "--out", str(tmp_path)])
     assert len(calls) == 4
     assert code == 1
     saved = json.loads(next(tmp_path.glob("routing-full-*.json")).read_text())
     assert saved["summary"]["runs"] == 4
     assert saved["summary"]["cost_usd"] == 0.8
+
+
+def rows(case_id: str, statuses: list[str], cost: float = 0.1) -> list[dict]:
+    return [rb.record(CASES[case_id], "go", status, "x", cost, [], 0.0) for status in statuses]
+
+
+def test_three_of_three_passes_is_a_stable_pass():
+    graded = rb.grade_cases(rows("design-api", ["pass"] * 3))["design-api"]
+    assert (graded["runs"], graded["passes"], graded["verdict"], graded["unstable"]) == (3, 3, "pass", False)
+    assert graded["median_cost_usd"] == 0.1
+
+
+def test_two_of_three_passes_is_an_unstable_pass():
+    graded = rb.grade_cases(rows("design-api", ["pass", "wrong-workflow", "pass-clarified"]))["design-api"]
+    assert (graded["passes"], graded["verdict"], graded["unstable"]) == (2, "pass", True)
+
+
+def test_one_of_three_passes_is_an_unstable_fail():
+    graded = rb.grade_cases(rows("design-api", ["pass", "no-route", "clarified"]))["design-api"]
+    assert (graded["passes"], graded["verdict"], graded["unstable"]) == (1, "fail", True)
+
+
+def test_zero_of_three_is_a_stable_fail():
+    graded = rb.grade_cases(rows("design-api", ["no-route"] * 3))["design-api"]
+    assert (graded["verdict"], graded["unstable"]) == ("fail", False)
+
+
+def test_harness_errors_are_excluded_from_the_denominator():
+    graded = rb.grade_cases(rows("design-api", ["pass", "pass", "harness-error"]))["design-api"]
+    assert (graded["runs"], graded["passes"], graded["verdict"], graded["unstable"]) == (2, 2, "pass", False)
+    single = rb.grade_cases(rows("design-api", ["pass", "harness-error", "harness-error"]))["design-api"]
+    assert (single["runs"], single["verdict"]) == (1, "fail")
+
+
+def test_all_harness_errors_is_a_harness_error_verdict():
+    graded = rb.grade_cases(rows("design-api", ["harness-error"] * 3))["design-api"]
+    assert (graded["runs"], graded["verdict"], graded["unstable"]) == (0, "harness-error", False)
+    assert graded["median_cost_usd"] is None
+
+
+def test_cases_are_graded_independently():
+    graded = rb.grade_cases(rows("design-api", ["pass"] * 3) + rows("plan-milestone", ["no-route"] * 3))
+    assert {cid: g["verdict"] for cid, g in graded.items()} == {"design-api": "pass", "plan-milestone": "fail"}
+
+
+def test_failing_case_is_diagnosed_once_and_summary_carries_verdicts(tmp_path, monkeypatch, capsys):
+    calls = []
+
+    def fake(case, entry, args):
+        calls.append((case["id"], entry))
+        status = "pass" if entry == "category" or case["id"] != "plan-customer-problem" else "wrong-workflow"
+        return rb.record(case, entry, status, "x", 0.1, [], 0.0)
+
+    monkeypatch.setattr(rb, "run_case", fake)
+    assert rb.main(["--tier", "smoke", "--out", str(tmp_path)]) == 1
+    assert calls.count(("plan-customer-problem", "category")) == 1
+    summary = json.loads(next(tmp_path.glob("routing-smoke-*.json")).read_text())["summary"]
+    assert summary["verdicts"] == {"pass": 5, "fail": 1, "harness-error": 0}
+    assert summary["cases"]["plan-customer-problem"]["passes"] == 0
+    assert summary["unstable"] == []
+    assert summary["diagnostics"] == {"plan-customer-problem": "pass"}
+    assert "fail            plan-customer-problem" in capsys.readouterr().out

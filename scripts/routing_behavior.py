@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import queue
 import re
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -31,7 +32,6 @@ PUBLIC = {f"sweetclaude:{name}" for name in (*CATEGORIES, "go", *UTILITIES)}
 ROUTERS = {"sweetclaude:find-skill", "sweetclaude:_route", "sweetclaude:library-load", *(f"sweetclaude:{c}" for c in CATEGORIES)}
 INDEX_READ = re.compile(r"skill-library/([^/]+)/INDEX\.md$")
 WORKFLOW_READ = re.compile(r"skill-library/([^/]+)/([^/]+)/SKILL\.md$")
-PRELOAD = re.compile(r"^!`([^`]+)`", re.MULTILINE)
 FIXTURE_STATE = """schema_version: 2
 framework:
   setup_complete: true
@@ -267,32 +267,6 @@ def preflight(project: Path, repo: Path = ROOT) -> str | None:
     return None
 
 
-def preload_commands(repo: Path) -> list[str]:
-    allowed = []
-    for skill in sorted((repo / "skills").glob("*/SKILL.md")):
-        for line in PRELOAD.findall(skill.read_text(encoding="utf-8")):
-            allowed.append(f"Bash({line.replace('${CLAUDE_SKILL_DIR}', str(skill.parent))})")
-    return allowed
-
-
-def gate_commands(repo: Path) -> list[str]:
-    return [f"Bash(python3 {repo}/scripts/gate_check.py:*)"]
-
-
-READ_ONLY_COMMANDS = (
-    "git status", "git diff", "git log", "git show", "git branch", "git rev-parse", "git ls-files",
-    "ls", "cat", "head", "tail", "wc", "find", "test",
-)
-
-
-def inspection_commands() -> list[str]:
-    return [f"Bash({name}:*)" for name in READ_ONLY_COMMANDS]
-
-
-def plugin_script_commands(repo: Path) -> list[str]:
-    return [f"Bash(bash {repo}/scripts/:*)", f"Bash(bash {repo}/hooks/:*)", f"Bash(python3 {repo}/scripts/:*)"]
-
-
 def command(prompt_text: str, repo: Path, model: str, budget: float, executable: str = "claude") -> list[str]:
     return [
         executable, "-p", "--verbose",
@@ -301,7 +275,7 @@ def command(prompt_text: str, repo: Path, model: str, budget: float, executable:
         "--plugin-dir", str(repo), "--add-dir", str(repo),
         "--model", model, "--max-budget-usd", f"{budget:.2f}",
         "--permission-mode", "default",
-        "--allowedTools", "Skill", "Read", "Glob", "Grep", *preload_commands(repo), *gate_commands(repo), *inspection_commands(), *plugin_script_commands(repo),
+        "--allowedTools", "Skill", "Read", "Glob", "Grep", "Bash",
         "--disallowedTools", "Write", "Edit", "NotebookEdit",
     ]
 
@@ -416,15 +390,33 @@ def summarise(results: list[dict[str, Any]], planned: int) -> dict[str, Any]:
     }
 
 
+def grade_cases(results: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in results:
+        rows = grouped.setdefault(row["case"], [])
+        if row["status"] != "harness-error":
+            rows.append(row)
+    cases = {}
+    for cid, rows in grouped.items():
+        wins = sum(r["passed"] for r in rows)
+        costs = [r["cost_usd"] for r in rows if r["cost_usd"] is not None]
+        if not rows:
+            verdict = "harness-error"
+        else:
+            verdict = "pass" if wins >= 2 and wins > len(rows) / 2 else "fail"
+        cases[cid] = {"runs": len(rows), "passes": wins, "verdict": verdict, "unstable": 0 < wins < len(rows), "median_cost_usd": round(statistics.median(costs), 4) if costs else None}
+    return cases
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tier", choices=("smoke", "full"), default="smoke")
     parser.add_argument("--entry", choices=("go", "category", "both"))
     parser.add_argument("--only", nargs="*", default=[])
-    parser.add_argument("--repeat", type=int, default=1)
+    parser.add_argument("--repeat", type=int, default=3)
     parser.add_argument("--model", default="sonnet")
-    parser.add_argument("--case-budget", type=float, default=0.25)
-    parser.add_argument("--run-budget", type=float, default=5.0)
+    parser.add_argument("--case-budget", type=float, default=1.00)
+    parser.add_argument("--run-budget", type=float, default=25.0)
     parser.add_argument("--timeout", type=float, default=90.0)
     parser.add_argument("--stop-grace", type=float, default=20.0)
     parser.add_argument("--cases", type=Path, default=CASES)
@@ -448,6 +440,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     results: list[dict[str, Any]] = []
     diagnostics: list[dict[str, Any]] = []
+    diagnosed: set[str] = set()
     spent = 0.0
     pending = [(case, entry, results) for case, entry in runs]
     while pending:
@@ -461,18 +454,25 @@ def main(argv: list[str] | None = None) -> int:
         price = f"${row['cost_usd']:.3f}" if row["cost_usd"] is not None else "unpriced"
         label = entry if sink is results else f"{entry}*"
         print(f"{row['status']:<15} {case['id']:<28} {label:<9} {price:<9} {row['detail']}", flush=True)
-        if sink is results and entry == "go" and args.diagnose and not row["passed"] and row["status"] != "harness-error":
+        if sink is results and entry == "go" and args.diagnose and not row["passed"] and row["status"] != "harness-error" and case["id"] not in diagnosed:
+            diagnosed.add(case["id"])
             pending.insert(0, (case, "category", diagnostics))
     summary = summarise(results, len(runs))
+    summary["cases"] = grade_cases(results)
+    summary["verdicts"] = {name: sum(c["verdict"] == name for c in summary["cases"].values()) for name in ("pass", "fail", "harness-error")}
+    summary["unstable"] = sorted(cid for cid, c in summary["cases"].items() if c["unstable"])
     summary["diagnostics"] = {row["case"]: row["status"] for row in diagnostics}
     summary["cost_usd"] = round(summary["cost_usd"] + sum(r["cost_usd"] or 0 for r in diagnostics), 4)
     args.out.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     path = args.out / f"routing-{args.tier}-{stamp}.json"
     path.write_text(json.dumps({"executed_at": stamp, "model": args.model, "tier": args.tier, "summary": summary, "results": results, "diagnostics": diagnostics}, indent=2), encoding="utf-8")
+    for cid, c in summary["cases"].items():
+        cost = f"${c['median_cost_usd']:.3f}" if c["median_cost_usd"] is not None else "unpriced"
+        print(f"{c['verdict']:<15} {cid:<28} {c['passes']}/{c['runs']:<7} {cost:<9} {'unstable' if c['unstable'] else ''}".rstrip())
     print(json.dumps(summary))
     print(f"Results: {path}")
-    return 0 if summary["runs"] == summary["planned"] and summary["passed"] == summary["planned"] else 1
+    return 0 if summary["runs"] == summary["planned"] and summary["verdicts"]["fail"] == 0 and summary["verdicts"]["harness-error"] == 0 else 1
 
 
 if __name__ == "__main__":

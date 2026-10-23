@@ -1,8 +1,8 @@
 # Behavioral Routing Suite
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 
-**Date:** 2026-10-20
+**Date:** 2026-10-23
 
 This suite checks that a plain-language request reaches the right Tier 1 category and the right Tier 2 workflow. It does not check what the workflow does after it loads.
 
@@ -15,19 +15,21 @@ This suite checks that a plain-language request reaches the right Tier 1 categor
 ## Running it live
 
 ```
-python3 scripts/routing_behavior.py --tier smoke          # 6 cases, one per category, about $0.90
-python3 scripts/routing_behavior.py --tier full           # 33 cases, about $4.50
+python3 scripts/routing_behavior.py --tier smoke          # 6 cases, one per category, 3 repeats each
+python3 scripts/routing_behavior.py --tier full           # 33 cases, 3 repeats each
 python3 scripts/routing_behavior.py --only design-api --entry both
 python3 scripts/routing_behavior.py --tier full --dry-run
 ```
 
-Both tiers send every case through `/sweetclaude:go`. A case that fails through `go` is run again through its category command (`/sweetclaude:<category>`), which shows whether Tier 1 or Tier 2 is at fault. `--no-diagnose` turns that re-run off. Results are written to `.sweetclaude/routing-results/`, which is gitignored.
+Both tiers send every case through `/sweetclaude:go`. A case that fails through `go` is run again through its category command (`/sweetclaude:<category>`), which shows whether Tier 1 or Tier 2 is at fault. The re-run happens at most once per case, however many repeats fail. `--no-diagnose` turns it off. Results are written to `.sweetclaude/routing-results/`, which is gitignored.
 
 Every run uses your normal Claude login and loads this checkout with `--plugin-dir`, with project and local settings only. Each run also gets:
 
 - a new throwaway Git project;
-- a $0.25 spend cap, a 90-second timeout and a $5 cap on the whole run;
-- Write and Edit disabled, and Bash denied apart from the startup commands the Tier 1 skills declare.
+- a $1.00 spend cap, a 90-second timeout and a $25 cap on the whole run;
+- Bash allowed in the throwaway fixture, with Write, Edit and NotebookEdit disabled.
+
+Each case runs 3 times (`--repeat 3`). A case passes when at least 2 graded runs pass and passes are a majority of graded runs. A case whose graded runs disagree is reported as unstable. `harness-error` runs are left out of the count, and a case with no graded runs gets the verdict `harness-error`. The summary carries `cases`, `verdicts` and `unstable` alongside the per-run fields.
 
 The run is interrupted as soon as a workflow's `SKILL.md` is read.
 
@@ -49,3 +51,13 @@ Before any paid run, the driver runs `hooks/session-preflight.sh` against the fi
 **2026-10-20, first run:** 30 of 33 passed, $4.43. All three failures were Tier 1 category choices: `build-issue-tracker` went to configure, `test-performance` went to maintain, and `utils-big-picture` went to `sweetclaude:status`. Each passed through its category command, and find-skill boundary rules fixed them.
 
 **2026-10-20, 5.0.0 release candidate:** 32 of 33 passed, $4.20. The one miss, `plan-milestone`, was a fixture artifact: the weekly doctor checkup prompt fired in the fresh project. The fixture now records a recent doctor run, and the case passed on rerun. Every run's catalog listed exactly the nine Tier 1 commands.
+
+## Harness change policy (2026-10-23)
+
+The harness is changed only through cases, fixtures and flags. A structural change to the driver or the oracle requires a recorded transcript that the oracle misgrades, added to `tests/fixtures/routing_transcripts/` with the change.
+
+The defaults are: Bash allowed in the throwaway fixture with Write, Edit and NotebookEdit disallowed; a $1.00 per-case cap that is meant never to bind; a $25 run cap as the spend control; and 3 repeats graded by a 2-of-3 majority, with unstable cases reported.
+
+Run the full tier before and after any change to skill descriptions, `find-skill`, or an INDEX file, and compare which cases flip. A run with no decision it could change should not happen.
+
+The suite is not a release gate. The release gate was removed in `b4611e60`.
