@@ -162,6 +162,35 @@ class TestFlagHashMatchesBootstrapSkill:
         assert_denied(run_hook_in("preflight-guard.sh", project, f"{project}/", stdin))
 
 
+class TestBootstrapStep4HealthExemption:
+    """Bootstrap Step 4 invokes `library-load _health` when hook_last_ran is
+    null or stale, and the bootstrap flag is not written until Step 8. A
+    project onboarded mid-session has hook_last_ran null — the SessionStart
+    health check exits early when no state file exists yet — so Step 4 fires
+    and is denied, and bootstrap can never reach Step 8. First-time onboarding
+    deadlocks (BUG-1, 2026-10-23).
+    """
+
+    def without_bootstrap_flag(self, project: Path, flags) -> None:
+        flag = flag_path("bootstrap-ran", str(project))
+        flag.unlink(missing_ok=True)
+        flags.append(flag)
+
+    def test_library_load_health_is_allowed_without_the_bootstrap_flag(self, project, flags):
+        write_sweetclaude_yaml(project)
+        self.without_bootstrap_flag(project, flags)
+        stdin = payload("PreToolUse-Skill", project,
+                        skill="sweetclaude:library-load", args="_health")
+        assert_allowed(run_hook_in("master-preflight.sh", project, str(project), stdin))
+
+    def test_the_exemption_covers_only_health_not_every_library_load_target(self, project, flags):
+        write_sweetclaude_yaml(project)
+        self.without_bootstrap_flag(project, flags)
+        stdin = payload("PreToolUse-Skill", project,
+                        skill="sweetclaude:library-load", args="project-backlog")
+        assert_denied(run_hook_in("master-preflight.sh", project, str(project), stdin))
+
+
 class TestAutoTestRunnerBound:
     def prepare(self, project: Path, command: str, timeout_seconds: int | None = None) -> None:
         write_sweetclaude_yaml(project, phase="IMPLEMENT", tdd_phase="implementing")
