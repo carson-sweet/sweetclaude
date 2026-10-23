@@ -4,6 +4,18 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [5.1.2] — 2026-10-23
+
+### Fixed — first-time onboarding, backlog feature setup, and the feature prompt
+
+Setting up SweetClaude in a project that was not already configured could stop partway through. The session-start health check is skipped when the project does not exist yet, so that first session carried no health stamp, and the check bootstrap runs at the start of a session then blocked the very setup step it was meant to perform — asking you to run the bootstrap skill, which was blocked in turn. Onboarding could not finish without hand-editing framework state. The health check is now permitted at that point, so onboarding completes normally.
+
+Choosing the Product backlog feature could run a different operation than the one named, and report success. That feature pointed at the read-only backlog view rather than the skill that owns the backlog, and an unrecognised operation falls through to that view's default. The feature now runs the backlog owner's own setup — the same skill the capability manifest and the update surface name for the backlog.
+
+The feature-selection prompt described eight features over a list of seven. It now states the correct count, and notes that the question tool accepts at most four choices at a time, so the list is presented across two questions.
+
+---
+
 ## [5.1.1] — 2026-10-22
 
 ### Fixed — release process hardening
