@@ -133,6 +133,7 @@ cases:
     prompt: "The new release is throwing errors for every clinic and I've approved a rollback. Roll it back."
     category: maintain
     workflows: [rollback-revert]
+    fixture: release-history
     clarify_ok: false
 
   - id: document-update-affected

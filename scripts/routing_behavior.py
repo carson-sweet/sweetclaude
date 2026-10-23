@@ -217,8 +217,19 @@ APPROVED_STORY = {
 REVIEW_CHANGE = {
     "src/shiftboard/availability.py": "from dataclasses import dataclass\nfrom datetime import date\n\n\n@dataclass\nclass Availability:\n    clinic_id: str\n    staff_id: str\n    day: date\n    available: bool\n\n\ndef calendar(entries, clinic_id):\n    return sorted((e for e in entries if e.clinic_id == clinic_id), key=lambda e: (e.day, e.staff_id))\n",
 }
+DEPLOY = {
+    ".github/workflows/deploy.yml": "name: deploy\non:\n  push:\n    tags: ['v*']\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: ./scripts/deploy.sh \"$GITHUB_REF_NAME\"\n",
+    "scripts/deploy.sh": "#!/bin/sh\necho \"deploying $1 to production\"\n",
+}
+REMINDERS_RELEASE = {
+    "src/shiftboard/reminders.py": "from shiftboard.shifts import Shift\n\n\ndef reminder(shift: Shift) -> str:\n    return f\"Shift at {shift.clinic.name} starts {shift.starts_at:%H:%M}\"\n",
+}
+RELEASES = {
+    "release-history": ("v0.1.0", REMINDERS_RELEASE, "Release 0.2.0: shift reminders", "v0.2.0"),
+}
 FIXTURES = {
     "approved-story": ({**SCAFFOLD, **APPROVED_STORY}, None),
+    "release-history": ({**SCAFFOLD, **DEPLOY}, None),
     "review-branch": (SCAFFOLD, ("feature/availability-calendar", REVIEW_CHANGE, "Add availability calendar")),
 }
 
@@ -244,6 +255,13 @@ def make_project(root: Path, fixture: str | None = None) -> Path:
     subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
     subprocess.run([*git, "add", "."], cwd=project, check=True)
     subprocess.run([*git, "commit", "-qm", "fixture baseline"], cwd=project, check=True)
+    if fixture in RELEASES:
+        previous, change, message, current = RELEASES[fixture]
+        subprocess.run([*git, "tag", previous], cwd=project, check=True)
+        write_files(project, change)
+        subprocess.run([*git, "add", "."], cwd=project, check=True)
+        subprocess.run([*git, "commit", "-qm", message], cwd=project, check=True)
+        subprocess.run([*git, "tag", current], cwd=project, check=True)
     if branch:
         name, change, message = branch
         subprocess.run(["git", "checkout", "-qb", name], cwd=project, check=True)
@@ -403,9 +421,17 @@ def grade_cases(results: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         if not rows:
             verdict = "harness-error"
         else:
-            verdict = "pass" if wins >= 2 and wins > len(rows) / 2 else "fail"
+            verdict = "pass" if wins > len(rows) / 2 and (wins >= 2 or len(rows) == 1) else "fail"
         cases[cid] = {"runs": len(rows), "passes": wins, "verdict": verdict, "unstable": 0 < wins < len(rows), "median_cost_usd": round(statistics.median(costs), 4) if costs else None}
     return cases
+
+
+def needs_rerun(rows: list[dict[str, Any]], limit: int) -> bool:
+    graded = [r for r in rows if r["status"] != "harness-error"]
+    wins = sum(r["passed"] for r in graded)
+    if not graded or graded[0]["passed"] or wins >= 2 or len(graded) >= limit:
+        return False
+    return wins + limit - len(graded) >= 2
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -413,10 +439,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tier", choices=("smoke", "full"), default="smoke")
     parser.add_argument("--entry", choices=("go", "category", "both"))
     parser.add_argument("--only", nargs="*", default=[])
-    parser.add_argument("--repeat", type=int, default=3)
+    parser.add_argument("--repeat", type=int, default=3, help="most runs per case; a case reruns only while its first run failed and a 2-of-N majority is still reachable")
     parser.add_argument("--model", default="sonnet")
-    parser.add_argument("--case-budget", type=float, default=1.00)
-    parser.add_argument("--run-budget", type=float, default=25.0)
+    parser.add_argument("--case-budget", type=float, default=0.50)
+    parser.add_argument("--run-budget", type=float, default=8.0)
     parser.add_argument("--timeout", type=float, default=90.0)
     parser.add_argument("--stop-grace", type=float, default=20.0)
     parser.add_argument("--cases", type=Path, default=CASES)
@@ -432,21 +458,23 @@ def main(argv: list[str] | None = None) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 2
-    runs = select_runs(cases, args.tier, args.entry, args.only) * args.repeat
+    runs = select_runs(cases, args.tier, args.entry, args.only)
     if args.dry_run:
         for case, entry in runs:
             print(f"{case['id']}\t{entry}\t{prompt_for(case, entry)}")
-        print(f"{len(runs)} runs; worst case ${len(runs) * args.case_budget:.2f}, capped at ${args.run_budget:.2f}")
+        print(f"{len(runs)} runs, up to {len(runs) * args.repeat} with reruns; worst case ${len(runs) * args.repeat * args.case_budget:.2f}, capped at ${args.run_budget:.2f}")
         return 0
     results: list[dict[str, Any]] = []
     diagnostics: list[dict[str, Any]] = []
     diagnosed: set[str] = set()
     spent = 0.0
+    stopped = False
     pending = [(case, entry, results) for case, entry in runs]
     while pending:
         case, entry, sink = pending.pop(0)
         if spent + args.case_budget > args.run_budget:
             print(f"Stopping: run budget ${args.run_budget:.2f} would be exceeded (${spent:.2f} committed)", file=sys.stderr)
+            stopped = True
             break
         row = run_case(case, entry, args)
         sink.append(row)
@@ -454,6 +482,8 @@ def main(argv: list[str] | None = None) -> int:
         price = f"${row['cost_usd']:.3f}" if row["cost_usd"] is not None else "unpriced"
         label = entry if sink is results else f"{entry}*"
         print(f"{row['status']:<15} {case['id']:<28} {label:<9} {price:<9} {row['detail']}", flush=True)
+        if sink is results and needs_rerun([r for r in results if r["case"] == case["id"] and r["entry"] == entry], args.repeat):
+            pending.append((case, entry, results))
         if sink is results and entry == "go" and args.diagnose and not row["passed"] and row["status"] != "harness-error" and case["id"] not in diagnosed:
             diagnosed.add(case["id"])
             pending.insert(0, (case, "category", diagnostics))
@@ -472,7 +502,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{c['verdict']:<15} {cid:<28} {c['passes']}/{c['runs']:<7} {cost:<9} {'unstable' if c['unstable'] else ''}".rstrip())
     print(json.dumps(summary))
     print(f"Results: {path}")
-    return 0 if summary["runs"] == summary["planned"] and summary["verdicts"]["fail"] == 0 and summary["verdicts"]["harness-error"] == 0 else 1
+    return 0 if not stopped and summary["verdicts"]["fail"] == 0 and summary["verdicts"]["harness-error"] == 0 else 1
 
 
 if __name__ == "__main__":

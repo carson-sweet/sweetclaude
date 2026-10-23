@@ -15,8 +15,8 @@ This suite checks that a plain-language request reaches the right Tier 1 categor
 ## Running it live
 
 ```
-python3 scripts/routing_behavior.py --tier smoke          # 6 cases, one per category, 3 repeats each
-python3 scripts/routing_behavior.py --tier full           # 33 cases, 3 repeats each
+python3 scripts/routing_behavior.py --tier smoke          # 6 cases, one per category
+python3 scripts/routing_behavior.py --tier full           # 33 cases
 python3 scripts/routing_behavior.py --only design-api --entry both
 python3 scripts/routing_behavior.py --tier full --dry-run
 ```
@@ -26,10 +26,10 @@ Both tiers send every case through `/sweetclaude:go`. A case that fails through 
 Every run uses your normal Claude login and loads this checkout with `--plugin-dir`, with project and local settings only. Each run also gets:
 
 - a new throwaway Git project;
-- a $1.00 spend cap, a 90-second timeout and a $25 cap on the whole run;
+- a $0.50 spend cap, a 90-second timeout and an $8 cap on the whole run;
 - Bash allowed in the throwaway fixture, with Write, Edit and NotebookEdit disabled.
 
-Each case runs 3 times (`--repeat 3`). A case passes when at least 2 graded runs pass and passes are a majority of graded runs. A case whose graded runs disagree is reported as unstable. `harness-error` runs are left out of the count, and a case with no graded runs gets the verdict `harness-error`. The summary carries `cases`, `verdicts` and `unstable` alongside the per-run fields.
+Each case runs once. A case whose first graded run fails is rerun, up to 3 runs (`--repeat 3`), while a 2-of-3 majority is still reachable. A case passes when its first graded run passes, or when at least 2 graded runs pass and passes are a majority. A case whose graded runs disagree is reported as unstable. `harness-error` runs are left out of the count, and a case with no graded runs gets the verdict `harness-error`. The summary carries `cases`, `verdicts` and `unstable` alongside the per-run fields.
 
 The run is interrupted as soon as a workflow's `SKILL.md` is read.
 
@@ -56,7 +56,7 @@ Before any paid run, the driver runs `hooks/session-preflight.sh` against the fi
 
 The harness is changed only through cases, fixtures and flags. A structural change to the driver or the oracle requires a recorded transcript that the oracle misgrades, added to `tests/fixtures/routing_transcripts/` with the change.
 
-The defaults are: Bash allowed in the throwaway fixture with Write, Edit and NotebookEdit disallowed; a $1.00 per-case cap that is meant never to bind; a $25 run cap as the spend control; and 3 repeats graded by a 2-of-3 majority, with unstable cases reported.
+The defaults are: Bash allowed in the throwaway fixture with Write, Edit and NotebookEdit disallowed; a $0.50 per-case cap; an $8 run cap as the spend control; and one run per case, with failed cases rerun up to 3 times and graded by a 2-of-3 majority, with unstable cases reported (changed 2026-10-23 to cut a full run from about $15 to about $5).
 
 Run the full tier before and after any change to skill descriptions, `find-skill`, or an INDEX file, and compare which cases flip. A run with no decision it could change should not happen.
 

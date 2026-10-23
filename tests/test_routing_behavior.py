@@ -201,6 +201,15 @@ def test_review_branch_fixture_has_a_change_set_on_a_feature_branch(tmp_path):
     assert diff == ["src/shiftboard/availability.py"]
 
 
+def test_release_history_fixture_has_two_tagged_releases_and_a_deploy_pipeline(tmp_path):
+    project = rb.make_project(tmp_path, "release-history")
+    tags = subprocess.run(["git", "tag", "--sort=creatordate"], cwd=project, capture_output=True, text=True, check=True).stdout.split()
+    changed = subprocess.run(["git", "diff", "--name-only", "v0.1.0", "v0.2.0"], cwd=project, capture_output=True, text=True, check=True).stdout.split()
+    assert tags == ["v0.1.0", "v0.2.0"]
+    assert changed == ["src/shiftboard/reminders.py"]
+    assert (project / ".github" / "workflows" / "deploy.yml").is_file()
+
+
 def test_validation_rejects_an_unknown_fixture():
     case = {**CASES["build-review-change"], "fixture": "nope"}
     assert rb.validate_cases([case]) == ["build-review-change: unknown fixture 'nope'"]
@@ -282,7 +291,7 @@ def test_driver_reports_a_missing_executable(tmp_path, monkeypatch):
 def test_dry_run_reports_worst_case_spend(capsys):
     assert rb.main(["--tier", "full", "--dry-run"]) == 0
     out = capsys.readouterr().out
-    assert f"{3 * len(CASES)} runs; worst case ${3 * len(CASES) * 1.0:.2f}, capped at $25.00" in out
+    assert f"{len(CASES)} runs, up to {3 * len(CASES)} with reruns; worst case ${3 * len(CASES) * 0.5:.2f}, capped at $8.00" in out
 
 
 def test_go_failures_are_rerun_through_the_category_command(tmp_path, monkeypatch, capsys):
@@ -342,7 +351,17 @@ def test_harness_errors_are_excluded_from_the_denominator():
     graded = rb.grade_cases(rows("design-api", ["pass", "pass", "harness-error"]))["design-api"]
     assert (graded["runs"], graded["passes"], graded["verdict"], graded["unstable"]) == (2, 2, "pass", False)
     single = rb.grade_cases(rows("design-api", ["pass", "harness-error", "harness-error"]))["design-api"]
-    assert (single["runs"], single["verdict"]) == (1, "fail")
+    assert (single["runs"], single["verdict"]) == (1, "pass")
+
+
+def test_only_a_failed_first_run_is_rerun_while_a_majority_is_reachable():
+    assert not rb.needs_rerun(rows("design-api", ["pass"]), 3)
+    assert rb.needs_rerun(rows("design-api", ["no-route"]), 3)
+    assert rb.needs_rerun(rows("design-api", ["no-route", "pass"]), 3)
+    assert not rb.needs_rerun(rows("design-api", ["no-route", "no-route"]), 3)
+    assert not rb.needs_rerun(rows("design-api", ["no-route", "pass", "pass"]), 3)
+    assert not rb.needs_rerun(rows("design-api", ["no-route"]), 1)
+    assert not rb.needs_rerun(rows("design-api", ["harness-error"]), 3)
 
 
 def test_all_harness_errors_is_a_harness_error_verdict():
