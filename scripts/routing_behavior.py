@@ -106,6 +106,8 @@ def validate_cases(cases: list[dict[str, Any]], library: Path = ROOT / "skill-li
         if not case.get("prompt") or not case.get("workflows"):
             errors.append(f"{cid}: prompt and workflows are required")
             continue
+        if case.get("fixture") is not None and case["fixture"] not in FIXTURES:
+            errors.append(f"{cid}: unknown fixture {case['fixture']!r}")
         index = (library / category / "INDEX.md").read_text(encoding="utf-8")
         for workflow in case["workflows"]:
             if not isinstance(workflow, str):
@@ -203,7 +205,32 @@ def prompt_for(case: dict[str, Any], entry: str) -> str:
     return f"/sweetclaude:{command} {case['prompt']}"
 
 
-def make_project(root: Path) -> Path:
+SCAFFOLD = {
+    "pyproject.toml": "[project]\nname = \"shiftboard\"\nversion = \"0.1.0\"\n",
+    "src/shiftboard/__init__.py": "",
+    "src/shiftboard/shifts.py": "from dataclasses import dataclass\nfrom datetime import datetime\n\n\n@dataclass\nclass Shift:\n    clinic_id: str\n    staff_id: str\n    starts_at: datetime\n    ends_at: datetime\n",
+    "tests/test_shifts.py": "from datetime import datetime\n\nfrom shiftboard.shifts import Shift\n\n\ndef test_shift_belongs_to_one_clinic():\n    shift = Shift(\"c1\", \"s1\", datetime(2026, 1, 5, 8), datetime(2026, 1, 5, 16))\n    assert shift.clinic_id == \"c1\"\n",
+}
+APPROVED_STORY = {
+    ".sweetclaude/product/roadmap/issues/ISSUE-001-shift-swap.md": "---\nid: ISSUE-001\ntype: story\ntitle: Shift swap within a clinic\nstatus: ready\npriority: P1\neffort: m\nepic: null\nmilestone: null\nsprint: null\ntags: []\norigin: manual\ncreated: '2026-10-20T00:00:00+00:00'\nupdated: '2026-10-20T00:00:00+00:00'\nclosed_date: null\n---\n\n## Description\n\nStaff can offer a shift and a coworker at the same clinic can take it.\n\n## Acceptance criteria\n\n- A staff member can offer one of their own upcoming shifts.\n- Only staff at the same clinic can see and take an offered shift.\n- Taking an offered shift reassigns it and notifies the original owner.\n\nApproved by the product owner on 2026-10-20.\n",
+}
+REVIEW_CHANGE = {
+    "src/shiftboard/availability.py": "from dataclasses import dataclass\nfrom datetime import date\n\n\n@dataclass\nclass Availability:\n    clinic_id: str\n    staff_id: str\n    day: date\n    available: bool\n\n\ndef calendar(entries, clinic_id):\n    return sorted((e for e in entries if e.clinic_id == clinic_id), key=lambda e: (e.day, e.staff_id))\n",
+}
+FIXTURES = {
+    "approved-story": ({**SCAFFOLD, **APPROVED_STORY}, None),
+    "review-branch": (SCAFFOLD, ("feature/availability-calendar", REVIEW_CHANGE, "Add availability calendar")),
+}
+
+
+def write_files(project: Path, files: dict[str, str]) -> None:
+    for name, text in files.items():
+        path = project / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+
+def make_project(root: Path, fixture: str | None = None) -> Path:
     project = root / "project"
     state = project / ".sweetclaude" / "state"
     state.mkdir(parents=True)
@@ -211,10 +238,18 @@ def make_project(root: Path) -> Path:
     (state / "sweetclaude.yaml").write_text(FIXTURE_STATE.format(now=now), encoding="utf-8")
     (state / "last-doctor-run.json").write_text(json.dumps({"timestamp": now}), encoding="utf-8")
     (project / "README.md").write_text("# ShiftBoard\n\nStaff shift scheduling for small veterinary clinics.\n", encoding="utf-8")
+    files, branch = FIXTURES[fixture] if fixture else ({}, None)
+    write_files(project, files)
     git = ["git", "-c", "user.email=routing-fixture@example.invalid", "-c", "user.name=Routing Fixture"]
     subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
     subprocess.run([*git, "add", "."], cwd=project, check=True)
     subprocess.run([*git, "commit", "-qm", "fixture baseline"], cwd=project, check=True)
+    if branch:
+        name, change, message = branch
+        subprocess.run(["git", "checkout", "-qb", name], cwd=project, check=True)
+        write_files(project, change)
+        subprocess.run([*git, "add", "."], cwd=project, check=True)
+        subprocess.run([*git, "commit", "-qm", message], cwd=project, check=True)
     digest = hashlib.md5(str(project.resolve()).encode()).hexdigest()
     Path(f"/tmp/.sweetclaude-bootstrap-ran-{digest}").write_text("", encoding="utf-8")
     return project
@@ -276,7 +311,7 @@ def run_case(case: dict[str, Any], entry: str, args: argparse.Namespace) -> dict
     events: list[dict[str, Any]] = []
     trace = Trace()
     with tempfile.TemporaryDirectory(prefix="sweetclaude-routing-") as tmp, tempfile.TemporaryFile("w+") as errors:
-        project = make_project(Path(tmp))
+        project = make_project(Path(tmp), case.get("fixture"))
         problem = preflight(project, args.repo)
         if problem:
             return record(case, entry, "harness-error", problem, None, events, started)

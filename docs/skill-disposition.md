@@ -113,7 +113,7 @@ This inventory covers every skill packaged with SweetClaude. The disposition is 
 | `setup` | Consolidated onboarding skill. | Keep — internal |
 | `small-story` | Internal bounded, evidence-gated small-story workflow. | Keep — internal |
 | `something-broke` | Reactive production incident skill. | Keep — on-demand |
-| `status` | Orient to the current project. | Keep — on-demand |
+| `status` | Orient to active work and blockers. | Keep — on-demand |
 | `sweetclaude-behavioral-regression` | Validates that mode enforcement is working correctly across all four modes. | Retired 2026-10-20 |
 | `testing-accessibility` | WCAG 2.1 Level AA audit. | Keep — on-demand |
 | `testing-compliance` | Compliance control testing and evidence collection. | Keep — on-demand |

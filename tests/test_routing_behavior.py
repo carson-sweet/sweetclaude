@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -201,6 +202,27 @@ def test_fixture_project_is_a_committed_git_repository(tmp_path):
     assert state["schema_version"] == 2
     assert state["framework"]["setup_complete"] is True
     assert (project / ".git").is_dir()
+
+
+def test_approved_story_fixture_has_a_ready_story_and_code(tmp_path):
+    project = rb.make_project(tmp_path, "approved-story")
+    story = project / ".sweetclaude/product/roadmap/issues/ISSUE-001-shift-swap.md"
+    assert "status: ready" in story.read_text()
+    assert (project / "src/shiftboard/shifts.py").is_file()
+    assert (project / "tests/test_shifts.py").is_file()
+
+
+def test_review_branch_fixture_has_a_change_set_on_a_feature_branch(tmp_path):
+    project = rb.make_project(tmp_path, "review-branch")
+    branch = subprocess.run(["git", "branch", "--show-current"], cwd=project, capture_output=True, text=True, check=True).stdout.strip()
+    diff = subprocess.run(["git", "diff", "--name-only", "main...HEAD"], cwd=project, capture_output=True, text=True, check=True).stdout.split()
+    assert branch == "feature/availability-calendar"
+    assert diff == ["src/shiftboard/availability.py"]
+
+
+def test_validation_rejects_an_unknown_fixture():
+    case = {**CASES["build-review-change"], "fixture": "nope"}
+    assert rb.validate_cases([case]) == ["build-review-change: unknown fixture 'nope'"]
 
 
 @needs_jq

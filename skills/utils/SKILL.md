@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Use bounded cross-cutting utilities."
+description: "Bounded cross-cutting utilities: meeting prep, session export, dashboards, and whole-project overview of milestones, epics, and issues."
 ---
 
 # Utils

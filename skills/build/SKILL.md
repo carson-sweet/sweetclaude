@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Build, verify, review, and ship planned work."
+description: "Build, verify, review, and ship planned work, including fixing defects found before release. A bug in shipped production code is maintain, not this."
 ---
 
 # Build

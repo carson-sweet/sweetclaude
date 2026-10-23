@@ -67,6 +67,7 @@ cases:
     category: build
     workflows: [code-feature, small-story, large-story]
     clarify_ok: false
+    fixture: approved-story
 
   - id: build-repair-defect
     story: "Build — repair a discovered defect"
@@ -82,6 +83,7 @@ cases:
     category: build
     workflows: [code-review]
     clarify_ok: false
+    fixture: review-branch
 
   - id: build-issue-tracker
     story: supplemental

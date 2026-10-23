@@ -1,7 +1,7 @@
 ---
 spdx-license: AGPL-3.0-or-later
 user-invocable: true
-description: "Orient to the current project."
+description: "Orient to active work and blockers. A whole-project overview of milestones, epics, and issues is utils big-picture, not this."
 ---
 
 

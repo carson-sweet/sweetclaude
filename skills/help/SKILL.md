@@ -36,11 +36,11 @@ Then print the nine SweetClaude commands:
 > - `/sweetclaude:go` — Assess what to work on next and propose it.
 > - `/sweetclaude:plan` — Plan what to build and why.
 > - `/sweetclaude:design` — Design how selected work should be shaped.
-> - `/sweetclaude:build` — Build, verify, review, and ship planned work.
+> - `/sweetclaude:build` — Build, verify, review, and ship planned work, including pre-release defect fixes.
 > - `/sweetclaude:maintain` — Maintain and repair the product codebase.
 > - `/sweetclaude:configure` — Configure, update, diagnose, and recover SweetClaude.
-> - `/sweetclaude:utils` — Use bounded cross-cutting utilities.
-> - `/sweetclaude:status` — Orient to the current project.
+> - `/sweetclaude:utils` — Bounded cross-cutting utilities, including the whole-project overview.
+> - `/sweetclaude:status` — Orient to active work and blockers.
 > - `/sweetclaude:help` — SweetClaude help and skill discovery.
 
 Then use AskUserQuestion with these four options:
