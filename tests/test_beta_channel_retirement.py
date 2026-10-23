@@ -32,11 +32,6 @@ _spec = importlib.util.spec_from_file_location(
 plugin_state = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(plugin_state)
 
-_gate_spec = importlib.util.spec_from_file_location(
-    "release_gate", REPO_ROOT / "scripts" / "release_gate.py"
-)
-release_gate = importlib.util.module_from_spec(_gate_spec)
-_gate_spec.loader.exec_module(release_gate)
 
 
 SWITCH_COMMANDS = [
@@ -172,19 +167,6 @@ class TestShellEmission:
     def test_preflight_exports_channel_retired(self):
         text = (REPO_ROOT / "scripts" / "preflight.sh").read_text(encoding="utf-8")
         assert "SC_PLUGIN_CHANNEL_RETIRED" in text
-
-
-class TestReleaseGateRefusesRetiredChannel:
-    def test_beta_release_is_refused(self):
-        with pytest.raises(ValueError, match="retired"):
-            release_gate._validate_channel("4.6.0-beta", "beta", "beta-4.x")
-
-    def test_stable_release_still_allowed(self):
-        release_gate._validate_channel("5.0.0", "stable", "main")
-
-    def test_stable_release_rejects_previous_major(self):
-        with pytest.raises(ValueError, match="stable releases must be 5.x"):
-            release_gate._validate_channel("4.6.0", "stable", "main")
 
 
 class TestCiRetargeted:

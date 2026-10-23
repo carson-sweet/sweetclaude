@@ -109,11 +109,3 @@ def test_release_workflow_reruns_docs_claims_check_at_tag_time():
     assert "scripts/docs_claims_check.py" in text, (
         "the tagged commit's docs must be re-checked at release time"
     )
-
-
-def test_release_gate_check_reads_committed_release_evidence():
-    text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
-    assert "docs/release-evidence" in text, (
-        "the release gate must re-validate the committed phase-6 proof "
-        "receipts for the tagged version"
-    )

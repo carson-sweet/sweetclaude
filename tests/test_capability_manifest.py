@@ -17,7 +17,6 @@ from maintenance.capability_manifest import (  # noqa: E402
     load_manifest,
     minimum_safe_version,
     project_shape_config,
-    required_release_checks,
     validate_manifest,
 )
 
@@ -44,22 +43,6 @@ def test_capability_manifest_loads_channel_facts():
     assert expected_ref("legacy", manifest) == "stable-3.x"
     assert expected_marketplace("legacy", manifest) == "sweetclaude-legacy"
     assert manifest["channels"]["legacy"]["major_version"] == 3
-
-
-def test_capability_manifest_loads_release_checks():
-    checks = required_release_checks()
-
-    assert checks == {
-        "tests",
-        "channel-isolation",
-        "installation-smoke",
-        "static-checks",
-        "release-metadata",
-        "manifest-validation",
-        "release-identity",
-        "docs-capability",
-        "public-distribution",
-    }
 
 
 def test_capability_manifest_loads_project_shape_routes():

@@ -148,11 +148,10 @@ def test_R_153_session_start_shows_short_status_line():
     assert "status line" in text
 
 
-def test_R_170_evidence_dir_is_release_gate_control_receipts():
+def test_R_170_evidence_dir_is_control_receipts():
     text = flat(doc("state-and-memory"))
     assert "and `state/evidence/` directories" not in text
     assert "scripts/control_receipts.py" in text
-    assert re.search(r"state/evidence/.{0,200}release[- ]gate|release[- ]gate.{0,200}state/evidence/", text)
 
 
 def test_R_171_yaml_example_uses_schema_2_and_null_declined():

@@ -23,85 +23,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Release readiness gate
+      - name: Refuse prerelease tags
         env:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-
-          # Derive channel + channel-branch from the tag. Two live channels
-          # (decision log #35, ISSUE-241 — the beta channel is retired and
-          # prerelease tags are refused):
-          #   non-prerelease 5.x  -> stable / main
-          #   non-prerelease 3.x  -> legacy / stable-3.x
-          major="${TAG#v}"; major="${major%%.*}"
           case "$TAG" in
             *-beta*|*-rc*|*-alpha*)
               echo "::error::Prerelease tag $TAG refused — the beta channel is retired (ISSUE-241)."
               exit 1
               ;;
-            *)
-              case "$major" in
-                3) channel=legacy; branch=stable-3.x ;;
-                *) channel=stable; branch=main ;;
-              esac
-              ;;
           esac
 
-          # The gate requires a named branch (not the detached tag checkout)
-          # tracking origin/<branch>, with the tag at the branch HEAD. Releases
-          # must be cut from the channel-branch HEAD.
-          git checkout "$branch"
-          tag_commit="$(git rev-list -n1 "$TAG")"
-          head_commit="$(git rev-parse HEAD)"
-          if [ "$tag_commit" != "$head_commit" ]; then
-            echo "::error::Tag $TAG ($tag_commit) is not at $branch HEAD ($head_commit) — releases must be cut from the channel-branch HEAD."
-            exit 1
-          fi
-
+      - name: Docs-claims check
+        run: |
+          set -euo pipefail
           python3 -m pip install --quiet pyyaml
-
-          # Docs-claims gate (phase 6): the tagged commit's user-facing docs
-          # must only carry resolvable command/script/path claims.
           python3 scripts/docs_claims_check.py
-
-          # Build the release artifact the gate inventories. dist/ is gitignored
-          # so it is absent in a fresh checkout — create it before packing.
-          mkdir -p dist
-          npm pack --pack-destination dist
-
-          # The release-identity evidence asserts update-discovery for ALL
-          # channels, so each other channel's current artifact must also exist.
-          # Build them from their channel branches, then return to ours.
-          for other_branch in main stable-3.x; do
-            if [ "$other_branch" = "$branch" ]; then
-              continue
-            fi
-            if git rev-parse --verify "origin/$other_branch" >/dev/null 2>&1; then
-              git checkout "$other_branch"
-              npm pack --pack-destination dist
-              git checkout "$branch"
-            fi
-          done
-
-          # Generate evidence, then enforce. A non-zero exit here fails the job
-          # before the release is created (publish-time gate).
-          if ! python3 scripts/release_gate.py generate-evidence \
-              --project-dir . --tag "$TAG" --channel "$channel" --branch "$branch" \
-              > "$RUNNER_TEMP/release-evidence.json"; then
-            cat "$RUNNER_TEMP/release-evidence.json"
-            exit 1
-          fi
-          cat "$RUNNER_TEMP/release-evidence.json"
-          receipt="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["release_receipt"])' "$RUNNER_TEMP/release-evidence.json")"
-
-          # Phase 6: the committed release proof receipts (live-enforcement, routing,
-          # upgrade-path, docs-claims) under docs/release-evidence/<version>/
-          # are re-validated for the tagged version by release_gate.py check.
-          python3 scripts/release_gate.py check \
-            --project-dir . --tag "$TAG" --channel "$channel" --branch "$branch" \
-            --receipt "$receipt" \
-            --release-evidence-dir "docs/release-evidence/${TAG#v}"
 
       - name: Create release from tag
         env:

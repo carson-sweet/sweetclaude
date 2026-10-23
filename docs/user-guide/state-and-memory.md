@@ -38,7 +38,7 @@ This page is reference. For why state is structured the way it is, read [How It 
 
 Skills create additional state files as they run — `state/discovery.yaml`, `state/personas.yaml`, `state/brief.yaml`, etc. Treat the schema as extensible.
 
-The `contracts/`, `reports/`, and `state/workflows/` directories are written by the controller-gated story workflows — see [Large-Story and Small-Story Workflows](large-story-workflow.md) and [Evidence and Success-Criteria Contracts](evidence-and-contracts.md). The `state/evidence/` directory holds control-lint receipts for the release gate, written by `scripts/control_receipts.py`. The opt-in `work/` tree is covered in [Work-Item Artifacts](work-item-artifacts.md).
+The `contracts/`, `reports/`, and `state/workflows/` directories are written by the controller-gated story workflows — see [Large-Story and Small-Story Workflows](large-story-workflow.md) and [Evidence and Success-Criteria Contracts](evidence-and-contracts.md). The `state/evidence/` directory holds control-lint receipts written by `scripts/control_receipts.py`. The opt-in `work/` tree is covered in [Work-Item Artifacts](work-item-artifacts.md).
 
 Version note: legacy 3.x and 4.x share the same state principle but differ in operational details. In 4.x, project maintenance data may include `.sweetclaude/state/doctor-runs/` and `.sweetclaude/state/recovery-runs/`. Recovery run directories can contain snapshots of state and product artifacts and should stay out of source control.
 

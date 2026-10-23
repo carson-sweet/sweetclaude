@@ -6,7 +6,6 @@ channels:
     expected_marketplace: sweetclaude-stable
     prerelease_required: false
     prerelease_allowed: false
-    control_lint_required: true
   beta:
     branch: beta-4.x
     major_version: 4
@@ -16,30 +15,12 @@ channels:
     minimum_safe_version: 4.1.9-beta
     retired: true
     retirement_target_channel: stable
-    control_lint_required: true
   legacy:
     branch: stable-3.x
     major_version: 3
     expected_marketplace: sweetclaude-legacy
     prerelease_required: false
     prerelease_allowed: false
-release:
-  required_evidence_checks:
-  - tests
-  - channel-isolation
-  - installation-smoke
-  - static-checks
-  - release-metadata
-  - manifest-validation
-  - release-identity
-  - docs-capability
-  - public-distribution
-  required_local_proofs:
-    stable:
-    - live-enforcement
-    - routing
-    - upgrade-path
-    - docs-claims
 capabilities:
   recover.stabilize_without_migration:
     title: Stabilize recoverable legacy layout without taxonomy migration

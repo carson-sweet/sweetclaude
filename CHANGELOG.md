@@ -6,6 +6,12 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ## [5.1.2] — 2026-10-23
 
+### Removed — release receipts and the release gate
+
+Releases no longer generate, commit, or validate receipts. `scripts/release_gate.py`, `scripts/release_evidence_local.py`, the release receipt validators in `scripts/control_receipts.py`, and the `release` section of the capability manifest are gone, along with the age, spend and CLI-version rules. The release workflow refuses prerelease tags, runs the docs-claims check, and creates the release.
+
+Releasing depends on the tests passing or failing when they are run: the unit suite, the live enforcement suite (`tests/live`), the routing suite (`scripts/routing_behavior.py`) and the docs-claims check. See CONTRIBUTING.md.
+
 ### Fixed — first-time onboarding, backlog feature setup, and the feature prompt
 
 Setting up SweetClaude in a project that was not already configured could stop partway through. The session-start health check is skipped when the project does not exist yet, so that first session carried no health stamp, and the check bootstrap runs at the start of a session then blocked the very setup step it was meant to perform — asking you to run the bootstrap skill, which was blocked in turn. Onboarding could not finish without hand-editing framework state. The health check is now permitted at that point, so onboarding completes normally.

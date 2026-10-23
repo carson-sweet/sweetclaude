@@ -24,7 +24,6 @@ from control_receipts import (
     validate_phase_exit_receipt,
     validate_status_closure_gate,
 )
-from release_gate import check_release_readiness
 
 
 REQUIRED_RELEASE_CHECKS = [
@@ -708,44 +707,6 @@ def _invariant_receipt(tmp_path: Path) -> Path:
         expected_assertion="historical bypass is blocked",
         last_run_result="pass",
     )
-
-
-def test_t025_high_stakes_release_requires_change_context(tmp_path):
-    _write_release_project(tmp_path)
-    checks = [
-        *[_release_check(name) for name in REQUIRED_RELEASE_CHECKS],
-        _release_check("load-bearing-invariant", evidence_path=str(_invariant_receipt(tmp_path))),
-    ]
-    receipt = _write_release_receipt(tmp_path, checks=checks)
-
-    with pytest.raises(ValueError, match="change-context"):
-        check_release_readiness(
-            tmp_path,
-            tag="v3.9.0",
-            channel="legacy",
-            branch="stable-3.x",
-            receipt_path=receipt,
-        )
-
-
-def test_t025_high_stakes_release_accepts_change_context(tmp_path):
-    _write_release_project(tmp_path)
-    checks = [
-        *[_release_check(name) for name in REQUIRED_RELEASE_CHECKS],
-        _release_check("load-bearing-invariant", evidence_path=str(_invariant_receipt(tmp_path))),
-        _release_check("change-context", evidence_path=str(_change_context_receipt(tmp_path))),
-    ]
-    receipt = _write_release_receipt(tmp_path, checks=checks)
-
-    result = check_release_readiness(
-        tmp_path,
-        tag="v3.9.0",
-        channel="legacy",
-        branch="stable-3.x",
-        receipt_path=receipt,
-    )
-
-    assert result["ok"] is True
 
 
 def test_status_closure_gate_cli_accepts_complete_receipts(tmp_path):
