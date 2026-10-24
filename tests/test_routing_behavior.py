@@ -392,3 +392,11 @@ def test_failing_case_is_diagnosed_once_and_summary_carries_verdicts(tmp_path, m
     assert summary["unstable"] == []
     assert summary["diagnostics"] == {"plan-customer-problem": "pass"}
     assert "fail            plan-customer-problem" in capsys.readouterr().out
+
+
+def test_each_run_is_saved_to_the_progress_log_as_it_completes(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(rb, "run_case", lambda case, entry, args: rb.record(case, entry, "pass", "ok", 0.20, [], 0.0))
+    rb.main(["--tier", "full", "--case-budget", "0.25", "--run-budget", "1.0", "--out", str(tmp_path)])
+    lines = next(tmp_path.glob("routing-full-*.jsonl")).read_text().splitlines()
+    assert len(lines) == 4
+    assert json.loads(lines[0])["diagnostic"] is False

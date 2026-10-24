@@ -464,6 +464,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{case['id']}\t{entry}\t{prompt_for(case, entry)}")
         print(f"{len(runs)} runs, up to {len(runs) * args.repeat} with reruns; worst case ${len(runs) * args.repeat * args.case_budget:.2f}, capped at ${args.run_budget:.2f}")
         return 0
+    args.out.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    path = args.out / f"routing-{args.tier}-{stamp}.json"
+    progress = path.with_suffix(".jsonl")
     results: list[dict[str, Any]] = []
     diagnostics: list[dict[str, Any]] = []
     diagnosed: set[str] = set()
@@ -477,6 +481,8 @@ def main(argv: list[str] | None = None) -> int:
             stopped = True
             break
         row = run_case(case, entry, args)
+        with progress.open("a", encoding="utf-8") as log:
+            log.write(json.dumps({"diagnostic": sink is not results, **row}) + "\n")
         sink.append(row)
         spent += row["cost_usd"] if row["cost_usd"] is not None else args.case_budget
         price = f"${row['cost_usd']:.3f}" if row["cost_usd"] is not None else "unpriced"
@@ -493,9 +499,6 @@ def main(argv: list[str] | None = None) -> int:
     summary["unstable"] = sorted(cid for cid, c in summary["cases"].items() if c["unstable"])
     summary["diagnostics"] = {row["case"]: row["status"] for row in diagnostics}
     summary["cost_usd"] = round(summary["cost_usd"] + sum(r["cost_usd"] or 0 for r in diagnostics), 4)
-    args.out.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    path = args.out / f"routing-{args.tier}-{stamp}.json"
     path.write_text(json.dumps({"executed_at": stamp, "model": args.model, "tier": args.tier, "summary": summary, "results": results, "diagnostics": diagnostics}, indent=2), encoding="utf-8")
     for cid, c in summary["cases"].items():
         cost = f"${c['median_cost_usd']:.3f}" if c["median_cost_usd"] is not None else "unpriced"
