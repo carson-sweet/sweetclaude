@@ -4,6 +4,18 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [5.1.3] — 2026-11-10
+
+### Fixed — improvement register learnings deleted on session start
+
+Learnings in the improvement register could be deleted without warning. The session-state generator rebuilds `improvement-register.md` from `improvement-register.jsonl` every time it runs, but it only copied rows from the Markdown file into the JSONL file when the JSONL file was missing. In a project with an empty `improvement-register.jsonl`, such as one an earlier version created, every recorded learning was overwritten with an empty table at session start and after any write to a watched state file. A row that the phase check-in, retro or post-mortem added to the Markdown file was also lost at the next regeneration. Either way, `improvement_register_count` dropped to 0 and no learnings were applied.
+
+The generator now merges rows that the Markdown file has and the JSONL file lacks before it rebuilds. This includes rows added to the Markdown file since the last rebuild. Entries that were edited or retired in the JSONL file are not merged back. If a rebuild would remove a row from the Markdown file, the previous file is saved first as `improvement-register.md.bak`. The phase check-in, retro and the interaction rules now give the row format they append, so each row is read back correctly.
+
+If your learnings were deleted, restore `improvement-register.md` from git (for example, `git checkout <commit> -- .sweetclaude/state/improvement-register.md`). The next session start merges the restored rows into `improvement-register.jsonl`.
+
+---
+
 ## [5.1.2] — 2026-10-23
 
 ### Removed — release receipts and the release gate
