@@ -136,7 +136,7 @@ The improvement register must not be empty after a project completes Implement. 
 
 **Session-start trigger.** If the improvement register has entries, acknowledge them at session start: "I have [N] learnings from previous sessions. [Brief summary]. Still apply?"
 
-Save all learnings to `.sweetclaude/state/improvement-register.md`. Read this file at session start.
+Append all learnings to `.sweetclaude/state/improvement-register.md` as a table row, `| {next #} | {today} | {correction|confirmation|preference|pattern} | {learning} |`. The row is merged into `improvement-register.jsonl` on the next state regeneration; do not rewrite or remove existing rows. Read this file at session start.
 
 ## Protocol Guardian Offer
 

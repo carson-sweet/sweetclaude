@@ -74,39 +74,25 @@ jsonl_path = os.path.join(state_dir, 'improvement-register.jsonl')
 md_path    = os.path.join(state_dir, 'improvement-register.md')
 archive_path = os.path.join(state_dir, 'improvement-register-archive.jsonl')
 
-# Migrate md → jsonl if jsonl absent and md has data rows
-if not os.path.exists(jsonl_path) and os.path.exists(md_path):
-    entries = []
-    with open(md_path) as f:
-        for line in f:
-            s = line.strip()
-            if not s.startswith('|') or s.startswith('| #') or '---' in s:
-                continue
-            parts = [p.strip() for p in s.split('|')[1:-1]]
-            if len(parts) < 4:
-                continue
-            num, d, etype, learning = parts[0], parts[1], parts[2], parts[3]
-            etype = etype.lower() or 'pattern'
-            entries.append({
-                'id': f'lr-{num.zfill(3)}',
-                'date': d if d else str(date.today()),
-                'type': etype,
-                'entry': learning,
-                'source': 'migrated',
-                'weight': 1.0,
-                'decay_exempt': etype in ('correction', 'confirmation'),
-            })
-    with open(jsonl_path, 'w') as f:
-        for e in entries:
-            f.write(json.dumps(e) + '\n')
+# The jsonl is the source of truth and the md is rebuilt from it, but skills
+# also append rows to the md. Rows the md has that the jsonl lacks are merged
+# in before the rebuild, so an append is never overwritten. Rows this script
+# rendered last time (recorded in the md's `rendered` marker) and that have
+# since left the jsonl were edited or retired upstream, so they are not merged
+# back. Losing that marker errs toward keeping rows, never toward dropping them.
+import hashlib, re, shutil
 
-# Process jsonl: compute decay, archive low-weight, build summary
-reg_count = 0
-improvement_register_summary = []
+RENDERED_MARKER = re.compile(r'<!--\s*rendered:\s*([0-9a-f,\s]*)-->')
 
-if os.path.exists(jsonl_path):
-    active, to_archive = [], []
-    with open(jsonl_path) as f:
+def entry_key(d, etype, text):
+    raw = '\x1f'.join([(d or '').strip(), (etype or '').strip().lower(), (text or '').strip()])
+    return hashlib.sha1(raw.encode()).hexdigest()[:12]
+
+def read_jsonl(path):
+    out = []
+    if not os.path.exists(path):
+        return out
+    with open(path) as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -115,7 +101,74 @@ if os.path.exists(jsonl_path):
                 entry = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            (to_archive if effective_weight(entry) < 0.1 else active).append(entry)
+            if isinstance(entry, dict):
+                out.append(entry)
+    return out
+
+def read_md(path):
+    rows, rendered = [], None
+    if not os.path.exists(path):
+        return rows, rendered
+    with open(path) as f:
+        content = f.read()
+    m = RENDERED_MARKER.search(content)
+    if m:
+        rendered = {k.strip() for k in m.group(1).split(',') if k.strip()}
+    for line in content.splitlines():
+        s = line.strip()
+        if not s.startswith('|') or s.startswith('| #') or re.fullmatch(r'[|\s:-]+', s):
+            continue
+        parts = [p.strip().replace('\\|', '|') for p in re.split(r'(?<!\\)\|', s)[1:-1]]
+        if len(parts) < 4 or not parts[3]:
+            continue
+        rows.append({'num': parts[0], 'date': parts[1], 'type': parts[2],
+                     'entry': ' | '.join(parts[3:]), 'line': s})
+    return rows, rendered
+
+def next_lr_id(entries):
+    nums = [int(m.group(1)) for e in entries
+            for m in [re.fullmatch(r'lr-(\d+)', str(e.get('id', '')))] if m]
+    return max(nums, default=0) + 1
+
+jsonl_entries = read_jsonl(jsonl_path)
+md_rows, rendered_keys = read_md(md_path)
+
+known = {entry_key(e.get('date'), e.get('type'), e.get('entry'))
+         for e in jsonl_entries + read_jsonl(archive_path)}
+skip = known | (rendered_keys or set())
+
+added = []
+for row in md_rows:
+    etype = row['type'].lower() or 'pattern'
+    d = row['date'] or str(date.today())
+    key = entry_key(d, etype, row['entry'])
+    if key in skip:
+        continue
+    skip.add(key)
+    added.append({
+        'id': f'lr-{next_lr_id(jsonl_entries + added):03d}',
+        'date': d,
+        'type': etype,
+        'entry': row['entry'],
+        'source': 'migrated' if not jsonl_entries else 'md-append',
+        'weight': 1.0,
+        'decay_exempt': etype in ('correction', 'confirmation'),
+    })
+
+if added:
+    jsonl_entries += added
+    with open(jsonl_path, 'w') as f:
+        for e in jsonl_entries:
+            f.write(json.dumps(e) + '\n')
+
+# Process jsonl: compute decay, archive low-weight, build summary
+reg_count = 0
+improvement_register_summary = []
+
+if os.path.exists(jsonl_path):
+    active, to_archive = [], []
+    for entry in jsonl_entries:
+        (to_archive if effective_weight(entry) < 0.1 else active).append(entry)
 
     if to_archive:
         with open(archive_path, 'a') as f:
@@ -129,22 +182,25 @@ if os.path.exists(jsonl_path):
     reg_count = len(active)
     improvement_register_summary = [e['entry'] for e in active[:5]]
 
-    # Regenerate human-readable md
+    new_keys = [entry_key(e.get('date'), e.get('type'), e.get('entry')) for e in active]
+    kept_keys = set(new_keys) | {entry_key(e.get('date'), e.get('type'), e.get('entry'))
+                                 for e in to_archive}
+    dropped = [r for r in md_rows
+               if entry_key(r['date'] or str(date.today()), r['type'].lower() or 'pattern', r['entry'])
+               not in kept_keys]
+    if dropped:
+        shutil.copyfile(md_path, md_path + '.bak')
+
     with open(md_path, 'w') as f:
         f.write('# Improvement Register\n\n')
+        f.write('<!-- Generated from improvement-register.jsonl. Rows appended below are '
+                'merged into it on the next regeneration. -->\n')
+        f.write(f"<!-- rendered: {','.join(new_keys)} -->\n\n")
         f.write('| # | Date | Type | Learning |\n')
         f.write('|---|---|---|---|\n')
         for i, e in enumerate(active, 1):
             text = e.get('entry', '').replace('|', '\\|')
             f.write(f"| {i} | {e.get('date','')} | {e.get('type','')} | {text} |\n")
-
-elif os.path.exists(md_path):
-    with open(md_path) as f:
-        lines = f.readlines()
-    reg_count = sum(1 for l in lines
-                    if l.strip().startswith('|')
-                    and not l.strip().startswith('| #')
-                    and '---' not in l)
 
 # Last Next: line from checkpoint
 checkpoint_next = None

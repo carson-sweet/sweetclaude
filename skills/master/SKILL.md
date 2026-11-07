@@ -138,7 +138,7 @@ Present with pass/fail marks. If all pass, proceed. If any fail, present the gap
 
 If the user overrides, run the gate check with the override as `--override-text`: a soft gate takes "I've addressed this informally — proceed", a hard gate takes "I accept the risk of {gate-id}", and the override is logged to the decision log with which criteria were waived. In Autonomous mode, auto-proceed if all pass; pause if any fail.
 
-**Step 2: Improvement check-in (all phases).** Ask: "What should I do differently next phase?" Save the response to `.sweetclaude/state/improvement-register.md`. Even "nothing" is worth recording. This step is not optional.
+**Step 2: Improvement check-in (all phases).** Ask: "What should I do differently next phase?" Append the response to `.sweetclaude/state/improvement-register.md` as a table row, `| {next #} | {today} | {correction|confirmation|preference|pattern} | {learning} |`. The row is merged into `improvement-register.jsonl` on the next state regeneration. Even "nothing" is worth recording. This step is not optional.
 
 **Step 3:** Generate a decision summary — what was decided, why, alternatives considered.
 

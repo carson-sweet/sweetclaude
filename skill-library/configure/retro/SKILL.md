@@ -29,7 +29,7 @@ If `REGISTER_EMPTY` or the register has no entries beyond a header row:
 
 > "Improvement register is empty — nothing to review. Add a learning with `/sweetclaude:go` after completing a phase, or note one now: what should I do differently next session?"
 
-If they provide one, append it to `improvement-register.md` and write the checkpoint summary (Step 4). Stop.
+If they provide one, append it to `improvement-register.md` as a table row, `| {next #} | {today} | {correction|confirmation|preference|pattern} | {learning} |`. The row is merged into `improvement-register.jsonl` on the next state regeneration, and write the checkpoint summary (Step 4). Stop.
 
 ---
 
