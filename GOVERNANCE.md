@@ -54,12 +54,9 @@ When a co-maintainer joins, governance transitions to:
 
 ## Release Process
 
-SweetClaude uses semantic versioning. Version bumps are operator-driven — run `scripts/bump-version.sh patch|minor|major` explicitly. There is no automatic version bump on commit. Releases are tagged on main. There is no separate release branch.
+SweetClaude uses semantic versioning. Version bumps are made by hand — there is no automatic version bump on commit. Releases are tagged on main. There is no separate release branch. The release steps, including the files to bump and the checks to run before tagging, are in [CONTRIBUTING.md](CONTRIBUTING.md#cutting-a-release).
 
-After each release, update the two static badges in `README.md` manually:
-
-- **Version badge** — update the version number in the shields.io URL to match the new release
-- **Behavioral contracts badge** — after scoring the current model with `scripts/behavioral_judge.py`, update the pass count and model version in the shields.io URL if either has changed
+The version badge in `README.md` is static. Update its version number and release link as part of the version bump.
 
 ---
 
@@ -67,7 +64,7 @@ After each release, update the two static badges in `README.md` manually:
 
 This document does not cover:
 - Code style enforcement (there is none)
-- Commit message enforcement beyond conventional commits (enforced by the auto-bump hook reading the prefix)
+- Commit message enforcement beyond the conventional commit format
 - Response time SLAs (the maintainer is one person; response times vary)
 
 For community expectations, see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
