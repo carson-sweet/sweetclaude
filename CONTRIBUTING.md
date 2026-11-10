@@ -175,36 +175,37 @@ PRs that include test results from a real session are much more likely to be mer
 
 ## Cutting a release
 
-Version bumping is operator-driven, not automated. There is no commit hook that bumps `package.json` automatically.
+Releases are cut by hand from `main`. Nothing bumps the version automatically, and there is no release branch.
 
-To bump the version:
+### 1. Write the changelog entry
 
-```bash
-scripts/bump-version.sh patch   # 4.0.9-beta → 4.0.10-beta
-scripts/bump-version.sh minor   # 4.0.9-beta → 4.1.0-beta
-scripts/bump-version.sh major   # 4.0.9-beta → 5.0.0-beta
+Add a section to the top of `CHANGELOG.md`, above the previous release:
+
+```markdown
+## [5.1.3] — 2026-11-10
+
+### Fixed — short description of the change
+
+What was wrong, what changed, and anything users need to do.
+
+---
 ```
 
-The script:
+The release workflow publishes this section as the GitHub release notes. It copies every line between the `## [x.y.z]` heading for the tagged version and the next `## ` heading, so the heading must match the tag's version exactly. If no section matches, the workflow falls back to GitHub's auto-generated notes.
 
-- Updates `package.json` with the new version.
-- Converts the `[Unreleased]` section in `CHANGELOG.md` to the new version heading and adds a fresh `[Unreleased]` section.
-- Preserves any prerelease suffix (e.g., `-beta`).
-- Does **not** commit or tag. Review the changes, then commit and push yourself:
+### 2. Bump the version
 
-```bash
-git add package.json CHANGELOG.md
-git commit -m 'chore(release): v4.0.10-beta'
-git push origin main
-```
+Change the version in all three places:
 
-Use `--dry-run` to preview the version change without modifying files.
+- `package.json` (`"version"`)
+- `.claude-plugin/plugin.json` (`"version"`)
+- the version badge near the top of `README.md` (the badge text and its `releases/tag/vX.Y.Z` link)
 
-### Releasing
+Use semantic versioning with no prerelease suffix. The release workflow refuses `-beta`, `-rc` and `-alpha` tags.
 
-Pushing a version tag triggers `.github/workflows/release.yml`, which refuses prerelease tags, runs `python3 scripts/docs_claims_check.py`, and creates the GitHub release. There is no receipt or evidence gate.
+### 3. Run the tests
 
-Before tagging, run the tests locally. Each one passes or fails:
+Install the test dependencies with `bash scripts/setup-dev.sh`, then run each check. Each one passes or fails:
 
 ```bash
 python3 -m pytest -q --ignore=tests/live
@@ -212,3 +213,22 @@ SWEETCLAUDE_LIVE=1 python3 -m pytest tests/live -q -rs
 python3 scripts/routing_behavior.py --tier full
 python3 scripts/docs_claims_check.py
 ```
+
+The live suite and the routing suite drive real Claude Code sessions and cost money. Each caps its own spend: the live suite at 0.10 USD per case, and the routing suite at `--case-budget` per case and `--run-budget` per run. `tests/test_dashboard_ui.py` skips unless the checkout has `.sweetclaude/` project data, which this repository does not.
+
+### 4. Commit, push and tag
+
+```bash
+git add package.json .claude-plugin/plugin.json README.md CHANGELOG.md
+git commit -m 'chore(release): 5.1.3 — short summary'
+git push origin main
+```
+
+The push runs `.github/workflows/test.yml`. Wait for it to pass, then tag:
+
+```bash
+git tag v5.1.3
+git push origin v5.1.3
+```
+
+Pushing the tag triggers `.github/workflows/release.yml`, which refuses prerelease tags, runs `python3 scripts/docs_claims_check.py`, and creates the GitHub release from the changelog section. There is no receipt or evidence gate.
