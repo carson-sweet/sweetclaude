@@ -2,7 +2,7 @@
 
 # SweetClaude
 
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-5.1.3-blue)](https://github.com/carson-sweet/sweetclaude/releases/tag/v5.1.3)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE) [![Version](https://img.shields.io/github/v/release/carson-sweet/sweetclaude?label=version)](https://github.com/carson-sweet/sweetclaude/releases/latest)
 
 ## TL;DR
 
