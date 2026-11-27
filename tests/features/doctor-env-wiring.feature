@@ -25,13 +25,14 @@ Feature: Doctor env_wiring checks
 
   # --- plansDirectory setting ---
 
-  Scenario: Global settings without plansDirectory produces warning
+  Scenario: Local settings without plansDirectory produces a project-only fix
     Given global settings has no plansDirectory key
+    And local settings has no plansDirectory key
     When check_env_wiring runs against the project state
-    Then the findings include id "env-wiring:plans-directory-unset:settings_global"
-    And the finding with id "env-wiring:plans-directory-unset:settings_global" has severity "warning"
-    And the finding with id "env-wiring:plans-directory-unset:settings_global" has fix_type "auto"
-    And the finding with id "env-wiring:plans-directory-unset:settings_global" fix_recipe action is "write_field"
+    Then the findings include id "env-wiring:plans-directory-unset:settings_local"
+    And the finding with id "env-wiring:plans-directory-unset:settings_local" has severity "warning"
+    And the finding with id "env-wiring:plans-directory-unset:settings_local" has fix_type "auto"
+    And the finding with id "env-wiring:plans-directory-unset:settings_local" fix_recipe action is "write_field"
 
   Scenario: Global settings with plansDirectory set produces no finding
     When check_env_wiring runs against the project state
@@ -43,11 +44,11 @@ Feature: Doctor env_wiring checks
     When check_env_wiring runs against the project state
     Then the findings include id "env-wiring:plans-directory-unset:settings_local"
 
-  Scenario: plansDirectory check stops after first settings source with the key
+  Scenario: Local plansDirectory is checked even when global is set
     Given global settings has plansDirectory set
     And local settings has no plansDirectory key
     When check_env_wiring runs against the project state
-    Then no finding has id prefix "env-wiring:plans-directory-unset"
+    Then the findings include id "env-wiring:plans-directory-unset:settings_local"
 
   # --- CLAUDE.md SweetClaude section ---
 
@@ -76,8 +77,8 @@ Feature: Doctor env_wiring checks
 
   Scenario: Plans directory missing and settings unset accumulate
     Given the plans directory does not exist
-    And global settings has no plansDirectory key
+    And local settings has no plansDirectory key
     When check_env_wiring runs against the project state
     Then the result contains at least 2 findings
     And the findings include id "env-wiring:missing:plans-directory"
-    And the findings include id "env-wiring:plans-directory-unset:settings_global"
+    And the findings include id "env-wiring:plans-directory-unset:settings_local"

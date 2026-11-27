@@ -90,12 +90,11 @@ def test_style_readme_no_emoji():
 
 def test_R_010_readme_install_blocks_restart_before_help():
     text = readme()
-    for heading in (r"^TL;DR", r"^Quick Start"):
-        block = first_code_block(section(text, heading))
-        install = block.index("/plugin install sweetclaude@sweetclaude-stable")
-        help_at = block.index("/sweetclaude:help")
-        between = block[install:help_at]
-        assert re.search(r"restart", between, re.I), f"{heading}: no restart step between install and help"
+    intro = section(text, r"^TL;DR")
+    assert "claude plugin install sweetclaude@sweetclaude-stable --scope local" in intro
+    assert re.search(r"restart.+/sweetclaude:help", intro, re.I | re.S)
+    quick = section(text, r"^Quick Start")
+    assert "TL;DR" in quick and re.search(r"restart.+/sweetclaude:help", quick, re.I | re.S)
 
 
 def test_R_011_readme_skills_reference_links_target_skills_reference():

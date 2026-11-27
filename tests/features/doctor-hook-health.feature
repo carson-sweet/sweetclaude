@@ -15,14 +15,12 @@ Feature: Doctor hook_health checks
   # --- hooks.json checks ---
 
   Scenario: hooks.json is missing
-    Given hooks.json does not exist in the fake home
+    Given hooks.json does not exist in the plugin bundle
     When check_hook_health runs against the project state
     Then the result contains at least 1 finding
     And the findings include id "hook-health:missing:hooks.json"
     And the finding with id "hook-health:missing:hooks.json" has severity "error"
-    And the finding with id "hook-health:missing:hooks.json" has fix_type "prompted"
-    And the finding with id "hook-health:missing:hooks.json" fix_recipe action is "prompt"
-    And the finding with id "hook-health:missing:hooks.json" fix_recipe type is "hook_restore"
+    And the finding with id "hook-health:missing:hooks.json" has fix_type "report-only"
 
   Scenario: hooks.json is empty dict (not None) produces no finding
     Given hooks.json contains an empty JSON object
@@ -41,8 +39,7 @@ Feature: Doctor hook_health checks
     When check_hook_health runs against the project state
     Then the findings include id "hook-health:syntax-error:bad-hook.sh"
     And the finding with id "hook-health:syntax-error:bad-hook.sh" has severity "error"
-    And the finding with id "hook-health:syntax-error:bad-hook.sh" has fix_type "prompted"
-    And the finding with id "hook-health:syntax-error:bad-hook.sh" fix_recipe type is "hook_restore"
+    And the finding with id "hook-health:syntax-error:bad-hook.sh" has fix_type "report-only"
 
   Scenario: Multiple hook scripts with mixed syntax
     Given the project has a hook file "good.sh" with content "#!/bin/bash\nexit 0\n"
@@ -105,7 +102,7 @@ Feature: Doctor hook_health checks
   # --- Interaction: multiple check blocks fire together ---
 
   Scenario: hooks.json missing and rules file missing accumulate findings
-    Given hooks.json does not exist in the fake home
+    Given hooks.json does not exist in the plugin bundle
     And rules file "tdd-levels.md" does not exist in the fake home
     When check_hook_health runs against the project state
     Then the result contains at least 2 findings

@@ -33,12 +33,17 @@ else
   pass "update skill does not offer orphan file mutation"
 fi
 
-if grep -q "No files were changed" "$UPDATE_SKILL" \
-   && grep -q "Do not move, copy, delete, or normalize" "$UPDATE_SKILL" \
+if grep -q "Update never mutates project work-item state" "$UPDATE_SKILL" \
    && grep -q "Do not write.*doctor-prompt-pending.json" "$UPDATE_SKILL"; then
-  pass "update skill documents report-only taxonomy/orphan behavior"
+  pass "update skill states the project safety contract"
 else
-  fail "update skill is missing report-only safety language"
+  fail "update skill is missing the project safety contract"
+fi
+
+if python3 -m pytest -q "$REPO_ROOT/tests/test_update_project_check_safety.py"; then
+  pass "project checks verify scan outcomes and preserve work items"
+else
+  fail "project-check safety regressions failed"
 fi
 
 echo ""

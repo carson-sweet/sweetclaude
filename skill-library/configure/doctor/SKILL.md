@@ -43,14 +43,18 @@ Installed version: {SC_PLUGIN_VERSION}
 Channel: {SC_PLUGIN_CHANNEL} (retired — no further updates)
 
 One-time switch to the {SC_PLUGIN_RETIREMENT_TARGET_CHANNEL} channel — run
-these in order so you are never double-installed:
+these in a terminal in the target repository. Before removing the retired
+marketplace, check whether other projects or plugins use it:
 
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-/plugin marketplace remove sweetclaude-beta
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 
-Then restart Claude Code and run /sweetclaude:configure update; your project data
-migrates normally. No project files were changed.
+Marketplace removal is optional and may affect other projects. After checking
+dependencies and deciding to remove it, run:
+claude plugin marketplace remove sweetclaude-beta
+
+Then restart Claude Code and run /sweetclaude:configure update; update does not migrate project data; run /sweetclaude:configure doctor for
+migration review. No project files were changed.
 ```
 
 Then stop. Do not invoke any project-mutating skill from this retired-channel

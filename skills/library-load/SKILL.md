@@ -28,7 +28,7 @@ if it is absent or ambiguous, route through `find-skill` instead.
    Exit 0 prints `{"allow": true, ...}` and the gates pass. If the command
    exits 2, it prints `{"allow": false, "reasons": [...], "unmet": [...]}` —
    do not read the workflow. Output every entry in `reasons` and stop.
-4. Read `${CLAUDE_PLUGIN_ROOT}/skill-library/<category>/<skill>/SKILL.md`.
+4. Read `${CLAUDE_PLUGIN_ROOT}/skill-library/<category>/<skill>/SKILL.md` with the Read tool. Do not run workflow controller commands until the selected workflow file has been read and the mode gates have passed. Selecting a workflow or invoking the loader is not a substitute for reading the file.
 5. Use the session state shown at the top of this loader as the workflow's pre-loaded state. A workflow read from the library does not run its own preload lines, the lines near the top that call `hooks/read-state.sh <stem> [sentinel]`. For a preload of any other stem, use the Read tool on `.sweetclaude/state/<stem>.yaml` before doing anything else; if that file does not exist, the pre-loaded state is the sentinel (default `STATE_NOT_FOUND`).
 6. Follow that workflow exactly. Its gates, hooks, and mutation limits remain
    authoritative.

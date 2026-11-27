@@ -577,6 +577,10 @@ def scan_orphans(project_dir: pathlib.Path) -> dict:
             continue
         for pattern in _LEGACY_PATTERNS:
             for p in root.rglob(pattern):
+                # Primary BL files are migration inputs, not misplaced orphans.
+                # Legacy taxonomy checks report them separately at every stage.
+                if str(p) in primary_bl_files:
+                    continue
                 if "done/" in str(p) or "archived/" in str(p):
                     _add(p, "legacy-archived", "legacy-prefix file in archival directory")
                 else:

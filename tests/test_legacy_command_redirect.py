@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -56,7 +57,7 @@ def test_malformed_input_is_silent(tmp_path):
 
 def test_hook_is_registered_and_listed():
     hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())["hooks"]["UserPromptSubmit"]
-    commands = [h["command"] for entry in hooks for h in entry["hooks"]]
+    commands = [shlex.split(h["command"])[0] for entry in hooks for h in entry["hooks"]]
     assert "${CLAUDE_PLUGIN_ROOT}/hooks/legacy-command-redirect.sh" in commands
     manifest = json.loads((ROOT / "hooks" / "hooks-manifest.json").read_text())["hooks"]
     assert any(h["file"] == "legacy-command-redirect.sh" and h["event"] == "UserPromptSubmit" for h in manifest)

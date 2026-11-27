@@ -187,7 +187,7 @@ def test_fixture_project_is_a_committed_git_repository(tmp_path):
 
 def test_approved_story_fixture_has_a_ready_story_and_code(tmp_path):
     project = rb.make_project(tmp_path, "approved-story")
-    story = project / ".sweetclaude/product/roadmap/issues/ISSUE-001-shift-swap.md"
+    story = project / ".sweetclaude/product/backlog/ISSUE-001-shift-swap.md"
     assert "status: ready" in story.read_text()
     assert (project / "src/shiftboard/shifts.py").is_file()
     assert (project / "tests/test_shifts.py").is_file()
@@ -400,3 +400,19 @@ def test_each_run_is_saved_to_the_progress_log_as_it_completes(tmp_path, monkeyp
     lines = next(tmp_path.glob("routing-full-*.jsonl")).read_text().splitlines()
     assert len(lines) == 4
     assert json.loads(lines[0])["diagnostic"] is False
+
+
+def test_security_patch_case_states_that_vulnerable_code_is_in_production():
+    case = CASES['maintain-security-patch']
+    assert 'production' in case['prompt'].lower()
+    assert case['category'] == 'maintain'
+    assert case['clarify_ok'] is False
+
+
+def test_approved_story_fixture_is_discoverable_by_contract_controller(tmp_path):
+    import success_criteria_contracts
+
+    project = rb.make_project(tmp_path, 'approved-story')
+    story = success_criteria_contracts.find_backlog_file(project, 'ISSUE-001', exclude_done=True)
+    assert story is not None
+    assert story.read_text().find('Shift swap within a clinic') >= 0

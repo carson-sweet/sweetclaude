@@ -19,6 +19,7 @@ is missing is denied, the test-guardian convention for the same state read.
 from __future__ import annotations
 
 import json
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -241,7 +242,7 @@ def registrations(event: str) -> list[tuple[str, str]]:
     found = []
     for entry in config.get("hooks", {}).get(event, []):
         for hook in entry.get("hooks", []):
-            found.append((entry.get("matcher", ""), hook.get("command", "")))
+            found.append((entry.get("matcher", ""), shlex.split(hook.get("command", ""))[0]))
     return found
 
 

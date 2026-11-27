@@ -212,8 +212,8 @@ def test_group_orphans_groups_by_category_prefix_and_directory(tmp_path):
     base = tmp_path / ".sweetclaude" / "product"
     bl = base / "backlog"
     _w(bl / "ISSUE-001-normal.md", "ISSUE-001")
-    _w(bl / "BL-010-legacy.md", "BL-010")
-    _w(bl / "BL-011-legacy.md", "BL-011")
+    _w(base / "stray/BL-010-legacy.md", "BL-010")
+    _w(base / "stray/BL-011-legacy.md", "BL-011")
     _w(bl / "stories" / "STORY-050-typed.md", "STORY-050")
 
     out = subprocess.run(

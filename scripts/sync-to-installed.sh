@@ -7,48 +7,96 @@ PROJECT_DIR="$(pwd)"
 FORCE=false
 DRY_RUN=false
 
-for arg in "$@"; do
-  case "$arg" in
-    --force)   FORCE=true ;;
-    --dry-run) DRY_RUN=true ;;
-    *)         echo "Unknown argument: $arg" >&2; exit 1 ;;
+REQUESTED_SCOPE=""
+REQUESTED_KEY=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --force) FORCE=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    --scope) [ "$#" -ge 2 ] || { echo "Missing --scope value" >&2; exit 1; }; REQUESTED_SCOPE="$2"; shift 2 ;;
+    --plugin-key) [ "$#" -ge 2 ] || { echo "Missing --plugin-key value" >&2; exit 1; }; REQUESTED_KEY="$2"; shift 2 ;;
+    *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
-# ── Path resolution ──────────────────────────────────────────────────────────
-
-_resolve_install_path() {
-  python3 -c "
-import json, os
+# Resolve only a single identified SweetClaude installation before any writes.
+INSTALL_PATH=$(python3 - "$PROJECT_DIR" "$REQUESTED_SCOPE" "$REQUESTED_KEY" "$REPO_ROOT" <<'PYRESOLVE'
+import json, os, pathlib, re, subprocess, sys
+project, requested_scope, requested_key, repo_root = sys.argv[1:]
+config = pathlib.Path(os.environ.get("CLAUDE_CONFIG_DIR") or pathlib.Path.home() / ".claude").expanduser()
+plugins = config / "plugins"
 try:
-    d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
-    entries = [e for versions in d.get('plugins', {}).values()
-               for e in versions if e.get('scope') == 'user']
-    entries.sort(key=lambda e: e.get('lastUpdated', ''), reverse=True)
-    for e in entries:
-        ip = e.get('installPath', '')
-        if ip and os.path.isdir(os.path.join(ip, 'hooks')):
-            print(ip)
-            break
-except Exception:
-    pass
-" 2>/dev/null
-}
-
-INSTALL_PATH=$(_resolve_install_path)
-if [ -z "$INSTALL_PATH" ] || [ ! -d "$INSTALL_PATH" ]; then
-  echo "ERROR: Cannot resolve installed plugin path." >&2
-  echo "Check ~/.claude/plugins/installed_plugins.json" >&2
-  exit 5
-fi
-
-case "$INSTALL_PATH" in
-  "$HOME/.claude/plugins/"*) ;;
-  *)
-    echo "ERROR: INSTALL_PATH '$INSTALL_PATH' is outside expected prefix (~/.claude/plugins/)." >&2
-    exit 5
-    ;;
-esac
+    if requested_scope and requested_scope not in {"local", "project", "user"}:
+        raise ValueError("Invalid scope; choose local, project, or user")
+    data = json.loads((plugins / "installed_plugins.json").read_text())
+    entries = data["plugins"]
+    if not isinstance(entries, dict):
+        raise ValueError("Plugin registry is invalid")
+    root = subprocess.run(["git", "-C", project, "rev-parse", "--show-toplevel"],
+                          capture_output=True, text=True).stdout.strip() or project
+    candidates = []
+    for key, versions in entries.items():
+        if not isinstance(key, str) or key.split("@", 1)[0] != "sweetclaude":
+            continue
+        if requested_key and key != requested_key:
+            continue
+        if not isinstance(versions, list):
+            raise ValueError(f"Invalid registry entry: {key}")
+        for entry in versions:
+            if not isinstance(entry, dict):
+                raise ValueError(f"Invalid registry entry: {key}")
+            scope = entry.get("scope")
+            if scope not in {"local", "project", "user"} or (requested_scope and scope != requested_scope):
+                continue
+            if scope in {"local", "project"}:
+                project_path = entry.get("projectPath")
+                if not project_path or pathlib.Path(project_path).resolve() != pathlib.Path(root).resolve():
+                    continue
+            value = entry.get("installPath")
+            if not isinstance(value, str) or not value:
+                raise ValueError(f"Missing installation path for {key}")
+            target = pathlib.Path(value)
+            if not target.is_absolute():
+                raise ValueError("Installation path must be absolute")
+            try:
+                relative = target.relative_to(plugins)
+            except ValueError:
+                raise ValueError("Installation is outside the Claude plugin directory")
+            current = plugins
+            for part in relative.parts:
+                current = current / part
+                if current.is_symlink():
+                    raise ValueError(f"Symlinked installation path: {current}")
+            if not target.resolve().is_relative_to(plugins.resolve()) or not (target / "hooks").is_dir():
+                raise ValueError("Invalid plugin installation path")
+            for name in ("hooks", "skills", "skill-library", "scripts", "config", ".claude-plugin"):
+                destination = target / name
+                if destination.is_symlink() or (destination.is_dir() and any(p.is_symlink() for p in destination.rglob("*"))):
+                    raise ValueError(f"Symlinked plugin destination: {destination}")
+            manifest = target / ".claude-plugin/plugin.json"
+            if manifest.is_symlink() or not manifest.is_file() or json.loads(manifest.read_text()).get("name") != "sweetclaude":
+                raise ValueError("Plugin bundle identity is not SweetClaude")
+            candidates.append(target)
+    if len(candidates) != 1:
+        raise ValueError(f"Expected exactly one matching SweetClaude installation; found {len(candidates)}. Specify --scope and --plugin-key.")
+    target = candidates[0]
+    package = pathlib.Path(repo_root) / "package.json"
+    if package.exists():
+        version = json.loads(package.read_text()).get("version", "")
+        if not isinstance(version, str) or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?", version):
+            raise ValueError("Invalid source version")
+        version_target = target.parent / version
+        if version_target.is_symlink():
+            raise ValueError("Symlinked version destination")
+        if version_target.is_dir() and version_target != target:
+            if any(p.is_symlink() for p in version_target.rglob("*")):
+                raise ValueError("Symlink in version destination")
+    print(target)
+except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+    print(f"ERROR: {exc}", file=sys.stderr)
+    sys.exit(1)
+PYRESOLVE
+) || exit 5
 
 echo "Repo:      $REPO_ROOT"
 echo "Installed: $INSTALL_PATH"

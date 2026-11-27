@@ -45,8 +45,9 @@ echo "[1] drift-gate.sh: writes marker and emits AskUserQuestion when drift foun
 
 FX1_HOME="$TMPROOT/home1"
 FX1_PROJ="$TMPROOT/proj1"
-mkdir -p "$FX1_HOME/.claude/scripts/sweetclaude/migrations"
-cat > "$FX1_HOME/.claude/scripts/sweetclaude/migrations/runner.py" << 'PYEOF'
+mkdir -p "$FX1_HOME/bundle/scripts/migrations" "$FX1_HOME/bundle/.claude-plugin"
+printf '%s\n' '{"name":"sweetclaude"}' > "$FX1_HOME/bundle/.claude-plugin/plugin.json"
+cat > "$FX1_HOME/bundle/scripts/migrations/runner.py" << 'PYEOF'
 import sys
 print("DRIFT_COUNT=1")
 print("FINDING|sweetclaude.yaml|v1->v2|chain=ok")
@@ -56,7 +57,7 @@ _make_git_repo "$FX1_PROJ"
 mkdir -p "$FX1_PROJ/.sweetclaude/state"
 printf 'schema_version: 1\n' > "$FX1_PROJ/.sweetclaude/state/sweetclaude.yaml"
 
-OUTPUT1=$(cd "$FX1_PROJ" && HOME="$FX1_HOME" bash "$REPO_ROOT/hooks/drift-gate.sh" 2>/dev/null) || true
+OUTPUT1=$(cd "$FX1_PROJ" && HOME="$FX1_HOME" CLAUDE_PLUGIN_ROOT="$FX1_HOME/bundle" bash "$REPO_ROOT/hooks/drift-gate.sh" 2>/dev/null) || true
 MARKER1="$FX1_PROJ/.sweetclaude/state/pending-drift-decision.yaml"
 
 if [ -f "$MARKER1" ]; then

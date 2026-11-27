@@ -24,14 +24,14 @@ If `gh` is not authenticated yet, run `gh auth login` once.
 
 ## Install
 
-Inside Claude Code, install the stable channel:
+From a terminal in the target repository, install the stable channel (register the marketplace once if needed):
 
 ```text
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 ```
 
-Restart Claude Code after install. See [Installing SweetClaude](install.md) for update instructions. After install, every Claude Code session in any project folder has nine commands available: `go`, `plan`, `design`, `build`, `maintain`, `configure`, `utils`, `status` and `help`. Workflows are run as `/sweetclaude:<category> <workflow>`, for example `/sweetclaude:configure doctor`, or by describing what you want after `/sweetclaude:go`.
+Restart Claude Code after install. See [Installing SweetClaude](install.md) for update instructions. After local install, Claude Code sessions in that repository have nine commands available: `go`, `plan`, `design`, `build`, `maintain`, `configure`, `utils`, `status` and `help`. Workflows are run as `/sweetclaude:<category> <workflow>`, for example `/sweetclaude:configure doctor`, or by describing what you want after `/sweetclaude:go`.
 
 ---
 

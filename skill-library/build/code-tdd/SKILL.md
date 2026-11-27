@@ -92,7 +92,7 @@ After the user selects a level, record the selection:
 
    Commit the failing test, naming the test files so they are included:
    ```bash
-   bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh "test: RED - [story-id] failing tests" <test files>
+   bash "${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh" "test: RED - [story-id] failing tests" <test files>
    ```
 
    Once RED is confirmed, freeze the tests:
@@ -119,7 +119,7 @@ After the user selects a level, record the selection:
 
 3. **Commit tests:** Auto-commit with `test: RED - [story-id] failing tests`, naming the test files so they are included:
    ```bash
-   bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh "test: RED - [story-id] failing tests" <test files>
+   bash "${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh" "test: RED - [story-id] failing tests" <test files>
    ```
    This is the git checkpoint. Test files are now immutable — record that, or the immutability is a claim rather than a fact:
    ```bash
@@ -189,7 +189,7 @@ After the user selects a level, record the selection:
 
 8. **Commit tests.** Git checkpoint, naming the test files so they are included:
    ```bash
-   bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh "test: RED - [story-id] failing tests" <test files>
+   bash "${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh" "test: RED - [story-id] failing tests" <test files>
    ```
 
 9. **Spawn implementer subagent.** Same rules as Level 2. Tests are read-only. The implementer runs in the main project dir — it never sees the Gherkin spec or test-writer reasoning.

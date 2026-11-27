@@ -5,11 +5,14 @@
 
 This page replaces the older "run migrate first" guidance. Project maintenance is routed through doctor and recovery before any taxonomy migration runs.
 
+
+Run `claude plugin ...` commands in a terminal in the target repository. Before removing a marketplace, check whether other projects or plugins depend on it. See [installation and scope migration](install.md#move-an-existing-user-wide-installation).
+
 ## Safe Order
 
 1. Get onto 5.x first. The 5.x configure commands do not exist on a 4.x install, so follow [Upgrading to 5.0](upgrading-to-5.md):
    - Stable 4.x install: `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`.
-   - Beta install: the beta channel is retired and `/plugin update` on it stays on 4.x, so switch channels with `/plugin marketplace add carson-sweet/sweetclaude@main`, `/plugin install sweetclaude@sweetclaude-stable`, then `/plugin marketplace remove sweetclaude-beta`.
+   - Beta install: the beta channel is retired and `/plugin update` on it stays on 4.x, so switch channels with `claude plugin marketplace add carson-sweet/sweetclaude@main`, `claude plugin install sweetclaude@sweetclaude-stable --scope local`, Optional: after checking dependencies and intentionally deciding to remove it, run `claude plugin marketplace remove sweetclaude-beta`.
 2. Restart Claude Code.
 3. Run `/sweetclaude:configure update` to sync framework files. Update does not migrate project data.
 4. Run `/sweetclaude:configure doctor` in the project.
@@ -57,6 +60,10 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/migrate/migrate-v3-to-v4.py" preflight --
 Typed legacy layouts (`stories/`, `bugs/`, `debt/`, `chores/`) and other multi-prefix layouts go to the taxonomy migrator, `scripts/migrate/migrate_taxonomy.py`, which supports `--dry-run` for a preview.
 
 Duplicate work-item IDs appear as `duplicate-ids` blockers. Resolve them through `/sweetclaude:configure doctor` before migration; doctor's fix renumbers the non-canonical copy, and you can choose which copy is renumbered.
+
+## Orphan scan boundaries
+
+The orphan scan reports misplaced work-item files under known product directories. Primary `BL-` files in the configured backlog are migration inputs, not orphans, whether the project is awaiting migration, partially migrated, or already carries a newer version stamp. Legacy taxonomy checks still report those files for migration review. Files under `scratch/` are outside the orphan scan, even when their frontmatter resembles a work item; review them separately. Scanning is read-only. Review exact paths before choosing any recovery action.
 
 ## What Recovery Does
 

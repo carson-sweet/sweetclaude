@@ -269,12 +269,9 @@ def test_a_freshly_onboarded_project_scans_clean(fixture_name, request,
     project_findings = [f for f in payload["findings"] if about_the_project(f)]
     assert project_findings == [], [f["id"] for f in project_findings]
 
-    # The install findings must still be the ones an empty HOME produces. If
-    # this ever empties out, the filter above has started hiding real results.
-    install_findings = [f for f in payload["findings"] if not about_the_project(f)]
-    assert install_findings, "expected install-scoped findings under an empty HOME"
-    assert all(f["category"] == "hook_health" for f in install_findings), \
-        [(f["category"], f["id"]) for f in install_findings]
+    # Hooks are checked in the plugin bundle, so an empty HOME must not be
+    # mistaken for a broken installation.
+    assert not any(f["id"].startswith("hook-health:missing") for f in payload["findings"])
 
 
 @pytest.mark.parametrize("fixture_name", ["empty_project", "existing_codebase"])

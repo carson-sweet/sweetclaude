@@ -16,6 +16,9 @@ Do not try to fix a beta install by running project migration commands first.
 
 ---
 
+
+Run `claude plugin ...` commands in a terminal in the target repository. Before removing a marketplace, check whether other projects or plugins depend on it. See [installation and scope migration](install.md#move-an-existing-user-wide-installation).
+
 ## Step 1: Switch To Stable
 
 Inside Claude Code, check which plugin key is installed:
@@ -24,20 +27,23 @@ Inside Claude Code, check which plugin key is installed:
 /plugin list
 ```
 
-If you see `sweetclaude@sweetclaude-beta`, run these in order so you are never double-installed:
+If you see `sweetclaude@sweetclaude-beta`, run these in a terminal in the target repository:
 
 ```
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-/plugin marketplace remove sweetclaude-beta
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 ```
 
-If you see the legacy beta key `sweetclaude@sweetclaude` on a prerelease version, the third command removes the legacy marketplace instead:
+Marketplace removal is optional and can affect other projects. After checking dependencies and intentionally deciding to remove the retired marketplace, run:
 
 ```
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-/plugin marketplace remove sweetclaude
+claude plugin marketplace remove sweetclaude-beta
+```
+
+For the legacy beta key `sweetclaude@sweetclaude`, the optional removal command is instead:
+
+```
+claude plugin marketplace remove sweetclaude
 ```
 
 ---
@@ -83,8 +89,8 @@ Recovery diagnoses first, shows a plan, snapshots before mutation, and asks befo
 To stay on the 3.x line instead of moving to stable 5.x:
 
 ```
-/plugin marketplace add carson-sweet/sweetclaude@stable-3.x
-/plugin install sweetclaude@sweetclaude-legacy
+claude plugin marketplace add carson-sweet/sweetclaude@stable-3.x
+claude plugin install sweetclaude@sweetclaude-legacy --scope local
 ```
 
 ---
