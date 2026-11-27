@@ -24,7 +24,8 @@ _make_git_repo() {
 _make_install_fixture() {
   local home_dir="$1"
   local install_dir="$2"
-  mkdir -p "$install_dir/hooks"
+  mkdir -p "$install_dir/hooks" "$install_dir/.claude-plugin"
+  printf '%s\n' '{"name":"sweetclaude"}' > "$install_dir/.claude-plugin/plugin.json"
   mkdir -p "$home_dir/.claude/plugins"
   printf '%s\n' "{\"plugins\": {\"sweetclaude\": [{\"installPath\": \"$install_dir\", \"scope\": \"user\", \"lastUpdated\": \"2026-01-01T00:00:00Z\"}]}}" \
     > "$home_dir/.claude/plugins/installed_plugins.json"
@@ -1156,10 +1157,10 @@ else
   fail "recovery script missing from installed plugin scripts/"
 fi
 
-if [ -f "$FX35_HOME/.claude/scripts/sweetclaude/recovery/recover_project.py" ]; then
-  pass "recovery script is present under versionless ~/.claude/scripts/sweetclaude/"
+if [ ! -e "$FX35_HOME/.claude/scripts/sweetclaude" ]; then
+  pass "sync did not create a user-wide scripts mirror"
 else
-  fail "recovery script missing from versionless scripts mirror"
+  fail "sync created an unexpected user-wide scripts mirror"
 fi
 
 if [ -f "$FX35_INSTALL/../0.0.0-test/scripts/recovery/recover_project.py" ]; then

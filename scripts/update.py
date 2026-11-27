@@ -106,14 +106,13 @@ def beta_stable_migration_notice(*, channel, installed_version, stable_tags):
         "You are on the beta channel, which is being retired. Your installed "
         "code already matches the stable release, but future stable updates "
         "will not reach the beta channel.\n\n"
-        "One-time switch to stable — run in this order so you are never "
-        "double-installed (both channels' skills and hooks load at once):\n"
-        "  /plugin marketplace add carson-sweet/sweetclaude@main\n"
-        "  /plugin install sweetclaude@sweetclaude-stable\n"
-        "  /plugin marketplace remove sweetclaude-beta\n\n"
-        "(Removing the beta marketplace uninstalls its plugin, so add and "
-        "install stable first.) Then run /sweetclaude:configure update on the stable "
-        "channel; your project data migrates normally."
+        "From a terminal in the target repository, run:\n"
+        "  claude plugin marketplace add carson-sweet/sweetclaude@main\n"
+        "  claude plugin install sweetclaude@sweetclaude-stable --scope local\n\n"
+        "Before removing the retired marketplace, check whether other projects or plugins use it. "
+        "After restarting Claude Code, run /sweetclaude:configure update. "
+        "Update does not migrate project data; use /sweetclaude:configure doctor for migration review."
+
     )
 
 
@@ -129,40 +128,9 @@ def cmd_preflight(args: argparse.Namespace) -> int:
 
     result: dict = {"ok": False}
 
-    # Version-dir heal (inline the logic from preflight.sh step 1)
+    # Preflight is read-only for plugin metadata. Repairs require a separate,
+    # explicitly selected operation rather than modifying another installation.
     result["version_dir_healed"] = False
-    plugins_json = Path.home() / ".claude" / "plugins" / "installed_plugins.json"
-    if plugins_json.exists():
-        try:
-            data = json.loads(plugins_json.read_text(encoding="utf-8"))
-            for k, versions in data.get("plugins", {}).items():
-                if "sweetclaude" not in k.lower():
-                    continue
-                for entry in versions:
-                    if entry.get("scope") != "user":
-                        continue
-                    install_path = entry.get("installPath", "").rstrip("/")
-                    version = entry.get("version", "")
-                    if not install_path or not version or not os.path.isdir(install_path):
-                        continue
-                    parent = os.path.dirname(install_path)
-                    version_dir = os.path.join(parent, version)
-                    if version_dir == install_path or os.path.isdir(version_dir):
-                        continue
-                    os.makedirs(version_dir, exist_ok=True)
-                    ret = _run(["rsync", "-a", install_path + "/", version_dir + "/"])
-                    if ret.returncode == 0:
-                        entry["installPath"] = version_dir
-                        tmp = tempfile.NamedTemporaryFile(
-                            "w", dir=str(plugins_json.parent),
-                            suffix=".tmp", delete=False, encoding="utf-8",
-                        )
-                        json.dump(data, tmp, indent=2)
-                        tmp.close()
-                        os.replace(tmp.name, str(plugins_json))
-                        result["version_dir_healed"] = True
-        except Exception:
-            pass
 
     # Resolve runner path
     runner_path = script_dir / "migrations" / "runner.py"
@@ -443,6 +411,47 @@ def cmd_sync(args: argparse.Namespace) -> int:
     install_path = args.install_path
     plugin_root = args.plugin_root or install_path
 
+    version_dir = ""
+    try:
+        new_ver = json.loads(Path(source, "package.json").read_text(encoding="utf-8")).get("version", "")
+    except (OSError, ValueError, AttributeError):
+        new_ver = ""
+    if new_ver:
+        if not isinstance(new_ver, str) or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?", new_ver):
+            _json_out({"ok": False, "errors": ["Invalid source version"]})
+            return 1
+        candidate = os.path.join(os.path.dirname(install_path), new_ver)
+        if os.path.realpath(candidate) != os.path.realpath(install_path):
+            if os.path.lexists(candidate):
+                _json_out({"ok": False, "errors": [f"Target version already exists: {candidate}"]})
+                return 1
+            os.makedirs(candidate)
+            version_dir = candidate
+            install_path = candidate
+            plugin_root = candidate
+
+    # A cache directory can be referenced by more than one installation. Never
+    # rewrite a shared bundle in place when refreshing the same version.
+    if not version_dir:
+        config = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude").expanduser()
+        registry = config / "plugins/installed_plugins.json"
+        if registry.exists():
+            try:
+                entries = json.loads(registry.read_text(encoding="utf-8"))["plugins"]
+                if not isinstance(entries, dict):
+                    raise ValueError("invalid plugin registry")
+                references = sum(
+                    1 for versions in entries.values() if isinstance(versions, list)
+                    for entry in versions if isinstance(entry, dict) and entry.get("installPath")
+                    and os.path.realpath(entry["installPath"]) == os.path.realpath(install_path)
+                )
+                if references > 1:
+                    _json_out({"ok": False, "errors": ["Installation bundle is shared by multiple plugin entries; use Claude Code to install the desired version for this project without overwriting the shared bundle."]})
+                    return 1
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                _json_out({"ok": False, "errors": [f"Cannot safely inspect plugin registry: {exc}"]})
+                return 1
+
     errors = []
 
     def rsync_dir(src: str, dst: str, delete: bool = True) -> bool:
@@ -497,82 +506,33 @@ def cmd_sync(args: argparse.Namespace) -> int:
                 fp = os.path.join(hooks_dir, f)
                 os.chmod(fp, os.stat(fp).st_mode | 0o111)
 
-    # Version-named directory sync
-    version_dir = ""
-    try:
-        pkg = json.loads(Path(source, "package.json").read_text(encoding="utf-8"))
-        new_ver = pkg.get("version", "")
-    except Exception:
-        new_ver = ""
-
-    if new_ver:
-        parent = os.path.dirname(install_path)
-        vdir = os.path.join(parent, new_ver)
-        if vdir != install_path:
-            version_dir = vdir
-            os.makedirs(vdir, exist_ok=True)
-            for d in ["skills", "hooks", "scripts", "rules", "config"]:
-                src = os.path.join(source, d)
-                if os.path.isdir(src):
-                    os.makedirs(os.path.join(vdir, d), exist_ok=True)
-                    rsync_dir(src, os.path.join(vdir, d))
-            rsync_dir(f"{source}/.claude-plugin", f"{vdir}/.claude-plugin", delete=False)
-            for f in ["CLAUDE.md", "package.json", "LICENSE", "CHANGELOG.md"]:
-                src_f = os.path.join(source, f)
-                if os.path.isfile(src_f):
-                    try:
-                        shutil.copy2(src_f, os.path.join(vdir, f))
-                    except OSError as exc:
-                        errors.append(f"copy {src_f} -> {vdir}/{f}: {exc}")
-
-    # Hook reconciliation (ensure-global-hooks.py)
+    # Global settings and legacy files are outside a project-local update.
     hook_cleaned = 0
-    hook_script = Path(plugin_root) / "scripts" / "maintenance" / "ensure-global-hooks.py"
-    if not hook_script.exists():
-        hook_script = Path(__file__).resolve().parent / "maintenance" / "ensure-global-hooks.py"
-    if hook_script.exists():
-        hr = _run([sys.executable, str(hook_script)])
-        for line in hr.stdout.splitlines():
-            if "cleaned:" in line:
-                try:
-                    hook_cleaned += int(line.split("cleaned:")[-1].strip().split()[0])
-                except (ValueError, IndexError):
-                    hook_cleaned += 1
-
-    # Rules in ~/.claude/rules are global Claude Code instructions. Remove the
-    # historical SweetClaude copy so projects that are disabled or never
-    # adopted cannot receive SweetClaude's phase/TDD/interaction rules.
-    legacy_cleanup = Path(source) / "scripts" / "maintenance" / "cleanup-legacy-paths.py"
-    if legacy_cleanup.exists():
-        cleanup = _run([sys.executable, str(legacy_cleanup), "clean", "--only",
-                        "rules/sweetclaude"])
-        if cleanup.returncode != 0:
-            errors.append(f"remove global SweetClaude rules: {cleanup.stderr.strip()}")
 
     # Verify sync
     verify_errors = []
     sync_target = version_dir or install_path
-    for d in ["skills", "scripts"]:
+    for d in ["skills", "skill-library", "scripts"]:
         src = os.path.join(source, d)
         dst = os.path.join(sync_target, d)
         if os.path.isdir(src):
             v = _run(["diff", "-rq", src, dst])
-            if v.stdout.strip():
-                verify_errors.append(f"{d}: {v.stdout.strip()}")
+            if v.returncode != 0:
+                verify_errors.append(f"{d}: {(v.stdout or v.stderr).strip() or 'comparison failed'}")
 
     # Check skills-registry.yaml
     registry_ok = os.path.isfile(os.path.join(plugin_root, "config", "skills-registry.yaml"))
 
     _json_out({
-        "ok": len(errors) == 0,
-        "errors": errors,
+        "ok": not errors and not verify_errors,
+        "errors": errors + verify_errors,
         "version_dir": version_dir,
         "sync_target": sync_target,
         "hook_cleaned": hook_cleaned,
         "verify_errors": verify_errors,
         "registry_ok": registry_ok,
     })
-    return 0 if not errors else 1
+    return 0 if not errors and not verify_errors else 1
 
 
 # ---------------------------------------------------------------------------
@@ -597,11 +557,20 @@ def cmd_metadata(args: argparse.Namespace) -> int:
             "--version", args.version,
             "--sha", args.sha,
         ]
+        if getattr(args, "scope", None):
+            cmd.extend(["--scope", args.scope])
         ps = _run(cmd)
         try:
             result = json.loads(ps.stdout)
         except json.JSONDecodeError:
-            result = {"ok": False, "error": ps.stderr.strip()}
+            result = {"ok": False, "error": ps.stderr.strip() or "Invalid metadata repair response"}
+        if ps.returncode != 0 or not result.get("ok"):
+            result["ok"] = False
+            _json_out(result)
+            return 1
+    else:
+        _json_out({"ok": False, "error": "Plugin metadata repair script not found"})
+        return 1
 
     # Update project installed_version
     project_dir = str(args.project_dir or os.getcwd())
@@ -641,9 +610,10 @@ def cmd_metadata(args: argparse.Namespace) -> int:
                 result["project_version_updated"] = True
         except Exception as exc:
             result["project_version_error"] = str(exc)
+            result["ok"] = False
 
     _json_out(result)
-    return 0
+    return 0 if result.get("ok") else 1
 
 
 # ---------------------------------------------------------------------------
@@ -661,36 +631,50 @@ def cmd_project_check(args: argparse.Namespace) -> int:
 
     result: dict = {"ok": True, "skipped": False}
 
-    # Drift detection
-    runner = args.runner or ""
-    result["drift_count"] = 0
+    # A zero count means a completed scan, not a missing or failed scanner.
+    result["scans"] = {}
+    result["drift_count"] = None
     result["drift_lines"] = []
-    if runner and os.path.isfile(runner):
+    runner = args.runner or ""
+    if not runner or not os.path.isfile(runner):
+        result["scans"]["drift"] = {"status": "failed", "error": "Drift scanner not found"}
+    else:
         dr = _run([sys.executable, runner, "--project-dir", project_dir, "--scan-drift"])
-        for line in dr.stdout.splitlines():
-            if "[DRIFT]" in line:
-                result["drift_count"] += 1
-                result["drift_lines"].append(line.strip())
+        header = re.search(r"^Drift scan \(.+\): (\d+) finding\(s\)$", dr.stdout, re.MULTILINE)
+        lines = [line for line in dr.stdout.splitlines() if "[DRIFT]" in line]
+        if dr.returncode != 0 or not header or int(header.group(1)) != len(lines):
+            result["scans"]["drift"] = {"status": "failed", "error": (dr.stderr.strip() or "Invalid drift scanner output")[:300]}
+        else:
+            result["drift_count"] = len(lines)
+            result["drift_lines"] = lines
+            result["scans"]["drift"] = {"status": "completed"}
 
-    # Orphan scan
-    result["orphan_count"] = 0
+    result["orphan_count"] = None
     result["orphan_output"] = None
     migrate_script = args.migrate_script or ""
     if not migrate_script:
         candidate = Path(__file__).resolve().parent / "migrate" / "migrate-v3-to-v4.py"
         if candidate.exists():
             migrate_script = str(candidate)
-    if migrate_script and os.path.isfile(migrate_script):
+    if not migrate_script or not os.path.isfile(migrate_script):
+        result["scans"]["orphans"] = {"status": "failed", "error": "Orphan scanner not found"}
+    else:
         orph = _run([sys.executable, migrate_script, "scan-orphans", "--project-dir", project_dir])
-        if orph.returncode == 0 and orph.stdout.strip():
-            try:
-                od = json.loads(orph.stdout)
-                result["orphan_count"] = od.get("orphan_count", 0)
-                if result["orphan_count"] > 0:
-                    result["orphan_output"] = od
-            except json.JSONDecodeError:
-                pass
+        try:
+            if orph.returncode != 0:
+                raise ValueError(orph.stderr.strip() or "Orphan scanner failed")
+            data = json.loads(orph.stdout)
+            if not isinstance(data, dict) or type(data.get("orphan_count")) is not int or data["orphan_count"] < 0:
+                raise ValueError("Invalid orphan scanner result")
+            if not isinstance(data.get("findings"), list) or len(data["findings"]) != data["orphan_count"]:
+                raise ValueError("Invalid orphan scanner findings")
+            result["orphan_count"] = data["orphan_count"]
+            result["orphan_output"] = data if data["orphan_count"] else None
+            result["scans"]["orphans"] = {"status": "completed"}
+        except (ValueError, TypeError) as exc:
+            result["scans"]["orphans"] = {"status": "failed", "error": str(exc)[:300]}
     result["migrate_script"] = migrate_script
+    result["ok"] = all(scan["status"] == "completed" for scan in result["scans"].values())
 
     # Legacy taxonomy count
     result["old_taxonomy_count"] = 0
@@ -711,7 +695,7 @@ def cmd_project_check(args: argparse.Namespace) -> int:
             result["bold_format_count"] = bf.stdout.count('"action": "would_convert"')
 
     _json_out(result)
-    return 0
+    return 0 if result["ok"] else 1
 
 
 # ---------------------------------------------------------------------------
@@ -794,6 +778,7 @@ def main(argv: list[str] | None = None) -> int:
     # metadata
     p = sub.add_parser("metadata")
     p.add_argument("--plugin-key", required=True)
+    p.add_argument("--scope", choices=("local", "project", "user", "managed"))
     p.add_argument("--install-path", required=True)
     p.add_argument("--version", required=True)
     p.add_argument("--sha", required=True)

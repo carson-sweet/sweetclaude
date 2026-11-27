@@ -4,6 +4,9 @@ installed_version. A stale available at or below the new version is cleared;
 a genuinely newer available is preserved. Not deferred to any health check.
 """
 import argparse
+import json
+
+import pytest
 import sys
 from pathlib import Path
 
@@ -14,6 +17,20 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 import update as update_mod
+
+
+
+@pytest.fixture(autouse=True)
+def isolated_plugin_registry(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    registry = home / ".claude/plugins/installed_plugins.json"
+    registry.parent.mkdir(parents=True)
+    registry.write_text(json.dumps({"plugins": {"sweetclaude-beta": [{
+        "scope": "local", "projectPath": str(tmp_path),
+        "installPath": str(tmp_path / "install"), "version": "4.3.8-beta"
+    }]}}))
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.delenv("CLAUDE_CONFIG_DIR", raising=False)
 
 
 def _write_state(project: Path, installed: str, available):

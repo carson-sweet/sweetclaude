@@ -6,7 +6,7 @@
 # .sweetclaude/state/pending-drift-decision.yaml and emits additionalContext
 # instructing Claude to present AskUserQuestion before any other work.
 #
-# Registered as a global SessionStart hook. Silent when not in a SweetClaude
+# Registered as a plugin SessionStart hook. Silent when not in a SweetClaude
 # project or when no drift is found.
 #
 # Pending-marker re-use: if the marker already exists from a prior session,
@@ -88,32 +88,41 @@ except Exception:
   exit 0
 fi
 
-# Find runner — versionless path first, then installPath fallback.
-RUNNER="$HOME/.claude/scripts/sweetclaude/migrations/runner.py"
-if [ ! -f "$RUNNER" ]; then
-  RUNNER=$(python3 -c "
-import json, os
-try:
-    d = json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))
-    entries = [e for versions in d.get('plugins', {}).values()
-               for e in versions if e.get('scope') == 'user']
-    entries.sort(key=lambda e: e.get('lastUpdated', ''), reverse=True)
-    for e in entries:
-        ip = e.get('installPath', '')
-        r = os.path.join(ip, 'scripts', 'migrations', 'runner.py')
-        if os.path.exists(r):
-            print(r)
-            break
-except Exception:
-    pass
-" 2>/dev/null)
-fi
-[ -z "$RUNNER" ] || [ ! -f "$RUNNER" ] && exit 0
+# A failed required scan must not be mistaken for a clean project.
+_scan_error() {
+  local message="SweetClaude drift check could not run. Stop SweetClaude workflows and run /sweetclaude:configure doctor; inspect the active plugin installation and retry. No drift result was determined."
+  printf '{"systemMessage":"%s","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' \
+    "$(_esc "$message")" "$(_esc "STOP - $message $_IDE_NOTE")"
+}
 
-# Run drift scan.
-DRIFT_OUTPUT=$(python3 "$RUNNER" --project-dir "$PROJECT_DIR" --report-drift-for-skill 2>/dev/null)
-DRIFT_COUNT=$(printf '%s\n' "$DRIFT_OUTPUT" | grep '^DRIFT_COUNT=' | cut -d= -f2)
-[ -z "$DRIFT_COUNT" ] || [ "$DRIFT_COUNT" = "0" ] && exit 0
+# Validate the active bundle identity and ensure the runner resolves inside it.
+RUNNER=$(python3 - "${CLAUDE_PLUGIN_ROOT:-}" <<'PYVALIDATE'
+import json, pathlib, sys
+try:
+    if not sys.argv[1]:
+        raise ValueError('missing root')
+    root = pathlib.Path(sys.argv[1]).resolve(strict=True)
+    manifest = root / '.claude-plugin/plugin.json'
+    runner = (root / 'scripts/migrations/runner.py').resolve(strict=True)
+    if not runner.is_relative_to(root) or not runner.is_file():
+        raise ValueError('invalid runner')
+    if json.loads(manifest.read_text()).get('name') != 'sweetclaude':
+        raise ValueError('invalid plugin identity')
+    print(runner)
+except (OSError, ValueError, TypeError, AttributeError):
+    sys.exit(1)
+PYVALIDATE
+) || { _scan_error; exit 0; }
+
+DRIFT_OUTPUT=$(python3 "$RUNNER" --project-dir "$PROJECT_DIR" --report-drift-for-skill 2>/dev/null) || { _scan_error; exit 0; }
+DRIFT_COUNT=$(printf '%s\n' "$DRIFT_OUTPUT" | python3 -c 'import re,sys; lines=[line for line in sys.stdin.read().splitlines() if line.startswith("DRIFT_COUNT=")]; sys.exit(1) if len(lines)!=1 or not re.fullmatch(r"DRIFT_COUNT=(0|[1-9][0-9]*)",lines[0]) else print(lines[0].split("=",1)[1])') || { _scan_error; exit 0; }
+printf '%s\n' "$DRIFT_OUTPUT" | python3 -c 'import re,sys
+lines=sys.stdin.read().splitlines()
+count=int(lines[0].split("=",1)[1]) if lines and re.fullmatch(r"DRIFT_COUNT=(0|[1-9][0-9]*)",lines[0]) else -1
+items=lines[1:]
+valid=all(re.fullmatch(r"FINDING\|[^|]+\|[^|]+\|chain=(ok|broken)", x) or re.fullmatch(r"MISSING\|[^|]+", x) for x in items)
+sys.exit(0 if valid and len(items)==count else 1)' || { _scan_error; exit 0; }
+[ "$DRIFT_COUNT" = "0" ] && exit 0
 
 # Classify: Case A (all chains ok) or Case B (at least one broken).
 if printf '%s\n' "$DRIFT_OUTPUT" | grep -q '|chain=broken'; then

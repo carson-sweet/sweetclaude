@@ -19,6 +19,7 @@ R-072 case test_reports_failing_run_back_to_the_model.
 from __future__ import annotations
 
 import json
+import shlex
 import os
 import re
 import shutil
@@ -65,7 +66,7 @@ def registrations(event: str) -> list[tuple[str, str]]:
     found = []
     for entry in config.get("hooks", {}).get(event, []):
         for hook in entry.get("hooks", []):
-            found.append((entry.get("matcher", ""), hook.get("command", "")))
+            found.append((entry.get("matcher", ""), shlex.split(hook.get("command", ""))[0]))
     return found
 
 

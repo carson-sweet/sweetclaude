@@ -2,7 +2,8 @@
 set -e
 TEST_TMPDIR=$(mktemp -d)
 trap "rm -rf $TEST_TMPDIR" EXIT
-mkdir -p "$TEST_TMPDIR/.sweetclaude/state"
+mkdir -p "$TEST_TMPDIR/.sweetclaude/state" "$TEST_TMPDIR/home"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Write sweetclaude.yaml with stale timestamps (25 hours ago)
 STALE=$(python3 -c "
@@ -25,7 +26,7 @@ d = {
 open('$TEST_TMPDIR/.sweetclaude/state/sweetclaude.yaml','w').write(yaml.dump(d))
 "
 
-PROJECT_DIR="$TEST_TMPDIR" bash hooks/sweetclaude-health-check.sh
+HOME="$TEST_TMPDIR/home" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" PROJECT_DIR="$TEST_TMPDIR" bash "$REPO_ROOT/hooks/sweetclaude-health-check.sh"
 
 # Verify timestamps were updated
 python3 -c "
@@ -52,7 +53,7 @@ d['framework']['consistency']['last_checked'] = '$STALE'
 open('$TEST_TMPDIR/.sweetclaude/state/sweetclaude.yaml','w').write(yaml.dump(d))
 "
 
-PROJECT_DIR="$TEST_TMPDIR" bash hooks/sweetclaude-health-check.sh
+HOME="$TEST_TMPDIR/home" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" PROJECT_DIR="$TEST_TMPDIR" bash "$REPO_ROOT/hooks/sweetclaude-health-check.sh"
 
 python3 -c "
 import yaml

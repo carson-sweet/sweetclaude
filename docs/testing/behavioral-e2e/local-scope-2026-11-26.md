@@ -1,0 +1,9 @@
+# Local installation scope check: 2026-11-26
+
+Claude Code 2.1.332 was exercised with isolated `HOME` and `CLAUDE_CONFIG_DIR`, two temporary Git repositories, and a temporary local marketplace made from this checkout. The terminal command `claude plugin install sweetclaude@sweetclaude-stable --scope local` was run from repository A. Plugin listing reported SweetClaude enabled in A and disabled in B. The current update sync and metadata commands were then run for A; the isolated global settings were unchanged and the plugin remained disabled in B.
+
+An unauthenticated `claude -p` startup initialized the SweetClaude plugin and nine skills in A and no SweetClaude plugin or skills in B, but model execution returned “Not logged in.” This confirms initialization and isolation in that fixture, not an authenticated end-to-end workflow or startup drift check. The interactive `/plugin install` scope-selection behavior was not tested. Marketplace registration is held in the isolated Claude configuration and removal can affect other projects using that registration.
+
+## Authenticated integration check
+
+With Claude Code 2.1.332 and an isolated Claude configuration, an authenticated session in a disposable repository with `sweetclaude@scope-probe` installed at local scope loaded the SweetClaude plugin and nine skills, completed the startup drift hook, and returned the requested response. A second disposable Git repository loaded no SweetClaude plugin or skills and also returned the requested response. The normal user-wide settings file was unchanged across the two sessions; the isolated configuration contained no legacy global SweetClaude hook, rules, or scripts directories. An instrumented wrapper around the actual migration runner confirmed the drift hook invoked it; the runner was restored immediately after the check. The two successful model calls cost $0.0773. This check does not establish downstream workflow correctness.

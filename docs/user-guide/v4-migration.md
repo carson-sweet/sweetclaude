@@ -11,6 +11,9 @@ The full migration and recovery guide lives here:
 - [Upgrading to 5.0](upgrading-to-5.md)
 - [4.x Beta Rescue](beta-rescue.md)
 
+
+Run `claude plugin ...` commands in a terminal in the target repository. Before removing a marketplace, check whether other projects or plugins depend on it. See [installation and scope migration](install.md#move-an-existing-user-wide-installation).
+
 ## Short Version
 
 Use this order:
@@ -20,9 +23,9 @@ Use this order:
    - Beta install: switch channels once, in this order, so you are never double-installed:
 
      ```text
-     /plugin marketplace add carson-sweet/sweetclaude@main
-     /plugin install sweetclaude@sweetclaude-stable
-     /plugin marketplace remove sweetclaude-beta
+     claude plugin marketplace add carson-sweet/sweetclaude@main
+     claude plugin install sweetclaude@sweetclaude-stable --scope local
+     claude plugin marketplace remove sweetclaude-beta
      ```
 2. Restart Claude Code.
 3. Run `/sweetclaude:configure update` to sync framework files.

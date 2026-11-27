@@ -340,10 +340,9 @@ echo "$PF_OUT" | grep -q '^SC_PLUGIN_CHANNEL=beta$' \
   && pass "preflight reports beta channel" \
   || fail "preflight did not report beta channel: $PF_OUT"
 
-echo "$PF_OUT" | grep -q '^CONFIG_SYNCED=true$' \
-  && [ -f "$PF_TMPDIR/.claude/config/sweetclaude/capability-manifest.yaml" ] \
-  && pass "preflight syncs framework capability manifest config" \
-  || fail "preflight did not sync framework config: $PF_OUT"
+[ ! -e "$PF_TMPDIR/.claude/config/sweetclaude" ] \
+  && pass "preflight does not create user-wide framework config" \
+  || fail "preflight created user-wide framework config"
 
 echo "$PF_OUT" | grep -q '^SC_PLUGIN_EXPECTED_REF=beta-4.x$' \
   && pass "preflight reports beta-4.x expected ref" \
@@ -404,21 +403,15 @@ echo "$PF_MISSING_OUT" | grep -q '^SC_PLUGIN_STALE_BETA=true$' \
 # Test 9: update skill contains channel-preserving source and metadata rules
 # ---------------------------------------------------------------------------
 
-echo "[9] update skill guards channel source and metadata repair"
-
-UPDATE_SKILL="$REPO_ROOT/skill-library/configure/update/SKILL.md"
-grep -q 'SC_PLUGIN_EXPECTED_REF' "$UPDATE_SKILL" \
-  && pass "update skill consumes expected channel ref" \
-  || fail "update skill does not consume SC_PLUGIN_EXPECTED_REF"
-
-grep -q 'branch .*does not match channel ref' "$UPDATE_SKILL" \
-  && pass "update skill blocks wrong-branch local repo source" \
-  || fail "update skill missing wrong-branch local repo guard"
-
-grep -q 'plugin-state.py' "$UPDATE_SKILL" \
-  && grep -q -- '--plugin-key "$PLUGIN_KEY"' "$UPDATE_SKILL" \
-  && pass "update skill repairs selected plugin metadata key" \
-  || fail "update skill missing deterministic metadata repair"
+echo "[9] update behavior preserves channel and selected metadata"
+if python3 -m pytest -q \
+  "$REPO_ROOT/tests/test_update_commands.py::test_update_check_rejects_local_source_without_required_branch" \
+  "$REPO_ROOT/tests/test_plugin_state.py::test_repair_local_scope_preserves_user_entry_with_shared_cache" \
+  "$REPO_ROOT/tests/test_plugin_state.py::test_retired_channel_switch_uses_explicit_local_scope"; then
+  pass "wrong branch, local metadata, and retired-channel guidance are guarded"
+else
+  fail "update safety regression tests failed"
+fi
 
 # ---------------------------------------------------------------------------
 

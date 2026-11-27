@@ -160,7 +160,7 @@ cases:
 
   - id: maintain-security-patch
     story: "Maintain — patch a security vulnerability"
-    prompt: "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+    prompt: "We confirmed a vulnerability in production: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
     category: maintain
     workflows: [security-patch]
     clarify_ok: false

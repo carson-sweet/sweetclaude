@@ -294,4 +294,4 @@ def test_R_197_corpus_steps_check_previous_and_allow_risk_override():
 
 def test_R_216_beta_rescue_removes_bare_legacy_marketplace():
     lines = [l.strip() for l in doc("beta-rescue").splitlines()]
-    assert "/plugin marketplace remove sweetclaude" in lines
+    assert "claude plugin marketplace remove sweetclaude" in lines

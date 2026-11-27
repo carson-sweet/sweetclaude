@@ -17,7 +17,7 @@ pass() { echo "  PASS: $1"; PASSED=$((PASSED + 1)); }
 TMPROOT=$(mktemp -d)
 trap "rm -rf $TMPROOT" EXIT
 
-# --- Fixture: project with stories, epics, milestones (old STORY/BUG prefixes) ---
+# --- Fixture: project with stories, epics, milestones (current ISSUE prefixes) ---
 FX="$TMPROOT/project"
 mkdir -p "$FX/.sweetclaude/product/backlog/stories/done"
 mkdir -p "$FX/.sweetclaude/product/backlog/bugs"
@@ -73,9 +73,9 @@ updated: 2026-05-15
 ---
 EOF
 
-cat > "$FX/.sweetclaude/product/backlog/stories/STORY-020-upfront-assessment.md" << 'EOF'
+cat > "$FX/.sweetclaude/product/backlog/stories/ISSUE-020-upfront-assessment.md" << 'EOF'
 ---
-id: STORY-020
+id: ISSUE-020
 type: story
 title: "Upfront story assessment"
 status: new
@@ -89,9 +89,9 @@ updated: 2026-05-15
 ---
 EOF
 
-cat > "$FX/.sweetclaude/product/backlog/stories/STORY-018-phase-status-table.md" << 'EOF'
+cat > "$FX/.sweetclaude/product/backlog/stories/ISSUE-018-phase-status-table.md" << 'EOF'
 ---
-id: STORY-018
+id: ISSUE-018
 type: story
 title: "Story phase-status table"
 status: new
@@ -105,9 +105,9 @@ updated: 2026-05-15
 ---
 EOF
 
-cat > "$FX/.sweetclaude/product/backlog/stories/STORY-015-model-enforcement.md" << 'EOF'
+cat > "$FX/.sweetclaude/product/backlog/stories/ISSUE-015-model-enforcement.md" << 'EOF'
 ---
-id: STORY-015
+id: ISSUE-015
 type: story
 title: "planning-concepts.md model enforcement"
 status: new
@@ -121,9 +121,9 @@ updated: 2026-05-15
 ---
 EOF
 
-cat > "$FX/.sweetclaude/product/backlog/stories/done/STORY-010-horizon-taxonomy.md" << 'EOF'
+cat > "$FX/.sweetclaude/product/backlog/stories/done/ISSUE-010-horizon-taxonomy.md" << 'EOF'
 ---
-id: STORY-010
+id: ISSUE-010
 type: story
 title: "Document and refine horizon taxonomy"
 status: done
@@ -138,9 +138,9 @@ closed_date: 2026-05-15
 ---
 EOF
 
-cat > "$FX/.sweetclaude/product/backlog/stories/STORY-011-roadmap-system.md" << 'EOF'
+cat > "$FX/.sweetclaude/product/backlog/stories/ISSUE-011-roadmap-system.md" << 'EOF'
 ---
-id: STORY-011
+id: ISSUE-011
 type: story
 title: "Roadmap system"
 status: new
@@ -154,10 +154,10 @@ updated: 2026-05-15
 ---
 EOF
 
-cat > "$FX/.sweetclaude/product/backlog/bugs/BUG-005-cache-test-bug.md" << 'EOF'
+cat > "$FX/.sweetclaude/product/backlog/bugs/ISSUE-005-cache-test-bug.md" << 'EOF'
 ---
-id: BUG-005
-type: bug
+id: ISSUE-005
+type: bug-fix
 title: "Test bug for cache"
 status: new
 priority: now
@@ -201,11 +201,11 @@ fi
 # ---------------------------------------------------------------------------
 echo "[4] cache.py --query epic-stories --epic EP-001 returns stories in sequence order"
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query epic-stories --epic EP-001 2>&1)
-# Should be STORY-020 (seq 1), STORY-018 (seq 2), STORY-015 (seq 3)
-FIRST=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'])" 2>/dev/null)
-SECOND=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[1]['id'])" 2>/dev/null)
-THIRD=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[2]['id'])" 2>/dev/null)
-if [ "$FIRST" = "STORY-020" ] && [ "$SECOND" = "STORY-018" ] && [ "$THIRD" = "STORY-015" ]; then
+# Should be ISSUE-020 (seq 1), ISSUE-018 (seq 2), ISSUE-015 (seq 3)
+FIRST=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'])" 2>/dev/null || true)
+SECOND=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[1]['id'])" 2>/dev/null || true)
+THIRD=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[2]['id'])" 2>/dev/null || true)
+if [ "$FIRST" = "ISSUE-020" ] && [ "$SECOND" = "ISSUE-018" ] && [ "$THIRD" = "ISSUE-015" ]; then
   pass "stories in sequence order: 020, 018, 015"
 else
   fail "wrong order: $FIRST, $SECOND, $THIRD"
@@ -213,25 +213,25 @@ fi
 
 # ---------------------------------------------------------------------------
 echo "[5] cache.py --query epic-stories excludes done stories by default"
-# Mark STORY-020 as done in file and rebuild
-sed -i.bak 's/status: new/status: done/' "$FX/.sweetclaude/product/backlog/stories/STORY-020-upfront-assessment.md"
+# Mark ISSUE-020 as done in file and rebuild
+sed -i.bak 's/status: new/status: done/' "$FX/.sweetclaude/product/backlog/stories/ISSUE-020-upfront-assessment.md"
 python3 "$CACHE_PY" --project-dir "$FX" --rebuild >/dev/null 2>&1
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query epic-stories --epic EP-001 2>&1)
-COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null)
+COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || true)
 if [ "$COUNT" = "2" ]; then
   pass "done stories excluded (2 remaining)"
 else
   fail "expected 2 stories, got $COUNT"
 fi
 # Restore
-mv "$FX/.sweetclaude/product/backlog/stories/STORY-020-upfront-assessment.md.bak" "$FX/.sweetclaude/product/backlog/stories/STORY-020-upfront-assessment.md"
+mv "$FX/.sweetclaude/product/backlog/stories/ISSUE-020-upfront-assessment.md.bak" "$FX/.sweetclaude/product/backlog/stories/ISSUE-020-upfront-assessment.md"
 python3 "$CACHE_PY" --project-dir "$FX" --rebuild >/dev/null 2>&1
 
 # ---------------------------------------------------------------------------
 echo "[6] cache.py --query backlog returns items sorted by priority"
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query backlog 2>&1)
 # now items should come before soon items
-FIRST_PRI=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['priority'])" 2>/dev/null)
+FIRST_PRI=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['priority'])" 2>/dev/null || true)
 if [ "$FIRST_PRI" = "now" ]; then
   pass "backlog sorted by priority (now first)"
 else
@@ -241,36 +241,36 @@ fi
 # ---------------------------------------------------------------------------
 echo "[7] cache.py --query backlog excludes done items"
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query backlog 2>&1)
-HAS_DONE=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(any(i['id']=='STORY-010' for i in d))" 2>/dev/null)
+HAS_DONE=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(any(i['id']=='ISSUE-010' for i in d))" 2>/dev/null || true)
 if [ "$HAS_DONE" = "False" ]; then
   pass "done items excluded from backlog"
 else
-  fail "STORY-010 (done) appeared in backlog"
+  fail "ISSUE-010 (done) appeared in backlog"
 fi
 
 # ---------------------------------------------------------------------------
-echo "[8] cache.py --query next-id --prefix STORY returns max+1"
-OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query next-id --prefix STORY 2>&1)
-if echo "$OUTPUT" | grep -q '"next_id": "STORY-021"'; then
-  pass "next story ID is STORY-021"
+echo "[8] cache.py --query next-id --prefix ISSUE returns max+1"
+OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query next-id --prefix ISSUE 2>&1)
+if echo "$OUTPUT" | grep -q '"next_id": "ISSUE-021"'; then
+  pass "next issue ID is ISSUE-021"
 else
-  fail "expected STORY-021, got: $OUTPUT"
+  fail "expected ISSUE-021, got: $OUTPUT"
 fi
 
 # ---------------------------------------------------------------------------
-echo "[9] cache.py --query next-id --prefix BUG returns max+1"
-OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query next-id --prefix BUG 2>&1)
-if echo "$OUTPUT" | grep -q '"next_id": "BUG-006"'; then
-  pass "next bug ID is BUG-006"
+echo "[9] cache.py --query next-id --prefix EP returns max+1"
+OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query next-id --prefix EP 2>&1)
+if echo "$OUTPUT" | grep -q '"next_id": "EP-003"'; then
+  pass "next epic ID is EP-003"
 else
-  fail "expected BUG-006, got: $OUTPUT"
+  fail "expected EP-003, got: $OUTPUT"
 fi
 
 # ---------------------------------------------------------------------------
 echo "[10] cache.py --query releases returns milestone hierarchy"
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query releases 2>&1)
-MS_ID=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'])" 2>/dev/null)
-EPIC_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics']))" 2>/dev/null)
+MS_ID=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'])" 2>/dev/null || true)
+EPIC_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics']))" 2>/dev/null || true)
 if [ "$MS_ID" = "MS-001" ] && [ "$EPIC_COUNT" = "2" ]; then
   pass "MS-001 has 2 epics"
 else
@@ -279,22 +279,22 @@ fi
 
 # ---------------------------------------------------------------------------
 echo "[11] cache.py --query epic-stories --epic EP-001 --include-done includes done stories"
-sed -i.bak 's/status: new/status: done/' "$FX/.sweetclaude/product/backlog/stories/STORY-020-upfront-assessment.md"
+sed -i.bak 's/status: new/status: done/' "$FX/.sweetclaude/product/backlog/stories/ISSUE-020-upfront-assessment.md"
 python3 "$CACHE_PY" --project-dir "$FX" --rebuild >/dev/null 2>&1
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query epic-stories --epic EP-001 --include-done 2>&1)
-COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null)
+COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || true)
 if [ "$COUNT" = "3" ]; then
   pass "include-done returns all 3 stories"
 else
   fail "expected 3 stories with include-done, got $COUNT"
 fi
-mv "$FX/.sweetclaude/product/backlog/stories/STORY-020-upfront-assessment.md.bak" "$FX/.sweetclaude/product/backlog/stories/STORY-020-upfront-assessment.md"
+mv "$FX/.sweetclaude/product/backlog/stories/ISSUE-020-upfront-assessment.md.bak" "$FX/.sweetclaude/product/backlog/stories/ISSUE-020-upfront-assessment.md"
 python3 "$CACHE_PY" --project-dir "$FX" --rebuild >/dev/null 2>&1
 
 # ---------------------------------------------------------------------------
 echo "[12] cache.py --query tags returns items by tag"
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query tags --tag workflow 2>&1)
-COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null)
+COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || true)
 if [ "$COUNT" = "3" ]; then
   pass "3 items tagged 'workflow'"
 else
@@ -306,9 +306,9 @@ echo "[13] cache.py handles missing roadmap directory gracefully"
 FX2="$TMPROOT/project-no-roadmap"
 mkdir -p "$FX2/.sweetclaude/product/backlog/stories"
 mkdir -p "$FX2/.sweetclaude/cache"
-cat > "$FX2/.sweetclaude/product/backlog/stories/STORY-001-test.md" << 'STEOF'
+cat > "$FX2/.sweetclaude/product/backlog/stories/ISSUE-001-test.md" << 'STEOF'
 ---
-id: STORY-001
+id: ISSUE-001
 type: story
 title: "Test story"
 status: new
@@ -336,19 +336,19 @@ fi
 # ---------------------------------------------------------------------------
 echo "[15] cache.py --query releases-compact returns compact milestone hierarchy under 10KB"
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX" --query releases-compact 2>&1)
-MS_ID=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'])" 2>/dev/null)
-EPIC_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics']))" 2>/dev/null)
-STORY_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics'][0]['stories']))" 2>/dev/null)
-HAS_CRITERIA=$(echo "$OUTPUT" | python3 -c "import sys,json; ep=json.load(sys.stdin)[0]['epics'][0]; print('criteria_done' in ep and 'criteria_total' in ep)" 2>/dev/null)
+MS_ID=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'])" 2>/dev/null || true)
+EPIC_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics']))" 2>/dev/null || true)
+STORY_COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d[0]['epics'][0]['stories']))" 2>/dev/null || true)
+HAS_CRITERIA=$(echo "$OUTPUT" | python3 -c "import sys,json; ep=json.load(sys.stdin)[0]['epics'][0]; print('criteria_done' in ep and 'criteria_total' in ep)" 2>/dev/null || true)
 BYTE_SIZE=$(echo -n "$OUTPUT" | wc -c | tr -d ' ')
 NO_EXTRA_FIELDS=$(echo "$OUTPUT" | python3 -c "
 import sys,json
 data = json.load(sys.stdin)
 ep = data[0]['epics'][0]
-allowed = {'id','title','status','criteria_done','criteria_total','stories'}
+allowed = {'id','title','status','derived_status','source','criteria_done','criteria_total','stories'}
 extra = set(ep.keys()) - allowed
 print('none' if not extra else ','.join(sorted(extra)))
-" 2>/dev/null)
+" 2>/dev/null || true)
 if [ "$MS_ID" = "MS-001" ] && [ "$EPIC_COUNT" = "2" ] && [ "$STORY_COUNT" -gt 0 ] && \
    [ "$HAS_CRITERIA" = "True" ] && [ "$BYTE_SIZE" -lt 10240 ] && [ "$NO_EXTRA_FIELDS" = "none" ]; then
   pass "releases-compact: correct structure, criteria fields present, no extra fields, under 10KB (${BYTE_SIZE}B)"
@@ -411,7 +411,7 @@ EOF
 cat > "$FX3/.sweetclaude/product/backlog/ISSUE-002-fix-login-bug.md" << 'EOF'
 ---
 id: ISSUE-002
-type: bug
+type: bug-fix
 title: "Fix login bug"
 status: new
 priority: now
@@ -427,7 +427,7 @@ EOF
 cat > "$FX3/.sweetclaude/product/backlog/ISSUE-003-update-docs.md" << 'EOF'
 ---
 id: ISSUE-003
-type: chore
+type: tech-debt
 title: "Update documentation"
 status: new
 priority: soon
@@ -443,7 +443,7 @@ EOF
 cat > "$FX3/.sweetclaude/product/backlog/done/ISSUE-004-setup-ci.md" << 'EOF'
 ---
 id: ISSUE-004
-type: chore
+type: tech-debt
 title: "Set up CI pipeline"
 status: done
 priority: now
@@ -467,9 +467,9 @@ fi
 # ---------------------------------------------------------------------------
 echo "[17] cache.py --query backlog returns ISSUE-NNN items"
 OUTPUT=$(python3 "$CACHE_PY" --project-dir "$FX3" --query backlog 2>&1)
-COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null)
-HAS_ISSUE=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(any(i['id']=='ISSUE-001' for i in d))" 2>/dev/null)
-NO_DONE=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(all(i['id']!='ISSUE-004' for i in d))" 2>/dev/null)
+COUNT=$(echo "$OUTPUT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || true)
+HAS_ISSUE=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(any(i['id']=='ISSUE-001' for i in d))" 2>/dev/null || true)
+NO_DONE=$(echo "$OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(all(i['id']!='ISSUE-004' for i in d))" 2>/dev/null || true)
 if [ "$COUNT" = "3" ] && [ "$HAS_ISSUE" = "True" ] && [ "$NO_DONE" = "True" ]; then
   pass "ISSUE-NNN: backlog has 3 open items, excludes done"
 else

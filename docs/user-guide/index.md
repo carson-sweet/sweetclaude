@@ -9,12 +9,14 @@ SweetClaude 5.x is the stable channel, tracked on `main`. Plugin update, framewo
 
 ## Install And Update
 
+In a terminal in the target repository, use local scope (recommended for one person in one project):
+
 ```text
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 ```
 
-After plugin install or update, restart Claude Code before running SweetClaude commands. To update:
+See [Installing SweetClaude](install.md) for scope, verification, and migration. After plugin install or update, restart Claude Code before running SweetClaude commands. To update:
 
 ```text
 /plugin update sweetclaude@sweetclaude-stable

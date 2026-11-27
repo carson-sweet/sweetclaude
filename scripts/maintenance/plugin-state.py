@@ -30,7 +30,8 @@ VERSION_MAJOR_RE = re.compile(r"^v?(\d+)")
 
 
 def _plugins_path(home: Path) -> Path:
-    return home / ".claude" / "plugins" / "installed_plugins.json"
+    config = os.environ.get("CLAUDE_CONFIG_DIR") if home == Path.home() else None
+    return (Path(config).expanduser() if config else home / ".claude") / "plugins" / "installed_plugins.json"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -99,9 +100,9 @@ def _switch_commands(retired_channel: str, target_channel: str, retired_marketpl
     target_ref = expected_ref(target_channel)
     retired_marketplace = retired_marketplace or expected_marketplace(retired_channel)
     return [
-        f"/plugin marketplace add carson-sweet/sweetclaude@{target_ref}",
-        f"/plugin install sweetclaude@{target_marketplace}",
-        f"/plugin marketplace remove {retired_marketplace}",
+        f"claude plugin marketplace add carson-sweet/sweetclaude@{target_ref}",
+        f"claude plugin install sweetclaude@{target_marketplace} --scope local",
+        f"claude plugin marketplace remove {retired_marketplace}",
     ]
 
 
@@ -137,7 +138,7 @@ def _entry_exists(entry: dict[str, Any]) -> bool:
 
 
 def _entry_matches_project(entry: dict[str, Any], project_dir: Path | None) -> bool:
-    if entry.get("scope") != "local":
+    if entry.get("scope") not in {"local", "project"}:
         return True
     if project_dir is None:
         return False
@@ -182,9 +183,9 @@ def _collect_entries(
                 except OSError:
                     pass
             if entry.get("scope") == "user":
-                score += 100
-            if entry.get("scope") == "local":
                 score += 50
+            if entry.get("scope") == "local":
+                score += 100
             if row["install_exists"]:
                 score += 10
             row["score"] = score
@@ -248,6 +249,7 @@ def repair_state(
     version: str,
     sha: str,
     project_dir: Path | None,
+    scope: str | None = None,
 ) -> dict[str, Any]:
     path = _plugins_path(home)
     data = _load(path)
@@ -256,20 +258,17 @@ def repair_state(
     if not isinstance(versions, list):
         raise ValueError(f"SweetClaude plugin key not found: {plugin_key}")
 
-    target_index = None
-    for index, entry in enumerate(versions):
-        if not isinstance(entry, dict):
-            continue
-        if project_dir and entry.get("scope") == "local":
-            if not _entry_matches_project(entry, project_dir):
-                continue
-        current_path = str(entry.get("installPath") or "")
-        if current_path == install_path or target_index is None:
-            target_index = index
-            if current_path == install_path:
-                break
-    if target_index is None:
+    candidates = [
+        index for index, entry in enumerate(versions)
+        if isinstance(entry, dict)
+        and (not scope or entry.get("scope") == scope)
+        and _entry_matches_project(entry, project_dir)
+    ]
+    if not candidates:
         raise ValueError(f"No repairable SweetClaude entry found for {plugin_key}")
+    if len(candidates) != 1:
+        raise ValueError(f"ambiguous SweetClaude entries for {plugin_key}; select an exact installation")
+    target_index = candidates[0]
 
     now = _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     entry = versions[target_index]
@@ -382,6 +381,7 @@ def main(argv: list[str] | None = None) -> int:
     p_repair.add_argument("--install-path", required=True)
     p_repair.add_argument("--version", required=True)
     p_repair.add_argument("--sha", required=True)
+    p_repair.add_argument("--scope", choices=("local", "project", "user", "managed"))
 
     args = parser.parse_args(argv)
     try:
@@ -400,6 +400,7 @@ def main(argv: list[str] | None = None) -> int:
                 version=args.version,
                 sha=args.sha,
                 project_dir=args.project_dir,
+                scope=args.scope,
             )
             print(json.dumps(result, indent=2))
             return 0

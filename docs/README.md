@@ -6,6 +6,9 @@
 Start with the guide that matches the SweetClaude plugin channel installed in
 Claude Code.
 
+
+Run `claude plugin ...` commands in a terminal in the target repository. Local scope is recommended; see the [installation guide](user-guide/install.md) before removing marketplaces or migrating a user-wide install.
+
 ## Stable: 5.x on `main`
 
 Stable 5.x is the recommended channel for normal active project work.
@@ -22,8 +25,8 @@ Stable 5.x is the recommended channel for normal active project work.
 Stable 5.x uses:
 
 ```text
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 ```
 
 Stable 5.x separates framework update from project maintenance. Update the
@@ -44,16 +47,16 @@ Legacy 3.x receives maintenance only. New installs should use stable 5.x.
 Legacy 3.x uses:
 
 ```text
-/plugin marketplace add carson-sweet/sweetclaude@stable-3.x
-/plugin install sweetclaude@sweetclaude-legacy
+claude plugin marketplace add carson-sweet/sweetclaude@stable-3.x
+claude plugin install sweetclaude@sweetclaude-legacy --scope local
 ```
 
 To move a 3.x project to the stable line, run these in order. Old 3.x installs registered their marketplace as `sweetclaude-stable`, so remove it first:
 
 ```text
-/plugin marketplace remove sweetclaude-stable
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
+claude plugin marketplace remove sweetclaude-stable
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 ```
 
 Then restart Claude Code and run `/sweetclaude:configure doctor` in each project. Doctor routes legacy project state to recovery or migration; update does not migrate project data.
@@ -65,9 +68,9 @@ installed. If `/plugin list` shows `sweetclaude@sweetclaude-beta`, make the
 one-time switch to stable — run these in order so SweetClaude stays installed throughout (both channels are installed briefly, and all three steps finish before you restart Claude Code):
 
 ```text
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-/plugin marketplace remove sweetclaude-beta
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
+claude plugin marketplace remove sweetclaude-beta
 ```
 
 Then restart Claude Code and use `/sweetclaude:configure update SweetClaude`. If a former beta

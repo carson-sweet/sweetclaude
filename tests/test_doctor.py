@@ -677,6 +677,13 @@ class TestHookHealth:
     tests/features/doctor-hook-health.feature.
     """
 
+    @pytest.fixture(autouse=True)
+    def plugin_hooks(self, tmp_path, fake_home, monkeypatch):
+        plugin = tmp_path / "installed-plugin"
+        plugin.mkdir()
+        (plugin / "hooks").symlink_to(fake_home / ".claude" / "hooks" / "sweetclaude", target_is_directory=True)
+        monkeypatch.setattr(_p0_doctor, "_SCRIPTS_DIR", plugin / "scripts")
+
     # ------------------------------------------------------------------
     # Scenario: Healthy project produces no hook_health findings
     # ------------------------------------------------------------------
@@ -715,9 +722,8 @@ class TestHookHealth:
 
         f = next(x for x in findings if x.id == "hook-health:missing:hooks.json")
         assert f.severity == "error"
-        assert f.fix_type == "prompted"
-        assert f.fix_recipe["action"] == "prompt"
-        assert f.fix_recipe["type"] == "hook_restore"
+        assert f.fix_type == "report-only"
+        assert f.fix_recipe == {}
 
     # Scenario: hooks.json is empty dict (not None) produces no finding
     def test_hooks_json_empty_dict_produces_no_missing_finding(
@@ -771,8 +777,8 @@ class TestHookHealth:
 
         f = next(x for x in findings if x.id == "hook-health:syntax-error:bad-hook.sh")
         assert f.severity == "error"
-        assert f.fix_type == "prompted"
-        assert f.fix_recipe["type"] == "hook_restore"
+        assert f.fix_type == "report-only"
+        assert f.fix_recipe == {}
 
     # Scenario: Multiple hook scripts with mixed syntax
     def test_mixed_hook_scripts_only_bad_gets_syntax_finding(
@@ -997,10 +1003,8 @@ class TestHookHealth:
             x for x in findings
             if x.id == "hook-health:missing-hook:auto-test-runner.sh"
         )
-        assert f.fix_type == "prompted"
-        assert f.fix_recipe["action"] == "prompt"
-        assert f.fix_recipe["type"] == "hook_restore"
-        assert f.fix_recipe["hook"] == "auto-test-runner.sh"
+        assert f.fix_type == "report-only"
+        assert f.fix_recipe == {}
 
     # Scenario: a manifest-declared hook present on disk -> no missing finding
     def test_manifest_declared_hook_present_produces_no_missing_finding(
@@ -3557,34 +3561,16 @@ class TestEnvWiring:
     # Scenario: Global settings without plansDirectory produces warning
     # ------------------------------------------------------------------
 
-    def test_global_settings_without_plans_directory_produces_warning(
-        self, tmp_path, fake_home
-    ):
-        settings_path = fake_home / ".claude" / "settings.json"
-        settings_path.write_text(json.dumps({}))
-
-        project_dir = build_fixture(tmp_path)
-        state = build_project_state(project_dir)
-        findings = check_env_wiring(state)
-
-        ids = [f.id for f in findings]
-        assert "env-wiring:plans-directory-unset:settings_global" in ids, (
-            f"Expected 'env-wiring:plans-directory-unset:settings_global' in {ids}"
-        )
-
-        f = next(
-            x for x in findings
-            if x.id == "env-wiring:plans-directory-unset:settings_global"
-        )
-        assert f.severity == "warning", (
-            f"Expected severity 'warning', got: {f.severity}"
-        )
-        assert f.fix_type == "auto", (
-            f"Expected fix_type 'auto', got: {f.fix_type}"
-        )
-        assert f.fix_recipe["action"] == "write_field", (
-            f"Expected fix_recipe action 'write_field', got: {f.fix_recipe.get('action')}"
-        )
+    def test_global_settings_without_plans_directory_is_not_modified(self, tmp_path, fake_home):
+        settings = fake_home / ".claude" / "settings.json"
+        settings.write_text("{}")
+        project = build_fixture(tmp_path, overrides={"settings_local": {}})
+        findings = check_env_wiring(build_project_state(project))
+        finding = next(f for f in findings if f.id == "env-wiring:plans-directory-unset:settings_local")
+        assert finding.fix_recipe["file"] == str(project / ".claude" / "settings.local.json")
+        result = execute_recipe(project, finding.fix_recipe, create_archive(project))
+        assert result.success
+        assert settings.read_text() == "{}"
 
     # ------------------------------------------------------------------
     # Scenario: Global settings with plansDirectory set produces no finding
@@ -3647,10 +3633,7 @@ class TestEnvWiring:
             f.id for f in findings
             if f.id.startswith("env-wiring:plans-directory-unset")
         ]
-        assert unset_ids == [], (
-            f"Check should stop after global (which has the key); "
-            f"no unset finding expected, got: {unset_ids}"
-        )
+        assert unset_ids == ["env-wiring:plans-directory-unset:settings_local"]
 
     # ------------------------------------------------------------------
     # Scenario: CLAUDE.md without sweetclaude mention produces warning
@@ -3753,7 +3736,7 @@ class TestEnvWiring:
         settings_path = fake_home / ".claude" / "settings.json"
         settings_path.write_text(json.dumps({}))
 
-        project_dir = build_fixture(tmp_path)
+        project_dir = build_fixture(tmp_path, overrides={"settings_local": {}})
         plans_dir = project_dir / ".sweetclaude" / "plans"
         shutil.rmtree(plans_dir)
 
@@ -3769,8 +3752,8 @@ class TestEnvWiring:
         assert "env-wiring:missing:plans-directory" in ids, (
             f"Expected 'env-wiring:missing:plans-directory' in {ids}"
         )
-        assert "env-wiring:plans-directory-unset:settings_global" in ids, (
-            f"Expected 'env-wiring:plans-directory-unset:settings_global' in {ids}"
+        assert "env-wiring:plans-directory-unset:settings_local" in ids, (
+            f"Expected 'env-wiring:plans-directory-unset:settings_local' in {ids}"
         )
 
 
@@ -5639,7 +5622,7 @@ class TestPostFixRescan:
         assert "env-wiring:plans-directory-unset:settings_global" not in returned_ids
 
     def test_rescan_returns_genuinely_new_findings(self, tmp_path, fake_home):
-        project_dir = build_fixture(tmp_path)
+        project_dir = build_fixture(tmp_path, overrides={"settings_local": {}})
         plans_dir = project_dir / ".sweetclaude" / "plans"
 
         # Condition A: plans directory missing
@@ -5660,7 +5643,7 @@ class TestPostFixRescan:
         result = post_fix_rescan(project_dir, ["env_wiring"], original_finding_ids)
 
         returned_ids = [f["id"] for f in result["findings"]]
-        assert "env-wiring:plans-directory-unset:settings_global" in returned_ids
+        assert "env-wiring:plans-directory-unset:settings_local" in returned_ids
         assert "env-wiring:missing:plans-directory" not in returned_ids
 
     def test_categories_not_requested_are_not_rescanned(self, tmp_path, fake_home):
@@ -7744,7 +7727,7 @@ def test_executor_supported_actions_match_dispatch():
         "run_script", "rebuild_cache", "create_dir", "delete_file",
         "write_field", "write_frontmatter_field", "prompt",
         "sync_parent_status", "convert_to_yaml", "config_conflict",
-        "yaml_repair", "hook_restore", "file_move", "renumber_duplicate",
+        "yaml_repair", "file_move", "renumber_duplicate",
         "resolve_orphans", "remove_global_rules",
     }
     assert set(EXECUTOR_SUPPORTED_ACTIONS) == dispatched
@@ -8796,197 +8779,29 @@ def _build_fake_plugin(tmp_path):
     return plugin
 
 
-class TestP1HookRestore:
-    """P1 / T2h: hook_restore made a real, executor-owned action.
-
-    The old skill-side ``cp $PLUGIN_DIR/config/{hook}`` always hit
-    SOURCE_NOT_FOUND because the hook scripts ship in the plugin ``hooks/``
-    dir and the rules ship in ``rules/`` — never ``config/``. This locks the
-    correct source -> dest mapping per restorable kind:
-
-      - hook script (``*.sh``)        : {plugin}/hooks/{name}  -> ~/.claude/hooks/sweetclaude/{name}
-      - hooks.json / hooks-manifest   : {plugin}/hooks/{name}  -> ~/.claude/hooks/sweetclaude/{name}
-      - rules file (``*.md``)         : {plugin}/rules/{name}  -> ~/.claude/rules/sweetclaude/{name}
-
-    Any overwrite of an existing dest is backed up through _record_mutation so
-    it is ``restore``-reversible (these ~/.claude files are outside the project
-    git tree, so the safety branch cannot cover them). A genuinely absent
-    source returns success=False with an error — never a silent skip, never a
-    wrong-path write. NO MOCKS — a real fake plugin source tree is built.
-    """
-
-    # ----- restore a missing hook script: source present -> copied to dest --
-
-    def test_remove_global_rules_moves_the_directory_to_a_recoverable_backup(
-        self, tmp_path, fake_home
-    ):
-        project_dir = build_fixture(tmp_path)
-        rules_dir = Path.home() / ".claude" / "rules" / "sweetclaude"
-        rules_dir.mkdir(parents=True)
-        (rules_dir / "interaction-model.md").write_text("# legacy rule\n")
-        archive = create_archive(project_dir)
-
-        result = execute_recipe(project_dir, {
-            "action": "remove_global_rules", "file": str(rules_dir),
-        }, archive)
-
-        assert result.success is True
-        assert not rules_dir.exists()
-        assert result.backup_path is not None
+class TestHookRestoreScope:
+    def test_global_rules_cleanup_has_recoverable_backup(self, tmp_path, fake_home):
+        project = build_fixture(tmp_path)
+        rules = fake_home / ".claude" / "rules" / "sweetclaude"
+        rules.mkdir(parents=True)
+        (rules / "interaction-model.md").write_text("# legacy rule\n")
+        result = execute_recipe(project, {"action": "remove_global_rules", "file": str(rules)}, create_archive(project))
+        assert result.success and not rules.exists()
         assert (result.backup_path / "interaction-model.md").read_text() == "# legacy rule\n"
 
-    def test_restore_missing_hook_script_copies_from_plugin_to_dest(
-        self, tmp_path, fake_home
-    ):
-        project_dir = build_fixture(tmp_path)
+    def test_legacy_restore_refuses_global_and_explicit_destinations(self, tmp_path, fake_home):
+        project = build_fixture(tmp_path)
         plugin = _build_fake_plugin(tmp_path)
-        dest = Path.home() / ".claude" / "hooks" / "sweetclaude" / "auto-test-runner.sh"
-        assert not dest.exists(), "precondition: dest hook script is missing"
-        archive = create_archive(project_dir)
-
-        result = execute_recipe(project_dir, {
-            "action": "hook_restore",
-            "hook": "auto-test-runner.sh",
-            "plugin_dir": str(plugin),
-        }, archive)
-
-        assert result.success is True, f"restore should succeed: {result.error}"
-        # landed at the exact dest check_hook_health scans
-        assert dest.exists(), "hook script must be restored to ~/.claude/hooks/sweetclaude/"
-        assert dest.read_text() == (plugin / "hooks" / "auto-test-runner.sh").read_text()
-
-    def test_restore_hooks_json_copies_from_plugin_hooks_dir(self, tmp_path, fake_home):
-        project_dir = build_fixture(tmp_path)
-        plugin = _build_fake_plugin(tmp_path)
-        # remove the fixture's placeholder hooks.json so this is a true restore
-        dest = Path.home() / ".claude" / "hooks" / "sweetclaude" / "hooks.json"
-        dest.unlink()
-        archive = create_archive(project_dir)
-
-        result = execute_recipe(project_dir, {
-            "action": "hook_restore",
-            "hook": "hooks.json",
-            "plugin_dir": str(plugin),
-        }, archive)
-
-        assert result.success is True, f"restore should succeed: {result.error}"
-        assert dest.exists()
-        assert dest.read_text() == (plugin / "hooks" / "hooks.json").read_text()
-
-    def test_restore_rules_file_is_refused_to_prevent_global_loading(self, tmp_path, fake_home):
-        project_dir = build_fixture(tmp_path)
-        plugin = _build_fake_plugin(tmp_path)
-        dest = Path.home() / ".claude" / "rules" / "sweetclaude" / "interaction-model.md"
-        assert not dest.exists()
-        archive = create_archive(project_dir)
-
-        result = execute_recipe(project_dir, {
-            "action": "hook_restore",
-            "hook": "interaction-model.md",
-            "plugin_dir": str(plugin),
-        }, archive)
-
-        assert result.success is False
-        assert "would load them for every project" in (result.error or "")
-        assert not dest.exists()
-
-    # ----- overwriting a stale dest is backed up (restore-reversible) -------
-
-    def test_restore_over_stale_dest_backs_up_prior_content(self, tmp_path, fake_home):
-        project_dir = build_fixture(tmp_path)
-        plugin = _build_fake_plugin(tmp_path)
-        dest = Path.home() / ".claude" / "hooks" / "sweetclaude" / "auto-test-runner.sh"
-        stale = "#!/bin/bash\n# STALE corrupted content\nexit 1\n"
-        dest.write_text(stale)
-        stale_bytes = dest.read_bytes()
-        archive = create_archive(project_dir)
-
-        result = execute_recipe(project_dir, {
-            "action": "hook_restore",
-            "hook": "auto-test-runner.sh",
-            "plugin_dir": str(plugin),
-        }, archive)
-
-        assert result.success is True, f"restore should succeed: {result.error}"
-        # dest now holds the canonical content
-        assert dest.read_text() == (plugin / "hooks" / "auto-test-runner.sh").read_text()
-        # the prior (stale) content was backed up to before/ for reversibility
-        before_entry = archive / "before" / _p0_doctor._sanitize_path(str(dest))
-        assert before_entry.exists(), "overwrite must back up the prior dest content"
-        assert before_entry.read_bytes() == stale_bytes, "backup must hold the stale bytes"
-
-    def test_restore_over_stale_dest_is_restore_reversible(self, tmp_path, fake_home):
-        project_dir = build_fixture(tmp_path)
-        plugin = _build_fake_plugin(tmp_path)
-        dest = Path.home() / ".claude" / "hooks" / "sweetclaude" / "git-checkpoint.sh"
-        stale = "#!/bin/bash\n# old version\nexit 7\n"
-        dest.write_text(stale)
-        stale_bytes = dest.read_bytes()
-        archive = create_archive(project_dir)
-
-        # apply through the auto-fix pipeline (the path the skill uses) so the
-        # action is recorded for restore to find
-        finding = {
-            "id": "hook-health:syntax-error:git-checkpoint.sh",
-            "category": "hook_health",
-            "summary": "hook script broken",
-            "fix_type": "prompted",
-            "fix_recipe": {
-                "action": "hook_restore",
-                "hook": "git-checkpoint.sh",
-                "plugin_dir": str(plugin),
-            },
-        }
-        auto_fix(project_dir, [finding], archive, include_prompted=True)
-        assert dest.read_bytes() != stale_bytes, "restore must overwrite the stale dest"
-
-        res = _p0_doctor.restore(project_dir, archive, file=str(dest))
-        assert dest.read_bytes() == stale_bytes, "restore must revert to the prior bytes"
-        assert res["restored"], "restore must report what it restored"
-
-    # ----- genuinely absent source -> success=False, no wrong-path write ----
-
-    def test_restore_absent_source_fails_without_writing(self, tmp_path, fake_home):
-        project_dir = build_fixture(tmp_path)
-        plugin = _build_fake_plugin(tmp_path)
-        # a target that does not exist anywhere in the plugin source tree
-        dest = Path.home() / ".claude" / "hooks" / "sweetclaude" / "does-not-exist.sh"
-        assert not dest.exists()
-        archive = create_archive(project_dir)
-
-        result = execute_recipe(project_dir, {
-            "action": "hook_restore",
-            "hook": "does-not-exist.sh",
-            "plugin_dir": str(plugin),
-        }, archive)
-
-        assert result.success is False, "absent source must not report success"
-        assert result.error, "absent source must surface a clear error"
-        # never a silent success, never a wrong-path write
-        assert not dest.exists(), "absent source must not write the dest"
-        assert list((archive / "before").iterdir()) == [], "no backup on a failed restore"
-
-    def test_restore_missing_plugin_dir_fails_cleanly(self, tmp_path, fake_home):
-        project_dir = build_fixture(tmp_path)
-        missing_plugin = tmp_path / "no-such-plugin"
-        dest = Path.home() / ".claude" / "hooks" / "sweetclaude" / "auto-test-runner.sh"
-        dest_existed = dest.exists()
-        archive = create_archive(project_dir)
-
-        result = execute_recipe(project_dir, {
-            "action": "hook_restore",
-            "hook": "auto-test-runner.sh",
-            "plugin_dir": str(missing_plugin),
-        }, archive)
-
-        assert result.success is False
-        assert result.error
-        assert dest.exists() == dest_existed, "must not create the dest from a missing plugin"
-
-
-def test_hook_restore_is_a_supported_action():
-    from doctor import EXECUTOR_SUPPORTED_ACTIONS
-    assert "hook_restore" in EXECUTOR_SUPPORTED_ACTIONS
+        dest = fake_home / ".claude" / "hooks" / "sweetclaude" / "auto-test-runner.sh"
+        dest.write_text("existing hook\n")
+        before = dest.read_bytes()
+        archive = create_archive(project)
+        for extra in ({}, {"source": str(plugin / "hooks" / "auto-test-runner.sh"), "dest": str(dest)}):
+            recipe = {"action": "hook_restore", "hook": "auto-test-runner.sh", "plugin_dir": str(plugin), **extra}
+            result = execute_recipe(project, recipe, archive)
+            assert not result.success
+            assert "scope" in result.error
+            assert dest.read_bytes() == before
 
 
 class TestP1FileMove:
@@ -9544,7 +9359,6 @@ _CONTENT_MUTATING_ACTIONS = frozenset({
     "convert_to_yaml",
     "config_conflict",
     "yaml_repair",
-    "hook_restore",
     "file_move",
     "renumber_duplicate",
     "remove_global_rules",
@@ -10844,8 +10658,9 @@ class TestResolveOrphansExecutor:
         self, tmp_path, fake_home
     ):
         project_dir = build_fixture(tmp_path)
-        self._plant_orphan(project_dir, "BL-010-legacy.md", "BL-010")
+        self._plant_orphan(project_dir, "STORY-010-legacy.md", "STORY-010")
         self._plant_orphan(project_dir, "BUG-001-legacy.md", "BUG-001")
+        self._plant_orphan(project_dir, "BL-011-primary.md", "BL-011")
 
         state = build_project_state(project_dir)
         findings = check_migration_currency(state)
@@ -10856,6 +10671,9 @@ class TestResolveOrphansExecutor:
         assert len(orphan_findings) == 2, (
             "one prompted resolve_orphans finding per orphan file"
         )
+        assert {Path(f.fix_recipe["file"]).name for f in orphan_findings} == {
+            "STORY-010-legacy.md", "BUG-001-legacy.md"
+        }
         for f in orphan_findings:
             assert f.fix_type == "prompted"
             assert f.fix_recipe.get("file"), "recipe must carry the orphan path"

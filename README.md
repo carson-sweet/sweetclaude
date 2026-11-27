@@ -6,15 +6,14 @@
 
 ## TL;DR
 
-Start Claude Code and run:
-```
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-(restart Claude Code)
-/sweetclaude:help
+In a terminal inside the repository where you want SweetClaude, run:
 
-/sweetclaude:go give me an overview of what you can do
+```bash
+claude plugin marketplace add carson-sweet/sweetclaude@main # once, if not registered
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 ```
+
+Start or restart Claude Code in that repository and run `/sweetclaude:help`. Local scope enables it for you in this repository; user scope enables it across projects and is not recommended. See the [installation guide](docs/user-guide/install.md) for verification, existing global installs, and current limitations.
 
 ## What It Is
 
@@ -42,14 +41,7 @@ There's a massive number of Claude Code plugins out there. To help you decide if
 
 ## Quick Start
 
-Start Claude Code in your project folder as you normally would, then inside Claude Code run these commands:
-
-```
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-(restart Claude Code)
-/sweetclaude:help
-```
+In a terminal in your project folder, run the two install commands in [TL;DR](#tldr). Restart Claude Code there and run `/sweetclaude:help`. See the [installation guide](docs/user-guide/install.md) for scope and migration details.
 
 
 ## Basic Usage
@@ -173,15 +165,17 @@ For dependency risk, failure modes, and contingency plans → [Platform Dependen
 
 ## Migrating from Older Channels
 
+Run `claude plugin ...` commands below in a terminal in the target repository. Marketplace removal affects all installations using that marketplace; check other projects first. Follow the [scope migration guide](docs/user-guide/install.md#move-an-existing-user-wide-installation) to remove older user-wide enablement.
+
 <!-- docs-claims: ignore slash:/sweetclaude:doctor -->
 **From 4.x:** Run `/plugin marketplace update sweetclaude-stable`, then `/plugin update sweetclaude@sweetclaude-stable`, then restart Claude Code. After the restart, run `/sweetclaude:configure update` in each project. Your project data does not change. SweetClaude 5.0 replaces the one-command-per-workflow menu with nine commands; for example `/sweetclaude:doctor` is now `/sweetclaude:configure doctor`. Claude Code reports old commands as unknown; `/sweetclaude:help` lists the new ones. See [Upgrading to 5.0](docs/user-guide/upgrading-to-5.md) for the full mapping. 4.x receives no further releases.
 
 **From the 4.x beta channel:** The beta channel is retired. Switch in this order so SweetClaude stays installed throughout (both channels are installed briefly, and all three steps finish before you restart Claude Code):
 
 ```
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-/plugin marketplace remove sweetclaude-beta
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
+claude plugin marketplace remove sweetclaude-beta
 ```
 
 Removing the beta marketplace uninstalls its plugin, so add and install stable first. Then restart Claude Code and run `/sweetclaude:configure update` on the stable channel.
@@ -191,9 +185,9 @@ Beta releases before `v4.1.9-beta` had known update/recovery risks. See [4.x Bet
 **From 3.x:** The 3.x channel has been renamed to `sweetclaude-legacy`. To move a 3.x install onto the stable line:
 
 ```
-/plugin marketplace remove sweetclaude-stable
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
+claude plugin marketplace remove sweetclaude-stable
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
 ```
 
 Old 3.x installs registered their marketplace as `sweetclaude-stable`, so remove it first. Then restart Claude Code and run `/sweetclaude:configure doctor` in each project; doctor routes legacy project state to recovery or migration, and update does not migrate project data.
@@ -201,9 +195,9 @@ Old 3.x installs registered their marketplace as `sweetclaude-stable`, so remove
 To stay on 3.x, re-add the renamed legacy marketplace (a one-time step — the marketplace name changed):
 
 ```
-/plugin marketplace remove sweetclaude-stable
-/plugin marketplace add carson-sweet/sweetclaude@stable-3.x
-/plugin install sweetclaude@sweetclaude-legacy
+claude plugin marketplace remove sweetclaude-stable
+claude plugin marketplace add carson-sweet/sweetclaude@stable-3.x
+claude plugin install sweetclaude@sweetclaude-legacy --scope local
 ```
 
 → [Legacy 3.x documentation](https://github.com/carson-sweet/sweetclaude/blob/stable-3.x/docs/user-guide/install.md)

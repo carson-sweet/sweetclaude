@@ -143,7 +143,6 @@ EXECUTOR_SUPPORTED_ACTIONS = frozenset({
     "convert_to_yaml",
     "config_conflict",
     "yaml_repair",
-    "hook_restore",
     "file_move",
     "renumber_duplicate",
     "resolve_orphans",
@@ -497,7 +496,7 @@ def check_state_integrity(state: ProjectState) -> list[Finding]:
             file_paths=[str(ss_path)],
             fix_type="auto",
             fix_recipe={"action": "run_script",
-                        "cmd": ["bash", str(Path.home() / ".claude" / "hooks" / "sweetclaude" / "generate-session-state.sh")],
+                        "cmd": ["bash", str(_SCRIPTS_DIR.parent / "hooks" / "generate-session-state.sh")],
                         "args": [],
                         "regenerates": [".sweetclaude/state/session-state.yaml"]},
         ))
@@ -573,7 +572,7 @@ def check_state_integrity(state: ProjectState) -> list[Finding]:
                 ],
                 fix_type="auto",
                 fix_recipe={"action": "run_script",
-                            "cmd": ["bash", str(Path.home() / ".claude" / "hooks" / "sweetclaude" / "generate-session-state.sh")],
+                            "cmd": ["bash", str(_SCRIPTS_DIR.parent / "hooks" / "generate-session-state.sh")],
                             "args": [],
                             "regenerates": [".sweetclaude/state/session-state.yaml"]},
             ))
@@ -585,17 +584,16 @@ def check_hook_health(state: ProjectState) -> list[Finding]:
     findings: list[Finding] = []
 
     if state.hooks_json is None:
-        hooks_json_path = Path.home() / ".claude" / "hooks" / "sweetclaude" / "hooks.json"
+        hooks_json_path = _SCRIPTS_DIR.parent / "hooks" / "hooks.json"
         findings.append(Finding(
             id="hook-health:missing:hooks.json",
             category="hook_health",
             severity="error",
             summary="SweetClaude hooks configuration is missing",
-            detail=f"Expected {hooks_json_path}",
+            detail=f"Expected {hooks_json_path}. Reinstall or update the plugin at its existing scope.",
             file_paths=[str(hooks_json_path)],
-            fix_type="prompted",
-            fix_recipe={"action": "prompt", "type": "hook_restore",
-                        "hook": "hooks.json", "sources": ["backup", "repo"]},
+            fix_type="report-only",
+            fix_recipe={},
         ))
 
     for hf in state.hook_files:
@@ -610,11 +608,10 @@ def check_hook_health(state: ProjectState) -> list[Finding]:
                     category="hook_health",
                     severity="error",
                     summary=f"Hook script {hf.name} has a syntax error",
-                    detail=f"bash -n failed: {result.stderr.decode(errors='replace')[:200]}",
+                    detail=f"bash -n failed: {result.stderr.decode(errors='replace')[:200]}. Reinstall or update the plugin at its existing scope.",
                     file_paths=[str(hf)],
-                    fix_type="prompted",
-                    fix_recipe={"action": "prompt", "type": "hook_restore",
-                                "hook": hf.name, "sources": ["backup", "repo"]},
+                    fix_type="report-only",
+                    fix_recipe={},
                 ))
         except (subprocess.TimeoutExpired, OSError):
             pass
@@ -624,7 +621,7 @@ def check_hook_health(state: ProjectState) -> list[Finding]:
     # compare against what is present, so a missing hook is detectable AND
     # fixable end-to-end via the hook_restore prompt.
     if state.hook_manifest:
-        hooks_dir = Path.home() / ".claude" / "hooks" / "sweetclaude"
+        hooks_dir = _SCRIPTS_DIR.parent / "hooks"
         present_names = {hf.name for hf in state.hook_files}
         for entry in state.hook_manifest.get("hooks", []):
             name = entry.get("file") if isinstance(entry, dict) else None
@@ -637,11 +634,10 @@ def check_hook_health(state: ProjectState) -> list[Finding]:
                 category="hook_health",
                 severity="error",
                 summary=f"Hook script {name} is declared in the manifest but missing",
-                detail=f"Expected {hooks_dir / name} (declared in hooks-manifest.json)",
+                detail=f"Expected {hooks_dir / name} (declared in hooks-manifest.json). Reinstall or update the plugin at its existing scope.",
                 file_paths=[str(hooks_dir / name)],
-                fix_type="prompted",
-                fix_recipe={"action": "prompt", "type": "hook_restore",
-                            "hook": name, "sources": ["backup", "repo"]},
+                fix_type="report-only",
+                fix_recipe={},
             ))
 
     global_rules_dir = Path.home() / ".claude" / "rules" / "sweetclaude"
@@ -1704,32 +1700,18 @@ def check_env_wiring(state: ProjectState) -> list[Finding]:
             fix_recipe={"action": "create_dir", "path": str(plans_dir)},
         ))
 
-    for sname, sdata in [
-        ("settings_global", state.settings_global),
-        ("settings_local", state.settings_local),
-    ]:
-        if sdata is not None:
-            plans_setting = sdata.get("plansDirectory")
-            if plans_setting is None:
-                settings_path = (
-                    Path.home() / ".claude" / "settings.json"
-                    if sname == "settings_global"
-                    else state.project_dir / ".claude" / "settings.local.json"
-                )
-                findings.append(Finding(
-                    id=f"env-wiring:plans-directory-unset:{sname}",
-                    category="env_wiring",
-                    severity="warning",
-                    summary="Plans directory isn't configured in settings",
-                    detail=f"plansDirectory not set in {settings_path}",
-                    file_paths=[str(settings_path)],
-                    fix_type="auto",
-                    fix_recipe={"action": "write_field",
-                                "file": str(settings_path),
-                                "key": "plansDirectory",
-                                "value": ".sweetclaude/plans"},
-                ))
-            break
+    # Project configuration must never create a user-wide plansDirectory.
+    if state.settings_local is not None and state.settings_local.get("plansDirectory") is None:
+        settings_path = state.project_dir / ".claude" / "settings.local.json"
+        findings.append(Finding(
+            id="env-wiring:plans-directory-unset:settings_local",
+            category="env_wiring", severity="warning",
+            summary="Plans directory isn't configured in local settings",
+            detail=f"plansDirectory not set in {settings_path}",
+            file_paths=[str(settings_path)], fix_type="auto",
+            fix_recipe={"action": "write_field", "file": str(settings_path),
+                        "key": "plansDirectory", "value": ".sweetclaude/plans"},
+        ))
 
     if state.claude_md_project:
         if "sweetclaude" not in state.claude_md_project.lower():
@@ -2310,12 +2292,12 @@ def build_project_state(project_dir: Path) -> ProjectState:
             sorted(roadmap_dir.rglob("*.md")) if roadmap_dir.is_dir() else []
         ),
         hook_files=(
-            sorted((home_claude / "hooks" / "sweetclaude").glob("*.sh"))
-            if (home_claude / "hooks" / "sweetclaude").is_dir()
+            sorted((_SCRIPTS_DIR.parent / "hooks").glob("*.sh"))
+            if (_SCRIPTS_DIR.parent / "hooks").is_dir()
             else []
         ),
-        hook_manifest=_read_json(home_claude / "hooks" / "sweetclaude" / "hooks-manifest.json"),
-        hooks_json=_read_json(home_claude / "hooks" / "sweetclaude" / "hooks.json"),
+        hook_manifest=_read_json(_SCRIPTS_DIR.parent / "hooks" / "hooks-manifest.json"),
+        hooks_json=_read_json(_SCRIPTS_DIR.parent / "hooks" / "hooks.json"),
         settings_global=_read_json(home_claude / "settings.json"),
         settings_local=_read_json(project_dir / ".claude" / "settings.local.json"),
         claude_md_project=_read_text(project_dir / "CLAUDE.md"),
@@ -3572,33 +3554,11 @@ def _config_conflict_adopt(before: bytes, recipe: dict) -> bytes:
 
 
 def _resolve_hook_restore_paths(recipe: dict) -> tuple[Path, Path]:
-    """Map a hook_restore target name to its real plugin SOURCE and installed DEST.
-
-      - rules ``*.md``              : {plugin}/rules/{name} -> ~/.claude/rules/sweetclaude/{name}
-      - hook script ``*.sh`` / json : {plugin}/hooks/{name} -> ~/.claude/hooks/sweetclaude/{name}
-
-    An explicit ``source``/``dest`` on the recipe overrides the derivation.
-    """
-    name = recipe.get("hook", "")
-    if not name:
-        raise ValueError("hook_restore: no hook/target name in recipe")
-
-    explicit_source = recipe.get("source")
-    explicit_dest = recipe.get("dest")
-    if explicit_source and explicit_dest:
-        return Path(explicit_source), Path(explicit_dest)
-
-    plugin_dir = Path(recipe.get("plugin_dir", ""))
-    home_claude = Path.home() / ".claude"
-
-    if name.endswith(".md"):
-        raise ValueError(
-            "SweetClaude rules must remain inside the plugin bundle; restoring "
-            "them to ~/.claude/rules would load them for every project."
-        )
-    source = plugin_dir / "hooks" / name
-    dest = home_claude / "hooks" / "sweetclaude" / name
-    return source, dest
+    """Refuse legacy hook copies: plugin hooks must stay in their bundle."""
+    raise ValueError(
+        "Hook restoration to user-level files is disabled because it can expand "
+        "SweetClaude's scope. Reinstall or update the plugin at its existing scope."
+    )
 
 
 def execute_recipe(

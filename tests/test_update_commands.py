@@ -357,7 +357,9 @@ def test_project_check_runs_on_a_configured_project(tmp_path: Path) -> None:
     (state / "sweetclaude.yaml").write_text(
         yaml.safe_dump({"schema_version": 2}), encoding="utf-8")
 
-    args = argparse.Namespace(project_dir=tmp_path, runner="", migrate_script="")
+    runner = tmp_path / "runner.py"
+    runner.write_text('print("Drift scan (test): 0 finding(s)")\n')
+    args = argparse.Namespace(project_dir=tmp_path, runner=str(runner), migrate_script="")
     out = _capture(mod.cmd_project_check, args)
     assert out["skipped"] is False
     assert out["ok"] is True
@@ -645,3 +647,170 @@ def test_preflight_leaves_an_already_versioned_install_alone(
 
     assert out["version_dir_healed"] is False
     assert json.loads((plugins / "installed_plugins.json").read_text()) == payload
+
+
+def test_local_update_sync_preserves_user_configuration(tmp_path: Path) -> None:
+    """A project-local update must not reconcile hooks or remove global rules."""
+    import os
+    import shutil
+
+    home = tmp_path / "home"
+    claude = home / ".claude"
+    (claude / "rules" / "sweetclaude").mkdir(parents=True)
+    rules = claude / "rules" / "sweetclaude" / "legacy.md"
+    rules.write_text("personal legacy rules\n")
+    settings = claude / "settings.json"
+    settings.write_text(json.dumps({"hooks": {"SessionStart": [{"hooks": [{
+        "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-preflight.sh"
+    }]}]}}))
+    before_settings = settings.read_bytes()
+    source = tmp_path / "source"
+    for name in ("skills", "hooks", "scripts/maintenance", ".claude-plugin"):
+        (source / name).mkdir(parents=True)
+    shutil.copy(REPO_ROOT / "scripts/maintenance/ensure-global-hooks.py", source / "scripts/maintenance")
+    shutil.copy(REPO_ROOT / "scripts/maintenance/cleanup-legacy-paths.py", source / "scripts/maintenance")
+    (source / "hooks/hooks-manifest.json").write_text(json.dumps({"hooks": [{
+        "file": "session-preflight.sh", "scope": "plugin-native"
+    }]}))
+    (source / ".claude-plugin/plugin.json").write_text('{"name":"sweetclaude"}')
+    install = claude / "plugins/cache/sweetclaude-stable/sweetclaude/5.1.2"
+    install.mkdir(parents=True)
+    proc = subprocess.run([sys.executable, str(SCRIPT), "sync", "--source", str(source),
+                           "--install-path", str(install), "--plugin-root", str(install)],
+                          env={**os.environ, "HOME": str(home), "CLAUDE_PLUGIN_ROOT": str(install)},
+                          capture_output=True, text=True, timeout=30)
+    assert proc.returncode == 0, proc.stderr
+    assert json.loads(proc.stdout)["ok"]
+    assert settings.read_bytes() == before_settings
+    assert rules.read_text() == "personal legacy rules\n"
+    assert not (claude / ".sweetclaude-legacy-backup").exists()
+
+
+def test_local_update_preflight_does_not_repair_user_entry(tmp_path: Path) -> None:
+    import os
+
+    home = tmp_path / "home"
+    plugins = home / ".claude/plugins"
+    plugins.mkdir(parents=True)
+    user_install = plugins / "cache/sweetclaude-stable/sweetclaude/old"
+    user_install.mkdir(parents=True)
+    (user_install / "sentinel").write_text("old installation")
+    local_install = plugins / "cache/sweetclaude-stable/sweetclaude/local"
+    local_install.mkdir()
+    project = tmp_path / "project"
+    project.mkdir()
+    registry = plugins / "installed_plugins.json"
+    registry.write_text(json.dumps({"plugins": {"sweetclaude@sweetclaude-stable": [
+        {"scope": "user", "installPath": str(user_install), "version": "1.2.3"},
+        {"scope": "local", "projectPath": str(project), "installPath": str(local_install), "version": "5.1.2"},
+    ]}}))
+    before = registry.read_bytes()
+    proc = subprocess.run([sys.executable, str(SCRIPT), "preflight", "--project-dir", str(project),
+                           "--plugin-root", str(local_install)], env={**os.environ, "HOME": str(home)},
+                          capture_output=True, text=True, timeout=30)
+    assert proc.returncode == 0, proc.stderr
+    assert registry.read_bytes() == before
+    assert not (user_install.parent / "1.2.3").exists()
+
+
+def test_metadata_failure_does_not_report_success_or_change_project(tmp_path: Path) -> None:
+    import os
+
+    home = tmp_path / "home"
+    home.mkdir()
+    project = tmp_path / "project"
+    state = project / ".sweetclaude/state"
+    state.mkdir(parents=True)
+    config = state / "sweetclaude.yaml"
+    config.write_text('framework:\n  installed_version: "5.1.2"\n')
+    before = config.read_bytes()
+    proc = subprocess.run([sys.executable, str(SCRIPT), "metadata", "--plugin-key", "sweetclaude@missing",
+                           "--scope", "local", "--install-path", str(tmp_path / "missing"),
+                           "--version", "5.1.3", "--sha", "abc", "--project-dir", str(project)],
+                          env={**os.environ, "HOME": str(home)}, capture_output=True, text=True, timeout=30)
+    assert proc.returncode != 0
+    assert json.loads(proc.stdout)["ok"] is False
+    assert config.read_bytes() == before
+
+
+def test_sync_new_version_preserves_old_bundle_and_copies_complete_library(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    for name in ("skills", "hooks", "scripts", "skill-library/build", ".claude-plugin"):
+        (source / name).mkdir(parents=True)
+    (source / "package.json").write_text('{"version":"5.1.3"}')
+    (source / ".claude-plugin/plugin.json").write_text('{"name":"sweetclaude"}')
+    (source / "skill-library/build/INDEX.md").write_text("new workflow")
+    old = tmp_path / "cache/5.1.2"
+    (old / "hooks").mkdir(parents=True)
+    (old / "hooks/old.sh").write_text("old version")
+    out = _capture(mod.cmd_sync, argparse.Namespace(source=str(source), install_path=str(old), plugin_root=str(old)))
+    assert out["ok"], out
+    assert (old / "hooks/old.sh").read_text() == "old version"
+    assert (Path(out["sync_target"]) / "skill-library/build/INDEX.md").read_text() == "new workflow"
+
+
+def test_beta_switch_notice_recommends_local_scope() -> None:
+    notice = mod.beta_stable_migration_notice(channel="beta", installed_version="4.1.2-beta", stable_tags=["v5.1.3"])
+    assert "claude plugin install sweetclaude@sweetclaude-stable --scope local" in notice
+    assert "project data migrates normally" not in notice
+
+
+def test_update_check_rejects_local_source_without_required_branch(tmp_path: Path, monkeypatch) -> None:
+    import shutil
+
+    repo = tmp_path / "source-repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "other", str(repo)], check=True)
+    (repo / "package.json").write_text('{"version":"5.1.3"}')
+    subprocess.run(["git", "-C", str(repo), "add", "package.json"], check=True)
+    subprocess.run(["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                    "commit", "-qm", "fixture"], check=True)
+    monkeypatch.setattr(mod.shutil, "which", lambda _: None)
+    out = _capture(mod.cmd_check, argparse.Namespace(ref="main", installed_sha="old", repo=str(repo),
+                   install_path="", plugin_root=""))
+    try:
+        assert not out["ok"]
+        assert out["error"] == "clone_failed"
+        assert not Path(out["tmpdir"], "sweetclaude", "package.json").exists()
+    finally:
+        shutil.rmtree(out["tmpdir"])
+
+
+def test_sync_refuses_to_overwrite_bundle_shared_with_another_scope(tmp_path: Path, monkeypatch) -> None:
+    home = tmp_path / 'home'
+    plugins = home / '.claude/plugins'
+    plugins.mkdir(parents=True)
+    install = plugins / 'cache/sweetclaude-stable/sweetclaude/5.1.3'
+    (install / 'hooks').mkdir(parents=True)
+    (install / 'hooks/existing.sh').write_text('original')
+    source = tmp_path / 'source'
+    (source / 'hooks').mkdir(parents=True)
+    (source / 'hooks/existing.sh').write_text('replacement')
+    (source / 'package.json').write_text('{"version":"5.1.3"}')
+    (plugins / 'installed_plugins.json').write_text(json.dumps({'plugins': {'sweetclaude@sweetclaude-stable': [
+        {'scope': 'local', 'projectPath': str(tmp_path / 'project'), 'installPath': str(install)},
+        {'scope': 'user', 'installPath': str(install)},
+    ]}}))
+    monkeypatch.setenv('HOME', str(home))
+    monkeypatch.delenv('CLAUDE_CONFIG_DIR', raising=False)
+    out = _capture(mod.cmd_sync, argparse.Namespace(source=str(source), install_path=str(install), plugin_root=str(install)))
+    assert not out['ok']
+    assert (install / 'hooks/existing.sh').read_text() == 'original'
+
+
+def test_sync_verification_failure_does_not_report_success(tmp_path: Path, monkeypatch) -> None:
+    source, install = tmp_path / 'source', tmp_path / 'install'
+    (source / 'skills').mkdir(parents=True)
+    (source / 'skills/example').write_text('content')
+    (source / 'hooks').mkdir()
+    (source / '.claude-plugin').mkdir()
+    install.mkdir()
+    real_run = mod._run
+    def fail_diff(command, *args, **kwargs):
+        if command[0] == 'diff':
+            return subprocess.CompletedProcess(command, 1, '', 'simulated difference')
+        return real_run(command, *args, **kwargs)
+    monkeypatch.setattr(mod, '_run', fail_diff)
+    out = _capture(mod.cmd_sync, argparse.Namespace(source=str(source), install_path=str(install), plugin_root=''))
+    assert out['verify_errors']
+    assert out['ok'] is False

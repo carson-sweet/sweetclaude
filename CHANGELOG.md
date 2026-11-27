@@ -4,6 +4,30 @@ All notable changes to SweetClaude are documented here. SweetClaude ships on the
 
 ---
 
+## [5.1.4] — 2026-11-26
+
+### Changed — project-local installation guidance
+
+The installation guide recommends installing SweetClaude with local scope in each project, and explains how to check scope, disable or uninstall it, and move from a user-wide installation. It also identifies remaining limitations in the update path and legacy global files.
+
+### Fixed — updates preserve local configuration scope
+
+Updates no longer reconcile user-wide hooks or remove global rules automatically. An explicit cleanup command previews legacy changes and creates a backup before applying them. Updating to a new version preserves the earlier plugin bundle.
+
+### Fixed — doctor preserves project scope
+
+Doctor checks hooks in the plugin bundle instead of treating user-level hook copies as the active installation. It no longer restores hooks into the user's global directory or configures the plans directory in user-wide settings. Damaged plugin hooks are reported with instructions to reinstall or update at the existing scope.
+
+### Fixed — hooks and migration checks
+
+Hook commands work when the plugin path contains spaces. Startup drift checks use the active plugin and report failures instead of treating an incomplete scan as clean. Project checks stop when drift or orphan scans fail, and primary legacy backlog items are kept as migration inputs rather than reported as orphans.
+
+### Fixed — workflow routing and developer sync
+
+The workflow loader requires the selected workflow to be read before its controller runs. The developer sync command verifies the intended SweetClaude installation and rejects ambiguous or unsafe destinations before writing.
+
+---
+
 ## [5.1.3] — 2026-11-10
 
 ### Fixed — improvement register learnings deleted on session start

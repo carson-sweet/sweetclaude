@@ -791,7 +791,7 @@ def tdd_commit_gate_denial(data: dict) -> str | None:
     return ("TDD commit gate: committing implementation before the RED tests. This story branch has no "
             "commit with subject 'test: RED - ...' and the commit would add the source file "
             f"'{sources[0]}'. Write the failing tests and commit them first as "
-            "'test: RED - <story> failing tests' (bash ${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh does "
+            "'test: RED - <story> failing tests' (bash \"${CLAUDE_PLUGIN_ROOT}/hooks/git-checkpoint.sh\" does "
             "this), then implement. If this story is a Level 0 hotfix, clear the cycle marker with "
             "'python3 ${CLAUDE_PLUGIN_ROOT}/scripts/tdd_phase.py clear --project-dir <dir>' and commit "
             "test and fix together.")

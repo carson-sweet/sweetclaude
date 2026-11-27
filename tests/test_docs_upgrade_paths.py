@@ -16,10 +16,10 @@ PASSAGE_END = r"\n\*\*[A-Z]|\n#{1,6} |\n→|To stay on 3\.x"
 
 MARKETPLACE_UPDATE = "/plugin marketplace update sweetclaude-stable"
 PLUGIN_UPDATE = "/plugin update sweetclaude@sweetclaude-stable"
-ADD_MAIN = "/plugin marketplace add carson-sweet/sweetclaude@main"
-INSTALL_STABLE = "/plugin install sweetclaude@sweetclaude-stable"
-REMOVE_OLD_STABLE = "/plugin marketplace remove sweetclaude-stable"
-REMOVE_BETA = "/plugin marketplace remove sweetclaude-beta"
+ADD_MAIN = "claude plugin marketplace add carson-sweet/sweetclaude@main"
+INSTALL_STABLE = "claude plugin install sweetclaude@sweetclaude-stable --scope local"
+REMOVE_OLD_STABLE = "claude plugin marketplace remove sweetclaude-stable"
+REMOVE_BETA = "claude plugin marketplace remove sweetclaude-beta"
 BETA_UPDATE = "/plugin update sweetclaude@sweetclaude-beta"
 
 

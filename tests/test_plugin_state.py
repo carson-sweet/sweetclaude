@@ -182,3 +182,93 @@ def test_repair_updates_exact_plugin_metadata_entry(tmp_path):
     assert entry["version"] == "4.1.8-beta"
     assert entry["gitCommitSha"] == "a217639"
     assert entry["lastUpdated"].endswith("Z")
+
+
+def test_inspect_prefers_current_project_local_entry_when_cache_is_shared(tmp_path):
+    project = tmp_path / "project"
+    project.mkdir()
+    install = _install_dir(tmp_path, ".claude", "plugins", "cache", "sweetclaude-stable", "sweetclaude", "5.1.2")
+    _write_installed(tmp_path, {"plugins": {"sweetclaude@sweetclaude-stable": [
+        {"scope": "user", "installPath": install, "version": "5.1.2"},
+        {"scope": "local", "projectPath": str(project), "installPath": install, "version": "5.1.2"},
+    ]}})
+    result = plugin_state.inspect_state(tmp_path, project, Path(install))
+    assert result["scope"] == "local"
+
+
+def test_repair_local_scope_preserves_user_entry_with_shared_cache(tmp_path):
+    project = tmp_path / "project"
+    project.mkdir()
+    old = _install_dir(tmp_path, ".claude", "plugins", "cache", "sweetclaude-stable", "sweetclaude", "5.1.2")
+    new = _install_dir(tmp_path, ".claude", "plugins", "cache", "sweetclaude-stable", "sweetclaude", "5.1.3")
+    path = _write_installed(tmp_path, {"plugins": {"sweetclaude@sweetclaude-stable": [
+        {"scope": "user", "installPath": old, "version": "5.1.2"},
+        {"scope": "local", "projectPath": str(project), "installPath": old, "version": "5.1.2"},
+    ]}})
+    before = json.loads(path.read_text())["plugins"]["sweetclaude@sweetclaude-stable"][0]
+    plugin_state.repair_state(tmp_path, plugin_key="sweetclaude@sweetclaude-stable",
+                              install_path=new, version="5.1.3", sha="abc", project_dir=project,
+                              scope="local")
+    entries = json.loads(path.read_text())["plugins"]["sweetclaude@sweetclaude-stable"]
+    assert entries[0] == before
+    assert entries[1]["installPath"] == new
+
+
+def test_inspect_respects_claude_config_dir(tmp_path):
+    import os
+    import subprocess
+    import sys
+
+    home = tmp_path / "home"
+    home.mkdir()
+    config = tmp_path / "config"
+    project = tmp_path / "project"
+    project.mkdir()
+    install = config / "plugins/cache/sweetclaude-stable/sweetclaude/5.1.2"
+    install.mkdir(parents=True)
+    (config / "plugins/installed_plugins.json").write_text(json.dumps({"plugins": {
+        "sweetclaude@sweetclaude-stable": [{"scope": "local", "projectPath": str(project),
+            "installPath": str(install), "version": "5.1.2"}]}}))
+    result = subprocess.run([sys.executable, str(SCRIPT), "--project-dir", str(project), "inspect",
+                             "--current-root", str(install)], capture_output=True, text=True,
+                            env={**os.environ, "HOME": str(home), "CLAUDE_CONFIG_DIR": str(config)}, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["scope"] == "local"
+
+
+def test_inspect_ignores_project_scope_entry_for_another_project(tmp_path):
+    project = tmp_path / "project"
+    other = tmp_path / "other"
+    project.mkdir()
+    other.mkdir()
+    user_install = _install_dir(tmp_path, "user-install")
+    other_install = _install_dir(tmp_path, "other-install")
+    _write_installed(tmp_path, {"plugins": {"sweetclaude@sweetclaude-stable": [
+        {"scope": "user", "installPath": user_install, "version": "5.1.2"},
+        {"scope": "project", "projectPath": str(other), "installPath": other_install, "version": "5.1.3"},
+    ]}})
+    result = plugin_state.inspect_state(tmp_path, project, Path(other_install))
+    assert result["scope"] == "user"
+    assert result["install_path"] == user_install
+
+
+def test_repair_rejects_ambiguous_scope_without_writing(tmp_path):
+    import pytest
+
+    project = tmp_path / "project"
+    project.mkdir()
+    install = _install_dir(tmp_path, "shared-install")
+    registry = _write_installed(tmp_path, {"plugins": {"sweetclaude@stable": [
+        {"scope": "user", "installPath": install, "version": "5.1.2"},
+        {"scope": "local", "projectPath": str(project), "installPath": install, "version": "5.1.2"},
+    ]}})
+    before = registry.read_bytes()
+    with pytest.raises(ValueError, match="ambiguous"):
+        plugin_state.repair_state(tmp_path, plugin_key="sweetclaude@stable", install_path=install,
+                                  version="5.1.3", sha="abc", project_dir=project)
+    assert registry.read_bytes() == before
+
+
+def test_retired_channel_switch_uses_explicit_local_scope():
+    commands = plugin_state._switch_commands("beta", "stable")
+    assert "claude plugin install sweetclaude@sweetclaude-stable --scope local" in commands

@@ -1,0 +1,411 @@
+{
+  "executed_at": "20261126T140026Z",
+  "model": "sonnet",
+  "tier": "full",
+  "results": [
+    {
+      "case": "build-tenant-safe-feature",
+      "entry": "go",
+      "status": "no-route",
+      "passed": false,
+      "detail": "no workflow loaded (build)",
+      "cost_usd": 0.19663340000000007,
+      "seconds": 31.8,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:build",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": null,
+        "asked": false,
+        "texts": [
+          "Dominant signal is \"build it\" for an approved feature story, so this routes to `build`.",
+          "Routing this as a small story through the controller; retrying with the right argument order.",
+          "I've stopped at DEFINE. The controller can't find the approved story.\n\n- **Routing:** I classified the request as a small story and the controller accepted the route.\n- **The block:** `init-contract` looks for `ISSUE-001-*.md` under `.sweetclaude/product/backlog/`. Your story is at `.sweetclaude/product/roadmap/issues/ISSUE-001-shift-swap.md`, so it fails with \"no backlog file found\". The contract has to be frozen before `init`, so nothing else can proceed.\n- **Not done yet:** No contract or workflow state exists, and no code has been written.\n\nI recommend moving the story file to `.sweetclaude/product/backlog/ISSUE-001-shift-swap.md`, since that is the location the controller scans. The alternative is a copy, but that leaves two files that can drift. Say \"move it\" and I'll do that, then continue.\n\nAfter that, the plan is:\n1. Draft three binary success criteria from the story's acceptance criteria and freeze the contract.\n2. Commit the frozen contract on `main`. `init` needs a clean trunk and then creates the story branch itself.\n3. Build the swap logic in `src/shiftboard/shifts.py`, test first. It covers offering your own upcoming shift, restricting visibility and taking to the same clinic, and reassigning plus notifying the original owner.\n\nThe repo has no notification mechanism yet. Unless you redirect me, I'll add a small notifier interface that tests can stub, rather than pick an email or SMS provider."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.19663340000000007,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-security-patch",
+      "entry": "go",
+      "status": "clarified",
+      "passed": false,
+      "detail": "asked instead of loading a workflow (no category selected)",
+      "cost_usd": 0.09717319999999999,
+      "seconds": 11.2,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ]
+        ],
+        "index_reads": [],
+        "workflow": null,
+        "asked": true,
+        "texts": [
+          "Step 0 applies: the user passed a request, so I'm routing it through find-skill.",
+          "I need one answer before routing, because it decides which workflow handles this. Is the vulnerable clinic staff-list endpoint already live in production, or is it still in unreleased code?\n\n- **Live in production:** this is a `maintain` hotfix/security patch. It starts with a blast-radius assessment, such as checking whether other clinics' data was already read, and then a regression test and the fix.\n- **Not yet released:** this is a `build` defect. It starts with a failing tenant-isolation test, and the fix follows.\n\nThe fix is the same either way: check that the requesting user belongs to the clinic in the URL before returning its staff list."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.09717319999999999,
+        "finished": true
+      }
+    },
+    {
+      "case": "build-tenant-safe-feature",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/small-story",
+      "cost_usd": 0.13222690000000004,
+      "seconds": 14.2,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:build",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "small-story"
+        ],
+        "asked": false,
+        "texts": [
+          "Routing the approved shift-swap story into the small-story workflow. Next I'm checking the mode gates and the story controller."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.13222690000000004,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-security-patch",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/security-patch",
+      "cost_usd": 0.1206735,
+      "seconds": 13.4,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ],
+          [
+            "sweetclaude:maintain",
+            "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "security-patch"
+        ],
+        "asked": false,
+        "texts": [],
+        "preflight_stop": null,
+        "cost_usd": 0.1206735,
+        "finished": true
+      }
+    },
+    {
+      "case": "build-tenant-safe-feature",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/small-story",
+      "cost_usd": 0.1258898,
+      "seconds": 12.5,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:build",
+            "The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "build The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "small-story"
+        ],
+        "asked": false,
+        "texts": [
+          "Dominant signal: building a feature \u2192 `build`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1258898,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-security-patch",
+      "entry": "go",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/security-patch",
+      "cost_usd": 0.12338389999999999,
+      "seconds": 16.0,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:find-skill",
+            "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ],
+          [
+            "sweetclaude:maintain",
+            "We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "security-patch"
+        ],
+        "asked": false,
+        "texts": [
+          "Routed to maintain \u2192 `security-patch`. Reading that workflow now."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.12338389999999999,
+        "finished": true
+      }
+    }
+  ],
+  "diagnostics": [
+    {
+      "case": "build-tenant-safe-feature",
+      "entry": "category",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded build/code-feature",
+      "cost_usd": 0.1328875,
+      "seconds": 20.3,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:library-load",
+            "build The shift-swap story is approved: staff can offer a shift and a coworker at the same clinic can take it. Build it."
+          ]
+        ],
+        "index_reads": [
+          "build"
+        ],
+        "workflow": [
+          "build",
+          "code-feature"
+        ],
+        "asked": false,
+        "texts": [
+          "No drift or legacy artifacts, so I'm routing to the build loader.",
+          "Gates pass. I'm loading the `code-feature` workflow."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1328875,
+        "finished": true
+      }
+    },
+    {
+      "case": "maintain-security-patch",
+      "entry": "category",
+      "status": "pass",
+      "passed": true,
+      "detail": "loaded maintain/security-patch",
+      "cost_usd": 0.1179255,
+      "seconds": 16.2,
+      "trace": {
+        "plugin_paths": [
+          "<checkout>"
+        ],
+        "public_skills": [
+          "sweetclaude:build",
+          "sweetclaude:configure",
+          "sweetclaude:design",
+          "sweetclaude:go",
+          "sweetclaude:help",
+          "sweetclaude:maintain",
+          "sweetclaude:plan",
+          "sweetclaude:status",
+          "sweetclaude:utils"
+        ],
+        "skills": [
+          [
+            "sweetclaude:bootstrap",
+            ""
+          ],
+          [
+            "sweetclaude:library-load",
+            "maintain We confirmed a vulnerability: any logged-in user can read another clinic's staff list by changing the clinic id in the URL. Repair it."
+          ]
+        ],
+        "index_reads": [
+          "maintain"
+        ],
+        "workflow": [
+          "maintain",
+          "security-patch"
+        ],
+        "asked": false,
+        "texts": [
+          "Selected workflow: `maintain` \u2192 `security-patch`."
+        ],
+        "preflight_stop": null,
+        "cost_usd": 0.1179255,
+        "finished": true
+      }
+    }
+  ]
+}

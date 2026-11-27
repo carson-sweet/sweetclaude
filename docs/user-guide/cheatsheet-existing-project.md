@@ -9,16 +9,15 @@ SweetClaude is not just a coding tool. Even on an existing project, the strategi
 
 ## Before You Start
 
-1. Install SweetClaude (if you have not already) — inside Claude Code run:
+1. Create or open the target project folder, and in a terminal there run:
+   ```bash
+   claude plugin marketplace add carson-sweet/sweetclaude@main # once, if needed
+   claude plugin install sweetclaude@sweetclaude-stable --scope local
    ```
-   /plugin marketplace add carson-sweet/sweetclaude@main
-   /plugin install sweetclaude@sweetclaude-stable
-   ```
-2. Open Claude Code in your project folder
-3. Run:
-   ```
-   /sweetclaude:configure init
-   ```
+2. Start or restart Claude Code in that folder.
+3. Run `/sweetclaude:configure init`.
+
+See [Installing SweetClaude](install.md) for scope, verification, and migration.
 
 Init installs the SweetClaude files and runs setup. After that, `/sweetclaude:go` reads your state and proposes the next item.
 

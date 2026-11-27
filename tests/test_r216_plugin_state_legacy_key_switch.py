@@ -38,7 +38,7 @@ class TestR216LegacyKeySwitchCommands:
 
         assert result["channel"] == "beta"
         assert result["channel_retired"] is True
-        assert result["retirement_switch_commands"][2] == "/plugin marketplace remove sweetclaude"
+        assert result["retirement_switch_commands"][2] == "claude plugin marketplace remove sweetclaude"
 
     def test_bare_key_switch_never_names_the_uninstalled_beta_marketplace(self, tmp_path):
         _install(tmp_path, "sweetclaude@sweetclaude", "4.5.1-beta")
@@ -46,6 +46,6 @@ class TestR216LegacyKeySwitchCommands:
         commands = plugin_state.inspect_state(tmp_path, None, None)["retirement_switch_commands"]
 
         assert len(commands) == 3
-        assert commands[0] == "/plugin marketplace add carson-sweet/sweetclaude@main"
-        assert commands[1] == "/plugin install sweetclaude@sweetclaude-stable"
-        assert "/plugin marketplace remove sweetclaude-beta" not in commands
+        assert commands[0] == "claude plugin marketplace add carson-sweet/sweetclaude@main"
+        assert commands[1] == "claude plugin install sweetclaude@sweetclaude-stable --scope local"
+        assert "claude plugin marketplace remove sweetclaude-beta" not in commands

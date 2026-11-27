@@ -35,9 +35,9 @@ _spec.loader.exec_module(plugin_state)
 
 
 SWITCH_COMMANDS = [
-    "/plugin marketplace add carson-sweet/sweetclaude@main",
-    "/plugin install sweetclaude@sweetclaude-stable",
-    "/plugin marketplace remove sweetclaude-beta",
+    "claude plugin marketplace add carson-sweet/sweetclaude@main",
+    "claude plugin install sweetclaude@sweetclaude-stable --scope local",
+    "claude plugin marketplace remove sweetclaude-beta",
 ]
 
 
@@ -208,3 +208,18 @@ class TestFrontDoorStops:
         assert "SweetClaude channel retired." in text, f"{skill} missing retired stop heading"
         for command in SWITCH_COMMANDS:
             assert command in text, f"{skill} missing switch command: {command}"
+
+
+def test_recovery_guidance_does_not_require_removing_shared_marketplaces():
+    root = Path(__file__).resolve().parents[1]
+    for relative in ('docs/user-guide/beta-rescue.md', 'docs/user-guide/migration-and-recovery.md'):
+        text = (root / relative).read_text().lower()
+        assert 'optional' in text and 'other projects' in text
+        assert 'never double-installed' not in text
+
+
+def test_retired_channel_workflows_mark_marketplace_removal_optional():
+    root = Path(__file__).resolve().parents[1]
+    for relative in ('skills/bootstrap/SKILL.md', 'skill-library/configure/doctor/SKILL.md', 'skill-library/configure/update/SKILL.md'):
+        text = (root / relative).read_text().lower()
+        assert 'marketplace removal is optional' in text

@@ -11,6 +11,7 @@ skipped. sc-artifact.sh and sc-artifact-impl.py are CLIs, not hooks, so their
 from __future__ import annotations
 
 import json
+import shlex
 import re
 from pathlib import Path
 
@@ -44,7 +45,7 @@ def pre_tool_use_scripts() -> list[Path]:
     scripts = []
     for group in config["hooks"].get("PreToolUse", []):
         for hook in group["hooks"]:
-            name = hook["command"].rsplit("/", 1)[-1]
+            name = shlex.split(hook["command"])[0].rsplit("/", 1)[-1]
             scripts.append(HOOKS / name)
     return sorted(set(scripts))
 

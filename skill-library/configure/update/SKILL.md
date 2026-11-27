@@ -6,7 +6,7 @@ description: "Update SweetClaude to the latest version from GitHub."
 
 # Update SweetClaude
 
-Fetch the latest SweetClaude and sync it to all installed locations.
+Fetch the latest SweetClaude and sync the selected installation.
 
 **This skill can be run from any project directory.**
 
@@ -56,6 +56,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/update.py" preflight \
 Read the JSON output. Required fields for subsequent steps:
 
 - `plugin_key` → `PLUGIN_KEY`
+- `scope` → `PLUGIN_SCOPE`
 - `install_path` → `INSTALL_PATH`
 - `version` → `INSTALLED_VERSION`
 - `git_commit_sha` → `INSTALLED_SHA`
@@ -67,8 +68,8 @@ Read the JSON output. Required fields for subsequent steps:
 If `ok` is not `true`, stop: "SweetClaude cannot find a repairable plugin entry."
 
 If `channel_retired` is `true`, the installed plugin is on a retired channel
-(ISSUE-241). Print the following, substituting `retirement_switch_commands`
-from the preflight JSON verbatim, then stop:
+(ISSUE-241). Print the following, using the first two `retirement_switch_commands` from preflight for the switch
+and the third only as optional removal, then stop:
 
 ```
 SweetClaude channel retired.
@@ -77,12 +78,15 @@ Installed plugin: {plugin_key}
 Installed version: {version}
 Channel: {channel} (retired — no further updates)
 
-One-time switch to the {retirement_target_channel} channel — run these in
-order so SweetClaude stays installed throughout (both channels are installed briefly, and all three steps finish before you restart Claude Code):
+One-time switch to the {retirement_target_channel} channel — run these
+in a terminal in the target repository. Before removing the retired marketplace, check whether other projects or plugins use it:
 
-/plugin marketplace add carson-sweet/sweetclaude@main
-/plugin install sweetclaude@sweetclaude-stable
-/plugin marketplace remove sweetclaude-beta
+claude plugin marketplace add carson-sweet/sweetclaude@main
+claude plugin install sweetclaude@sweetclaude-stable --scope local
+
+Marketplace removal is optional and may affect other projects. After checking
+dependencies and deciding to remove it, run:
+claude plugin marketplace remove sweetclaude-beta
 
 Then restart Claude Code and run /sweetclaude:configure update to sync framework
 files. Update does not migrate project data; run /sweetclaude:configure doctor
@@ -259,7 +263,7 @@ Read the JSON output. Save `version_dir`, `sync_target`, `hook_cleaned`.
 
 If `ok` is false, report errors. Run cleanup. Stop.
 
-If `verify_errors` is non-empty, report them as warnings but continue.
+If `verify_errors` is non-empty, report the failed verification, run cleanup, and stop before changing metadata.
 
 If `registry_ok` is false, warn: "skills-registry.yaml not found after sync."
 
@@ -270,11 +274,14 @@ If `registry_ok` is false, warn: "skills-registry.yaml not found after sync."
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/update.py" metadata \
   --plugin-key "{PLUGIN_KEY}" \
+  --scope "{PLUGIN_SCOPE}" \
   --install-path "{sync_target}" \
   --version "{new_version}" \
   --sha "{effective_sha}" \
   --project-dir .
 ```
+
+If metadata repair returns a nonzero status or `ok` is false, report the error, run cleanup, and stop. Do not report the update as successful.
 
 ---
 
@@ -286,7 +293,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/update.py" project-check \
   --runner "{RUNNER}"
 ```
 
-Read the JSON output.
+Read the JSON output. If the command exits nonzero or `ok` is false, report each failed scan and its error, run cleanup, and stop with a partial-update result. If `skipped` is true, report that project checks were skipped because no project was found, run cleanup, and stop; do not report the project clean. Never report the project clean when a required scan failed or was not run.
 
 **If `drift_count` > 0:** print partial-update report and stop:
 

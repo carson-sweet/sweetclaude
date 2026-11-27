@@ -6,6 +6,7 @@ with correct matchers, and that the registered commands actually fire.
 """
 import copy
 import json
+import shlex
 import os
 import re
 import subprocess
@@ -43,7 +44,7 @@ def _config():
 
 
 def _resolve(command: str) -> str:
-    return command.replace("${CLAUDE_PLUGIN_ROOT}", str(REPO_ROOT))
+    return shlex.split(command)[0].replace("${CLAUDE_PLUGIN_ROOT}", str(REPO_ROOT))
 
 
 def _entries(config, event):

@@ -256,9 +256,9 @@ def test_R_204_safe_order_switches_to_5x_before_configure_update():
     for cmd in (
         "/plugin marketplace update sweetclaude-stable",
         "/plugin update sweetclaude@sweetclaude-stable",
-        "/plugin marketplace add carson-sweet/sweetclaude@main",
-        "/plugin install sweetclaude@sweetclaude-stable",
-        "/plugin marketplace remove sweetclaude-beta",
+        "claude plugin marketplace add carson-sweet/sweetclaude@main",
+        "claude plugin install sweetclaude@sweetclaude-stable --scope local",
+        "claude plugin marketplace remove sweetclaude-beta",
     ):
         assert cmd in order, cmd
     assert "/sweetclaude:configure update" in order
@@ -315,9 +315,9 @@ def test_R_212_v4_guide_gives_switch_commands_and_no_bare_plugin_update():
     text = guide("v4-migration.md")
     assert re.search(r"/plugin update(?!\s+sweetclaude@)", text) is None
     for cmd in (
-        "/plugin marketplace add carson-sweet/sweetclaude@main",
-        "/plugin install sweetclaude@sweetclaude-stable",
-        "/plugin marketplace remove sweetclaude-beta",
+        "claude plugin marketplace add carson-sweet/sweetclaude@main",
+        "claude plugin install sweetclaude@sweetclaude-stable --scope local",
+        "claude plugin marketplace remove sweetclaude-beta",
     ):
         assert cmd in text, cmd
     assert "upgrading-to-5.md" in text

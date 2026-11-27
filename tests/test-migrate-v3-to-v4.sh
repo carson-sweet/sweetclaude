@@ -686,7 +686,7 @@ MD
 
 run_orphan_scan_scenario() {
     echo ""
-    echo "=== Scenario: scan-orphans finds files in typed subdirs, scratch, and stray locations ==="
+    echo "=== Scenario: scan-orphans finds typed files while excluding primary inputs and scratch ==="
     local tmp
     tmp=$(mktemp -d)
 
@@ -732,7 +732,7 @@ type: bug
 body
 MD
 
-    # Orphan 3: work item in scratch/
+    # Work item in scratch is deliberately excluded from orphan scanning
     mkdir -p "$tmp/scratch"
     cat > "$tmp/scratch/spike-auth-research.md" << 'MD'
 ---
@@ -756,16 +756,17 @@ MD
     scan_out=$(python3 "$SCRIPT" scan-orphans --project-dir "$tmp" 2>&1)
     orphan_count=$(echo "$scan_out" | python3 -c "import sys, json; print(json.load(sys.stdin).get('orphan_count', 0))")
 
-    if [ "$orphan_count" = "3" ]; then
-        pass "scan-orphans: found 3 orphans (typed-subdir x2, scratch x1)"
+    if echo "$scan_out" | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+expected={(".sweetclaude/product/backlog/stories/STORY-001-old-story.md", "typed-subdir"),
+          (".sweetclaude/product/backlog/bugs/BUG-001-old-bug.md", "typed-subdir")}
+actual={(f["file"], f["category"]) for f in d.get("findings", [])}
+sys.exit(0 if d.get("orphan_count") == len(expected) and actual == expected else 1)
+'; then
+        pass "scan-orphans: exact typed files reported; primary and scratch excluded"
     else
-        fail "scan-orphans: expected 3 orphans, got $orphan_count"
-        echo "$scan_out" | python3 -c "
-import sys, json
-d = json.load(sys.stdin)
-for f in d.get('findings', []):
-    print(f'  {f[\"category\"]}: {f[\"file\"]}')
-"
+        fail "scan-orphans: unexpected findings: $scan_out"
     fi
 
     # Verify primary BL-001 is NOT in findings
@@ -806,8 +807,8 @@ import sys, json
 d = json.load(sys.stdin)
 print(sum(1 for f in d.get('findings', []) if f['category'] == 'scratch'))
 ")
-    if [ "$typed_count" = "2" ] && [ "$scratch_count" = "1" ]; then
-        pass "scan-orphans: correct categories (2 typed-subdir, 1 scratch)"
+    if [ "$typed_count" = "2" ] && [ "$scratch_count" = "0" ]; then
+        pass "scan-orphans: correct categories (2 typed-subdir, 0 scratch)"
     else
         fail "scan-orphans: wrong categories (typed=$typed_count, scratch=$scratch_count)"
     fi

@@ -95,24 +95,32 @@ print(d.get('framework',{}).get('update',{}).get('last_checked') or 'None')
 " 2>/dev/null)
 
 # --- Consistency check (every 24h) ---
+HEALTH_CHECK_FAILED=0
 if [ "$(hours_since "$LAST_CONSISTENCY")" -ge 24 ]; then
   (
     DRIFT=""
 
-    # Check hooks.json exists
-    HOOKS_JSON="${HOME}/.claude/hooks/sweetclaude/hooks.json"
-    if [ ! -f "$HOOKS_JSON" ]; then
-      DRIFT="hooks.json_missing"
-    else
-      for required_hook in session-preflight.sh preflight-guard.sh; do
-        if ! grep -q "$required_hook" "$HOOKS_JSON" 2>/dev/null; then
-          DRIFT="${DRIFT} hook:${required_hook}"
-        fi
-      done
+    # The plugin bundle, not a user-wide legacy mirror, owns hook definitions.
+    PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
+    HOOKS_JSON="${PLUGIN_ROOT}/hooks/hooks.json"
+    if [ -z "$PLUGIN_ROOT" ] || [ ! -f "$HOOKS_JSON" ] || ! python3 - "$HOOKS_JSON" << 'PYHOOKS'
+import json, sys
+try:
+    data = json.load(open(sys.argv[1], encoding='utf-8'))
+    hooks = data['hooks']
+    assert isinstance(hooks, dict)
+    commands = [h.get('command', '') for groups in hooks.values() for group in groups for h in group['hooks']]
+    assert all(any(name in command for command in commands) for name in ('session-preflight.sh', 'preflight-guard.sh'))
+except (OSError, ValueError, KeyError, TypeError, AttributeError, AssertionError):
+    sys.exit(1)
+PYHOOKS
+    then
+      echo "SweetClaude plugin hooks missing or invalid; reinstall at the existing scope." >&2
+      exit 21
     fi
 
     # Check sweetclaude rules files
-    RULES_DIR="${CLAUDE_PLUGIN_ROOT}/rules"
+    RULES_DIR="${PLUGIN_ROOT}/rules"
     for rules_file in interaction-model.md phase-gates.md tdd-levels.md; do
       if [ ! -f "$RULES_DIR/$rules_file" ]; then
         DRIFT="${DRIFT} rules:${rules_file}"
@@ -152,11 +160,16 @@ PY
     fi
     update_yaml_field "framework.consistency.last_checked" "$NOW_ISO"
   ) || {
-    python3 - "$SC_YAML" << 'PY'
+    CONSISTENCY_EXIT=$?
+    HEALTH_CHECK_FAILED=1
+    CHECK_ERROR="check_failed"
+    [ "$CONSISTENCY_EXIT" = "21" ] && CHECK_ERROR="plugin_hooks_missing_or_invalid"
+    python3 - "$SC_YAML" "$CHECK_ERROR" << 'PY'
 import sys, yaml
-path = sys.argv[1]
+path, error = sys.argv[1:]
 with open(path) as f: d = yaml.safe_load(f) or {}
-d.setdefault('framework',{}).setdefault('consistency',{})['check_error'] = 'check_failed'
+d.setdefault('framework',{}).setdefault('consistency',{})['check_error'] = error
+d['framework']['consistency']['status'] = 'check_failed'
 import tempfile, os as _os
 with tempfile.NamedTemporaryFile('w', dir=_os.path.dirname(path), suffix='.tmp', delete=False) as tmp:
     yaml.dump(d, tmp, default_flow_style=False, allow_unicode=True, sort_keys=False)
@@ -398,4 +411,4 @@ os.replace(tmp_name, path)
   fi
 fi
 
-exit 0
+exit "$HEALTH_CHECK_FAILED"

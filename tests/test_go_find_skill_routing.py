@@ -52,3 +52,8 @@ def test_large_story_removed_from_public_skills_reference():
 
     assert "| **Large Story** |" not in text
     assert "`/sweetclaude:large-story`" not in text
+
+
+def test_loader_requires_workflow_read_before_running_controllers():
+    text = (ROOT / 'skills/library-load/SKILL.md').read_text()
+    assert 'Do not run workflow controller commands until the selected workflow file has been read' in text
